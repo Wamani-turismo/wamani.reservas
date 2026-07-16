@@ -1,0 +1,323 @@
+@page
+@model Wamani.Reservas.Pages.Reservas.IndexModel
+@{
+    ViewData["Title"] = "Reservas";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+
+    string PillEstado(string estado) => estado switch
+    {
+        "Pagado" => "pill pill-ok",
+        "Señado" => "pill pill-info",
+        _         => "pill pill-muted"
+    };
+}
+
+<h1>Reservas</h1>
+<p class="subtitle">Todas las reservas, de la fecha más cercana a la más lejana.</p>
+
+@if (!string.IsNullOrEmpty(Model.Aviso))
+{
+    <div class="aviso-ok">@Model.Aviso</div>
+}
+
+@if (Model.Coincidencia is not null)
+{
+    var c = Model.Coincidencia;
+    <div class="modal-overlay" id="modalCoinc">
+        <div class="modal-box">
+            <h2>📌 Ya hay otra reserva para esta salida</h2>
+            <p>
+                Para <strong>@c.Excursion</strong> el <strong>@c.Fecha.ToString("dd/MM/yyyy")</strong>
+                ahora hay <strong>@c.CantidadReservas reservas</strong>, con un total de
+                <strong>@c.TotalPasajeros pasajero(s)</strong> (mínimo @c.Minimo).
+                @if (c.LlegaAlMinimo)
+                {
+                    <span class="pill pill-ok">✔ La salida ya llega al mínimo</span>
+                }
+            </p>
+
+            @if (c.Manuales.Count > 0)
+            {
+                <div class="aviso-warn" style="margin-top:14px">
+                    ⚠️ Hay @c.Manuales.Count reserva(s) con <strong>precio manual</strong> (cargadas cuando iban solas).
+                    Ahora que la salida se completa, revisá si les corresponde el
+                    <strong>precio normal de la excursión (@Money(c.PrecioNormal) por persona)</strong>.
+                </div>
+                <table class="tabla" style="margin-top:12px">
+                    <thead>
+                        <tr><th>Pasajero</th><th class="num">Precio manual actual</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var m in c.Manuales)
+                    {
+                        <tr>
+                            <td data-label="Pasajero">@m.NombreCliente (@m.CantidadPersonas p.)</td>
+                            <td class="num" data-label="Precio actual">@Money(m.PrecioPorPersona)</td>
+                            <td data-label="" style="white-space:nowrap">
+                                <a class="btn btn-ghost" style="padding:6px 12px;font-size:.85rem" asp-page="/Reservas/Cargar" asp-route-id="@m.Id">Editar aparte</a>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+
+                <form method="post" asp-page-handler="AjustarPrecios" style="margin-top:16px">
+                    @foreach (var m in c.Manuales)
+                    {
+                        <input type="hidden" name="ids" value="@m.Id" />
+                    }
+                    <button type="submit" class="btn btn-primary">
+                        ✔ Poner precio normal a @(c.Manuales.Count == 1 ? "esta reserva" : $"las {c.Manuales.Count} reservas") (@Money(c.PrecioNormal) c/u)
+                    </button>
+                </form>
+            }
+
+            @if (c.ProveedoresReservados.Count > 0)
+            {
+                <div class="aviso-warn" style="margin-top:14px">
+                    🏨 Esta salida ya tiene reservado:
+                    <strong>@string.Join(" · ", c.ProveedoresReservados.Select(p => $"{p.Tipo}: {p.Nombre}"))</strong>.
+                    Acordate de <strong>sumarle el hospedaje/restaurante a esta persona nueva</strong> (ej: otra habitación, otro cubierto).
+                </div>
+                <a class="btn btn-primary" style="margin-top:12px" asp-page="/Operativo/Salida"
+                   asp-route-excursionId="@c.ExcursionId" asp-route-fecha="@c.Fecha.ToString("yyyy-MM-dd")">
+                    🎒 Ir al operativo de esta salida
+                </a>
+            }
+
+            <div class="acciones-form" style="margin-top:18px">
+                <button type="button" class="btn btn-ghost" onclick="document.getElementById('modalCoinc').style.display='none'">Cerrar</button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="toolbar">
+    <a class="btn-nueva" asp-page="/Reservas/Cargar">+ Nueva reserva</a>
+    <a class="btn btn-ghost" asp-page="/Interesados/Index">
+        👀 Interesados @if (Model.Uniones.Count > 0) { <span class="pill pill-warn" style="margin-left:6px">@Model.Uniones.Count</span> }
+    </a>
+</div>
+
+@if (Model.Uniones.Count > 0)
+{
+    <div class="aviso-warn" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span>👀 Hay <strong>@Model.Uniones.Count interesado(s)</strong> que podrían unirse a una salida.</span>
+        <button type="button" class="btn-mini btn-mini-ghost" onclick="document.getElementById('modalUniones').style.display='flex'">
+            Ver quiénes son
+        </button>
+    </div>
+
+    <div class="modal-overlay serv-modal" id="modalUniones" style="@(Model.VerUniones ? "display:flex" : "")"
+         onclick="if(event.target===this) this.style.display='none'">
+        <div class="modal-box" style="max-width:560px">
+            <h2>👀 Se podrían unir</h2>
+            <p class="subtitle" style="margin:-6px 0 14px">
+                Estos interesados coinciden en excursión y fechas. Contactalos para completar la salida.
+            </p>
+
+            @foreach (var u in Model.Uniones)
+            {
+                var wpp = Wamani.Reservas.Services.Wpp.Link(u.Interesado.Telefono,
+                    $"¡Hola {u.Interesado.Nombre.Trim()}! Te escribo de Wamani por tu consulta de {u.Interesado.Excursion.Trim()}. Tenemos fecha para esos días, ¿te sumás?");
+                <div class="prov-bloque" style="margin-bottom:12px">
+                    <div class="prov-head" style="margin-bottom:8px">
+                        <div>
+                            <div class="cliente-nombre">@u.Interesado.Nombre <span class="pill pill-info">Interesado</span></div>
+                            <div class="cliente-sub">@u.Interesado.Excursion · @u.Interesado.FechaDesde.ToString("dd/MM/yy") → @u.Interesado.FechaHasta.ToString("dd/MM/yy")</div>
+                        </div>
+                        @if (wpp is not null)
+                        {
+                            <a class="btn-mini btn-mini-ghost" style="margin-left:auto" href="@wpp" target="_blank" rel="noopener">💬 WhatsApp</a>
+                        }
+                    </div>
+                    <div class="cliente-sub" style="margin-bottom:6px">Puede unirse con:</div>
+                    @foreach (var c in u.Con)
+                    {
+                        var wc = Wamani.Reservas.Services.Wpp.Link(c.Telefono,
+                            $"¡Hola {c.Nombre.Trim()}! Te escribo de Wamani por la salida de {u.Interesado.Excursion.Trim()}.");
+                        <div class="union-item">
+                            <span><strong>@c.Nombre</strong> <span class="pill @(c.Que == "Reserva" ? "pill-ok" : "pill-info")">@c.Que</span></span>
+                            <span class="cliente-sub">@c.Fechas</span>
+                            @if (wc is not null)
+                            {
+                                <a class="btn-mini btn-mini-ghost" href="@wc" target="_blank" rel="noopener">💬</a>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="acciones-form" style="margin-top:16px">
+                <a class="btn btn-ghost" asp-page="/Interesados/Index">Ver todos los interesados</a>
+                <button type="button" class="btn btn-ghost" style="margin-left:auto"
+                        onclick="document.getElementById('modalUniones').style.display='none'">Cerrar</button>
+            </div>
+        </div>
+    </div>
+}
+
+<form method="get" class="filtros">
+    <input class="search" type="text" name="Buscar" value="@Model.Buscar" placeholder="Buscar por pasajero o excursión…" />
+    <select name="FiltroExcursionId" asp-items="Model.ExcursionesOpciones">
+        <option value="">Todas las excursiones</option>
+    </select>
+    <select name="FiltroEstado">
+        <option value="">Todos los estados</option>
+        <option value="Pendiente" selected="@(Model.FiltroEstado == "Pendiente")">Pendiente</option>
+        <option value="Señado" selected="@(Model.FiltroEstado == "Señado")">Señado</option>
+        <option value="Pagado" selected="@(Model.FiltroEstado == "Pagado")">Pagado</option>
+    </select>
+    <input class="search" type="date" name="FiltroFecha" value="@(Model.FiltroFecha?.ToString("yyyy-MM-dd"))" />
+    <button type="submit" class="btn btn-ghost">Filtrar</button>
+    <a class="btn btn-ghost" asp-page="/Reservas/Index">Limpiar</a>
+</form>
+
+@if (Model.Reservas.Count == 0)
+{
+    <div class="table-wrap">
+        <div class="empty">
+            <div class="big">🏔️</div>
+            <p>No hay reservas para mostrar.</p>
+            <a class="btn btn-primary" asp-page="/Reservas/Cargar">Cargar una reserva</a>
+        </div>
+    </div>
+}
+else
+{
+    @foreach (var g in Model.Grupos)
+    {
+        var primera = g.Reservas.First();
+        <div class="card salida-card">
+            <!-- Cabecera de la salida -->
+            <div class="salida-head">
+                <div>
+                    <div class="salida-titulo">@g.Excursion</div>
+                    <div class="cliente-sub">
+                        @g.FechaDesde.ToString("dd/MM/yy") → @g.FechaHasta.ToString("dd/MM/yy")
+                        · @g.TotalPasajeros pasajero(s) en la salida
+                        @if (g.Reservas.Count > 1)
+                        {
+                            <text> · @g.Reservas.Count reservas unidas</text>
+                        }
+                    </div>
+                </div>
+                <div class="salida-pills">
+                    @if (g.Sale)
+                    {
+                        <span class="pill pill-ok">✔ Sale</span>
+                    }
+                    else
+                    {
+                        <span class="pill pill-warn">Faltan @g.Faltan p/ mínimo</span>
+                    }
+                    @if (Model.TieneServicios(primera))
+                    {
+                        @if (Model.ServiciosTodoPagado(primera))
+                        {
+                            <span class="pill pill-ok">🧾 Servicios pagados ✓</span>
+                        }
+                        else
+                        {
+                            <button type="button" class="pill pill-warn pill-btn" onclick="abrirServ(@primera.Id)">
+                                🧾 Faltan @Model.FaltanServicios(primera) servicio(s)
+                            </button>
+                        }
+                    }
+                    <a class="btn-mini btn-mini-ghost" asp-page="/Operativo/Salida"
+                       asp-route-excursionId="@g.ExcursionId" asp-route-fecha="@g.FechaDesde.ToString("yyyy-MM-dd")">🎒 Operativo</a>
+                </div>
+            </div>
+
+            <!-- Pasajeros / reservas de esta salida -->
+            <table class="tabla" style="margin-top:12px">
+                <thead>
+                    <tr>
+                        <th>Pasajero</th>
+                        <th>Pers.</th>
+                        <th class="num">Total</th>
+                        <th class="num">Cobrado</th>
+                        <th>Estado</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in g.Reservas)
+                {
+                    <tr>
+                        <td data-label="Pasajero">
+                            <div class="cliente-nombre">@r.NombreCliente</div>
+                            <div class="cliente-sub">@r.Telefono</div>
+                        </td>
+                        <td data-label="Personas">@r.CantidadPersonas</td>
+                        <td class="num" data-label="Total">
+                            @Money(r.TotalConDescuento())
+                            @if (r.PrecioManual)
+                            {
+                                <div class="cliente-sub">precio manual</div>
+                            }
+                            else if (r.DescuentoPct > 0)
+                            {
+                                <div class="cliente-sub">-@r.DescuentoPct.ToString("0.##")%</div>
+                            }
+                        </td>
+                        <td class="num" data-label="Cobrado">@Money(r.Cobrado())</td>
+                        <td data-label="Estado">
+                            <span class="@PillEstado(r.EstadoActual())">@r.EstadoActual()</span>
+                            @if (!r.EstaPaga() && r.Cobrado() > 0)
+                            {
+                                <div class="cliente-sub">falta @Money(r.Pendiente())</div>
+                            }
+                        </td>
+                        <td class="acciones" data-label="">
+                            <div class="acciones-fila">
+                                <a class="btn-mini btn-mini-ghost" asp-page="/Reservas/Cargar" asp-route-id="@r.Id">✏️ Editar</a>
+                                <form method="post" asp-page-handler="Eliminar" asp-route-id="@r.Id" style="display:inline"
+                                      onsubmit="return confirm('¿Eliminar la reserva de @r.NombreCliente? (Ej: se canceló). No se puede deshacer.');">
+                                    <button type="submit" class="btn-mini btn-mini-danger">🗑 Eliminar</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @* Modales de "servicios que faltan pagar" (uno por reserva con faltantes) *@
+    @foreach (var r in Model.Reservas)
+    {
+        if (!Model.TieneServicios(r) || Model.ServiciosTodoPagado(r)) { continue; }
+        var faltan = Model.ServiciosQueFaltan(r);
+        <div class="modal-overlay serv-modal" id="servModal-@r.Id" onclick="cerrarServFondo(event, @r.Id)">
+            <div class="modal-box" style="max-width:420px">
+                <h2>🧾 Servicios sin pagar</h2>
+                <p class="subtitle" style="margin:-6px 0 14px">@r.Excursion · @r.FechaDesde.ToString("dd/MM/yyyy")</p>
+                <p style="margin:0 0 10px">Faltan pagar <strong>@faltan.Count</strong> servicio(s):</p>
+                <ul class="serv-lista">
+                    @foreach (var s in faltan)
+                    {
+                        <li>@s</li>
+                    }
+                </ul>
+                <div class="acciones-form" style="margin-top:18px">
+                    <a class="btn btn-primary" asp-page="/Operativo/Salida"
+                       asp-route-excursionId="@r.ExcursionId" asp-route-fecha="@r.FechaDesde.ToString("yyyy-MM-dd")">
+                        🎒 Ir al operativo
+                    </a>
+                    <button type="button" class="btn btn-ghost" onclick="cerrarServ(@r.Id)">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+    <script>
+        function abrirServ(id) { var m = document.getElementById('servModal-' + id); if (m) m.style.display = 'flex'; }
+        function cerrarServ(id) { var m = document.getElementById('servModal-' + id); if (m) m.style.display = 'none'; }
+        function cerrarServFondo(e, id) { if (e.target === e.currentTarget) cerrarServ(id); }
+    </script>
+}

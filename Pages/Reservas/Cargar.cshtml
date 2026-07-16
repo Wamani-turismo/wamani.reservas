@@ -1,0 +1,330 @@
+@page
+@model Wamani.Reservas.Pages.Reservas.CargarModel
+@{
+    ViewData["Title"] = Model.EsNueva ? "Nueva reserva" : "Editar reserva";
+}
+
+<h1>@(Model.EsNueva ? "Nueva reserva" : "Editar reserva")</h1>
+<p class="subtitle">Todos los montos están en pesos argentinos ($).</p>
+
+<form method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="Reserva.Id" />
+    <input type="hidden" asp-for="Reserva.CreadaEl" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <!-- ---------- Datos de la reserva ---------- -->
+    <div class="card">
+        <h2>Datos de la reserva</h2>
+        <div class="form-grid">
+            <div class="field full">
+                <label asp-for="Reserva.ExcursionId"></label>
+                <select asp-for="Reserva.ExcursionId" id="selExc">
+                    <option value="">— Elegí una excursión —</option>
+                    @foreach (var e in Model.Excursiones)
+                    {
+                        <option value="@e.Id"
+                                data-precio="@e.PrecioPorPersona"
+                                data-min="@e.MinimoPersonas">
+                            @e.Nombre (@e.PrecioPorPersona.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("es-AR"))/pers · mín @e.MinimoPersonas)
+                        </option>
+                    }
+                </select>
+                <span asp-validation-for="Reserva.ExcursionId" class="text-danger"></span>
+                <div class="hint">¿Falta una excursión o querés cambiar un precio? <a asp-page="/Excursiones/Index" target="_blank">Administrar excursiones</a></div>
+            </div>
+
+            <div class="field">
+                <label asp-for="Reserva.NombreCliente"></label>
+                <input asp-for="Reserva.NombreCliente" />
+                <span asp-validation-for="Reserva.NombreCliente" class="text-danger"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Reserva.CantidadPersonas"></label>
+                <input asp-for="Reserva.CantidadPersonas" type="number" min="1" id="inPers" />
+                <span asp-validation-for="Reserva.CantidadPersonas" class="text-danger"></span>
+            </div>
+
+            <div class="field full">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                    <input asp-for="Reserva.PrecioManual" type="checkbox" style="width:auto" id="chkManual" />
+                    Precio manual (ej: 1 sola persona con tarifa especial)
+                </label>
+                <div class="hint">Si lo tildás, escribís el precio por persona a mano. Si no, se usa el precio del catálogo de la excursión.</div>
+            </div>
+            <div class="field">
+                <label asp-for="Reserva.PrecioPorPersona">Precio por persona</label>
+                <input asp-for="Reserva.PrecioPorPersona" type="number" step="0.01" min="0" id="inPrecio" />
+            </div>
+
+            <div class="field">
+                <label asp-for="Reserva.Telefono"></label>
+                <input asp-for="Reserva.Telefono" placeholder="Ej: 388 123 4567" />
+            </div>
+            <div class="field">
+                <label asp-for="Reserva.Email"></label>
+                <input asp-for="Reserva.Email" type="email" />
+                <span asp-validation-for="Reserva.Email" class="text-danger"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Reserva.FechaDesde"></label>
+                <input asp-for="Reserva.FechaDesde" type="date" />
+            </div>
+            <div class="field">
+                <label asp-for="Reserva.FechaHasta"></label>
+                <input asp-for="Reserva.FechaHasta" type="date" />
+                <span asp-validation-for="Reserva.FechaHasta" class="text-danger"></span>
+            </div>
+
+            <div class="field">
+                <label asp-for="Reserva.DescuentoPct"></label>
+                <input asp-for="Reserva.DescuentoPct" type="number" step="0.01" min="0" max="100" id="inDesc" />
+                <div class="hint">Dejalo en 0 si no hay descuento.</div>
+            </div>
+            <div class="field">
+                <label asp-for="Reserva.EstadoManual">Estado</label>
+                <select asp-for="Reserva.EstadoManual">
+                    <option value="">Automático (según los pagos)</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Señado">Señado</option>
+                    <option value="Pagado">Pagado</option>
+                </select>
+                <div class="hint">Dejalo en "Automático" y se actualiza solo al cargar los pagos.</div>
+            </div>
+        </div>
+
+        <div id="avisoMin" class="aviso-warn" style="display:none"></div>
+
+        <div class="resumen">
+            <div class="item">
+                <div class="label">Subtotal (precio × personas)</div>
+                <div class="val" id="outSub">$ 0</div>
+            </div>
+            <div class="item">
+                <div class="label">Total con descuento</div>
+                <div class="val" id="outTotal">$ 0</div>
+            </div>
+            <div class="item">
+                <div class="label">Cobrado (seña + saldo)</div>
+                <div class="val" id="outCobrado">$ 0</div>
+            </div>
+            <div class="item">
+                <div class="label">Falta cobrar</div>
+                <div class="val pend" id="outPend">$ 0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------- Seña ---------- -->
+    <div class="card">
+        <h2>Seña</h2>
+        <div class="form-grid">
+            <div class="field">
+                <label asp-for="Reserva.SenaMonto"></label>
+                <input asp-for="Reserva.SenaMonto" type="number" step="0.01" min="0" id="inSena" />
+            </div>
+            <div class="field">
+                <label asp-for="Reserva.SenaFecha"></label>
+                <input asp-for="Reserva.SenaFecha" type="date" />
+            </div>
+            <div class="field">
+                <label asp-for="Reserva.SenaRecibioPor"></label>
+                <input asp-for="Reserva.SenaRecibioPor" placeholder="Nombre de quién cobró" />
+            </div>
+            <div class="field">
+                <label>Comprobante de la seña</label>
+                <input type="file" name="SenaArchivo" accept="image/*,.pdf" />
+                @if (!string.IsNullOrEmpty(Model.Reserva.SenaComprobante))
+                {
+                    <div class="comprobante-actual">
+                        ✔ Ya hay un comprobante cargado —
+                        <a href="@Model.Reserva.SenaComprobante" target="_blank">ver</a>.
+                        <span class="hint">Subí otro solo si querés reemplazarlo.</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------- Saldo ---------- -->
+    <div class="card">
+        <h2>Saldo</h2>
+        <div class="form-grid">
+            <div class="field">
+                <label asp-for="Reserva.SaldoMonto"></label>
+                <input asp-for="Reserva.SaldoMonto" type="number" step="0.01" min="0" id="inSaldo" />
+            </div>
+            <div class="field">
+                <label asp-for="Reserva.SaldoFecha"></label>
+                <input asp-for="Reserva.SaldoFecha" type="date" />
+            </div>
+            <div class="field">
+                <label asp-for="Reserva.SaldoRecibioPor"></label>
+                <input asp-for="Reserva.SaldoRecibioPor" placeholder="Nombre de quién cobró" />
+            </div>
+            <div class="field">
+                <label>Comprobante del saldo</label>
+                <input type="file" name="SaldoArchivo" accept="image/*,.pdf" />
+                @if (!string.IsNullOrEmpty(Model.Reserva.SaldoComprobante))
+                {
+                    <div class="comprobante-actual">
+                        ✔ Ya hay un comprobante cargado —
+                        <a href="@Model.Reserva.SaldoComprobante" target="_blank">ver</a>.
+                        <span class="hint">Subí otro solo si querés reemplazarlo.</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------- Pasajeros (datos para el seguro) ---------- -->
+    <div class="card">
+        <h2>Pasajeros <span class="hint" style="font-weight:400">(datos para el seguro)</span></h2>
+        <p class="hint" style="margin:-8px 0 14px">
+            Cargá una fila por persona. Con esto después armamos el PDF para mandarle al seguro.
+        </p>
+
+        <div id="pasBody" class="prov-group">
+            @{
+                var pasajeros = Model.Pasajeros.Count > 0
+                    ? Model.Pasajeros
+                    : new List<Wamani.Reservas.Models.Pasajero> { new Wamani.Reservas.Models.Pasajero() };
+            }
+            @foreach (var p in pasajeros)
+            {
+                <div class="pas-row prov-bloque">
+                    <input type="hidden" name="PasIds" value="@p.Id" />
+                    <div class="pas-grid">
+                        <div class="field">
+                            <label>Nombre completo</label>
+                            <input name="PasNombres" value="@p.NombreCompleto" placeholder="Ej: María González" />
+                        </div>
+                        <div class="field">
+                            <label>DNI</label>
+                            <input name="PasDnis" value="@p.Dni" placeholder="Ej: 30123456" />
+                        </div>
+                        <div class="field">
+                            <label>Fecha de nacimiento</label>
+                            <input name="PasFechasNac" type="date" value="@(p.FechaNacimiento?.ToString("yyyy-MM-dd"))" />
+                        </div>
+                        <div class="field">
+                            <label>Teléfono</label>
+                            <input name="PasTelefonos" value="@p.Telefono" placeholder="Ej: 388 123 4567" />
+                        </div>
+                        <div class="field">
+                            <label>Mail</label>
+                            <input name="PasEmails" type="email" value="@p.Email" />
+                        </div>
+                        <div class="field pas-quitar">
+                            <label>&nbsp;</label>
+                            <button type="button" class="btn-mini btn-mini-danger" onclick="quitarPasajero(this)">Quitar</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="acciones-form" style="margin-top:12px">
+            <button type="button" class="btn btn-ghost" onclick="agregarPasajero()">+ Agregar pasajero</button>
+            @if (!Model.EsNueva)
+            {
+                <a class="btn btn-primary" asp-page-handler="PdfSeguro" asp-route-id="@Model.Reserva.Id" target="_blank">
+                    📄 Descargar PDF para el seguro
+                </a>
+            }
+        </div>
+        @if (Model.EsNueva)
+        {
+            <p class="hint" style="margin-top:8px">Guardá la reserva y después vas a poder descargar el PDF para el seguro.</p>
+        }
+    </div>
+
+    <div class="acciones-form">
+        <button type="submit" class="btn btn-primary">💾 Guardar reserva</button>
+        <a class="btn btn-ghost" asp-page="/Index">Cancelar</a>
+
+        @if (!Model.EsNueva)
+        {
+            <button type="submit" class="btn btn-danger" style="margin-left:auto"
+                    asp-page-handler="Eliminar" asp-route-id="@Model.Reserva.Id" formnovalidate
+                    onclick="return confirm('¿Seguro que querés eliminar esta reserva? (Ej: se canceló). No se puede deshacer.');">
+                🗑 Eliminar reserva
+            </button>
+        }
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function money(n) {
+            return "$ " + (isNaN(n) ? 0 : Math.round(n)).toLocaleString("es-AR");
+        }
+        function recalcular() {
+            const sel = document.getElementById("selExc");
+            const opt = sel.options[sel.selectedIndex];
+            const precioExc = opt ? parseFloat(opt.getAttribute("data-precio")) || 0 : 0;
+            const min    = opt ? parseInt(opt.getAttribute("data-min")) || 0 : 0;
+            const pers   = parseInt(document.getElementById("inPers").value) || 0;
+
+            // Precio manual vs precio del catálogo
+            const manual = document.getElementById("chkManual").checked;
+            const inPrecio = document.getElementById("inPrecio");
+            inPrecio.readOnly = !manual;
+            if (!manual) inPrecio.value = precioExc;   // muestra el precio del catálogo (referencia)
+            const precio = manual ? (parseFloat(inPrecio.value) || 0) : precioExc;
+            const desc   = parseFloat(document.getElementById("inDesc").value) || 0;
+            const sena   = parseFloat(document.getElementById("inSena").value) || 0;
+            const saldo  = parseFloat(document.getElementById("inSaldo").value) || 0;
+
+            const subtotal = precio * pers;
+            const totalConDesc = subtotal * (1 - desc / 100);
+            const cobrado = sena + saldo;
+            const pend = Math.max(0, totalConDesc - cobrado);
+
+            document.getElementById("outSub").textContent = money(subtotal);
+            document.getElementById("outTotal").textContent = money(totalConDesc);
+            document.getElementById("outCobrado").textContent = money(cobrado);
+            const pendEl = document.getElementById("outPend");
+            if (pend <= 0.01 && cobrado > 0) {
+                pendEl.textContent = "Paga ✔";
+                pendEl.className = "val paga";
+            } else {
+                pendEl.textContent = money(pend);
+                pendEl.className = "val pend";
+            }
+
+            // Aviso de mínimo (no bloquea)
+            const aviso = document.getElementById("avisoMin");
+            if (min > 0 && pers > 0 && pers < min) {
+                aviso.style.display = "block";
+                aviso.textContent = "⚠️ Faltan " + (min - pers) + " pasajero(s) para el mínimo de esta salida (mínimo " + min + "). Igual podés guardar: se puede completar con otra reserva de la misma fecha.";
+            } else {
+                aviso.style.display = "none";
+            }
+        }
+        ["selExc","inPers","inDesc","inSena","inSaldo","inPrecio"].forEach(id =>
+            document.getElementById(id).addEventListener("input", recalcular));
+        document.getElementById("chkManual").addEventListener("change", recalcular);
+        recalcular();
+
+        // ---- Pasajeros (datos del seguro) ----
+        function agregarPasajero() {
+            var body = document.getElementById('pasBody');
+            var base = body.querySelector('.pas-row');
+            var clone = base.cloneNode(true);
+            clone.querySelector('input[name=PasIds]').value = '0';
+            clone.querySelectorAll('input').forEach(function (i) {
+                if (i.name !== 'PasIds') i.value = '';
+            });
+            body.appendChild(clone);
+            clone.querySelector('input[name=PasNombres]').focus();
+        }
+        function quitarPasajero(btn) {
+            var body = document.getElementById('pasBody');
+            var fila = btn.closest('.pas-row');
+            if (body.querySelectorAll('.pas-row').length > 1) { fila.remove(); }
+            else { fila.querySelectorAll('input').forEach(function (i) { if (i.name !== 'PasIds') i.value = ''; }); }
+        }
+    </script>
+}

@@ -1,0 +1,94 @@
+@using Wamani.Reservas.ViewComponents
+@model List<Wamani.Reservas.Models.Reserva>
+@{
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+    var hoy = DateTime.Today;
+}
+
+<div class="recordatorios">
+    <button type="button" class="rec-btn" onclick="toggleRecordatorios(event)" title="Cobros de saldo pendientes">
+        🔔
+        @if (Model.Count > 0)
+        {
+            <span class="rec-badge">@Model.Count</span>
+        }
+    </button>
+
+    <div class="rec-panel" id="recPanel">
+        <div class="rec-head">💬 Saldos para cobrar</div>
+
+        @if (Model.Count == 0)
+        {
+            <div class="rec-empty">No tenés saldos para cobrar por ahora 🎉</div>
+        }
+        else
+        {
+            <div class="rec-lista">
+            @foreach (var r in Model)
+            {
+                var dias = (r.FechaDesde.Date - hoy).Days;
+                <button type="button" class="rec-item" onclick="abrirRecModal(@r.Id)">
+                    <div class="rec-item-top">
+                        <span class="rec-nombre">@r.NombreCliente</span>
+                        <span class="rec-monto">@Money(r.Pendiente())</span>
+                    </div>
+                    <div class="rec-item-sub">
+                        @r.Excursion · sale el @r.FechaDesde.ToString("dd/MM")
+                        @if (dias <= 0)
+                        {
+                            <strong> (¡es hoy/ya!)</strong>
+                        }
+                        else
+                        {
+                            <text> (en @dias día@(dias == 1 ? "" : "s"))</text>
+                        }
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(r.Telefono))
+                    {
+                        <div class="rec-item-tel">📞 @r.Telefono</div>
+                    }
+                </button>
+            }
+            </div>
+        }
+    </div>
+</div>
+
+@* Un modal por cada reserva a cobrar (ocultos hasta que se toca el ítem) *@
+@foreach (var r in Model)
+{
+    var wpp = RecordatoriosViewComponent.WhatsAppLink(r);
+    <div class="modal-overlay rec-modal" id="recModal-@r.Id" onclick="cerrarRecModalFondo(event, @r.Id)">
+        <div class="modal-box" style="max-width:460px">
+            <h2>@r.NombreCliente</h2>
+            <p class="subtitle" style="margin:-6px 0 14px">@r.Excursion</p>
+
+            <table class="rec-detalle">
+                <tr><th>Fechas</th><td>@r.FechaDesde.ToString("dd/MM/yy") → @r.FechaHasta.ToString("dd/MM/yy")</td></tr>
+                <tr><th>Personas</th><td>@r.CantidadPersonas</td></tr>
+                <tr><th>Estado</th><td>@r.EstadoActual()</td></tr>
+                <tr><th>Total</th><td>@Money(r.TotalConDescuento())</td></tr>
+                <tr><th>Seña cobrada</th><td>@Money(r.SenaMonto ?? 0)@(string.IsNullOrWhiteSpace(r.SenaRecibioPor) ? "" : $" (recibió {r.SenaRecibioPor})")</td></tr>
+                <tr><th>Saldo a cobrar</th><td><strong style="color:var(--warn)">@Money(r.Pendiente())</strong></td></tr>
+                @if (!string.IsNullOrWhiteSpace(r.Telefono))
+                {
+                    <tr><th>Teléfono</th><td>@r.Telefono</td></tr>
+                }
+                @if (!string.IsNullOrWhiteSpace(r.Email))
+                {
+                    <tr><th>Mail</th><td>@r.Email</td></tr>
+                }
+            </table>
+
+            <div class="acciones-form" style="margin-top:18px">
+                @if (wpp is not null)
+                {
+                    <a class="btn btn-primary" href="@wpp" target="_blank" rel="noopener">💬 Escribir por WhatsApp</a>
+                }
+                <a class="btn btn-ghost" asp-page="/Reservas/Cargar" asp-route-id="@r.Id">✏️ Abrir reserva</a>
+                <button type="button" class="btn btn-ghost" style="margin-left:auto" onclick="cerrarRecModal(@r.Id)">Cerrar</button>
+            </div>
+        </div>
+    </div>
+}

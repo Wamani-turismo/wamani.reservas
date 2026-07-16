@@ -1,0 +1,80 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Inicio";
+}
+
+<h1>Inicio</h1>
+<p class="subtitle">Un vistazo rápido a tus próximas salidas.</p>
+
+@if (Model.CobrosPendientesCount > 0)
+{
+    <div class="aviso-warn">
+        💬 Tenés <strong>@Model.CobrosPendientesCount cobro(s) de saldo</strong> para hacer.
+        Miralos en la campanita 🔔 de arriba a la derecha.
+    </div>
+}
+
+@if (Model.ProximasSalidas.Count == 0)
+{
+    <div class="table-wrap">
+        <div class="empty">
+            <div class="big">🏔️</div>
+            <p>No hay salidas próximas cargadas.</p>
+            <a class="btn btn-primary" asp-page="/Reservas/Cargar">Cargar una reserva</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <h2>📅 Próximas salidas</h2>
+        <div style="overflow-x:auto">
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Excursión y pasajeros</th>
+                        <th class="num">Total</th>
+                        <th>¿Sale?</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var s in Model.ProximasSalidas)
+                {
+                    <tr>
+                        <td data-label="Fecha">
+                            <strong>@s.FechaDesde.ToString("dd/MM/yy")</strong>
+                            @if (s.EsRango)
+                            {
+                                <div class="cliente-sub">al @s.FechaHasta.ToString("dd/MM/yy")</div>
+                            }
+                        </td>
+                        <td data-label="Excursión y pasajeros">
+                            <div class="cliente-nombre">@s.Excursion</div>
+                            <div class="cliente-sub">
+                                @string.Join(" · ", s.Reservas.Select(r => $"{r.NombreCliente} ({r.CantidadPersonas})"))
+                            </div>
+                        </td>
+                        <td class="num" data-label="Total">@s.TotalPasajeros pas.</td>
+                        <td data-label="¿Sale?">
+                            @if (s.Sale)
+                            {
+                                <span class="pill pill-ok">✔ Sale</span>
+                            }
+                            else
+                            {
+                                <span class="pill pill-warn">Faltan @s.Faltan</span>
+                            }
+                        </td>
+                        <td class="acciones" data-label="">
+                            <a asp-page="/Salidas" asp-route-Fecha="@s.FechaDesde.ToString("yyyy-MM-dd")">Ver día</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

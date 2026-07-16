@@ -1,0 +1,68 @@
+@page
+@model Wamani.Reservas.Pages.Interesados.IndexModel
+@{
+    ViewData["Title"] = "Interesados";
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Interesados</h1>
+        <p class="subtitle" style="margin:0">Gente que consultó y todavía no reservó. Si coinciden con una salida, te avisamos para unirlos.</p>
+    </div>
+    <div class="salida-pills">
+        <a class="btn btn-ghost" asp-page="/Reservas/Index">← Volver a reservas</a>
+        <a class="btn-nueva" asp-page="/Interesados/Cargar">+ Nuevo interesado</a>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Aviso))
+{
+    <div class="aviso-ok">@Model.Aviso</div>
+}
+
+@if (Model.Lista.Count == 0)
+{
+    <div class="table-wrap">
+        <div class="empty">
+            <div class="big">👀</div>
+            <p>Todavía no cargaste ningún interesado.</p>
+            <a class="btn btn-primary" asp-page="/Interesados/Cargar">Cargar el primero</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <table class="tabla">
+            <thead>
+                <tr><th>Nombre</th><th>Teléfono</th><th>Excursión</th><th>Rango de fechas</th><th></th></tr>
+            </thead>
+            <tbody>
+            @foreach (var i in Model.Lista)
+            {
+                var wpp = Wamani.Reservas.Services.Wpp.Link(i.Telefono,
+                    $"¡Hola {i.Nombre.Trim()}! Te escribo de Wamani por tu consulta de {i.Excursion.Trim()}.");
+                <tr>
+                    <td data-label="Nombre"><strong>@i.Nombre</strong></td>
+                    <td data-label="Teléfono">@i.Telefono</td>
+                    <td data-label="Excursión">@i.Excursion</td>
+                    <td data-label="Rango de fechas">@i.FechaDesde.ToString("dd/MM/yy") → @i.FechaHasta.ToString("dd/MM/yy")</td>
+                    <td class="acciones" data-label="">
+                        <div class="acciones-fila">
+                            @if (wpp is not null)
+                            {
+                                <a class="btn-mini btn-mini-ghost" href="@wpp" target="_blank" rel="noopener">💬 WhatsApp</a>
+                            }
+                            <a class="btn-mini btn-mini-ghost" asp-page="/Interesados/Cargar" asp-route-id="@i.Id">✏️ Editar</a>
+                            <form method="post" asp-page-handler="Eliminar" asp-route-id="@i.Id" style="display:inline"
+                                  onsubmit="return confirm('¿Eliminar a @i.Nombre de interesados?');">
+                                <button type="submit" class="btn-mini btn-mini-danger">🗑</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

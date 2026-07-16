@@ -1,0 +1,50 @@
+@page
+@model Wamani.Reservas.Pages.Proveedores.IndexModel
+@{
+    ViewData["Title"] = "Proveedores";
+    string Ico(string t) => t switch { "Guía" => "🧑‍🏫", "Hospedaje" => "🏨", "Restaurante" => "🍽️", "Auto" => "🚐", _ => "•" };
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Proveedores</h1>
+        <p class="subtitle" style="margin:0">Guías, hospedajes, restaurantes y autos/agencias que usás en las salidas.</p>
+    </div>
+    <a class="btn-nueva" asp-page="/Proveedores/Cargar">+ Nuevo proveedor</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Aviso))
+{
+    <div class="aviso-ok">@Model.Aviso</div>
+}
+
+@foreach (var tipo in Wamani.Reservas.Models.Proveedor.Tipos)
+{
+    var lista = Model.Todos.Where(p => p.Tipo == tipo).ToList();
+    <div class="card">
+        <h2>@Ico(tipo) @tipo</h2>
+        @if (lista.Count == 0)
+        {
+            <p class="hint">Todavía no cargaste ninguno.</p>
+        }
+        else
+        {
+            <table class="tabla">
+                <thead><tr><th>Nombre</th><th class="num">Lo que cobra</th><th>Contacto</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var p in lista)
+                {
+                    <tr>
+                        <td data-label="Nombre"><strong>@p.Nombre</strong></td>
+                        <td class="num" data-label="Lo que cobra">@(p.Precio > 0 ? "$ " + p.Precio.ToString("N0", ci) : "—")</td>
+                        <td data-label="Contacto">@p.Contacto</td>
+                        <td data-label="Estado">@(p.Activo ? "Activo" : "Oculto")</td>
+                        <td class="acciones" data-label=""><a class="btn-mini btn-mini-ghost" asp-page="/Proveedores/Cargar" asp-route-id="@p.Id">✏️ Editar</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+}

@@ -1,0 +1,251 @@
+@page
+@model Wamani.Reservas.Pages.Operativo.SalidaModel
+@{
+    ViewData["Title"] = "Preparar salida";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+    string Num(decimal m) => m.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+    var total = Model.Gastos.Sum(g => g.Precio);
+    var listos = Model.Gastos.Count(g => g.Comprado);
+}
+
+<h1>Preparar salida</h1>
+<p class="subtitle">@Model.ExcursionNombre · @Model.Fecha.ToString("dd/MM/yyyy")</p>
+
+@if (Model.Guardado)
+{
+    <div class="aviso-ok">Operativo guardado ✔</div>
+}
+
+<div class="toolbar">
+    <a asp-page="/Operativo/Index">← Volver al operativo</a>
+</div>
+
+@if (Model.Reservas.Count > 0)
+{
+    <div class="card">
+        <h2>Pasajeros de esta salida (@Model.Reservas.Sum(r => r.CantidadPersonas))</h2>
+        <div>
+            @string.Join(" · ", Model.Reservas.Select(r => $"{r.NombreCliente} ({r.CantidadPersonas})"))
+        </div>
+    </div>
+}
+
+<form method="post" enctype="multipart/form-data">
+    <input type="hidden" asp-for="ExcursionId" />
+    <input type="hidden" asp-for="Fecha" />
+
+    <div class="card">
+        <h2>Gastos a preparar / comprar</h2>
+
+        @if (Model.Gastos.Count == 0)
+        {
+            <p class="hint">Esta excursión todavía no tiene gastos cargados. Podés agregarlos acá, o cargarlos en la excursión para que aparezcan solos en todas sus salidas.</p>
+        }
+
+        <table class="tabla" id="tablaGastos">
+            <thead>
+                <tr>
+                    <th style="width:70px">Listo</th>
+                    <th>Ítem / gasto</th>
+                    <th class="num" style="width:150px">Lo que se pagó</th>
+                    <th style="width:220px">Comprobante</th>
+                    <th style="width:60px"></th>
+                </tr>
+            </thead>
+            <tbody id="gastosBody">
+            @foreach (var g in Model.Gastos)
+            {
+                <tr class="gasto-row">
+                    <td data-label="Listo">
+                        <input type="checkbox" name="Comprados" value="@g.Id" class="chk-listo" style="width:20px;height:20px" @(g.Comprado ? "checked" : "") />
+                    </td>
+                    <td data-label="Ítem">
+                        <input type="hidden" name="Ids" value="@g.Id" />
+                        <input name="Nombres" value="@g.Nombre" />
+                    </td>
+                    <td class="num" data-label="Lo que se pagó">
+                        <input name="Precios" type="number" step="0.01" min="0" value="@Num(g.Precio)" class="in-precio" />
+                    </td>
+                    <td data-label="Comprobante">
+                        <input type="file" name="comp_@g.Id" accept="image/*,.pdf" class="in-comp" />
+                        @if (!string.IsNullOrEmpty(g.Comprobante))
+                        {
+                            <a href="@g.Comprobante" target="_blank" class="hint">✔ ver comprobante</a>
+                        }
+                    </td>
+                    <td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <button type="button" class="btn btn-ghost" style="margin-top:12px" onclick="agregarGasto()">+ Agregar gasto</button>
+
+        <div class="resumen" style="margin-top:18px">
+            <div class="item">
+                <div class="label">Gastos listos</div>
+                <div class="val" id="outListos">@listos / @Model.Gastos.Count</div>
+            </div>
+            <div class="item">
+                <div class="label">Total de la salida (gastos + proveedores)</div>
+                <div class="val" id="outTotal">@Money(total)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------- Proveedores ---------- -->
+    <div class="card">
+        <h2>Proveedores <span class="hint" style="font-weight:400">(guía, hospedaje, restaurante, auto)</span></h2>
+        <p class="hint" style="margin:-8px 0 14px">
+            Elegí el proveedor de cada uno y registrá el total y lo que ya pagaste (seña). El sistema te avisa lo que falta.
+            ¿Falta uno en la lista? <a asp-page="/Proveedores/Cargar" target="_blank">Agregar proveedor</a>.
+        </p>
+        @{
+            List<Wamani.Reservas.Pages.Operativo.ProvRowVm> RowsDe(string tipo, bool conPasajero)
+            {
+                var cat = Model.CatalogoPorTipo.GetValueOrDefault(tipo) ?? new();
+                var asigs = Model.ProvPorTipo.GetValueOrDefault(tipo) ?? new();
+                var rows = asigs.Select(a => new Wamani.Reservas.Pages.Operativo.ProvRowVm { Tipo = tipo, Asig = a, Cat = cat, ConPasajero = conPasajero }).ToList();
+                if (rows.Count == 0) rows.Add(new Wamani.Reservas.Pages.Operativo.ProvRowVm { Tipo = tipo, Asig = null, Cat = cat, ConPasajero = conPasajero });
+                return rows;
+            }
+        }
+
+        <div class="prov-lista">
+            @* Guía y Auto: una sola fila (uno por salida) *@
+            @foreach (var vm in RowsDe("Guía", false)) { <partial name="_ProvRow" model="vm" /> }
+
+            @* Hospedaje: uno o varios (por pasajero) *@
+            <div class="prov-group" data-tipo="Hospedaje">
+                @foreach (var vm in RowsDe("Hospedaje", true)) { <partial name="_ProvRow" model="vm" /> }
+            </div>
+            <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Hospedaje')">+ Agregar hospedaje (otra persona)</button>
+
+            @* Restaurante: uno o varios (por pasajero) *@
+            <div class="prov-group" data-tipo="Restaurante">
+                @foreach (var vm in RowsDe("Restaurante", true)) { <partial name="_ProvRow" model="vm" /> }
+            </div>
+            <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Restaurante')">+ Agregar restaurante (otra persona)</button>
+
+            @foreach (var vm in RowsDe("Auto", false)) { <partial name="_ProvRow" model="vm" /> }
+        </div>
+    </div>
+
+    <!-- ---------- Servicios pagados ---------- -->
+    <div class="card">
+        <h2>Servicios pagados</h2>
+        <label class="check-linea">
+            <input type="checkbox" asp-for="ServiciosPagados" class="chk-listo" />
+            <span>Ya pagué todos los servicios de esta salida (aparece "Servicios pagados ✓" en las reservas)</span>
+        </label>
+    </div>
+
+    <div class="acciones-form">
+        <button type="submit" class="btn btn-primary">💾 Guardar operativo</button>
+        <a class="btn btn-ghost" asp-page="/Operativo/Index">Cancelar</a>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        function money(n) { return "$ " + (isNaN(n) ? 0 : Math.round(n)).toLocaleString("es-AR"); }
+        function totalProveedores() {
+            var t = 0;
+            document.querySelectorAll('.prov-row').forEach(function (tr) {
+                t += parseFloat(tr.querySelector('.prov-total')?.value) || 0;
+            });
+            return t;
+        }
+        function recalcular() {
+            var total = 0, listos = 0, filas = document.querySelectorAll('#gastosBody .gasto-row');
+            filas.forEach(function (tr) {
+                var p = parseFloat(tr.querySelector('.in-precio')?.value) || 0;
+                total += p;
+                var c = tr.querySelector('.chk-listo');
+                if (c && c.checked) listos++;
+            });
+            // El total de la salida incluye gastos + proveedores
+            document.getElementById('outTotal').textContent = money(total + totalProveedores());
+            document.getElementById('outListos').textContent = listos + " / " + filas.length;
+        }
+        function agregarGasto() {
+            var tr = document.createElement('tr');
+            tr.className = 'gasto-row';
+            tr.innerHTML =
+                '<td data-label="Listo"><span class="cliente-sub">guardá primero</span></td>' +
+                '<td data-label="Ítem"><input type="hidden" name="Ids" value="0" /><input name="Nombres" placeholder="Ej: Peaje" /></td>' +
+                '<td class="num" data-label="Lo que se pagó"><input name="Precios" type="number" step="0.01" min="0" value="" class="in-precio" /></td>' +
+                '<td data-label="Comprobante"><span class="cliente-sub">guardá primero</span></td>' +
+                '<td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>';
+            document.getElementById('gastosBody').appendChild(tr);
+            tr.querySelector('input[name=Nombres]').focus();
+            tr.querySelector('.in-precio').addEventListener('input', recalcular);
+        }
+        function quitarGasto(btn) { btn.closest('tr').remove(); recalcular(); }
+
+        // Proveedores: "lo que falta" (total - seña - saldo) por bloque
+        function recalcularProv() {
+            document.querySelectorAll('.prov-row').forEach(function (tr) {
+                var total = parseFloat(tr.querySelector('.prov-total')?.value) || 0;
+                var sena = parseFloat(tr.querySelector('.prov-sena')?.value) || 0;
+                var saldo = parseFloat(tr.querySelector('.prov-saldo')?.value) || 0;
+                var falta = Math.max(0, total - sena - saldo);
+                var cel = tr.querySelector('.prov-pend');
+                if (!cel) return;
+                if (total <= 0) { cel.textContent = '—'; cel.style.color = 'var(--muted)'; }
+                else if (falta <= 0.01) { cel.textContent = 'Pagado ✔'; cel.style.color = 'var(--ok)'; }
+                else { cel.textContent = money(falta); cel.style.color = 'var(--warn)'; }
+            });
+            recalcular();  // el total de la salida cambia si cambia un total de proveedor
+        }
+        document.addEventListener('input', function (e) {
+            if (e.target.classList.contains('in-precio') || e.target.classList.contains('chk-listo')) recalcular();
+            if (e.target.classList.contains('prov-total') || e.target.classList.contains('prov-sena') || e.target.classList.contains('prov-saldo')) recalcularProv();
+        });
+        recalcularProv();
+
+        // Agregar / quitar filas de hospedaje o restaurante (por pasajero)
+        function agregarProv(tipo) {
+            var group = document.querySelector('.prov-group[data-tipo="' + tipo + '"]');
+            var base = group.querySelector('.prov-row');
+            var clone = base.cloneNode(true);
+            clone.querySelector('input[name=ProvIds]').value = '0';
+            var sel = clone.querySelector('select[name=ProvProveedorIds]'); if (sel) sel.value = '0';
+            clone.querySelectorAll('.prov-total,.prov-sena,.prov-saldo').forEach(function (i) { i.value = ''; });
+            var pq = clone.querySelector('.prov-para'); if (pq) pq.value = '';
+            // reemplazar los campos de comprobante por "guardá primero"
+            clone.querySelectorAll('.prov-grid .field').forEach(function (f) {
+                var lbl = (f.querySelector('label') || {}).textContent || '';
+                if (/Comprobante/.test(lbl)) {
+                    var fi = f.querySelector('input[type=file]'); if (fi) fi.remove();
+                    var ver = f.querySelector('a'); if (ver) ver.remove();
+                    if (!f.querySelector('.hint')) {
+                        var s = document.createElement('span'); s.className = 'hint'; s.textContent = 'guardá primero'; f.appendChild(s);
+                    }
+                }
+            });
+            var pend = clone.querySelector('.prov-pend'); if (pend) pend.textContent = '';
+            group.appendChild(clone);
+            recalcularProv();
+        }
+        function quitarProv(btn) { btn.closest('.prov-row').remove(); recalcularProv(); }
+
+        // Al elegir un proveedor, el Total se completa solo con "lo que cobra" y queda bloqueado
+        document.addEventListener('change', function (e) {
+            if (!e.target.classList.contains('prov-select')) return;
+            var opt = e.target.options[e.target.selectedIndex];
+            var precio = parseFloat(opt.getAttribute('data-precio')) || 0;
+            var tot = e.target.closest('.prov-row').querySelector('.prov-total');
+            if (precio > 0) { tot.value = precio; tot.readOnly = true; }
+            recalcularProv();
+        });
+        // Botón "a mano": desbloquea el total para cambiarlo
+        function editarTotal(btn) {
+            var tot = btn.closest('.field').querySelector('.prov-total');
+            tot.readOnly = false;
+            tot.focus();
+            tot.select();
+        }
+    </script>
+}

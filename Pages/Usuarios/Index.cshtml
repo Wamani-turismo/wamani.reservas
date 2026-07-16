@@ -1,0 +1,43 @@
+@page
+@model Wamani.Reservas.Pages.Usuarios.IndexModel
+@{
+    ViewData["Title"] = "Usuarios";
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Usuarios</h1>
+        <p class="subtitle" style="margin:0">Quiénes pueden entrar al sistema (los socios).</p>
+    </div>
+    <a class="btn-nueva" asp-page="/Usuarios/Cargar">+ Nuevo usuario</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Aviso))
+{
+    <div class="aviso-ok">@Model.Aviso</div>
+}
+
+<div class="table-wrap">
+    <table class="tabla">
+        <thead><tr><th>Nombre</th><th>Usuario (para entrar)</th><th>Estado</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var u in Model.Lista)
+        {
+            <tr>
+                <td data-label="Nombre"><strong>@u.Nombre</strong></td>
+                <td data-label="Usuario">@u.NombreUsuario</td>
+                <td data-label="Estado">@(u.Activo ? "Activo" : "Inactivo")</td>
+                <td class="acciones" data-label="">
+                    <div class="acciones-fila">
+                        <a class="btn-mini btn-mini-ghost" asp-page="/Usuarios/Cargar" asp-route-id="@u.Id">✏️ Editar</a>
+                        <form method="post" asp-page-handler="Eliminar" asp-route-id="@u.Id" style="display:inline"
+                              onsubmit="return confirm('¿Eliminar al usuario @u.Nombre?');">
+                            <button type="submit" class="btn-mini btn-mini-danger">🗑</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

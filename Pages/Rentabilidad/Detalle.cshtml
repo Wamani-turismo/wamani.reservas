@@ -1,0 +1,136 @@
+@page
+@model Wamani.Reservas.Pages.Rentabilidad.DetalleModel
+@{
+    ViewData["Title"] = "Rentabilidad · " + Model.Excursion.Nombre;
+    string Num(decimal m) => m.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+    var e = Model.Excursion;
+}
+
+<div class="toolbar">
+    <div>
+        <h1>@e.Nombre</h1>
+        <p class="subtitle" style="margin:0">Precio: $ @e.PrecioPorPersona.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("es-AR")) por persona · @e.CantidadGuias guía(s) · 1 auto cada @Model.PersonasPorAuto</p>
+    </div>
+    <div class="salida-pills">
+        <a class="btn btn-ghost" asp-page="/Rentabilidad/Index">← Volver</a>
+        <a class="btn-nueva" asp-page="/Excursiones/Cargar" asp-route-id="@e.Id">✏️ Editar costos</a>
+    </div>
+</div>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="card">
+        <p>Esta excursión todavía no tiene costos cargados. <a asp-page="/Excursiones/Cargar" asp-route-id="@e.Id">Cargalos acá</a> para ver la rentabilidad.</p>
+    </div>
+}
+else
+{
+    <!-- Calculadora interactiva -->
+    <div class="card">
+        <div class="calc-top">
+            <div class="calc-pax">
+                <span class="calc-lbl">Pasajeros</span>
+                <div class="stepper">
+                    <button type="button" onclick="cambiarPax(-1)">−</button>
+                    <span id="paxVal">@e.MinimoPersonas</span>
+                    <button type="button" onclick="cambiarPax(1)">+</button>
+                </div>
+            </div>
+            <div class="calc-info">
+                <div>🚐 <strong id="outAutos">1</strong> auto(s)</div>
+                <div>🧑‍🏫 <strong id="outGuias">@e.CantidadGuias</strong> guía(s)</div>
+            </div>
+        </div>
+
+        <div class="fin-cards" style="margin-top:18px">
+            <div class="fin-card"><div class="fin-label">Ingreso</div><div class="fin-val" id="outIngreso">$ 0</div></div>
+            <div class="fin-card"><div class="fin-label">Costo</div><div class="fin-val" style="color:var(--warn)" id="outCosto">$ 0</div></div>
+            <div class="fin-card fin-card-net"><div class="fin-label">Ganancia</div><div class="fin-val" style="color:var(--accent)" id="outGanancia">$ 0</div></div>
+            <div class="fin-card"><div class="fin-label">Margen</div><div class="fin-val" id="outMargen">0%</div></div>
+        </div>
+    </div>
+
+    <!-- Gráfico de ganancia por cantidad de pasajeros -->
+    <div class="card">
+        <h2>Ganancia por cantidad de pasajeros</h2>
+        <div id="grafico" class="graf"></div>
+        <p class="hint" style="margin-top:10px">La barra más alta es el punto óptimo. Cuando entra un auto nuevo, la ganancia baja (y después vuelve a subir).</p>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        var COSTOS = [
+            @foreach (var g in Model.Items)
+            {
+                <text>{ nombre: "@g.Nombre.Replace("\"", "")", monto: @Num(g.Precio), tipo: "@g.TipoCalculo" },</text>
+            }
+        ];
+        var PRECIO = @Num(e.PrecioPorPersona);
+        var GUIAS = @e.CantidadGuias;
+        var PXAUTO = @Model.PersonasPorAuto;
+        var MIN = @e.MinimoPersonas, MAX = @e.MaximoPersonas;
+        var pax = MIN;
+
+        function money(n){ return "$ " + Math.round(n).toLocaleString("es-AR"); }
+        function autos(p){ return p <= 0 ? 0 : Math.ceil(p / PXAUTO); }
+        function costo(p){
+            var a = autos(p), t = 0;
+            COSTOS.forEach(function(c){
+                if (c.tipo === "Por auto") t += c.monto * a;
+                else if (c.tipo === "Por guía") t += c.monto * GUIAS;
+                else if (c.tipo === "Fijo") t += c.monto;
+                else t += c.monto * p; // Por persona
+            });
+            return t;
+        }
+        function ganancia(p){ return PRECIO * p - costo(p); }
+
+        function pintar(){
+            var ing = PRECIO * pax, cos = costo(pax), gan = ing - cos;
+            var mar = cos > 0 ? Math.round(gan / cos * 100) : 0;
+            document.getElementById("paxVal").textContent = pax;
+            document.getElementById("outAutos").textContent = autos(pax);
+            document.getElementById("outGuias").textContent = GUIAS;
+            document.getElementById("outIngreso").textContent = money(ing);
+            document.getElementById("outCosto").textContent = money(cos);
+            document.getElementById("outGanancia").textContent = money(gan);
+            document.getElementById("outMargen").textContent = mar + "%";
+            marcarBarra();
+        }
+        function cambiarPax(d){
+            pax = Math.min(MAX, Math.max(MIN, pax + d));
+            pintar();
+        }
+
+        // Gráfico de barras (ganancia por pax)
+        var maxGan = 0;
+        for (var p = MIN; p <= MAX; p++) maxGan = Math.max(maxGan, ganancia(p));
+        var optimo = MIN, mejor = -Infinity;
+        for (var p = MIN; p <= MAX; p++){ var g = ganancia(p); if (g > mejor){ mejor = g; optimo = p; } }
+
+        var graf = document.getElementById("grafico");
+        if (graf){
+            for (var p = MIN; p <= MAX; p++){
+                var g = ganancia(p);
+                var h = maxGan > 0 ? Math.max(2, g / maxGan * 100) : 2;
+                var row = document.createElement("div");
+                row.className = "graf-row" + (p === optimo ? " optimo" : "");
+                row.setAttribute("data-pax", p);
+                row.onclick = (function(pp){ return function(){ pax = pp; pintar(); }; })(p);
+                row.innerHTML =
+                    '<span class="graf-pax">' + p + ' pax</span>' +
+                    '<span class="graf-bar"><span style="width:' + h + '%"></span></span>' +
+                    '<span class="graf-val">' + money(g) + (p === optimo ? ' ⭐' : '') + '</span>';
+                graf.appendChild(row);
+            }
+        }
+        function marcarBarra(){
+            document.querySelectorAll(".graf-row").forEach(function(r){
+                r.classList.toggle("activo", parseInt(r.getAttribute("data-pax")) === pax);
+            });
+        }
+
+        pintar();
+    </script>
+}

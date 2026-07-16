@@ -1,0 +1,144 @@
+@{
+    var pg = (ViewContext.RouteData.Values["page"]?.ToString() ?? "").ToLower();
+    string Activo(params string[] bases) =>
+        bases.Any(b => pg == b || pg.StartsWith(b + "/")) ? "active" : "";
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · Wamani Reservas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script>
+        // Aplicar el estado guardado del menú (colapsado o no) antes de pintar, sin parpadeo
+        try { if (localStorage.getItem('sbColapsado') === '1') document.documentElement.classList.add('sb-collapsed'); } catch (e) { }
+    </script>
+</head>
+<body>
+    <div class="app-shell">
+        <!-- ── Menú lateral ─────────────────────────────── -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sb-top">
+                <a class="sb-brand" asp-page="/Index">
+                    <span class="brand-mark">▲</span>
+                    <span class="brand-text">Wamani <small>Reservas · Jujuy</small></span>
+                </a>
+                <button class="sb-toggle" type="button" onclick="toggleColapsar()" title="Achicar / agrandar menú" aria-label="Achicar o agrandar el menú"></button>
+            </div>
+
+            <nav class="sb-nav">
+                <div class="sb-section">Principal</div>
+                <a class="sb-item @Activo("/index")" asp-page="/Index" title="Inicio">
+                    <span class="sb-ico">🏠</span> <span>Inicio</span>
+                </a>
+                <a class="sb-item @Activo("/reservas")" asp-page="/Reservas/Index" title="Reservas">
+                    <span class="sb-ico">📋</span> <span>Reservas</span>
+                </a>
+                <a class="sb-item @Activo("/salidas")" asp-page="/Salidas" title="Salidas">
+                    <span class="sb-ico">📅</span> <span>Salidas</span>
+                </a>
+                <a class="sb-item @Activo("/operativo")" asp-page="/Operativo/Index" title="Operativo">
+                    <span class="sb-ico">🎒</span> <span>Operativo</span>
+                </a>
+                <a class="sb-item @Activo("/excursiones")" asp-page="/Excursiones/Index" title="Excursiones">
+                    <span class="sb-ico">🧭</span> <span>Excursiones</span>
+                </a>
+                <a class="sb-item @Activo("/proveedores")" asp-page="/Proveedores/Index" title="Proveedores">
+                    <span class="sb-ico">🤝</span> <span>Proveedores</span>
+                </a>
+                <a class="sb-item @Activo("/financiera")" asp-page="/Financiera/Index" title="Financiera">
+                    <span class="sb-ico">💰</span> <span>Financiera</span>
+                </a>
+                <a class="sb-item @Activo("/rentabilidad")" asp-page="/Rentabilidad/Index" title="Rentabilidad">
+                    <span class="sb-ico">📈</span> <span>Rentabilidad</span>
+                </a>
+                <a class="sb-item @Activo("/usuarios")" asp-page="/Usuarios/Index" title="Usuarios">
+                    <span class="sb-ico">👤</span> <span>Usuarios</span>
+                </a>
+            </nav>
+
+            <div class="sb-foot">
+                <a class="btn-nueva sb-nueva" asp-page="/Reservas/Cargar" title="Nueva reserva">
+                    <span class="nueva-full">+ Nueva reserva</span><span class="nueva-mini">+</span>
+                </a>
+            </div>
+        </aside>
+
+        <div class="sb-overlay" id="sbOverlay" onclick="toggleSidebar()"></div>
+
+        <!-- ── Área principal ───────────────────────────── -->
+        <div class="main-area">
+            <header class="topbar2">
+                <button class="hamb" type="button" onclick="toggleSidebar()" aria-label="Abrir menú">☰</button>
+                <a class="topbar-brand-mobile" asp-page="/Index">Wamani</a>
+                <div class="topbar-right">
+                    @await Component.InvokeAsync("Recordatorios")
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <div class="user-box">
+                            <span class="user-nombre">@User.Identity.Name</span>
+                            <form method="post" asp-page="/Logout" style="display:inline">
+                                <button type="submit" class="btn-mini btn-mini-ghost" title="Cerrar sesión">Salir</button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            </header>
+
+            <main class="container">
+                @RenderBody()
+            </main>
+
+            <footer class="footer">
+                <div class="container">Wamani · Sistema de reservas de excursiones</div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        // Menú lateral (abrir/cerrar en celular)
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('abierto');
+            document.getElementById('sbOverlay').classList.toggle('abierto');
+        }
+
+        // Achicar / agrandar el menú (vista solo íconos) y recordar la elección
+        function toggleColapsar() {
+            var colapsado = document.documentElement.classList.toggle('sb-collapsed');
+            try { localStorage.setItem('sbColapsado', colapsado ? '1' : '0'); } catch (e) { }
+        }
+
+        // Panel de recordatorios de cobro (la campanita)
+        function toggleRecordatorios(e) {
+            if (e) e.stopPropagation();
+            var p = document.getElementById('recPanel');
+            if (p) p.classList.toggle('abierto');
+        }
+        document.addEventListener('click', function (e) {
+            var panel = document.getElementById('recPanel');
+            var cont = e.target.closest('.recordatorios');
+            var enModal = e.target.closest('.rec-modal');
+            if (panel && !cont && !enModal) panel.classList.remove('abierto');
+        });
+        function abrirRecModal(id) {
+            var m = document.getElementById('recModal-' + id);
+            if (m) m.style.display = 'flex';
+            var p = document.getElementById('recPanel');
+            if (p) p.classList.remove('abierto');
+        }
+        function cerrarRecModal(id) {
+            var m = document.getElementById('recModal-' + id);
+            if (m) m.style.display = 'none';
+        }
+        function cerrarRecModalFondo(e, id) {
+            if (e.target === e.currentTarget) cerrarRecModal(id);
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,145 @@
+@page
+@model Wamani.Reservas.Pages.Financiera.IndexModel
+@{
+    ViewData["Title"] = "Financiera";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+    var mesPrev = Model.MesActual.AddMonths(-1).ToString("yyyy-MM");
+    var mesNext = Model.MesActual.AddMonths(1).ToString("yyyy-MM");
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Financiera</h1>
+        <p class="subtitle" style="margin:0">
+            Plata que <strong>entró y salió este mes</strong> (por fecha de pago, no por cuándo sale la excursión).
+            Reparto en partes iguales entre los 3 dueños.
+        </p>
+    </div>
+    <a class="btn btn-primary" asp-page="/Financiera/Anual" asp-route-anio="@Model.MesActual.Year">📊 Rendimiento anual</a>
+</div>
+
+<div class="mes-nav">
+    <a class="btn-mini btn-mini-ghost" asp-page="/Financiera/Index" asp-route-mes="@mesPrev">← Mes anterior</a>
+    <span class="mes-titulo">@Model.MesTexto</span>
+    <a class="btn-mini btn-mini-ghost" asp-page="/Financiera/Index" asp-route-mes="@mesNext">Mes siguiente →</a>
+    <form method="get" style="margin-left:auto">
+        <input class="search" type="month" name="Mes" value="@Model.MesActual.ToString("yyyy-MM")" onchange="this.form.submit()" style="min-width:0" />
+    </form>
+</div>
+
+<!-- Resumen -->
+<div class="fin-cards">
+    <div class="fin-card">
+        <div class="fin-label">Ingresos (cobrado este mes)</div>
+        <div class="fin-val">@Money(Model.Ingreso)</div>
+    </div>
+    <div class="fin-card">
+        <div class="fin-label">Egresos (pagado este mes)</div>
+        <div class="fin-val" style="color:var(--warn)">@Money(Model.Gastos)</div>
+    </div>
+    <div class="fin-card fin-card-net">
+        <div class="fin-label">Ganancia neta</div>
+        <div class="fin-val" style="color:var(--accent)">@Money(Model.Neta)</div>
+    </div>
+    <div class="fin-card">
+        <div class="fin-label">Salidas del mes</div>
+        <div class="fin-val">@Model.TotalReservas <span style="font-size:1rem;color:var(--muted)">res</span> · @Model.TotalPersonas <span style="font-size:1rem;color:var(--muted)">pers</span></div>
+    </div>
+</div>
+
+<!-- Dueños -->
+<div class="card">
+    <h2>Ganancia por dueño</h2>
+    <div class="duenos-grid">
+        @foreach (var d in Wamani.Reservas.Pages.Financiera.IndexModel.Duenos)
+        {
+            <div class="dueno">
+                <div class="dueno-nombre">@d</div>
+                <div class="dueno-monto">@Money(Model.PorDueno)</div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Por excursión -->
+<div class="table-wrap" style="margin-top:18px">
+    <table class="tabla">
+        <thead>
+            <tr>
+                <th>Excursión / Travesía</th>
+                <th>Salidas</th>
+                <th>Personas</th>
+                <th class="num">Ingresos</th>
+                <th class="num">Egresos</th>
+                <th class="num">Ganancia neta</th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (Model.Lineas.Count == 0)
+        {
+            <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">No hay reservas este mes.</td></tr>
+        }
+        @foreach (var l in Model.Lineas)
+        {
+            <tr>
+                <td data-label="Excursión"><strong>@l.Excursion</strong></td>
+                <td data-label="Reservas">@l.Reservas</td>
+                <td data-label="Personas">@l.Personas</td>
+                <td class="num" data-label="Ingreso">@Money(l.Ingreso)</td>
+                <td class="num" data-label="Gastos" style="color:var(--warn)">@Money(l.Gastos)</td>
+                <td class="num" data-label="Ganancia neta"><strong style="color:var(--accent)">@Money(l.Neta)</strong></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<!-- Gastos por tipo (con detalle) -->
+@if (Model.GastosPorTipo.Count > 0)
+{
+    <div class="card" style="margin-top:18px">
+        <h2>Egresos por tipo <span class="hint" style="font-weight:400">(lo pagado este mes — tocá uno para ver el detalle por excursión)</span></h2>
+        <div class="gasto-tipos">
+            @for (int i = 0; i < Model.GastosPorTipo.Count; i++)
+            {
+                var g = Model.GastosPorTipo[i];
+                <button type="button" class="gasto-chip" onclick="abrirGasto(@i)">
+                    <span class="gasto-chip-nom">@g.Nombre</span>
+                    <span class="gasto-chip-val">@Money(g.Total)</span>
+                </button>
+            }
+        </div>
+    </div>
+
+    @for (int i = 0; i < Model.GastosPorTipo.Count; i++)
+    {
+        var g = Model.GastosPorTipo[i];
+        <div class="modal-overlay gasto-modal" id="gastoModal-@i" onclick="cerrarGastoFondo(event, @i)">
+            <div class="modal-box" style="max-width:440px">
+                <h2>@g.Nombre · @Model.MesTexto</h2>
+                <p style="margin:0 0 10px">Total gastado: <strong>@Money(g.Total)</strong></p>
+                <table class="tabla">
+                    <thead><tr><th>Excursión</th><th class="num">Monto</th></tr></thead>
+                    <tbody>
+                    @foreach (var d in g.Detalle)
+                    {
+                        <tr><td>@d.Excursion</td><td class="num">@Money(d.Monto)</td></tr>
+                    }
+                    </tbody>
+                </table>
+                <div class="acciones-form" style="margin-top:16px">
+                    <button type="button" class="btn btn-ghost" onclick="cerrarGasto(@i)">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+    <script>
+        function abrirGasto(i) { var m = document.getElementById('gastoModal-' + i); if (m) m.style.display = 'flex'; }
+        function cerrarGasto(i) { var m = document.getElementById('gastoModal-' + i); if (m) m.style.display = 'none'; }
+        function cerrarGastoFondo(e, i) { if (e.target === e.currentTarget) cerrarGasto(i); }
+    </script>
+}

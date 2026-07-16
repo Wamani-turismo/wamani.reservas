@@ -1,0 +1,45 @@
+@page
+@model Wamani.Reservas.Pages.Usuarios.CargarModel
+@{
+    ViewData["Title"] = Model.EsNuevo ? "Nuevo usuario" : "Editar usuario";
+}
+
+<h1>@(Model.EsNuevo ? "Nuevo usuario" : "Editar usuario")</h1>
+<p class="subtitle">Un usuario por socio, con su propia contraseña.</p>
+
+@if (!string.IsNullOrEmpty(Model.Error))
+{
+    <div class="aviso-warn">@Model.Error</div>
+}
+
+<form method="post">
+    <input type="hidden" asp-for="Usuario.Id" />
+    <div class="card">
+        <div class="form-grid">
+            <div class="field">
+                <label asp-for="Usuario.Nombre"></label>
+                <input asp-for="Usuario.Nombre" placeholder="Ej: Lautaro" />
+            </div>
+            <div class="field">
+                <label asp-for="Usuario.NombreUsuario"></label>
+                <input asp-for="Usuario.NombreUsuario" placeholder="Ej: lautaro" autocomplete="off" />
+                <div class="hint">Sin espacios. Con esto inicia sesión.</div>
+            </div>
+            <div class="field">
+                <label>Contraseña@(Model.EsNuevo ? "" : " (dejar vacío para no cambiarla)")</label>
+                <input asp-for="Password" type="password" autocomplete="new-password" />
+            </div>
+            <div class="field full">
+                <label class="check-linea">
+                    <input asp-for="Usuario.Activo" type="checkbox" style="width:auto" />
+                    Activo (puede entrar)
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="acciones-form">
+        <button type="submit" class="btn btn-primary">💾 Guardar usuario</button>
+        <a class="btn btn-ghost" asp-page="/Usuarios/Index">Cancelar</a>
+    </div>
+</form>

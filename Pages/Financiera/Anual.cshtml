@@ -1,0 +1,116 @@
+@page
+@model Wamani.Reservas.Pages.Financiera.AnualModel
+@{
+    ViewData["Title"] = "Rendimiento anual";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+    string Cap(string s) => string.IsNullOrEmpty(s) ? s : char.ToUpper(s[0]) + s.Substring(1);
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Rendimiento anual @Model.Anio</h1>
+        <p class="subtitle" style="margin:0">Todo el año de un vistazo, para tomar decisiones.</p>
+    </div>
+    <a class="btn btn-ghost" asp-page="/Financiera/Index">← Volver al mes</a>
+</div>
+
+<div class="mes-nav">
+    <a class="btn-mini btn-mini-ghost" asp-page="/Financiera/Anual" asp-route-anio="@(Model.Anio - 1)">← @(Model.Anio - 1)</a>
+    <span class="mes-titulo">Año @Model.Anio</span>
+    <a class="btn-mini btn-mini-ghost" asp-page="/Financiera/Anual" asp-route-anio="@(Model.Anio + 1)">@(Model.Anio + 1) →</a>
+</div>
+
+<!-- Resumen anual -->
+<div class="fin-cards">
+    <div class="fin-card"><div class="fin-label">Ingresos (cobrado en el año)</div><div class="fin-val">@Money(Model.Ingreso)</div></div>
+    <div class="fin-card"><div class="fin-label">Egresos (pagado en el año)</div><div class="fin-val" style="color:var(--warn)">@Money(Model.Gastos)</div></div>
+    <div class="fin-card fin-card-net"><div class="fin-label">Ganancia neta</div><div class="fin-val" style="color:var(--accent)">@Money(Model.Neta)</div></div>
+    <div class="fin-card"><div class="fin-label">Salidas del año</div><div class="fin-val">@Model.TotalReservas · @Model.TotalPersonas</div></div>
+</div>
+
+@if (Model.HayAnioPrevio)
+{
+    <div class="card" style="margin-top:18px">
+        <h2>Comparativa con @(Model.Anio - 1)</h2>
+        <div class="duenos-grid">
+            <div class="dueno">
+                <div class="dueno-nombre">Ingreso</div>
+                <div class="dueno-monto" style="font-size:1.2rem">@Money(Model.Ingreso) <span class="var @(Model.VarIngresoPct >= 0 ? "up" : "down")">@(Model.VarIngresoPct >= 0 ? "▲" : "▼") @Math.Abs(Model.VarIngresoPct)%</span></div>
+                <div class="hint">Antes: @Money(Model.IngresoPrev)</div>
+            </div>
+            <div class="dueno">
+                <div class="dueno-nombre">Ganancia neta</div>
+                <div class="dueno-monto" style="font-size:1.2rem">@Money(Model.Neta) <span class="var @(Model.VarNetaPct >= 0 ? "up" : "down")">@(Model.VarNetaPct >= 0 ? "▲" : "▼") @Math.Abs(Model.VarNetaPct)%</span></div>
+                <div class="hint">Antes: @Money(Model.NetaPrev)</div>
+            </div>
+            <div class="dueno">
+                <div class="dueno-nombre">Reservas</div>
+                <div class="dueno-monto" style="font-size:1.2rem">@Model.TotalReservas</div>
+                <div class="hint">Antes: @Model.ReservasPrev</div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Ganancia por dueño -->
+<div class="card" style="margin-top:18px">
+    <h2>Ganancia por dueño (año @Model.Anio)</h2>
+    <div class="duenos-grid">
+        @foreach (var d in Wamani.Reservas.Pages.Financiera.IndexModel.Duenos)
+        {
+            <div class="dueno"><div class="dueno-nombre">@d</div><div class="dueno-monto">@Money(Model.PorDueno)</div></div>
+        }
+    </div>
+</div>
+
+<!-- Por mes -->
+<div class="table-wrap" style="margin-top:18px">
+    <table class="tabla">
+        <thead>
+            <tr><th>Mes</th><th>Salidas</th><th>Personas</th><th class="num">Ingresos</th><th class="num">Egresos</th><th class="num">Ganancia neta</th></tr>
+        </thead>
+        <tbody>
+        @foreach (var m in Model.Meses)
+        {
+            <tr>
+                <td data-label="Mes"><strong>@Cap(m.Nombre)</strong></td>
+                <td data-label="Reservas">@m.Reservas</td>
+                <td data-label="Personas">@m.Personas</td>
+                <td class="num" data-label="Ingreso">@Money(m.Ingreso)</td>
+                <td class="num" data-label="Gastos" style="color:var(--warn)">@Money(m.Gastos)</td>
+                <td class="num" data-label="Ganancia neta"><strong style="color:var(--accent)">@Money(m.Neta)</strong></td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<!-- Ranking de excursiones -->
+<div class="card" style="margin-top:18px">
+    <h2>Excursiones más vendidas → menos vendidas</h2>
+    <div class="table-wrap" style="border:none;box-shadow:none">
+        <table class="tabla">
+            <thead><tr><th>#</th><th>Excursión / Travesía</th><th>Salidas</th><th>Personas</th><th class="num">Ingresos</th><th class="num">Ganancia neta</th></tr></thead>
+            <tbody>
+            @if (Model.Ranking.Count == 0)
+            {
+                <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">Sin datos este año.</td></tr>
+            }
+            @{ int pos = 1; }
+            @foreach (var l in Model.Ranking)
+            {
+                <tr>
+                    <td data-label="#">@pos</td>
+                    <td data-label="Excursión"><strong>@l.Excursion</strong></td>
+                    <td data-label="Reservas">@l.Reservas</td>
+                    <td data-label="Personas">@l.Personas</td>
+                    <td class="num" data-label="Ingreso">@Money(l.Ingreso)</td>
+                    <td class="num" data-label="Ganancia neta">@Money(l.Neta)</td>
+                </tr>
+                pos++;
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

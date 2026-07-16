@@ -1,0 +1,17 @@
+# Archivos que NO se suben a GitHub
+
+# Compilados (se generan solos)
+bin/
+obj/
+
+# Base de datos local (tus datos de la compu; en internet se usa Postgres)
+wamani.db
+wamani.db-shm
+wamani.db-wal
+
+# Comprobantes subidos en tu compu (en internet se usa el disco de Render)
+wwwroot/comprobantes/
+
+# Basura del sistema
+.DS_Store
+.vs/

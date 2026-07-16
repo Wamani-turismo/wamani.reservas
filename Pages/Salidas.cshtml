@@ -1,0 +1,70 @@
+@page
+@model Wamani.Reservas.Pages.SalidasModel
+@{
+    ViewData["Title"] = "Salidas por fecha";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+}
+
+<h1>Salidas por fecha</h1>
+<p class="subtitle">Elegí un día y mirá cuántos pasajeros hay por excursión, para saber si la salida llega al mínimo.</p>
+
+<div class="toolbar">
+    <a href="/">← Volver a reservas</a>
+    <form method="get" class="filtros">
+        <input class="search" type="date" name="Fecha" value="@Model.Fecha.ToString("yyyy-MM-dd")" />
+        <button type="submit" class="btn btn-ghost">Ver ese día</button>
+    </form>
+</div>
+
+@if (Model.Grupos.Count == 0)
+{
+    <div class="table-wrap">
+        <div class="empty">
+            <div class="big">📅</div>
+            <p>No hay reservas para el @Model.Fecha.ToString("dd/MM/yyyy").</p>
+        </div>
+    </div>
+}
+else
+{
+    @foreach (var g in Model.Grupos)
+    {
+        <div class="card">
+            <div class="salida-head">
+                <div>
+                    <h2 style="border:none;margin:0;padding:0">@g.Excursion</h2>
+                    <div class="cliente-sub">Mínimo para salir: @g.MinimoPersonas pasajeros</div>
+                </div>
+                <div class="salida-estado">
+                    <div class="salida-num">@g.TotalPasajeros <span>pas.</span></div>
+                    @if (g.Sale)
+                    {
+                        <span class="pill pill-ok">✔ Sale</span>
+                    }
+                    else
+                    {
+                        <span class="pill pill-warn">Faltan @g.Faltan</span>
+                    }
+                </div>
+            </div>
+
+            <table class="tabla" style="margin-top:14px">
+                <thead>
+                    <tr><th>Pasajero</th><th>Personas</th><th>Teléfono</th><th>Estado</th><th></th></tr>
+                </thead>
+                <tbody>
+                @foreach (var r in g.Reservas)
+                {
+                    <tr>
+                        <td data-label="Pasajero">@r.NombreCliente</td>
+                        <td data-label="Personas">@r.CantidadPersonas</td>
+                        <td data-label="Teléfono">@r.Telefono</td>
+                        <td data-label="Estado"><span class="pill @(r.EstadoActual() == "Pagado" ? "pill-ok" : r.EstadoActual() == "Señado" ? "pill-info" : "pill-muted")">@r.EstadoActual()</span></td>
+                        <td class="acciones" data-label=""><a asp-page="/Reservas/Cargar" asp-route-id="@r.Id">Ver</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+}

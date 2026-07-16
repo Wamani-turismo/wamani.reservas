@@ -1,0 +1,70 @@
+@page
+@model Wamani.Reservas.Pages.Excursiones.IndexModel
+@{
+    ViewData["Title"] = "Excursiones";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+}
+
+<h1>Excursiones y precios</h1>
+<p class="subtitle">Acá administrás las excursiones, sus precios por persona y el mínimo de pasajeros.</p>
+
+@if (!string.IsNullOrEmpty(Model.Aviso))
+{
+    <div class="aviso-ok">@Model.Aviso</div>
+}
+
+<div class="toolbar">
+    <a href="/">← Volver a reservas</a>
+    <a class="btn-nueva" asp-page="/Excursiones/Cargar">+ Nueva excursión</a>
+</div>
+
+@if (Model.Excursiones.Count == 0)
+{
+    <div class="table-wrap">
+        <div class="empty">
+            <div class="big">🧭</div>
+            <p>Todavía no hay excursiones cargadas.</p>
+            <a class="btn btn-primary" asp-page="/Excursiones/Cargar">Cargar la primera</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Excursión / Travesía</th>
+                    <th class="num">Precio por persona</th>
+                    <th class="num">Mínimo</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var e in Model.Excursiones)
+            {
+                <tr>
+                    <td data-label="Excursión"><strong>@e.Nombre</strong></td>
+                    <td class="num" data-label="Precio por persona">@Money(e.PrecioPorPersona)</td>
+                    <td class="num" data-label="Mínimo">@e.MinimoPersonas</td>
+                    <td data-label="Estado">
+                        @if (e.Activa)
+                        {
+                            <span class="pill pill-ok">Activa</span>
+                        }
+                        else
+                        {
+                            <span class="pill pill-muted">Oculta</span>
+                        }
+                    </td>
+                    <td class="acciones" data-label="">
+                        <a asp-page="/Excursiones/Cargar" asp-route-id="@e.Id">Editar</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

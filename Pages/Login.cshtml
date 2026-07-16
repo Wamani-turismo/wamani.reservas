@@ -1,0 +1,46 @@
+@page
+@model Wamani.Reservas.Pages.LoginModel
+@{
+    ViewData["Title"] = "Entrar";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Entrar · Wamani</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body style="background:var(--verde-oscuro)">
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
+        <div class="card" style="max-width:380px;width:100%">
+            <div style="text-align:center;margin-bottom:18px">
+                <span class="brand-mark" style="width:44px;height:44px;font-size:1.1rem;margin:0 auto">▲</span>
+                <h1 style="margin:12px 0 2px">Wamani</h1>
+                <p class="subtitle" style="margin:0">Reservas · Jujuy</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Error))
+            {
+                <div class="aviso-warn">@Model.Error</div>
+            }
+
+            <form method="post">
+                <div class="field" style="margin-bottom:14px">
+                    <label>Usuario</label>
+                    <input name="NombreUsuario" value="@Model.NombreUsuario" autofocus autocomplete="username" />
+                </div>
+                <div class="field" style="margin-bottom:18px">
+                    <label>Contraseña</label>
+                    <input name="Password" type="password" autocomplete="current-password" />
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%">Entrar</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

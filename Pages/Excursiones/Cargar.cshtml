@@ -1,0 +1,159 @@
+@page
+@model Wamani.Reservas.Pages.Excursiones.CargarModel
+@{
+    ViewData["Title"] = Model.EsNueva ? "Nueva excursión" : "Editar excursión";
+    string Num(decimal m) => m.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+}
+
+<h1>@(Model.EsNueva ? "Nueva excursión" : "Editar excursión")</h1>
+<p class="subtitle">Precio en pesos argentinos ($), por persona.</p>
+
+<form method="post">
+    <input type="hidden" asp-for="Excursion.Id" />
+
+    <div class="card">
+        <div class="form-grid">
+            <div class="field full">
+                <label asp-for="Excursion.Nombre"></label>
+                <input asp-for="Excursion.Nombre" placeholder="Ej: Serranías del Hornocal" />
+                <span asp-validation-for="Excursion.Nombre" class="text-danger"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Excursion.PrecioPorPersona"></label>
+                <input asp-for="Excursion.PrecioPorPersona" type="number" step="0.01" min="0" />
+                <span asp-validation-for="Excursion.PrecioPorPersona" class="text-danger"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Excursion.MinimoPersonas"></label>
+                <input asp-for="Excursion.MinimoPersonas" type="number" min="1" />
+                <div class="hint">Mínimo para que la salida se realice.</div>
+                <span asp-validation-for="Excursion.MinimoPersonas" class="text-danger"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Excursion.MaximoPersonas"></label>
+                <input asp-for="Excursion.MaximoPersonas" type="number" min="1" />
+                <div class="hint">Máximo de pasajeros (ej: 8, o 15 en travesías).</div>
+            </div>
+            <div class="field">
+                <label asp-for="Excursion.CantidadGuias"></label>
+                <input asp-for="Excursion.CantidadGuias" type="number" min="0" />
+                <div class="hint">Cuántos guías van (lo podés cambiar).</div>
+            </div>
+            <div class="field full">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                    <input asp-for="Excursion.EsTravesia" type="checkbox" style="width:auto" />
+                    Es travesía (varios días) — el saldo se cobra 7 días antes en vez de 4
+                </label>
+            </div>
+            <div class="field full">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                    <input asp-for="Excursion.Activa" type="checkbox" style="width:auto" />
+                    Activa (aparece para cargar reservas nuevas)
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- ---------- Costos de la excursión ---------- -->
+    <div class="card">
+        <h2>Costos de la excursión</h2>
+        <p class="hint" style="margin:-8px 0 14px">
+            Cargá cada costo con su monto y <strong>cómo se cuenta</strong>: <em>por persona</em> (× pasajeros),
+            <em>por auto</em> (× cantidad de autos, 1 cada @Wamani.Reservas.Models.Excursion.PersonasPorAuto),
+            <em>por guía</em> (× guías) o <em>fijo</em> (una vez). Con esto se calcula la <strong>Rentabilidad</strong>.
+        </p>
+
+        <table class="tabla" id="tablaGastos">
+            <thead>
+                <tr>
+                    <th>Ítem / costo</th>
+                    <th class="num" style="width:150px">Monto</th>
+                    <th style="width:170px">Cómo se cuenta</th>
+                    <th style="width:60px"></th>
+                </tr>
+            </thead>
+            <tbody id="gastosBody">
+                @for (int i = 0; i < Model.Gastos.Count; i++)
+                {
+                    var gt = Model.Gastos[i].TipoCalculo;
+                    <tr class="gasto-row">
+                        <td data-label="Ítem"><input name="GastoNombres" value="@Model.Gastos[i].Nombre" placeholder="Ej: Nafta" /></td>
+                        <td class="num" data-label="Monto"><input name="GastoPrecios" type="number" step="0.01" min="0" value="@Num(Model.Gastos[i].Precio)" /></td>
+                        <td data-label="Cómo se cuenta">
+                            <select name="GastoTipos">
+                                @foreach (var t in Wamani.Reservas.Models.GastoExcursion.Tipos)
+                                {
+                                    <option value="@t" selected="@(gt == t)">@t</option>
+                                }
+                            </select>
+                        </td>
+                        <td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <button type="button" class="btn btn-ghost" style="margin-top:12px" onclick="agregarGasto()">+ Agregar costo</button>
+    </div>
+
+    <!-- ---------- Contenido para la Guía (PDF) ---------- -->
+    <div class="card">
+        <h2>Contenido para la Guía (PDF)</h2>
+        <p class="hint" style="margin:-8px 0 14px">
+            Esto se carga a mano por cada excursión y queda guardado. Después aparece en la Guía en PDF de cada salida.
+        </p>
+        <div class="form-grid">
+            <div class="field full">
+                <label asp-for="Excursion.GuiaBreve"></label>
+                <textarea asp-for="Excursion.GuiaBreve" rows="4" placeholder="Contá brevemente de qué se trata la excursión / travesía…"></textarea>
+            </div>
+            <div class="field full">
+                <label asp-for="Excursion.Recomendaciones"></label>
+                <textarea asp-for="Excursion.Recomendaciones" rows="4" placeholder="Ej: calzado cómodo, protector solar, agua, abrigo, documento…"></textarea>
+            </div>
+            <div class="field full">
+                <label asp-for="Excursion.LugaresVisitar"></label>
+                <textarea asp-for="Excursion.LugaresVisitar" rows="4" placeholder="Ej: Salinas Grandes, Purmamarca, Cuesta de Lipán…"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="acciones-form">
+        <button type="submit" class="btn btn-primary">💾 Guardar excursión</button>
+        <a class="btn btn-ghost" asp-page="/Excursiones/Index">Cancelar</a>
+
+        @if (!Model.EsNueva)
+        {
+            <button type="submit" class="btn btn-danger" style="margin-left:auto"
+                    asp-page-handler="Eliminar" asp-route-id="@Model.Excursion.Id"
+                    onclick="return confirm('¿Eliminar esta excursión? Si ya tiene reservas, se ocultará en vez de borrarse.');">
+                🗑 Eliminar
+            </button>
+        }
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function agregarGasto(nombre, precio) {
+            var tr = document.createElement('tr');
+            tr.className = 'gasto-row';
+            tr.innerHTML =
+                '<td data-label="Ítem"><input name="GastoNombres" placeholder="Ej: Nafta" value="' + (nombre || '') + '" /></td>' +
+                '<td class="num" data-label="Monto"><input name="GastoPrecios" type="number" step="0.01" min="0" value="' + (precio || '') + '" /></td>' +
+                '<td data-label="Cómo se cuenta"><select name="GastoTipos">' +
+                '<option value="Por persona">Por persona</option>' +
+                '<option value="Por auto">Por auto</option>' +
+                '<option value="Por guía">Por guía</option>' +
+                '<option value="Fijo">Fijo</option>' +
+                '</select></td>' +
+                '<td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>';
+            document.getElementById('gastosBody').appendChild(tr);
+            tr.querySelector('input').focus();
+        }
+        function quitarGasto(btn) {
+            btn.closest('tr').remove();
+        }
+    </script>
+}

@@ -18,5 +18,27 @@ namespace Wamani.Reservas.Data
         public DbSet<Pasajero> Pasajeros => Set<Pasajero>();
         public DbSet<Interesado> Interesados => Set<Interesado>();
         public DbSet<Usuario> Usuarios => Set<Usuario>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // En Postgres (internet) las fechas se guardan SIN zona horaria.
+            //
+            // Las fechas de este sistema son fechas de agenda: "la excursión sale el 20/07"
+            // es el 20/07 en Jujuy, no un momento exacto del planeta. Si no se aclara esto,
+            // Postgres las trata como "con zona horaria" y exige que se le manden en horario
+            // UTC, lo que rompe todas las consultas que filtran por fecha (Salidas, Operativo)
+            // y además podría correr una salida un día para atrás o para adelante.
+            //
+            // Solo aplica a Postgres: en SQLite (tu compu) no cambia nada.
+            if (Database.IsNpgsql())
+            {
+                foreach (var entidad in modelBuilder.Model.GetEntityTypes())
+                    foreach (var propiedad in entidad.GetProperties())
+                        if (propiedad.ClrType == typeof(DateTime) || propiedad.ClrType == typeof(DateTime?))
+                            propiedad.SetColumnType("timestamp without time zone");
+            }
+        }
     }
 }

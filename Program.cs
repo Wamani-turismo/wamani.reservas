@@ -176,6 +176,14 @@ using (var scope = app.Services.CreateScope())
         );");
     } // fin del bloque específico de SQLite
 
+    // En Postgres: corrige las tablas que se hayan creado antes con fechas "con zona
+    // horaria" (el primer deploy las creó así y rompía Salidas y Operativo).
+    // Es seguro correrlo siempre: si ya están bien, no hace nada.
+    if (db.Database.IsNpgsql())
+    {
+        ArreglarFechasPostgres(db);
+    }
+
     // Carga excursiones de EJEMPLO la primera vez (editables/borrables desde la web)
     if (!db.Excursiones.Any())
     {
@@ -254,6 +262,36 @@ static string ConvertirUrlPostgres(string url)
     var puerto = uri.Port > 0 ? uri.Port : 5432;
     return $"Host={uri.Host};Port={puerto};Database={baseDatos};Username={usuario};" +
            $"Password={clave};SSL Mode=Require;Trust Server Certificate=true";
+}
+
+// Pasa a "sin zona horaria" cualquier columna de fecha que haya quedado creada
+// "con zona horaria" en Postgres. No borra ni pierde datos: Postgres convierte los
+// valores existentes. Si no hay ninguna para arreglar, no hace nada.
+static void ArreglarFechasPostgres(AppDbContext db)
+{
+    var conn = db.Database.GetDbConnection();
+    if (conn.State != System.Data.ConnectionState.Open) conn.Open();
+
+    var aArreglar = new List<(string Tabla, string Columna)>();
+    using (var buscar = conn.CreateCommand())
+    {
+        buscar.CommandText = @"
+            SELECT table_name, column_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND data_type = 'timestamp with time zone';";
+        using var reader = buscar.ExecuteReader();
+        while (reader.Read())
+            aArreglar.Add((reader.GetString(0), reader.GetString(1)));
+    }
+
+    foreach (var (tabla, columna) in aArreglar)
+    {
+        using var alter = conn.CreateCommand();
+        alter.CommandText =
+            $@"ALTER TABLE ""{tabla}"" ALTER COLUMN ""{columna}"" TYPE timestamp without time zone;";
+        alter.ExecuteNonQuery();
+    }
 }
 
 // Agrega una columna a una tabla SQLite solo si todavía no existe (no borra datos).

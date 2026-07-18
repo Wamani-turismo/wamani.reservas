@@ -77,7 +77,8 @@ h1, h2, .card h2, .modal-box h2, .mes-titulo {
 }
 .sb-item:hover { background: rgba(255,255,255,.08); text-decoration: none; color: #fff; }
 .sb-item.active { background: rgba(255,255,255,.14); color: #fff; font-weight: 600; }
-.sb-ico { font-size: 1.05rem; width: 22px; text-align: center; }
+.sb-ico { color: var(--dorado); width: 22px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.sb-ico .ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .sb-foot { padding: 16px; }
 .sb-nueva { display: block; text-align: center; }
 
@@ -101,7 +102,8 @@ html.sb-collapsed .sb-brand { justify-content: center; padding: 20px 0 6px; }
 html.sb-collapsed .sb-toggle { padding: 6px; }
 html.sb-collapsed .sb-toggle::before { content: '›'; }
 html.sb-collapsed .sb-item { justify-content: center; padding: 12px 0; }
-html.sb-collapsed .sb-ico { width: auto; font-size: 1.2rem; }
+html.sb-collapsed .sb-ico { width: auto; }
+html.sb-collapsed .sb-ico .ic { width: 22px; height: 22px; }
 html.sb-collapsed .sb-nueva { padding: 12px 0; }
 html.sb-collapsed .nueva-mini { display: inline; }
 

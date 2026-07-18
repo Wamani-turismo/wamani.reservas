@@ -1,26 +1,28 @@
 :root {
+  /* ===== Marca Wamani ===== */
   /* Texto y neutros */
-  --ink: #2b3a34;          /* verde oscuro casi carbón (texto) */
+  --ink: #23332e;          /* verde muy oscuro (texto) */
   --ink-soft: #5d6862;
   --muted: #9aa09a;
-  --line: #eae7df;
+  --line: #ece7db;
   --surface: #ffffff;
-  --bg: #f6f4ef;           /* blanco hueso */
+  --bg: #f5f2ea;           /* fondo crema */
 
-  /* Paleta mate (usada equilibrada, sin ruido) */
-  --verde-oscuro: #23413a; /* sidebar */
-  --verde: #5f9585;        /* acento principal (verde salvia mate) */
-  --naranja: #c67c48;      /* naranja terracota mate */
-  --violeta: #837aa3;      /* violeta mate */
+  /* Colores de la marca */
+  --verde-oscuro: #22332f; /* verde oscuro del logo: menú + botones */
+  --verde: #5f9585;        /* verde salvia (secundario, gráficos) */
+  --dorado: #d8c096;       /* dorado del logo (detalles) */
+  --dorado-soft: #f1ead9;
+  --naranja: #d2673a;      /* coral/terracota */
 
-  /* Acento principal */
-  --accent: #5f9585;
-  --accent-soft: #e8f0ec;
+  /* Acento principal = coral/terracota (avisos, acciones, links) */
+  --accent: #d2673a;
+  --accent-soft: #f8e8df;
 
   /* Estados */
-  --ok: #4a7d6b;           --ok-soft: #e8f1ec;      /* verde */
-  --warn: #b06f3c;         --warn-soft: #f6ebe0;    /* naranja */
-  --info: #746a92;         --info-soft: #ece8f1;    /* violeta */
+  --ok: #4a7d6b;           --ok-soft: #e8f1ec;      /* verde: Pagado / Sale */
+  --warn: #c05a2c;         --warn-soft: #f8e6da;    /* coral: avisos / pendiente */
+  --info: #8a7c52;         --info-soft: #f1ead7;    /* dorado apagado: Señado */
 }
 
 * { box-sizing: border-box; }
@@ -38,16 +40,18 @@ body {
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-.brand-mark {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; border-radius: 10px;
-  background: var(--accent); color: #fff; font-size: .8rem; flex: none;
+/* Títulos con tipografía serif (estilo editorial de la marca) */
+h1, h2, .card h2, .modal-box h2, .mes-titulo {
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 600; letter-spacing: 0;
 }
-.brand-text { line-height: 1.15; }
-.brand-text small { display: block; font-size: .7rem; color: rgba(255,255,255,.55); font-weight: 500; }
+
+/* Logo de Wamani en el menú */
+.brand-logo-full { width: 148px; max-width: 100%; height: auto; display: block; }
+.brand-logo-mini { width: 42px; height: auto; display: none; }
 .btn-nueva {
-  background: var(--naranja); color: #fff !important; padding: 11px 16px;
-  border-radius: 12px; font-weight: 600;
+  background: var(--naranja); color: #fff !important; padding: 11px 18px;
+  border-radius: 999px; font-weight: 600;
 }
 .btn-nueva:hover { text-decoration: none; opacity: .92; }
 
@@ -87,10 +91,11 @@ a:hover { text-decoration: underline; }
 
 /* ----- Menú colapsado: solo íconos ----- */
 html.sb-collapsed { --sb-w: 74px; }
-html.sb-collapsed .brand-text,
+html.sb-collapsed .brand-logo-full,
 html.sb-collapsed .sb-section,
 html.sb-collapsed .sb-item > span:not(.sb-ico),
 html.sb-collapsed .nueva-full { display: none; }
+html.sb-collapsed .brand-logo-mini { display: block; }
 html.sb-collapsed .sb-top { flex-direction: column; align-items: center; gap: 4px; }
 html.sb-collapsed .sb-brand { justify-content: center; padding: 20px 0 6px; }
 html.sb-collapsed .sb-toggle { padding: 6px; }
@@ -299,7 +304,7 @@ input[type=file]::file-selector-button {
 .check-linea input { width: 20px; height: 20px; }
 .acciones-fila { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .btn-mini {
-  display: inline-block; padding: 7px 12px; border-radius: 10px; font-size: .82rem;
+  display: inline-block; padding: 7px 14px; border-radius: 999px; font-size: .82rem;
   font-weight: 600; border: 1px solid var(--line); cursor: pointer; white-space: nowrap; font-family: inherit;
 }
 .btn-mini-ghost { background: #fff; color: var(--ink-soft); }
@@ -324,11 +329,13 @@ input[type=file]::file-selector-button {
 
 .acciones-form { display: flex; gap: 12px; margin-top: 24px; align-items: center; flex-wrap: wrap; }
 .btn {
-  display: inline-block; padding: 12px 22px; border-radius: 12px; font-weight: 600;
+  display: inline-block; padding: 12px 24px; border-radius: 999px; font-weight: 600;
   border: 1px solid transparent; cursor: pointer; font-size: .95rem; font-family: inherit;
 }
-.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary { background: var(--verde-oscuro); color: #fff; }
 .btn-primary:hover { opacity: .92; text-decoration: none; }
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-accent:hover { opacity: .92; text-decoration: none; }
 .btn-ghost { background: #fff; border-color: var(--line); color: var(--ink-soft); }
 .btn-ghost:hover { text-decoration: none; background: #faf9f5; }
 .btn-danger { background: #fff; border-color: #eccaba; color: #b06a3c; }

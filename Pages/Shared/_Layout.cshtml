@@ -11,7 +11,9 @@
     <title>@ViewData["Title"] · Wamani Reservas</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="~/logo/montana.png" />
+    <link rel="apple-touch-icon" href="~/logo/montana.png" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <script>
         // Aplicar el estado guardado del menú (colapsado o no) antes de pintar, sin parpadeo
@@ -23,9 +25,9 @@
         <!-- ── Menú lateral ─────────────────────────────── -->
         <aside class="sidebar" id="sidebar">
             <div class="sb-top">
-                <a class="sb-brand" asp-page="/Index">
-                    <span class="brand-mark">▲</span>
-                    <span class="brand-text">Wamani <small>Reservas · Jujuy</small></span>
+                <a class="sb-brand" asp-page="/Index" aria-label="Wamani - Inicio">
+                    <img class="brand-logo-full" src="~/logo/logo-completo.webp" alt="Wamani" />
+                    <img class="brand-logo-mini" src="~/logo/montana.png" alt="Wamani" />
                 </a>
                 <button class="sb-toggle" type="button" onclick="toggleColapsar()" title="Achicar / agrandar menú" aria-label="Achicar o agrandar el menú"></button>
             </div>

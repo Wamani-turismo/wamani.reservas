@@ -62,6 +62,7 @@
                     </td>
                     <td data-label="Ítem">
                         <input type="hidden" name="Ids" value="@g.Id" />
+                        <input type="hidden" name="Keys" value="@g.Id" />
                         <input name="Nombres" value="@g.Nombre" />
                     </td>
                     <td class="num" data-label="Lo que se pagó">
@@ -169,14 +170,17 @@
             document.getElementById('outTotal').textContent = money(total + totalProveedores());
             document.getElementById('outListos').textContent = listos + " / " + filas.length;
         }
+        var nuevoGastoSeq = 1;
         function agregarGasto() {
+            // Clave temporal para poder subir el comprobante de una fila nueva en el mismo guardado
+            var key = 'n' + (nuevoGastoSeq++);
             var tr = document.createElement('tr');
             tr.className = 'gasto-row';
             tr.innerHTML =
                 '<td data-label="Listo"><span class="cliente-sub">guardá primero</span></td>' +
-                '<td data-label="Ítem"><input type="hidden" name="Ids" value="0" /><input name="Nombres" placeholder="Ej: Peaje" /></td>' +
+                '<td data-label="Ítem"><input type="hidden" name="Ids" value="0" /><input type="hidden" name="Keys" value="' + key + '" /><input name="Nombres" placeholder="Ej: Peaje" /></td>' +
                 '<td class="num" data-label="Lo que se pagó"><input name="Precios" type="number" step="0.01" min="0" value="" class="in-precio" /></td>' +
-                '<td data-label="Comprobante"><span class="cliente-sub">guardá primero</span></td>' +
+                '<td data-label="Comprobante"><input type="file" name="comp_' + key + '" accept="image/*,.pdf" class="in-comp" /></td>' +
                 '<td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>';
             document.getElementById('gastosBody').appendChild(tr);
             tr.querySelector('input[name=Nombres]').focus();

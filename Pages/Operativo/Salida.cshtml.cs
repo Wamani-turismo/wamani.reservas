@@ -42,6 +42,7 @@ public class SalidaModel : PageModel
 
     // Enviados desde el form al guardar
     [BindProperty] public List<int> Ids { get; set; } = new();
+    [BindProperty] public List<string> Keys { get; set; } = new();    // clave para asociar el comprobante a la fila (id real, o temporal si es nueva)
     [BindProperty] public List<string> Nombres { get; set; } = new();
     [BindProperty] public List<string> Precios { get; set; } = new();
     [BindProperty] public List<int> Comprados { get; set; } = new();  // ids tildados
@@ -141,16 +142,26 @@ public class SalidaModel : PageModel
             var precio = ParsePrecio(i < Precios.Count ? Precios[i] : "0");
             var comprado = id != 0 && Comprados.Contains(id);
 
+            // El comprobante viaja como archivo "comp_{clave}". La clave es el id real de la
+            // fila, o una temporal (ej "n1") si es una fila recién agregada que todavía no
+            // tiene id. Así una fila NUEVA también puede traer su comprobante en el mismo guardado.
+            var clave = i < Keys.Count ? Keys[i] : id.ToString();
+            var archivo = Request.Form.Files[$"comp_{clave}"];
+            var guardado = await GuardarArchivoAsync(archivo);
+
             if (id == 0)
             {
-                _db.OperativoGastos.Add(new OperativoGasto
+                var nuevo = new OperativoGasto
                 {
                     ExcursionId = ExcursionId,
                     Fecha = Fecha.Date,
                     Nombre = nombre,
                     Precio = precio,
                     Comprado = false
-                });
+                };
+                if (precio > 0) nuevo.FechaPago = DateTime.Today;
+                if (guardado is not null) nuevo.Comprobante = guardado;
+                _db.OperativoGastos.Add(nuevo);
             }
             else
             {
@@ -165,9 +176,6 @@ public class SalidaModel : PageModel
                     if (precio > 0 && g.FechaPago is null) g.FechaPago = DateTime.Today;
                     if (precio == 0) g.FechaPago = null;
 
-                    // Comprobante de pago de ESTE gasto (input file "comp_{id}")
-                    var archivo = Request.Form.Files[$"comp_{id}"];
-                    var guardado = await GuardarArchivoAsync(archivo);
                     if (guardado is not null) g.Comprobante = guardado;
 
                     idsEnviados.Add(id);

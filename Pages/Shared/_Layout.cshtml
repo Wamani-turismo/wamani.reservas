@@ -38,11 +38,14 @@
                 <a class="sb-item @Activo("/reservas")" asp-page="/Reservas/Index" title="Reservas">
                     <span class="sb-ico">📋</span> <span>Reservas</span>
                 </a>
-                <a class="sb-item @Activo("/salidas")" asp-page="/Salidas" title="Salidas">
-                    <span class="sb-ico">📅</span> <span>Salidas</span>
-                </a>
                 <a class="sb-item @Activo("/operativo")" asp-page="/Operativo/Index" title="Operativo">
                     <span class="sb-ico">🎒</span> <span>Operativo</span>
+                </a>
+                <a class="sb-item @Activo("/financiera")" asp-page="/Financiera/Index" title="Finanzas">
+                    <span class="sb-ico">💰</span> <span>Finanzas</span>
+                </a>
+                <a class="sb-item @Activo("/rentabilidad")" asp-page="/Rentabilidad/Index" title="Rentabilidad">
+                    <span class="sb-ico">📈</span> <span>Rentabilidad</span>
                 </a>
                 <a class="sb-item @Activo("/excursiones")" asp-page="/Excursiones/Index" title="Excursiones">
                     <span class="sb-ico">🧭</span> <span>Excursiones</span>
@@ -50,23 +53,17 @@
                 <a class="sb-item @Activo("/proveedores")" asp-page="/Proveedores/Index" title="Proveedores">
                     <span class="sb-ico">🤝</span> <span>Proveedores</span>
                 </a>
-                <a class="sb-item @Activo("/financiera")" asp-page="/Financiera/Index" title="Financiera">
-                    <span class="sb-ico">💰</span> <span>Financiera</span>
-                </a>
-                <a class="sb-item @Activo("/rentabilidad")" asp-page="/Rentabilidad/Index" title="Rentabilidad">
-                    <span class="sb-ico">📈</span> <span>Rentabilidad</span>
-                </a>
                 <a class="sb-item @Activo("/historial")" asp-page="/Historial/Index" title="Historial">
                     <span class="sb-ico">📚</span> <span>Historial</span>
                 </a>
-                <a class="sb-item @Activo("/usuarios")" asp-page="/Usuarios/Index" title="Usuarios">
-                    <span class="sb-ico">👤</span> <span>Usuarios</span>
+                <a class="sb-item @Activo("/salidas")" asp-page="/Salidas" title="Salidas">
+                    <span class="sb-ico">📅</span> <span>Salidas</span>
                 </a>
             </nav>
 
             <div class="sb-foot">
-                <a class="btn-nueva sb-nueva" asp-page="/Reservas/Cargar" title="Nueva reserva">
-                    <span class="nueva-full">+ Nueva reserva</span><span class="nueva-mini">+</span>
+                <a class="sb-item sb-item-foot @Activo("/usuarios")" asp-page="/Usuarios/Index" title="Usuarios">
+                    <span class="sb-ico">👤</span> <span>Usuarios</span>
                 </a>
             </div>
         </aside>

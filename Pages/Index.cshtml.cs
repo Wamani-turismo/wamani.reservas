@@ -35,7 +35,9 @@ public class IndexModel : PageModel
         var reservas = await _db.Reservas.ToListAsync();
 
         ProximasSalidas = reservas
-            .Where(r => r.FechaHasta.Date >= hoy)
+            // "Próximas" = las que todavía no salieron (el día de salida es hoy o más adelante).
+            // Las que ya salieron quedan guardadas en el Historial.
+            .Where(r => r.FechaDesde.Date >= hoy)
             .GroupBy(r => new { r.ExcursionId, r.Excursion, Fecha = r.FechaDesde.Date })
             .Select(g => new ProximaSalida
             {

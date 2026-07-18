@@ -1,0 +1,156 @@
+@page
+@model Wamani.Reservas.Pages.Historial.MesModel
+@{
+    ViewData["Title"] = "Historial";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+}
+
+<div class="toolbar">
+    <div>
+        <h1>@(Model.MesValido ? Model.MesTexto : "Historial")</h1>
+        <p class="subtitle" style="margin:0">Salidas realizadas ese mes. Tocá una para ver el detalle.</p>
+    </div>
+    <a class="btn btn-ghost" asp-page="/Historial/Index">← Todos los meses</a>
+</div>
+
+@if (!Model.MesValido || !Model.Salidas.Any())
+{
+    <div class="card" style="text-align:center; padding:40px">
+        <p style="margin:0; color:var(--muted)">No hay salidas guardadas para este mes.</p>
+    </div>
+}
+else
+{
+    @foreach (var s in Model.Salidas)
+    {
+        <details class="hist-salida">
+            <summary class="hist-salida-head">
+                <div class="hist-salida-main">
+                    <span class="hist-salida-fecha">@s.Fecha.ToString("dd/MM")</span>
+                    <span class="hist-salida-exc">@s.Excursion</span>
+                </div>
+                <div class="hist-salida-tags">
+                    <span class="hist-tag">👥 @s.Pasajeros</span>
+                    <span class="hist-tag hist-tag-in">@Money(s.Facturado)</span>
+                    <span class="hist-tag hist-tag-out">−@Money(s.Gastos)</span>
+                    <span class="hist-tag hist-tag-net">@Money(s.Ganancia)</span>
+                    <span class="hist-caret">▾</span>
+                </div>
+            </summary>
+
+            <div class="hist-salida-body">
+                <!-- Pasajeros -->
+                <h3 class="hist-bloque-tit">👥 Pasajeros y pagos</h3>
+                <div class="tabla-wrap">
+                    <table class="tabla">
+                        <thead>
+                            <tr>
+                                <th>Pasajero</th>
+                                <th class="num">Personas</th>
+                                <th class="num">Facturado</th>
+                                <th class="num">Cobrado</th>
+                                <th class="num">Pendiente</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in s.Reservas)
+                            {
+                                <tr>
+                                    <td data-label="Pasajero">@r.Nombre</td>
+                                    <td class="num" data-label="Personas">@r.Personas</td>
+                                    <td class="num" data-label="Facturado">@Money(r.Facturado)</td>
+                                    <td class="num" data-label="Cobrado">@Money(r.Cobrado)</td>
+                                    <td class="num" data-label="Pendiente">
+                                        @if (r.Pendiente > 0)
+                                        {
+                                            <span style="color:var(--warn)">@Money(r.Pendiente)</span>
+                                        }
+                                        else
+                                        {
+                                            <span style="color:var(--accent)">✓</span>
+                                        }
+                                    </td>
+                                    <td data-label="Estado">@r.Estado</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td><strong>Total</strong></td>
+                                <td class="num"><strong>@s.Pasajeros</strong></td>
+                                <td class="num"><strong>@Money(s.Facturado)</strong></td>
+                                <td class="num"><strong>@Money(s.Cobrado)</strong></td>
+                                <td class="num"></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Gastos -->
+                <h3 class="hist-bloque-tit">🎒 Gastos de la salida</h3>
+                @if (!s.ListaGastos.Any() && !s.Proveedores.Any())
+                {
+                    <p style="color:var(--muted); margin:0 0 8px">No se cargaron gastos para esta salida.</p>
+                }
+                else
+                {
+                    <div class="tabla-wrap">
+                        <table class="tabla">
+                            <thead>
+                                <tr>
+                                    <th>Concepto</th>
+                                    <th class="num">Se pagó</th>
+                                    <th>Comprobante</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var g in s.ListaGastos)
+                                {
+                                    <tr>
+                                        <td data-label="Concepto">@g.Nombre</td>
+                                        <td class="num" data-label="Se pagó">@Money(g.Precio)</td>
+                                        <td data-label="Comprobante">
+                                            @if (!string.IsNullOrEmpty(g.Comprobante))
+                                            {
+                                                <a href="@g.Comprobante" target="_blank" class="hint">✔ ver</a>
+                                            }
+                                            else if (g.Comprado)
+                                            {
+                                                <span style="color:var(--accent)">✓ listo</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                                @foreach (var p in s.Proveedores)
+                                {
+                                    <tr>
+                                        <td data-label="Concepto">@p.Tipo: @p.Nombre</td>
+                                        <td class="num" data-label="Se pagó">@Money(p.Pagado)@(p.Pagado < p.Total ? $" / {Money(p.Total)}" : "")</td>
+                                        <td data-label="Comprobante"></td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td><strong>Total gastado</strong></td>
+                                    <td class="num"><strong>@Money(s.Gastos)</strong></td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+
+                <!-- Resumen -->
+                <div class="hist-resumen">
+                    <div><span class="hist-res-lbl">Facturado</span><span class="hist-res-val">@Money(s.Facturado)</span></div>
+                    <div><span class="hist-res-lbl">Gastos</span><span class="hist-res-val" style="color:var(--warn)">@Money(s.Gastos)</span></div>
+                    <div><span class="hist-res-lbl">Ganancia</span><span class="hist-res-val" style="color:var(--accent)">@Money(s.Ganancia)</span></div>
+                </div>
+            </div>
+        </details>
+    }
+}

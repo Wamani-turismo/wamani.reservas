@@ -9,7 +9,10 @@
         <h1>Usuarios</h1>
         <p class="subtitle" style="margin:0">Quiénes pueden entrar al sistema (los socios).</p>
     </div>
-    <a class="btn-nueva" asp-page="/Usuarios/Cargar">+ Nuevo usuario</a>
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+        <a class="btn btn-ghost" asp-page="/Mantenimiento">🧹 Mantenimiento</a>
+        <a class="btn-nueva" asp-page="/Usuarios/Cargar">+ Nuevo usuario</a>
+    </div>
 </div>
 
 @if (!string.IsNullOrEmpty(Model.Aviso))

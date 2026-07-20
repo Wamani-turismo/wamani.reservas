@@ -93,33 +93,38 @@ public class SalidaModel : PageModel
 
     public async Task<IActionResult> OnGetAsync()
     {
-        // La primera vez, copiar los gastos desde la plantilla de la excursión
-        bool hayOperativo = await _db.OperativoGastos
-            .AnyAsync(o => o.ExcursionId == ExcursionId && o.Fecha.Date == Fecha.Date);
+        // Sincronizar los gastos de la excursión con esta salida: agrega los que falten.
+        // Así, si después de abrir el operativo agregás gastos a la excursión, aparecen
+        // acá la próxima vez que entrás (antes solo se copiaban la PRIMERA vez).
+        // Los "por auto" y "por guía" no van a la lista: se manejan en la sección Proveedores.
+        var plantilla = await _db.GastosExcursion
+            .Where(g => g.ExcursionId == ExcursionId
+                     && g.TipoCalculo != "Por auto" && g.TipoCalculo != "Por guía")
+            .OrderBy(g => g.Id)
+            .ToListAsync();
 
-        if (!hayOperativo)
+        var yaCargados = await _db.OperativoGastos
+            .Where(o => o.ExcursionId == ExcursionId && o.Fecha.Date == Fecha.Date)
+            .ToListAsync();
+        var nombresCargados = yaCargados
+            .Select(o => (o.Nombre ?? "").Trim().ToLowerInvariant())
+            .ToHashSet();
+
+        bool agregoAlguno = false;
+        foreach (var p in plantilla)
         {
-            // Solo los consumibles (por persona / fijo). Los "por auto" y "por guía" son
-            // costos de rentabilidad y en el operativo se manejan como Proveedores.
-            var plantilla = await _db.GastosExcursion
-                .Where(g => g.ExcursionId == ExcursionId
-                         && g.TipoCalculo != "Por auto" && g.TipoCalculo != "Por guía")
-                .OrderBy(g => g.Id)
-                .ToListAsync();
-
-            foreach (var p in plantilla)
+            if (nombresCargados.Contains((p.Nombre ?? "").Trim().ToLowerInvariant())) continue;
+            _db.OperativoGastos.Add(new OperativoGasto
             {
-                _db.OperativoGastos.Add(new OperativoGasto
-                {
-                    ExcursionId = ExcursionId,
-                    Fecha = Fecha.Date,
-                    Nombre = p.Nombre,
-                    Precio = p.Precio,
-                    Comprado = false
-                });
-            }
-            if (plantilla.Count > 0) await _db.SaveChangesAsync();
+                ExcursionId = ExcursionId,
+                Fecha = Fecha.Date,
+                Nombre = p.Nombre ?? "",
+                Precio = p.Precio,
+                Comprado = false
+            });
+            agregoAlguno = true;
         }
+        if (agregoAlguno) await _db.SaveChangesAsync();
 
         await CargarAsync();
         return Page();

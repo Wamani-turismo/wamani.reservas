@@ -1,0 +1,61 @@
+@page
+@model Wamani.Reservas.Pages.MantenimientoModel
+@{
+    ViewData["Title"] = "Mantenimiento";
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Mantenimiento</h1>
+        <p class="subtitle" style="margin:0">Empezar de cero con las reservas.</p>
+    </div>
+    <a class="btn btn-ghost" asp-page="/Usuarios/Index">← Volver</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Aviso))
+{
+    <div class="aviso-ok">@Model.Aviso</div>
+}
+
+<div class="card" style="max-width:640px">
+    <h2>Borrar todas las reservas</h2>
+
+    <p style="margin-top:0">
+        Esto <strong>borra para siempre</strong> todas las reservas y lo que depende de ellas.
+        Se usa para dejar la lista limpia y volver a cargar todo desde cero.
+    </p>
+
+    <p style="font-weight:600; margin-bottom:6px">Se va a borrar:</p>
+    <ul class="serv-lista" style="margin-top:0">
+        <li>@Model.Reservas reserva@(Model.Reservas == 1 ? "" : "s")</li>
+        <li>@Model.Pasajeros pasajero@(Model.Pasajeros == 1 ? "" : "s") (datos del seguro)</li>
+        <li>@Model.GastosOperativo gasto@(Model.GastosOperativo == 1 ? "" : "s") cargado@(Model.GastosOperativo == 1 ? "" : "s") en el operativo</li>
+        <li>@Model.ProveedoresOperativo pago@(Model.ProveedoresOperativo == 1 ? "" : "s") a proveedores del operativo</li>
+        <li>@Model.Interesados interesado@(Model.Interesados == 1 ? "" : "s")</li>
+    </ul>
+
+    <div class="aviso-warn" style="margin:14px 0">
+        <strong>NO</strong> se borran: las excursiones, los proveedores (catálogo) ni los usuarios.
+        Esto <strong>no se puede deshacer</strong>.
+    </div>
+
+    <form method="post" onsubmit="return confirm('¿Seguro que querés borrar TODAS las reservas? No se puede deshacer.');">
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="text-danger" style="margin-bottom:10px">
+                @foreach (var e in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <div>@e.ErrorMessage</div>
+                }
+            </div>
+        }
+        <div class="field" style="max-width:280px">
+            <label>Para confirmar, escribí <strong>BORRAR</strong></label>
+            <input name="Confirmacion" autocomplete="off" placeholder="BORRAR" />
+        </div>
+        <div class="acciones-form">
+            <button type="submit" class="btn btn-danger">🗑 Borrar todas las reservas</button>
+            <a class="btn btn-ghost" asp-page="/Index">Cancelar</a>
+        </div>
+    </form>
+</div>

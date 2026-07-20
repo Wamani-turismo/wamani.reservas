@@ -25,6 +25,17 @@ var puertoInternet = Environment.GetEnvironmentVariable("PORT");
 if (!string.IsNullOrWhiteSpace(puertoInternet))
     builder.WebHost.UseUrls($"http://0.0.0.0:{puertoInternet}");
 
+// Permitir subir varios comprobantes (fotos) en un mismo guardado sin que se corte.
+// Por defecto el servidor limita el envío a ~30 MB; lo subimos a 100 MB porque las
+// fotos de celular pesan bastante y con 3 o más se pasaba de ese límite.
+const long limiteSubida = 100L * 1024 * 1024; // 100 MB
+builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = limiteSubida);
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
+{
+    o.MultipartBodyLengthLimit = limiteSubida;
+    o.ValueCountLimit = int.MaxValue;
+});
+
 // Páginas web (Razor Pages) — TODAS requieren login, menos la página de entrar
 builder.Services.AddRazorPages(options =>
 {

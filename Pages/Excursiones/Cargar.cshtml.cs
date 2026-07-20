@@ -73,7 +73,6 @@ public class CargarModel : PageModel
             db.PrecioPorPersona = Excursion.PrecioPorPersona;
             db.MinimoPersonas = Excursion.MinimoPersonas;
             db.MaximoPersonas = Excursion.MaximoPersonas;
-            db.CantidadGuias = Excursion.CantidadGuias;
             db.EsTravesia = Excursion.EsTravesia;
             db.Activa = Excursion.Activa;
             db.GuiaBreve = Excursion.GuiaBreve;

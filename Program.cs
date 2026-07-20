@@ -195,6 +195,11 @@ using (var scope = app.Services.CreateScope())
         ArreglarFechasPostgres(db);
     }
 
+    // El tipo de costo "Por guía" se unificó con "Por auto" (en Wamani el chofer es el guía).
+    // Pasamos los gastos que hayan quedado como "Por guía" a "Por auto". No pierde datos.
+    db.Database.ExecuteSqlRaw(
+        "UPDATE \"GastosExcursion\" SET \"TipoCalculo\" = 'Por auto' WHERE \"TipoCalculo\" = 'Por guía';");
+
     // Carga excursiones de EJEMPLO la primera vez (editables/borrables desde la web)
     if (!db.Excursiones.Any())
     {

@@ -9,7 +9,7 @@
 <div class="toolbar">
     <div>
         <h1>@e.Nombre</h1>
-        <p class="subtitle" style="margin:0">Precio: $ @e.PrecioPorPersona.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("es-AR")) por persona · @e.CantidadGuias guía(s) · 1 auto cada @Model.PersonasPorAuto</p>
+        <p class="subtitle" style="margin:0">Precio: $ @e.PrecioPorPersona.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("es-AR")) por persona · 1 auto/guía cada @Model.PersonasPorAuto personas</p>
     </div>
     <div class="salida-pills">
         <a class="btn btn-ghost" asp-page="/Rentabilidad/Index">← Volver</a>
@@ -37,8 +37,7 @@ else
                 </div>
             </div>
             <div class="calc-info">
-                <div>🚐 <strong id="outAutos">1</strong> auto(s)</div>
-                <div>🧑‍🏫 <strong id="outGuias">@e.CantidadGuias</strong> guía(s)</div>
+                <div>🚐 <strong id="outAutos">1</strong> auto(s) / guía(s)</div>
             </div>
         </div>
 
@@ -67,7 +66,6 @@ else
             }
         ];
         var PRECIO = @Num(e.PrecioPorPersona);
-        var GUIAS = @e.CantidadGuias;
         var PXAUTO = @Model.PersonasPorAuto;
         var MIN = @e.MinimoPersonas, MAX = @e.MaximoPersonas;
         var pax = MIN;
@@ -78,7 +76,7 @@ else
             var a = autos(p), t = 0;
             COSTOS.forEach(function(c){
                 if (c.tipo === "Por auto") t += c.monto * a;
-                else if (c.tipo === "Por guía") t += c.monto * GUIAS;
+                else if (c.tipo === "Por guía") t += c.monto * a; // guía = auto (chofer-guía)
                 else if (c.tipo === "Fijo") t += c.monto;
                 else t += c.monto * p; // Por persona
             });
@@ -91,7 +89,6 @@ else
             var mar = cos > 0 ? Math.round(gan / cos * 100) : 0;
             document.getElementById("paxVal").textContent = pax;
             document.getElementById("outAutos").textContent = autos(pax);
-            document.getElementById("outGuias").textContent = GUIAS;
             document.getElementById("outIngreso").textContent = money(ing);
             document.getElementById("outCosto").textContent = money(cos);
             document.getElementById("outGanancia").textContent = money(gan);

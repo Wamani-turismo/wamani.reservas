@@ -12,7 +12,7 @@ public static class RentabilidadCalc
     public static int AutosPara(int pax)
         => pax <= 0 ? 0 : (int)Math.Ceiling(pax / (double)Excursion.PersonasPorAuto);
 
-    public static decimal Costo(IEnumerable<GastoExcursion> items, int pax, int guias)
+    public static decimal Costo(IEnumerable<GastoExcursion> items, int pax)
     {
         int autos = AutosPara(pax);
         decimal total = 0;
@@ -21,7 +21,7 @@ public static class RentabilidadCalc
             total += g.TipoCalculo switch
             {
                 "Por auto"  => g.Precio * autos,
-                "Por guía"  => g.Precio * guias,
+                "Por guía"  => g.Precio * autos,  // el chofer es el guía → cuenta como auto
                 "Fijo"      => g.Precio,
                 _            => g.Precio * pax,   // Por persona
             };
@@ -32,7 +32,7 @@ public static class RentabilidadCalc
     public static (decimal Ingreso, decimal Costo, decimal Ganancia, decimal MargenPct)
         Calcular(Excursion exc, IEnumerable<GastoExcursion> items, int pax)
     {
-        var costo = Costo(items, pax, exc.CantidadGuias);
+        var costo = Costo(items, pax);
         var ingreso = exc.PrecioPorPersona * pax;
         var ganancia = ingreso - costo;
         var margen = costo > 0 ? Math.Round(ganancia / costo * 100, 0) : 0;

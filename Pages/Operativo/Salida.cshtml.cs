@@ -96,10 +96,10 @@ public class SalidaModel : PageModel
         // Sincronizar los gastos de la excursión con esta salida: agrega los que falten.
         // Así, si después de abrir el operativo agregás gastos a la excursión, aparecen
         // acá la próxima vez que entrás (antes solo se copiaban la PRIMERA vez).
-        // Los "por auto" y "por guía" no van a la lista: se manejan en la sección Proveedores.
+        // Aparecen TODOS los gastos (por persona, por auto/guía y fijo) para poder pagarlos
+        // y subir el comprobante. (Los proveedores con seña/saldo son una sección aparte.)
         var plantilla = await _db.GastosExcursion
-            .Where(g => g.ExcursionId == ExcursionId
-                     && g.TipoCalculo != "Por auto" && g.TipoCalculo != "Por guía")
+            .Where(g => g.ExcursionId == ExcursionId)
             .OrderBy(g => g.Id)
             .ToListAsync();
 

@@ -34,11 +34,6 @@
                 <input asp-for="Excursion.MaximoPersonas" type="number" min="1" />
                 <div class="hint">Máximo de pasajeros (ej: 8, o 15 en travesías).</div>
             </div>
-            <div class="field">
-                <label asp-for="Excursion.CantidadGuias"></label>
-                <input asp-for="Excursion.CantidadGuias" type="number" min="0" />
-                <div class="hint">Cuántos guías van (lo podés cambiar).</div>
-            </div>
             <div class="field full">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
                     <input asp-for="Excursion.EsTravesia" type="checkbox" style="width:auto" />
@@ -59,8 +54,9 @@
         <h2>Costos de la excursión</h2>
         <p class="hint" style="margin:-8px 0 14px">
             Cargá cada costo con su monto y <strong>cómo se cuenta</strong>: <em>por persona</em> (× pasajeros),
-            <em>por auto</em> (× cantidad de autos, 1 cada @Wamani.Reservas.Models.Excursion.PersonasPorAuto),
-            <em>por guía</em> (× guías) o <em>fijo</em> (una vez). Con esto se calcula la <strong>Rentabilidad</strong>.
+            <em>por auto (chofer-guía)</em> (× cantidad de autos, 1 cada @Wamani.Reservas.Models.Excursion.PersonasPorAuto —
+            incluye al guía porque es el mismo chofer) o <em>fijo</em> (una vez por salida).
+            Con esto se calcula la <strong>Rentabilidad</strong> y estos costos aparecen en el <strong>Operativo</strong> para pagarlos.
         </p>
 
         <table class="tabla" id="tablaGastos">
@@ -83,7 +79,7 @@
                             <select name="GastoTipos">
                                 @foreach (var t in Wamani.Reservas.Models.GastoExcursion.Tipos)
                                 {
-                                    <option value="@t" selected="@(gt == t)">@t</option>
+                                    <option value="@t" selected="@(gt == t)">@(t == "Por auto" ? "Por auto (chofer-guía)" : t)</option>
                                 }
                             </select>
                         </td>
@@ -144,8 +140,7 @@
                 '<td class="num" data-label="Monto"><input name="GastoPrecios" type="number" step="0.01" min="0" value="' + (precio || '') + '" /></td>' +
                 '<td data-label="Cómo se cuenta"><select name="GastoTipos">' +
                 '<option value="Por persona">Por persona</option>' +
-                '<option value="Por auto">Por auto</option>' +
-                '<option value="Por guía">Por guía</option>' +
+                '<option value="Por auto">Por auto (chofer-guía)</option>' +
                 '<option value="Fijo">Fijo</option>' +
                 '</select></td>' +
                 '<td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>';

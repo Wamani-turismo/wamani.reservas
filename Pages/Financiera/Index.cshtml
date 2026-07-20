@@ -41,9 +41,9 @@
     <div class="fin-card fin-card-net">
         <div class="fin-label">Ganancia neta</div>
         <div class="fin-val" style="color:var(--accent)">@Money(Model.Neta)</div>
-        @if (Model.Ingreso > 0)
+        @if (Model.Gastos > 0)
         {
-            <div class="fin-label" style="margin-top:4px">@Model.MargenPct.ToString("0")% de ganancia</div>
+            <div class="fin-label" style="margin-top:4px">@Model.MargenPct.ToString("0")% de ganancia (sobre el costo)</div>
         }
     </div>
     <div class="fin-card">
@@ -94,7 +94,7 @@
                 <td class="num" data-label="Ingreso">@Money(l.Ingreso)</td>
                 <td class="num" data-label="Gastos" style="color:var(--warn)">@Money(l.Gastos)</td>
                 <td class="num" data-label="Ganancia neta"><strong style="color:var(--accent)">@Money(l.Neta)</strong></td>
-                <td class="num" data-label="% Ganancia">@(l.Ingreso > 0 ? l.MargenPct.ToString("0") + "%" : "—")</td>
+                <td class="num" data-label="% Ganancia">@(l.Gastos > 0 ? l.MargenPct.ToString("0") + "%" : "—")</td>
             </tr>
         }
         </tbody>

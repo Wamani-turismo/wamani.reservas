@@ -28,8 +28,8 @@ public class IndexModel : PageModel
         public decimal Ingreso { get; set; }
         public decimal Gastos { get; set; }
         public decimal Neta => Ingreso - Gastos;
-        // % de ganancia sobre lo cobrado (cuánto de lo que entró quedó como ganancia)
-        public decimal MargenPct => Ingreso > 0 ? Math.Round(Neta / Ingreso * 100, 0) : 0;
+        // % de ganancia sobre el COSTO (cuánto se gana sobre lo gastado), como la planilla
+        public decimal MargenPct => Gastos > 0 ? Math.Round(Neta / Gastos * 100, 0) : 0;
     }
 
     public class GastoTipo
@@ -46,7 +46,7 @@ public class IndexModel : PageModel
     public decimal Gastos { get; set; }
     public decimal Neta => Ingreso - Gastos;
     public decimal PorDueno => Math.Round(Neta / Duenos.Length, 2);
-    public decimal MargenPct => Ingreso > 0 ? Math.Round(Neta / Ingreso * 100, 0) : 0;  // % ganancia del mes
+    public decimal MargenPct => Gastos > 0 ? Math.Round(Neta / Gastos * 100, 0) : 0;  // % ganancia sobre el costo
     public int TotalReservas { get; set; }
     public int TotalPersonas { get; set; }
 

@@ -102,14 +102,15 @@ public class SalidaModel : PageModel
         // Sincronizar los gastos de la excursión con esta salida: agrega los que falten.
         // Así, si después de abrir el operativo agregás gastos a la excursión, aparecen
         // acá la próxima vez que entrás (antes solo se copiaban la PRIMERA vez).
-        // Aparecen TODOS los gastos (por persona, por auto/guía y fijo) para poder pagarlos
-        // y subir el comprobante. (Los proveedores con seña/saldo son una sección aparte.)
+        // Aparecen los gastos a comprar/preparar. Los marcados "es proveedor" (guía, auto,
+        // hospedaje, restaurante) NO se materializan acá: cuentan en la Rentabilidad pero se
+        // pagan en la sección Proveedores (con seña + saldo).
         int pasajeros = await _db.Reservas
             .Where(r => r.ExcursionId == ExcursionId && r.FechaDesde.Date == Fecha.Date)
             .SumAsync(r => r.CantidadPersonas);
 
         var plantilla = await _db.GastosExcursion
-            .Where(g => g.ExcursionId == ExcursionId)
+            .Where(g => g.ExcursionId == ExcursionId && !g.EsProveedor)
             .OrderBy(g => g.Id)
             .ToListAsync();
 

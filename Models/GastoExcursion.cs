@@ -23,6 +23,11 @@ namespace Wamani.Reservas.Models
         [MaxLength(20)]
         public string TipoCalculo { get; set; } = "Por persona";
 
+        // Si es true, este costo es un SERVICIO de proveedor (guía, auto, hospedaje,
+        // restaurante). Se sigue contando en la Rentabilidad, pero NO aparece en la lista
+        // de gastos del operativo (se maneja en la sección Proveedores con seña + saldo).
+        public bool EsProveedor { get; set; } = false;
+
         // "Por auto" incluye al guía: en Wamani el chofer es el guía, así que van juntos.
         public static readonly string[] Tipos = { "Por persona", "Por auto", "Fijo" };
     }

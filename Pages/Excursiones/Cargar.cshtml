@@ -65,6 +65,7 @@
                     <th>Ítem / costo</th>
                     <th class="num" style="width:150px">Monto</th>
                     <th style="width:170px">Cómo se cuenta</th>
+                    <th style="width:110px">¿Proveedor?</th>
                     <th style="width:60px"></th>
                 </tr>
             </thead>
@@ -72,6 +73,7 @@
                 @for (int i = 0; i < Model.Gastos.Count; i++)
                 {
                     var gt = Model.Gastos[i].TipoCalculo;
+                    var gp = Model.Gastos[i].EsProveedor;
                     <tr class="gasto-row">
                         <td data-label="Ítem"><input name="GastoNombres" value="@Model.Gastos[i].Nombre" placeholder="Ej: Nafta" /></td>
                         <td class="num" data-label="Monto"><input name="GastoPrecios" type="number" step="0.01" min="0" value="@Num(Model.Gastos[i].Precio)" /></td>
@@ -82,6 +84,12 @@
                                     <option value="@t" selected="@(gt == t)">@(t == "Por auto" ? "Por auto (chofer-guía)" : t)</option>
                                 }
                             </select>
+                        </td>
+                        <td data-label="¿Proveedor?">
+                            <label class="check-linea" title="Guía, auto, hospedaje o restaurante: cuenta en la Rentabilidad pero NO aparece en la lista del operativo (se paga en Proveedores).">
+                                <input type="checkbox" onchange="this.nextElementSibling.value = this.checked ? '1' : '0'" @(gp ? "checked" : "") />
+                                <input type="hidden" name="GastoEsProveedor" value="@(gp ? "1" : "0")" />
+                            </label>
                         </td>
                         <td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>
                     </tr>
@@ -143,6 +151,7 @@
                 '<option value="Por auto">Por auto (chofer-guía)</option>' +
                 '<option value="Fijo">Fijo</option>' +
                 '</select></td>' +
+                '<td data-label="¿Proveedor?"><label class="check-linea"><input type="checkbox" onchange="this.nextElementSibling.value = this.checked ? \'1\' : \'0\'" /><input type="hidden" name="GastoEsProveedor" value="0" /></label></td>' +
                 '<td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>';
             document.getElementById('gastosBody').appendChild(tr);
             tr.querySelector('input').focus();

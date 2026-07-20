@@ -24,6 +24,9 @@ public class CargarModel : PageModel
     [BindProperty]
     public List<string> GastoTipos { get; set; } = new();
 
+    [BindProperty]
+    public List<string> GastoEsProveedor { get; set; } = new();   // "1" si el costo es un proveedor
+
     // Para mostrar los gastos ya cargados al abrir la página
     public List<GastoExcursion> Gastos { get; set; } = new();
 
@@ -93,12 +96,14 @@ public class CargarModel : PageModel
             decimal precio = ParsePrecio(precioTxt);
             var tipo = i < GastoTipos.Count && GastoExcursion.Tipos.Contains(GastoTipos[i])
                 ? GastoTipos[i] : "Por persona";
+            var esProv = i < GastoEsProveedor.Count && GastoEsProveedor[i] == "1";
             _db.GastosExcursion.Add(new GastoExcursion
             {
                 ExcursionId = excursionId,
                 Nombre = nombre,
                 Precio = precio,
-                TipoCalculo = tipo
+                TipoCalculo = tipo,
+                EsProveedor = esProv
             });
         }
 

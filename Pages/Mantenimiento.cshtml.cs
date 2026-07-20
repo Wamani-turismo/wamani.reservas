@@ -41,8 +41,8 @@ public class MantenimientoModel : PageModel
         GastosOperativo = await _db.OperativoGastos.CountAsync();
         ProveedoresOperativo = await _db.OperativoProveedores.CountAsync();
         Interesados = await _db.Interesados.CountAsync();
-        GastosProveedor = (await _db.GastosExcursion.Select(g => g.Nombre).ToListAsync())
-            .Count(EsGastoProveedor);
+        GastosProveedor = (await _db.GastosExcursion.ToListAsync())
+            .Count(g => EsGastoProveedor(g.Nombre) && !g.EsProveedor);
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -67,22 +67,27 @@ public class MantenimientoModel : PageModel
         return RedirectToPage();
     }
 
-    // Saca de los GASTOS de las excursiones los que en realidad son proveedores
-    // (Auto, Chofer, Guía, Hospedaje, Restaurante, Cena). Esos se manejan en Proveedores.
+    // Marca como "es proveedor" los gastos de las excursiones que en realidad son proveedores
+    // (Auto, Chofer, Guía, Hospedaje, Restaurante, Cena). Así SIGUEN contando en la Rentabilidad,
+    // pero dejan de aparecer en la lista del operativo (se pagan en la sección Proveedores).
     public async Task<IActionResult> OnPostLimpiarGastosAsync()
     {
         var plantilla = await _db.GastosExcursion.ToListAsync();
-        var aBorrarPlantilla = plantilla.Where(g => EsGastoProveedor(g.Nombre)).ToList();
-        _db.GastosExcursion.RemoveRange(aBorrarPlantilla);
+        int marcados = 0;
+        foreach (var g in plantilla.Where(g => EsGastoProveedor(g.Nombre) && !g.EsProveedor))
+        {
+            g.EsProveedor = true;
+            marcados++;
+        }
 
-        // También sacarlos de los operativos ya cargados (para que desaparezcan de las salidas abiertas)
+        // Sacarlos de los operativos ya cargados (para que desaparezcan de las salidas abiertas)
         var ops = await _db.OperativoGastos.ToListAsync();
         var aBorrarOps = ops.Where(o => EsGastoProveedor(o.Nombre)).ToList();
         _db.OperativoGastos.RemoveRange(aBorrarOps);
 
         await _db.SaveChangesAsync();
 
-        Aviso = $"Listo. Se sacaron {aBorrarPlantilla.Count} gasto(s) de las excursiones (y {aBorrarOps.Count} de las salidas) que eran proveedores. Ahora esos se cargan en la sección Proveedores.";
+        Aviso = $"Listo. Se marcaron {marcados} costo(s) como proveedor (siguen contando en Rentabilidad) y se sacaron {aBorrarOps.Count} de las salidas ya abiertas.";
         return RedirectToPage();
     }
 }

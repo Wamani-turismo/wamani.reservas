@@ -103,6 +103,8 @@ using (var scope = app.Services.CreateScope())
     EnsureSqliteColumn(db, "Excursiones", "CantidadGuias", "INTEGER NOT NULL DEFAULT 1");
     EnsureSqliteColumn(db, "GastosExcursion", "TipoCalculo", "TEXT NOT NULL DEFAULT 'Por persona'");
     EnsureSqliteColumn(db, "OperativoGastos", "FechaPago", "TEXT NULL");
+    EnsureSqliteColumn(db, "OperativoGastos", "PrecioUnitario", "TEXT NULL");
+    EnsureSqliteColumn(db, "OperativoGastos", "TipoCalculo", "TEXT NOT NULL DEFAULT 'Por persona'");
     EnsureSqliteColumn(db, "OperativoProveedores", "FechaSena", "TEXT NULL");
     EnsureSqliteColumn(db, "OperativoProveedores", "FechaSaldo", "TEXT NULL");
 
@@ -193,6 +195,9 @@ using (var scope = app.Services.CreateScope())
     if (db.Database.IsNpgsql())
     {
         ArreglarFechasPostgres(db);
+        // Columnas nuevas del gasto (precio por persona + tipo) en la base de internet
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""PrecioUnitario"" numeric;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""TipoCalculo"" text NOT NULL DEFAULT 'Por persona';");
     }
 
     // El tipo de costo "Por guía" se unificó con "Por auto" (en Wamani el chofer es el guía).

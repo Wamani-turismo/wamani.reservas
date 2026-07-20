@@ -34,6 +34,8 @@ public class SalidaModel : PageModel
     public string ExcursionNombre { get; set; } = "";
     public List<OperativoGasto> Gastos { get; set; } = new();
     public List<Reserva> Reservas { get; set; } = new();
+    public int PasajerosSalida { get; set; }   // total de personas de la salida (para multiplicar)
+    public int PersonasPorAuto => Wamani.Reservas.Models.Excursion.PersonasPorAuto;
     public OperativoSalida Salida { get; set; } = new();
 
     // Proveedores: catálogo por tipo y lo asignado a esta salida (puede haber varios por tipo)
@@ -44,7 +46,8 @@ public class SalidaModel : PageModel
     [BindProperty] public List<int> Ids { get; set; } = new();
     [BindProperty] public List<string> Keys { get; set; } = new();    // clave para asociar el comprobante a la fila (id real, o temporal si es nueva)
     [BindProperty] public List<string> Nombres { get; set; } = new();
-    [BindProperty] public List<string> Precios { get; set; } = new();
+    [BindProperty] public List<string> Precios { get; set; } = new();   // unitario (auto) o total (a mano) según el modo
+    [BindProperty] public List<string> EsManual { get; set; } = new();  // "1" si el monto se cargó a mano
     [BindProperty] public List<int> Comprados { get; set; } = new();  // ids tildados
     [BindProperty] public bool ServiciosPagados { get; set; }
     [BindProperty] public IFormFile? ComprobanteArchivo { get; set; }
@@ -67,6 +70,7 @@ public class SalidaModel : PageModel
             .Where(r => r.ExcursionId == ExcursionId && r.FechaDesde.Date == Fecha.Date)
             .OrderBy(r => r.NombreCliente)
             .ToListAsync();
+        PasajerosSalida = Reservas.Sum(r => r.CantidadPersonas);
 
         Gastos = await _db.OperativoGastos
             .Where(o => o.ExcursionId == ExcursionId && o.Fecha.Date == Fecha.Date)
@@ -98,6 +102,10 @@ public class SalidaModel : PageModel
         // acá la próxima vez que entrás (antes solo se copiaban la PRIMERA vez).
         // Aparecen TODOS los gastos (por persona, por auto/guía y fijo) para poder pagarlos
         // y subir el comprobante. (Los proveedores con seña/saldo son una sección aparte.)
+        int pasajeros = await _db.Reservas
+            .Where(r => r.ExcursionId == ExcursionId && r.FechaDesde.Date == Fecha.Date)
+            .SumAsync(r => r.CantidadPersonas);
+
         var plantilla = await _db.GastosExcursion
             .Where(g => g.ExcursionId == ExcursionId)
             .OrderBy(g => g.Id)
@@ -110,21 +118,34 @@ public class SalidaModel : PageModel
             .Select(o => (o.Nombre ?? "").Trim().ToLowerInvariant())
             .ToHashSet();
 
-        bool agregoAlguno = false;
+        bool cambio = false;
         foreach (var p in plantilla)
         {
             if (nombresCargados.Contains((p.Nombre ?? "").Trim().ToLowerInvariant())) continue;
+            var tipo = string.IsNullOrWhiteSpace(p.TipoCalculo) ? "Por persona" : p.TipoCalculo;
             _db.OperativoGastos.Add(new OperativoGasto
             {
                 ExcursionId = ExcursionId,
                 Fecha = Fecha.Date,
                 Nombre = p.Nombre ?? "",
-                Precio = p.Precio,
+                TipoCalculo = tipo,
+                PrecioUnitario = p.Precio,   // lo que se carga como "por persona/por auto"
+                Precio = p.Precio * OperativoGasto.Multiplicador(tipo, pasajeros),  // total
                 Comprado = false
             });
-            agregoAlguno = true;
+            cambio = true;
         }
-        if (agregoAlguno) await _db.SaveChangesAsync();
+
+        // Refrescar el total de los gastos automáticos por si cambió la cantidad de gente
+        foreach (var g in yaCargados)
+        {
+            if (g.PrecioUnitario is decimal u)
+            {
+                var nuevoTotal = u * OperativoGasto.Multiplicador(g.TipoCalculo, pasajeros);
+                if (g.Precio != nuevoTotal) { g.Precio = nuevoTotal; cambio = true; }
+            }
+        }
+        if (cambio) await _db.SaveChangesAsync();
 
         await CargarAsync();
         return Page();
@@ -136,6 +157,10 @@ public class SalidaModel : PageModel
             .Where(o => o.ExcursionId == ExcursionId && o.Fecha.Date == Fecha.Date)
             .ToListAsync();
 
+        int pasajeros = await _db.Reservas
+            .Where(r => r.ExcursionId == ExcursionId && r.FechaDesde.Date == Fecha.Date)
+            .SumAsync(r => r.CantidadPersonas);
+
         var idsEnviados = new HashSet<int>();
 
         for (int i = 0; i < Nombres.Count; i++)
@@ -144,7 +169,8 @@ public class SalidaModel : PageModel
             if (string.IsNullOrWhiteSpace(nombre)) continue;
 
             var id = i < Ids.Count ? Ids[i] : 0;
-            var precio = ParsePrecio(i < Precios.Count ? Precios[i] : "0");
+            var valor = ParsePrecio(i < Precios.Count ? Precios[i] : "0");  // unitario (auto) o total (a mano)
+            var esManual = i < EsManual.Count && EsManual[i] == "1";
             var comprado = id != 0 && Comprados.Contains(id);
 
             // El comprobante viaja como archivo "comp_{clave}". La clave es el id real de la
@@ -156,15 +182,18 @@ public class SalidaModel : PageModel
 
             if (id == 0)
             {
+                // Fila nueva agregada a mano en el operativo → el monto es el total directo.
                 var nuevo = new OperativoGasto
                 {
                     ExcursionId = ExcursionId,
                     Fecha = Fecha.Date,
                     Nombre = nombre,
-                    Precio = precio,
+                    TipoCalculo = "Por persona",
+                    PrecioUnitario = null,   // a mano
+                    Precio = valor,
                     Comprado = false
                 };
-                if (precio > 0) nuevo.FechaPago = DateTime.Today;
+                if (valor > 0) nuevo.FechaPago = DateTime.Today;
                 if (guardado is not null) nuevo.Comprobante = guardado;
                 _db.OperativoGastos.Add(nuevo);
             }
@@ -174,12 +203,22 @@ public class SalidaModel : PageModel
                 if (g is not null)
                 {
                     g.Nombre = nombre;
-                    g.Precio = precio;
                     g.Comprado = comprado;
 
+                    if (esManual)
+                    {
+                        g.PrecioUnitario = null;
+                        g.Precio = valor;   // total escrito a mano
+                    }
+                    else
+                    {
+                        g.PrecioUnitario = valor;   // precio unitario (por persona / por auto)
+                        g.Precio = valor * OperativoGasto.Multiplicador(g.TipoCalculo, pasajeros);
+                    }
+
                     // La fecha del gasto se toma sola el día que se carga el monto
-                    if (precio > 0 && g.FechaPago is null) g.FechaPago = DateTime.Today;
-                    if (precio == 0) g.FechaPago = null;
+                    if (g.Precio > 0 && g.FechaPago is null) g.FechaPago = DateTime.Today;
+                    if (g.Precio == 0) g.FechaPago = null;
 
                     if (guardado is not null) g.Comprobante = guardado;
 

@@ -43,20 +43,30 @@
             <p class="hint">Esta excursión todavía no tiene gastos cargados. Podés agregarlos acá, o cargarlos en la excursión para que aparezcan solos en todas sus salidas.</p>
         }
 
+        <p class="hint" style="margin:-6px 0 14px">
+            Cargá el precio <strong>por persona</strong> (o por auto) y el sistema lo multiplica
+            por la gente de la salida. Si alguna vez pagaste un monto distinto, tocá <em>“a mano”</em>.
+        </p>
         <table class="tabla" id="tablaGastos">
             <thead>
                 <tr>
                     <th style="width:70px">Listo</th>
                     <th>Ítem / gasto</th>
-                    <th class="num" style="width:150px">Lo que se pagó</th>
-                    <th style="width:220px">Comprobante</th>
+                    <th class="num" style="width:210px">Precio y total</th>
+                    <th style="width:210px">Comprobante</th>
                     <th style="width:60px"></th>
                 </tr>
             </thead>
             <tbody id="gastosBody">
             @foreach (var g in Model.Gastos)
             {
-                <tr class="gasto-row">
+                var esManual = g.PrecioUnitario is null;
+                var tipo = string.IsNullOrWhiteSpace(g.TipoCalculo) ? "Por persona" : g.TipoCalculo;
+                var mult = Wamani.Reservas.Models.OperativoGasto.Multiplicador(tipo, Model.PasajerosSalida);
+                var uni = tipo == "Por auto" ? "autos" : "personas";
+                var tipoLabel = tipo == "Fijo" ? "Fijo" : tipo == "Por auto" ? "Por auto (chofer-guía)" : "Por persona";
+                var valorInput = esManual ? g.Precio : (g.PrecioUnitario ?? 0);
+                <tr class="gasto-row" data-tipo="@tipo" data-mult="@mult" data-uni="@uni">
                     <td data-label="Listo">
                         <input type="checkbox" name="Comprados" value="@g.Id" class="chk-listo" style="width:20px;height:20px" @(g.Comprado ? "checked" : "") />
                     </td>
@@ -64,9 +74,12 @@
                         <input type="hidden" name="Ids" value="@g.Id" />
                         <input type="hidden" name="Keys" value="@g.Id" />
                         <input name="Nombres" value="@g.Nombre" />
+                        <div class="cliente-sub">@tipoLabel</div>
                     </td>
-                    <td class="num" data-label="Lo que se pagó">
-                        <input name="Precios" type="number" step="0.01" min="0" value="@Num(g.Precio)" class="in-precio" />
+                    <td class="num" data-label="Precio y total">
+                        <input type="hidden" name="EsManual" value="@(esManual ? "1" : "0")" class="es-manual" />
+                        <input name="Precios" type="number" step="0.01" min="0" value="@Num(valorInput)" class="in-precio" />
+                        <div class="calc-linea"></div>
                     </td>
                     <td data-label="Comprobante">
                         <input type="file" name="comp_@g.Id" accept="image/*,.pdf" class="in-comp" />
@@ -158,11 +171,43 @@
             });
             return t;
         }
+        // Calcula y muestra el total de una fila (precio unitario × cantidad, o total a mano)
+        function pintarFila(tr) {
+            var linea = tr.querySelector('.calc-linea');
+            var manual = tr.querySelector('.es-manual').value === '1';
+            var mult = parseInt(tr.dataset.mult) || 0;
+            var tipo = tr.dataset.tipo || 'Por persona';
+            var uni = tr.dataset.uni || 'personas';
+            var val = parseFloat(tr.querySelector('.in-precio').value) || 0;
+            var total = manual ? val : val * mult;
+            tr._total = total;
+            if (linea) {
+                if (manual) {
+                    linea.innerHTML = '<span class="cliente-sub">total a mano</span> · <button type="button" class="link-mini" onclick="modoAuto(this)">volver al cálculo</button>';
+                } else if (tipo === 'Fijo') {
+                    linea.innerHTML = 'monto fijo = <b>' + money(total) + '</b> · <button type="button" class="link-mini" onclick="modoManual(this)">a mano</button>';
+                } else {
+                    linea.innerHTML = '× ' + mult + ' ' + uni + ' = <b>' + money(total) + '</b> · <button type="button" class="link-mini" onclick="modoManual(this)">a mano</button>';
+                }
+            }
+            return total;
+        }
+        function modoManual(btn) {
+            var tr = btn.closest('.gasto-row');
+            tr.querySelector('.es-manual').value = '1';
+            tr.querySelector('.in-precio').value = Math.round(tr._total || 0);
+            pintarFila(tr); recalcular();
+        }
+        function modoAuto(btn) {
+            var tr = btn.closest('.gasto-row');
+            tr.querySelector('.es-manual').value = '0';
+            var inp = tr.querySelector('.in-precio'); inp.value = '';
+            pintarFila(tr); recalcular(); inp.focus();
+        }
         function recalcular() {
             var total = 0, listos = 0, filas = document.querySelectorAll('#gastosBody .gasto-row');
             filas.forEach(function (tr) {
-                var p = parseFloat(tr.querySelector('.in-precio')?.value) || 0;
-                total += p;
+                total += (typeof tr._total === 'number') ? tr._total : (parseFloat(tr.querySelector('.in-precio')?.value) || 0);
                 var c = tr.querySelector('.chk-listo');
                 if (c && c.checked) listos++;
             });
@@ -176,15 +221,15 @@
             var key = 'n' + (nuevoGastoSeq++);
             var tr = document.createElement('tr');
             tr.className = 'gasto-row';
+            tr.dataset.tipo = 'Manual'; tr.dataset.mult = '1'; tr.dataset.uni = '';
             tr.innerHTML =
                 '<td data-label="Listo"><span class="cliente-sub">guardá primero</span></td>' +
                 '<td data-label="Ítem"><input type="hidden" name="Ids" value="0" /><input type="hidden" name="Keys" value="' + key + '" /><input name="Nombres" placeholder="Ej: Peaje" /></td>' +
-                '<td class="num" data-label="Lo que se pagó"><input name="Precios" type="number" step="0.01" min="0" value="" class="in-precio" /></td>' +
+                '<td class="num" data-label="Precio y total"><input type="hidden" name="EsManual" value="1" class="es-manual" /><input name="Precios" type="number" step="0.01" min="0" value="" class="in-precio" /><div class="calc-linea"><span class="cliente-sub">total a mano</span></div></td>' +
                 '<td data-label="Comprobante"><input type="file" name="comp_' + key + '" accept="image/*,.pdf" class="in-comp" /></td>' +
                 '<td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>';
             document.getElementById('gastosBody').appendChild(tr);
             tr.querySelector('input[name=Nombres]').focus();
-            tr.querySelector('.in-precio').addEventListener('input', recalcular);
         }
         function quitarGasto(btn) { btn.closest('tr').remove(); recalcular(); }
 
@@ -204,9 +249,12 @@
             recalcular();  // el total de la salida cambia si cambia un total de proveedor
         }
         document.addEventListener('input', function (e) {
-            if (e.target.classList.contains('in-precio') || e.target.classList.contains('chk-listo')) recalcular();
+            if (e.target.classList.contains('in-precio')) { pintarFila(e.target.closest('.gasto-row')); recalcular(); }
+            else if (e.target.classList.contains('chk-listo')) recalcular();
             if (e.target.classList.contains('prov-total') || e.target.classList.contains('prov-sena') || e.target.classList.contains('prov-saldo')) recalcularProv();
         });
+        // Pintar los totales de todas las filas al abrir
+        document.querySelectorAll('#gastosBody .gasto-row').forEach(pintarFila);
         recalcularProv();
 
         // Agregar / quitar filas de hospedaje o restaurante (por pasajero)

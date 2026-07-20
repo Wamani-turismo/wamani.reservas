@@ -28,8 +28,8 @@ else
                     <th>Excursión</th>
                     <th>Pers.</th>
                     <th>Gastos listos</th>
-                    <th class="num">Presupuesto</th>
-                    <th>Proveedores</th>
+                    <th class="num">Gastos</th>
+                    <th class="num">Proveedores</th>
                     <th>Comprobantes</th>
                     <th></th>
                 </tr>
@@ -55,11 +55,19 @@ else
                             <span class="pill pill-warn">@s.GastosListos / @s.GastosTotal listos</span>
                         }
                     </td>
-                    <td class="num" data-label="Presupuesto">@Money(s.Presupuesto)</td>
-                    <td data-label="Proveedores">
-                        @if (s.DeudaProveedores > 0)
+                    <td class="num" data-label="Gastos">@Money(s.Presupuesto)</td>
+                    <td class="num" data-label="Proveedores">
+                        @if (s.ProveedoresTotal > 0)
                         {
-                            <span class="pill pill-warn">Falta pagar @Money(s.DeudaProveedores)</span>
+                            <div>@Money(s.ProveedoresTotal)</div>
+                            @if (s.DeudaProveedores > 0)
+                            {
+                                <span class="pill pill-warn" style="margin-top:4px">Falta @Money(s.DeudaProveedores)</span>
+                            }
+                            else
+                            {
+                                <span class="pill pill-ok" style="margin-top:4px">Pagado ✓</span>
+                            }
                         }
                         else
                         {

@@ -18,8 +18,9 @@ public class IndexModel : PageModel
         public int Pasajeros { get; set; }
         public int GastosTotal { get; set; }
         public int GastosListos { get; set; }
-        public decimal Presupuesto { get; set; }
-        public decimal DeudaProveedores { get; set; }
+        public decimal Presupuesto { get; set; }     // total de los gastos a comprar/preparar
+        public decimal ProveedoresTotal { get; set; } // total de lo que cuestan los proveedores
+        public decimal DeudaProveedores { get; set; } // lo que falta pagarles
         public int Comprobantes { get; set; }        // cuántos comprobantes hay subidos
         public bool Completo => GastosTotal > 0 && GastosListos >= GastosTotal;
     }
@@ -60,6 +61,7 @@ public class IndexModel : PageModel
                 };
 
                 var provs = provPorSalida.GetValueOrDefault((exId, g.Key.Fecha)) ?? new();
+                res.ProveedoresTotal = provs.Sum(x => x.Total);
                 res.DeudaProveedores = provs.Sum(x => x.Pendiente());
                 // Comprobantes subidos: los de proveedores (seña/saldo)…
                 res.Comprobantes = provs.Count(p => !string.IsNullOrEmpty(p.ComprobanteSena))

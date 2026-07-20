@@ -28,6 +28,8 @@ public class IndexModel : PageModel
         public decimal Ingreso { get; set; }
         public decimal Gastos { get; set; }
         public decimal Neta => Ingreso - Gastos;
+        // % de ganancia sobre lo cobrado (cuánto de lo que entró quedó como ganancia)
+        public decimal MargenPct => Ingreso > 0 ? Math.Round(Neta / Ingreso * 100, 0) : 0;
     }
 
     public class GastoTipo
@@ -44,6 +46,7 @@ public class IndexModel : PageModel
     public decimal Gastos { get; set; }
     public decimal Neta => Ingreso - Gastos;
     public decimal PorDueno => Math.Round(Neta / Duenos.Length, 2);
+    public decimal MargenPct => Ingreso > 0 ? Math.Round(Neta / Ingreso * 100, 0) : 0;  // % ganancia del mes
     public int TotalReservas { get; set; }
     public int TotalPersonas { get; set; }
 
@@ -94,11 +97,13 @@ public class IndexModel : PageModel
                 gastoPorExc[p.ExcursionId] = gastoPorExc.GetValueOrDefault(p.ExcursionId) + salio;
         }
 
-        // ---- Salidas del mes (dato operativo: cuántas reservas/personas salieron) ----
-        var salidasDelMes = reservas.Where(r => r.FechaDesde >= MesActual && r.FechaDesde < fin).ToList();
-        TotalReservas = salidasDelMes.Count;
-        TotalPersonas = salidasDelMes.Sum(r => r.CantidadPersonas);
-        var reservasPorExc = salidasDelMes.GroupBy(r => r.ExcursionId ?? 0)
+        // ---- Reservas del mes: las que MOVIERON plata este mes (cobraste seña o saldo),
+        //      así las personas/reservas coinciden con la plata que se ve (aunque la
+        //      excursión salga otro mes) ----
+        var reservasDelMes = reservas.Where(r => EnMes(r.SenaFecha) || EnMes(r.SaldoFecha)).ToList();
+        TotalReservas = reservasDelMes.Count;
+        TotalPersonas = reservasDelMes.Sum(r => r.CantidadPersonas);
+        var reservasPorExc = reservasDelMes.GroupBy(r => r.ExcursionId ?? 0)
             .ToDictionary(g => g.Key, g => (Cant: g.Count(), Pers: g.Sum(x => x.CantidadPersonas)));
 
         // ---- Una línea por excursión que tuvo movimiento o salidas este mes ----

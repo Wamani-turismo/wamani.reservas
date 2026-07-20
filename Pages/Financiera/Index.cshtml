@@ -41,9 +41,13 @@
     <div class="fin-card fin-card-net">
         <div class="fin-label">Ganancia neta</div>
         <div class="fin-val" style="color:var(--accent)">@Money(Model.Neta)</div>
+        @if (Model.Ingreso > 0)
+        {
+            <div class="fin-label" style="margin-top:4px">@Model.MargenPct.ToString("0")% de ganancia</div>
+        }
     </div>
     <div class="fin-card">
-        <div class="fin-label">Salidas del mes</div>
+        <div class="fin-label">Reservas del mes</div>
         <div class="fin-val">@Model.TotalReservas <span style="font-size:1rem;color:var(--muted)">res</span> · @Model.TotalPersonas <span style="font-size:1rem;color:var(--muted)">pers</span></div>
     </div>
 </div>
@@ -68,17 +72,18 @@
         <thead>
             <tr>
                 <th>Excursión / Travesía</th>
-                <th>Salidas</th>
+                <th>Reservas</th>
                 <th>Personas</th>
                 <th class="num">Ingresos</th>
                 <th class="num">Egresos</th>
                 <th class="num">Ganancia neta</th>
+                <th class="num">% Gan.</th>
             </tr>
         </thead>
         <tbody>
         @if (Model.Lineas.Count == 0)
         {
-            <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">No hay reservas este mes.</td></tr>
+            <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px">No hay reservas este mes.</td></tr>
         }
         @foreach (var l in Model.Lineas)
         {
@@ -89,6 +94,7 @@
                 <td class="num" data-label="Ingreso">@Money(l.Ingreso)</td>
                 <td class="num" data-label="Gastos" style="color:var(--warn)">@Money(l.Gastos)</td>
                 <td class="num" data-label="Ganancia neta"><strong style="color:var(--accent)">@Money(l.Neta)</strong></td>
+                <td class="num" data-label="% Ganancia">@(l.Ingreso > 0 ? l.MargenPct.ToString("0") + "%" : "—")</td>
             </tr>
         }
         </tbody>

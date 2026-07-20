@@ -9,12 +9,7 @@ namespace Wamani.Reservas.Pages.Financiera;
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
-    private readonly IWebHostEnvironment _env;
-    public IndexModel(AppDbContext db, IWebHostEnvironment env)
-    {
-        _db = db;
-        _env = env;
-    }
+    public IndexModel(AppDbContext db) => _db = db;
 
     // Los 3 dueños (reparto en partes iguales)
     public static readonly string[] Duenos = { "Lautaro", "Facundo", "Luciano" };
@@ -58,13 +53,6 @@ public class IndexModel : PageModel
         ? Math.Round(Neta / (Gastos + GastosEmpresaTotal) * 100, 0) : 0;
     public int TotalReservas { get; set; }
     public int TotalPersonas { get; set; }
-
-    // Formulario para agregar un gasto de empresa
-    [BindProperty] public DateTime NuevoFecha { get; set; } = DateTime.Today;
-    [BindProperty] public string NuevoTipo { get; set; } = "Fijo";
-    [BindProperty] public string? NuevoDescripcion { get; set; }
-    [BindProperty] public decimal NuevoMonto { get; set; }
-    [BindProperty] public IFormFile? NuevoComprobante { get; set; }
 
     public async Task OnGetAsync()
     {
@@ -192,46 +180,5 @@ public class IndexModel : PageModel
             .Where(g => g.Total > 0)
             .OrderByDescending(g => g.Total)
             .ToList();
-    }
-
-    // Agregar un gasto general de la empresa
-    public async Task<IActionResult> OnPostAgregarGastoAsync()
-    {
-        if (!string.IsNullOrWhiteSpace(NuevoDescripcion) && NuevoMonto > 0)
-        {
-            var g = new GastoEmpresa
-            {
-                Fecha = NuevoFecha.Date,
-                Tipo = GastoEmpresa.Tipos.Contains(NuevoTipo) ? NuevoTipo : "Fijo",
-                Descripcion = NuevoDescripcion.Trim(),
-                Monto = NuevoMonto
-            };
-
-            if (NuevoComprobante is not null && NuevoComprobante.Length > 0)
-            {
-                var carpeta = Wamani.Reservas.Services.Comprobantes.Carpeta(_env);
-                Directory.CreateDirectory(carpeta);
-                var nombre = $"{Guid.NewGuid():N}{Path.GetExtension(NuevoComprobante.FileName)}";
-                using (var st = new FileStream(Path.Combine(carpeta, nombre), FileMode.Create))
-                    await NuevoComprobante.CopyToAsync(st);
-                g.Comprobante = $"/comprobantes/{nombre}";
-            }
-
-            _db.GastosEmpresa.Add(g);
-            await _db.SaveChangesAsync();
-        }
-        return RedirectToPage(new { Mes });
-    }
-
-    // Borrar un gasto general de la empresa
-    public async Task<IActionResult> OnPostEliminarGastoAsync(int id)
-    {
-        var g = await _db.GastosEmpresa.FindAsync(id);
-        if (g is not null)
-        {
-            _db.GastosEmpresa.Remove(g);
-            await _db.SaveChangesAsync();
-        }
-        return RedirectToPage(new { Mes });
     }
 }

@@ -1,0 +1,104 @@
+@page
+@model Wamani.Reservas.Pages.Gastos.IndexModel
+@{
+    ViewData["Title"] = "Gastos";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+    var mesPrev = Model.MesActual.AddMonths(-1).ToString("yyyy-MM");
+    var mesNext = Model.MesActual.AddMonths(1).ToString("yyyy-MM");
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Gastos de la empresa</h1>
+        <p class="subtitle" style="margin:0">Publicidad, botiquín, etc. Se descuentan del neto del mes en Finanzas.</p>
+    </div>
+    <a class="btn btn-ghost" asp-page="/Financiera/Index" asp-route-mes="@Model.MesActual.ToString("yyyy-MM")">💰 Ver en Finanzas</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Aviso))
+{
+    <div class="aviso-ok">@Model.Aviso</div>
+}
+
+<div class="mes-nav">
+    <a class="btn-mini btn-mini-ghost" asp-page="/Gastos/Index" asp-route-mes="@mesPrev">← Mes anterior</a>
+    <span class="mes-titulo">@Model.MesTexto</span>
+    <a class="btn-mini btn-mini-ghost" asp-page="/Gastos/Index" asp-route-mes="@mesNext">Mes siguiente →</a>
+    <form method="get" style="margin-left:auto">
+        <input class="search" type="month" name="Mes" value="@Model.MesActual.ToString("yyyy-MM")" onchange="this.form.submit()" style="min-width:0" />
+    </form>
+</div>
+
+<!-- Cargar un gasto -->
+<div class="card">
+    <h2>Agregar un gasto</h2>
+    <form method="post" enctype="multipart/form-data" asp-page-handler="Agregar">
+        <div class="form-grid">
+            <div class="field"><label>Fecha</label><input asp-for="NuevoFecha" type="date" /></div>
+            <div class="field">
+                <label>Fijo / Variable</label>
+                <select asp-for="NuevoTipo">
+                    @foreach (var t in Wamani.Reservas.Models.GastoEmpresa.Tipos) { <option value="@t">@t</option> }
+                </select>
+            </div>
+            <div class="field full"><label>Descripción</label><input asp-for="NuevoDescripcion" placeholder="Ej: Publicidad en Instagram" /></div>
+            <div class="field"><label>Monto</label><input asp-for="NuevoMonto" type="number" step="0.01" min="0" /></div>
+            <div class="field"><label>Comprobante (opcional)</label><input asp-for="NuevoComprobante" type="file" accept="image/*,.pdf" /></div>
+        </div>
+        <div class="acciones-form" style="margin-top:12px">
+            <button type="submit" class="btn btn-primary">+ Agregar gasto</button>
+        </div>
+    </form>
+</div>
+
+<!-- Lista del mes -->
+<div class="table-wrap" style="margin-top:18px">
+    <table class="tabla">
+        <thead>
+            <tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th class="num">Monto</th><th>Comprobante</th><th></th></tr>
+        </thead>
+        <tbody>
+        @if (Model.Lista.Count == 0)
+        {
+            <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">No hay gastos cargados este mes.</td></tr>
+        }
+        @foreach (var g in Model.Lista)
+        {
+            <tr>
+                <td data-label="Fecha">@g.Fecha.ToString("dd/MM/yy")</td>
+                <td data-label="Tipo">@g.Tipo</td>
+                <td data-label="Descripción">@g.Descripcion</td>
+                <td class="num" data-label="Monto" style="color:var(--warn)">@Money(g.Monto)</td>
+                <td data-label="Comprobante">
+                    @if (!string.IsNullOrEmpty(g.Comprobante))
+                    {
+                        <a href="@g.Comprobante" target="_blank" class="hint">✔ ver</a>
+                    }
+                    else
+                    {
+                        <span class="cliente-sub">—</span>
+                    }
+                </td>
+                <td>
+                    <form method="post" asp-page-handler="Eliminar" asp-route-id="@g.Id" style="display:inline"
+                          onsubmit="return confirm('¿Borrar este gasto?');">
+                        <input type="hidden" asp-for="Mes" />
+                        <button type="submit" class="btn-mini btn-mini-danger">Quitar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+        @if (Model.Lista.Count > 0)
+        {
+            <tfoot>
+                <tr>
+                    <td colspan="3"><strong>Total del mes</strong></td>
+                    <td class="num"><strong style="color:var(--warn)">@Money(Model.Total)</strong></td>
+                    <td colspan="2"></td>
+                </tr>
+            </tfoot>
+        }
+    </table>
+</div>

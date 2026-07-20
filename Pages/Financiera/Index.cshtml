@@ -146,34 +146,18 @@
     }
 }
 
-<!-- Gastos generales de la empresa (se descuentan del neto del mes) -->
+<!-- Gastos generales de la empresa (solo lectura; se cargan en la página Gastos) -->
 <div class="card" style="margin-top:18px">
-    <h2>Gastos de la empresa <span class="hint" style="font-weight:400">(publicidad, botiquín, etc. — se descuentan del neto del mes)</span></h2>
-
-    <form method="post" enctype="multipart/form-data" asp-page-handler="AgregarGasto">
-        <input type="hidden" asp-for="Mes" />
-        <div class="form-grid">
-            <div class="field"><label>Fecha</label><input asp-for="NuevoFecha" type="date" /></div>
-            <div class="field">
-                <label>Fijo / Variable</label>
-                <select asp-for="NuevoTipo">
-                    @foreach (var t in Wamani.Reservas.Models.GastoEmpresa.Tipos) { <option value="@t">@t</option> }
-                </select>
-            </div>
-            <div class="field full"><label>Descripción</label><input asp-for="NuevoDescripcion" placeholder="Ej: Publicidad en Instagram" /></div>
-            <div class="field"><label>Monto</label><input asp-for="NuevoMonto" type="number" step="0.01" min="0" /></div>
-            <div class="field"><label>Comprobante (opcional)</label><input asp-for="NuevoComprobante" type="file" accept="image/*,.pdf" /></div>
-        </div>
-        <div class="acciones-form" style="margin-top:12px">
-            <button type="submit" class="btn btn-primary">+ Agregar gasto</button>
-        </div>
-    </form>
+    <div class="toolbar" style="margin-bottom:14px">
+        <h2 style="border:none;padding:0;margin:0">Gastos de la empresa <span class="hint" style="font-weight:400">(se descuentan del neto)</span></h2>
+        <a class="btn btn-ghost" asp-page="/Gastos/Index" asp-route-mes="@Model.MesActual.ToString("yyyy-MM")">✏️ Cargar gastos</a>
+    </div>
 
     @if (Model.GastosEmpresaLista.Count > 0)
     {
-        <table class="tabla" style="margin-top:18px">
+        <table class="tabla">
             <thead>
-                <tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th class="num">Monto</th><th>Comprobante</th><th></th></tr>
+                <tr><th>Fecha</th><th>Tipo</th><th>Descripción</th><th class="num">Monto</th><th>Comprobante</th></tr>
             </thead>
             <tbody>
             @foreach (var g in Model.GastosEmpresaLista)
@@ -193,13 +177,6 @@
                             <span class="cliente-sub">—</span>
                         }
                     </td>
-                    <td>
-                        <form method="post" asp-page-handler="EliminarGasto" asp-route-id="@g.Id" style="display:inline"
-                              onsubmit="return confirm('¿Borrar este gasto?');">
-                            <input type="hidden" asp-for="Mes" />
-                            <button type="submit" class="btn-mini btn-mini-danger">Quitar</button>
-                        </form>
-                    </td>
                 </tr>
             }
             </tbody>
@@ -207,14 +184,14 @@
                 <tr>
                     <td colspan="3"><strong>Total gastos de empresa</strong></td>
                     <td class="num"><strong style="color:var(--warn)">@Money(Model.GastosEmpresaTotal)</strong></td>
-                    <td colspan="2"></td>
+                    <td></td>
                 </tr>
             </tfoot>
         </table>
     }
     else
     {
-        <p class="hint" style="margin-top:14px">Todavía no cargaste gastos de la empresa este mes.</p>
+        <p class="hint" style="margin:0">Este mes no hay gastos de empresa cargados. Cargalos desde la página <strong>Gastos</strong>.</p>
     }
 </div>
 

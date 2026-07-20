@@ -144,35 +144,24 @@ public class IndexModel : PageModel
             .Select(s => $"{s.ExcursionId}|{s.Fecha:yyyy-MM-dd}")
             .ToHashSet();
 
-        // Servicios que faltan pagar por salida: si el operativo ya se abrió, los gastos
-        // NO tildados; si nunca se abrió, todos los gastos de la plantilla de la excursión.
-        var opsPorSalida = (await _db.OperativoGastos.ToListAsync())
+        // "Servicios" = los PROVEEDORES de la salida (guía, auto, hospedaje, restaurante).
+        // "Faltan servicios" = proveedores con saldo pendiente (aún no pagados del todo).
+        var provsPorSalida = (await _db.OperativoProveedores.ToListAsync())
             .GroupBy(o => $"{o.ExcursionId}|{o.Fecha:yyyy-MM-dd}")
             .ToDictionary(g => g.Key, g => g.ToList());
-        var plantillaPorExc = (await _db.GastosExcursion.ToListAsync())
-            .GroupBy(g => g.ExcursionId)
-            .ToDictionary(g => g.Key, g => g.Select(x => x.Nombre).ToList());
 
         foreach (var r in todas)
         {
             var clave = ClaveSalida(r);
             if (ServiciosFaltantes.ContainsKey(clave)) continue;
 
-            if (opsPorSalida.TryGetValue(clave, out var ops))
-            {
-                ServiciosFaltantes[clave] = ops.Where(o => !o.Comprado).Select(o => o.Nombre).ToList();
-                ServiciosTotal[clave] = ops.Count;
-            }
-            else if (r.ExcursionId is int exId && plantillaPorExc.TryGetValue(exId, out var plant))
-            {
-                ServiciosFaltantes[clave] = new List<string>(plant);
-                ServiciosTotal[clave] = plant.Count;
-            }
-            else
-            {
-                ServiciosFaltantes[clave] = new List<string>();
-                ServiciosTotal[clave] = 0;
-            }
+            var provs = provsPorSalida.GetValueOrDefault(clave) ?? new();
+            var conTotal = provs.Where(p => p.Total > 0).ToList();
+            ServiciosTotal[clave] = conTotal.Count;
+            ServiciosFaltantes[clave] = conTotal
+                .Where(p => p.Pendiente() > 0)
+                .Select(p => string.IsNullOrWhiteSpace(p.ProveedorNombre) ? p.Tipo : $"{p.Tipo}: {p.ProveedorNombre}")
+                .ToList();
         }
 
         // ---- Detección de coincidencias para el modal ----

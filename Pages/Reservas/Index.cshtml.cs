@@ -300,10 +300,14 @@ public class IndexModel : PageModel
         var r = await _db.Reservas.FindAsync(id);
         if (r is not null)
         {
+            var excursionId = r.ExcursionId;
+            var fecha = r.FechaDesde;
             var pas = await _db.Pasajeros.Where(p => p.ReservaId == id).ToListAsync();
             _db.Pasajeros.RemoveRange(pas);
             _db.Reservas.Remove(r);
             await _db.SaveChangesAsync();
+            await Wamani.Reservas.Services.LimpiezaSalida
+                .BorrarOperativoSiSalidaVaciaAsync(_db, excursionId, fecha);
         }
         return RedirectToPage("/Reservas/Index", new { Aviso = "Reserva eliminada." });
     }

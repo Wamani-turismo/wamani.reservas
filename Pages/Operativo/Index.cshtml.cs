@@ -20,6 +20,7 @@ public class IndexModel : PageModel
         public int GastosListos { get; set; }
         public decimal Presupuesto { get; set; }
         public decimal DeudaProveedores { get; set; }
+        public int Comprobantes { get; set; }        // cuántos comprobantes hay subidos
         public bool Completo => GastosTotal > 0 && GastosListos >= GastosTotal;
     }
 
@@ -41,9 +42,9 @@ public class IndexModel : PageModel
             .GroupBy(o => (o.ExcursionId, o.Fecha.Date))
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        var deudaProvPorSalida = (await _db.OperativoProveedores.ToListAsync())
+        var provPorSalida = (await _db.OperativoProveedores.ToListAsync())
             .GroupBy(o => (o.ExcursionId, o.Fecha.Date))
-            .ToDictionary(g => g.Key, g => g.Sum(x => x.Pendiente()));
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         Salidas = reservas
             .GroupBy(r => new { r.ExcursionId, r.Excursion, Fecha = r.FechaDesde.Date })
@@ -58,13 +59,18 @@ public class IndexModel : PageModel
                     Pasajeros = g.Sum(r => r.CantidadPersonas)
                 };
 
-                res.DeudaProveedores = deudaProvPorSalida.TryGetValue((exId, g.Key.Fecha), out var dp) ? dp : 0m;
+                var provs = provPorSalida.GetValueOrDefault((exId, g.Key.Fecha)) ?? new();
+                res.DeudaProveedores = provs.Sum(x => x.Pendiente());
+                // Comprobantes subidos: los de proveedores (seña/saldo)…
+                res.Comprobantes = provs.Count(p => !string.IsNullOrEmpty(p.ComprobanteSena))
+                                 + provs.Count(p => !string.IsNullOrEmpty(p.ComprobanteSaldo));
 
                 if (operativoPorSalida.TryGetValue((exId, g.Key.Fecha), out var ops))
                 {
                     res.GastosTotal = ops.Count;
                     res.GastosListos = ops.Count(o => o.Comprado);
                     res.Presupuesto = ops.Sum(o => o.Precio);
+                    res.Comprobantes += ops.Count(o => !string.IsNullOrEmpty(o.Comprobante));  // …y los de gastos
                 }
                 else if (plantillaPorExc.TryGetValue(exId, out var plant))
                 {

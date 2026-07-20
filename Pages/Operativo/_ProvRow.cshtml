@@ -7,6 +7,7 @@
 }
 <div class="prov-row prov-bloque">
     <input type="hidden" name="ProvIds" value="@id" />
+    <input type="hidden" name="ProvKeys" value="@Model.Key" />
     <input type="hidden" name="ProvTipos" value="@Model.Tipo" />
     <div class="prov-head">
         <span class="prov-tipo">@Ico(Model.Tipo) @Model.Tipo</span>
@@ -42,17 +43,10 @@
         </div>
         <div class="field">
             <label>Comprobante seña</label>
-            @if (id > 0)
+            <input type="file" name="provcompsena_@Model.Key" accept="image/*,.pdf" />
+            @if (!string.IsNullOrEmpty(a?.ComprobanteSena))
             {
-                <input type="file" name="provcompsena_@id" accept="image/*,.pdf" />
-                @if (!string.IsNullOrEmpty(a?.ComprobanteSena))
-                {
-                    <a href="@a.ComprobanteSena" target="_blank" class="hint">✔ ver</a>
-                }
-            }
-            else
-            {
-                <span class="hint">guardá primero</span>
+                <a href="@a.ComprobanteSena" target="_blank" class="hint">✔ ver</a>
             }
         </div>
         <div class="field">
@@ -61,17 +55,10 @@
         </div>
         <div class="field">
             <label>Comprobante saldo</label>
-            @if (id > 0)
+            <input type="file" name="provcompsaldo_@Model.Key" accept="image/*,.pdf" />
+            @if (!string.IsNullOrEmpty(a?.ComprobanteSaldo))
             {
-                <input type="file" name="provcompsaldo_@id" accept="image/*,.pdf" />
-                @if (!string.IsNullOrEmpty(a?.ComprobanteSaldo))
-                {
-                    <a href="@a.ComprobanteSaldo" target="_blank" class="hint">✔ ver</a>
-                }
-            }
-            else
-            {
-                <span class="hint">guardá primero</span>
+                <a href="@a.ComprobanteSaldo" target="_blank" class="hint">✔ ver</a>
             }
         </div>
     </div>

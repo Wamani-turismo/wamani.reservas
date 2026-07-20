@@ -13,6 +13,7 @@ public class ProvRowVm
     public OperativoProveedor? Asig { get; set; }
     public List<Proveedor> Cat { get; set; } = new();
     public bool ConPasajero { get; set; }   // hospedaje/restaurante: se pueden agregar varios (por persona)
+    public string Key { get; set; } = "";   // clave para asociar el comprobante a la fila (id real o temporal si es nueva)
 }
 
 public class SalidaModel : PageModel
@@ -54,6 +55,7 @@ public class SalidaModel : PageModel
 
     // Proveedores enviados (una fila puede repetirse por tipo; alineadas por índice)
     [BindProperty] public List<int> ProvIds { get; set; } = new();
+    [BindProperty] public List<string> ProvKeys { get; set; } = new();   // clave para el comprobante de cada proveedor
     [BindProperty] public List<string> ProvTipos { get; set; } = new();
     [BindProperty] public List<int> ProvProveedorIds { get; set; } = new();
     [BindProperty] public List<string> ProvTotales { get; set; } = new();
@@ -293,14 +295,12 @@ public class SalidaModel : PageModel
             if (saldo > 0 && row.FechaSaldo is null) row.FechaSaldo = DateTime.Today;
             if (saldo == 0) row.FechaSaldo = null;
 
-            // Comprobantes por id de fila (solo filas ya guardadas)
-            if (rowId != 0)
-            {
-                var gSena = await GuardarArchivoAsync(Request.Form.Files[$"provcompsena_{rowId}"]);
-                if (gSena is not null) row.ComprobanteSena = gSena;
-                var gSaldo = await GuardarArchivoAsync(Request.Form.Files[$"provcompsaldo_{rowId}"]);
-                if (gSaldo is not null) row.ComprobanteSaldo = gSaldo;
-            }
+            // Comprobantes por clave de fila (funciona también en filas nuevas)
+            var provKey = i < ProvKeys.Count ? ProvKeys[i] : rowId.ToString();
+            var gSena = await GuardarArchivoAsync(Request.Form.Files[$"provcompsena_{provKey}"]);
+            if (gSena is not null) row.ComprobanteSena = gSena;
+            var gSaldo = await GuardarArchivoAsync(Request.Form.Files[$"provcompsaldo_{provKey}"]);
+            if (gSaldo is not null) row.ComprobanteSaldo = gSaldo;
         }
 
         // Borrar filas que se quitaron en la pantalla (existían y no volvieron)

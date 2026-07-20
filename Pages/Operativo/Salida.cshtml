@@ -35,6 +35,45 @@
     <input type="hidden" asp-for="ExcursionId" />
     <input type="hidden" asp-for="Fecha" />
 
+    <!-- ---------- Proveedores (van primero: llevan seña + saldo) ---------- -->
+    <div class="card">
+        <h2>Proveedores <span class="hint" style="font-weight:400">(guía, hospedaje, restaurante, auto)</span></h2>
+        <p class="hint" style="margin:-8px 0 14px">
+            Elegí el proveedor de cada uno y registrá el total y lo que ya pagaste (seña). El sistema te avisa lo que falta.
+            ¿Falta uno en la lista? <a asp-page="/Proveedores/Cargar" target="_blank">Agregar proveedor</a>.
+        </p>
+        @{
+            List<Wamani.Reservas.Pages.Operativo.ProvRowVm> RowsDe(string tipo, bool conPasajero)
+            {
+                var cat = Model.CatalogoPorTipo.GetValueOrDefault(tipo) ?? new();
+                var asigs = Model.ProvPorTipo.GetValueOrDefault(tipo) ?? new();
+                var rows = asigs.Select(a => new Wamani.Reservas.Pages.Operativo.ProvRowVm { Tipo = tipo, Asig = a, Cat = cat, ConPasajero = conPasajero, Key = a.Id.ToString() }).ToList();
+                if (rows.Count == 0) rows.Add(new Wamani.Reservas.Pages.Operativo.ProvRowVm { Tipo = tipo, Asig = null, Cat = cat, ConPasajero = conPasajero, Key = "new-" + tipo });
+                return rows;
+            }
+        }
+
+        <div class="prov-lista">
+            @* Guía y Auto: una sola fila (uno por salida) *@
+            @foreach (var vm in RowsDe("Guía", false)) { <partial name="_ProvRow" model="vm" /> }
+
+            @* Hospedaje: uno o varios (por pasajero) *@
+            <div class="prov-group" data-tipo="Hospedaje">
+                @foreach (var vm in RowsDe("Hospedaje", true)) { <partial name="_ProvRow" model="vm" /> }
+            </div>
+            <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Hospedaje')">+ Agregar hospedaje (otra persona)</button>
+
+            @* Restaurante: uno o varios (por pasajero) *@
+            <div class="prov-group" data-tipo="Restaurante">
+                @foreach (var vm in RowsDe("Restaurante", true)) { <partial name="_ProvRow" model="vm" /> }
+            </div>
+            <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Restaurante')">+ Agregar restaurante (otra persona)</button>
+
+            @foreach (var vm in RowsDe("Auto", false)) { <partial name="_ProvRow" model="vm" /> }
+        </div>
+    </div>
+
+    <!-- ---------- Gastos a preparar / comprar (van abajo) ---------- -->
     <div class="card">
         <h2>Gastos a preparar / comprar</h2>
 
@@ -105,44 +144,6 @@
                 <div class="label">Total de la salida (gastos + proveedores)</div>
                 <div class="val" id="outTotal">@Money(total)</div>
             </div>
-        </div>
-    </div>
-
-    <!-- ---------- Proveedores ---------- -->
-    <div class="card">
-        <h2>Proveedores <span class="hint" style="font-weight:400">(guía, hospedaje, restaurante, auto)</span></h2>
-        <p class="hint" style="margin:-8px 0 14px">
-            Elegí el proveedor de cada uno y registrá el total y lo que ya pagaste (seña). El sistema te avisa lo que falta.
-            ¿Falta uno en la lista? <a asp-page="/Proveedores/Cargar" target="_blank">Agregar proveedor</a>.
-        </p>
-        @{
-            List<Wamani.Reservas.Pages.Operativo.ProvRowVm> RowsDe(string tipo, bool conPasajero)
-            {
-                var cat = Model.CatalogoPorTipo.GetValueOrDefault(tipo) ?? new();
-                var asigs = Model.ProvPorTipo.GetValueOrDefault(tipo) ?? new();
-                var rows = asigs.Select(a => new Wamani.Reservas.Pages.Operativo.ProvRowVm { Tipo = tipo, Asig = a, Cat = cat, ConPasajero = conPasajero }).ToList();
-                if (rows.Count == 0) rows.Add(new Wamani.Reservas.Pages.Operativo.ProvRowVm { Tipo = tipo, Asig = null, Cat = cat, ConPasajero = conPasajero });
-                return rows;
-            }
-        }
-
-        <div class="prov-lista">
-            @* Guía y Auto: una sola fila (uno por salida) *@
-            @foreach (var vm in RowsDe("Guía", false)) { <partial name="_ProvRow" model="vm" /> }
-
-            @* Hospedaje: uno o varios (por pasajero) *@
-            <div class="prov-group" data-tipo="Hospedaje">
-                @foreach (var vm in RowsDe("Hospedaje", true)) { <partial name="_ProvRow" model="vm" /> }
-            </div>
-            <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Hospedaje')">+ Agregar hospedaje (otra persona)</button>
-
-            @* Restaurante: uno o varios (por pasajero) *@
-            <div class="prov-group" data-tipo="Restaurante">
-                @foreach (var vm in RowsDe("Restaurante", true)) { <partial name="_ProvRow" model="vm" /> }
-            </div>
-            <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Restaurante')">+ Agregar restaurante (otra persona)</button>
-
-            @foreach (var vm in RowsDe("Auto", false)) { <partial name="_ProvRow" model="vm" /> }
         </div>
     </div>
 
@@ -240,9 +241,11 @@
                 var sena = parseFloat(tr.querySelector('.prov-sena')?.value) || 0;
                 var saldo = parseFloat(tr.querySelector('.prov-saldo')?.value) || 0;
                 var falta = Math.max(0, total - sena - saldo);
+                var demas = (sena + saldo) - total;
                 var cel = tr.querySelector('.prov-pend');
                 if (!cel) return;
                 if (total <= 0) { cel.textContent = '—'; cel.style.color = 'var(--muted)'; }
+                else if (demas > 0.01) { cel.textContent = '⚠ Cargaste ' + money(demas) + ' de más'; cel.style.color = 'var(--warn)'; }
                 else if (falta <= 0.01) { cel.textContent = 'Pagado ✔'; cel.style.color = 'var(--ok)'; }
                 else { cel.textContent = money(falta); cel.style.color = 'var(--warn)'; }
             });
@@ -258,25 +261,21 @@
         recalcularProv();
 
         // Agregar / quitar filas de hospedaje o restaurante (por pasajero)
+        var nuevoProvSeq = 1;
         function agregarProv(tipo) {
             var group = document.querySelector('.prov-group[data-tipo="' + tipo + '"]');
             var base = group.querySelector('.prov-row');
             var clone = base.cloneNode(true);
+            var key = 'pnew' + (nuevoProvSeq++);   // clave única para poder subir el comprobante de la fila nueva
             clone.querySelector('input[name=ProvIds]').value = '0';
+            var pk = clone.querySelector('input[name=ProvKeys]'); if (pk) pk.value = key;
             var sel = clone.querySelector('select[name=ProvProveedorIds]'); if (sel) sel.value = '0';
-            clone.querySelectorAll('.prov-total,.prov-sena,.prov-saldo').forEach(function (i) { i.value = ''; });
+            clone.querySelectorAll('.prov-total,.prov-sena,.prov-saldo').forEach(function (i) { i.value = ''; i.readOnly = false; i.style.background = ''; });
             var pq = clone.querySelector('.prov-para'); if (pq) pq.value = '';
-            // reemplazar los campos de comprobante por "guardá primero"
-            clone.querySelectorAll('.prov-grid .field').forEach(function (f) {
-                var lbl = (f.querySelector('label') || {}).textContent || '';
-                if (/Comprobante/.test(lbl)) {
-                    var fi = f.querySelector('input[type=file]'); if (fi) fi.remove();
-                    var ver = f.querySelector('a'); if (ver) ver.remove();
-                    if (!f.querySelector('.hint')) {
-                        var s = document.createElement('span'); s.className = 'hint'; s.textContent = 'guardá primero'; f.appendChild(s);
-                    }
-                }
-            });
+            // renombrar los campos de comprobante con la clave nueva y limpiarlos
+            var fSena = clone.querySelector('input[name^="provcompsena_"]'); if (fSena) { fSena.name = 'provcompsena_' + key; fSena.value = ''; }
+            var fSaldo = clone.querySelector('input[name^="provcompsaldo_"]'); if (fSaldo) { fSaldo.name = 'provcompsaldo_' + key; fSaldo.value = ''; }
+            clone.querySelectorAll('.prov-grid .field a').forEach(function (a) { a.remove(); });  // sacar los "✔ ver" heredados
             var pend = clone.querySelector('.prov-pend'); if (pend) pend.textContent = '';
             group.appendChild(clone);
             recalcularProv();

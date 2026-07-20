@@ -18,6 +18,15 @@ public class MantenimientoModel : PageModel
     public int GastosOperativo { get; set; }
     public int ProveedoresOperativo { get; set; }
     public int Interesados { get; set; }
+    public int GastosProveedor { get; set; }   // gastos que en realidad son proveedores
+
+    // Nombres de gastos que en realidad son proveedores (se manejan con seña + saldo).
+    private static readonly HashSet<string> NombresProveedor = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "auto", "chofer", "guia", "guía", "hospedaje", "restaurante", "cena"
+    };
+    private static bool EsGastoProveedor(string? nombre)
+        => NombresProveedor.Contains((nombre ?? "").Trim());
 
     [BindProperty] public string? Confirmacion { get; set; }
 
@@ -32,6 +41,8 @@ public class MantenimientoModel : PageModel
         GastosOperativo = await _db.OperativoGastos.CountAsync();
         ProveedoresOperativo = await _db.OperativoProveedores.CountAsync();
         Interesados = await _db.Interesados.CountAsync();
+        GastosProveedor = (await _db.GastosExcursion.Select(g => g.Nombre).ToListAsync())
+            .Count(EsGastoProveedor);
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -53,6 +64,25 @@ public class MantenimientoModel : PageModel
         await _db.Reservas.ExecuteDeleteAsync();
 
         Aviso = "Listo. Se borraron todas las reservas y sus datos. Ya podés cargarlas de nuevo desde cero.";
+        return RedirectToPage();
+    }
+
+    // Saca de los GASTOS de las excursiones los que en realidad son proveedores
+    // (Auto, Chofer, Guía, Hospedaje, Restaurante, Cena). Esos se manejan en Proveedores.
+    public async Task<IActionResult> OnPostLimpiarGastosAsync()
+    {
+        var plantilla = await _db.GastosExcursion.ToListAsync();
+        var aBorrarPlantilla = plantilla.Where(g => EsGastoProveedor(g.Nombre)).ToList();
+        _db.GastosExcursion.RemoveRange(aBorrarPlantilla);
+
+        // También sacarlos de los operativos ya cargados (para que desaparezcan de las salidas abiertas)
+        var ops = await _db.OperativoGastos.ToListAsync();
+        var aBorrarOps = ops.Where(o => EsGastoProveedor(o.Nombre)).ToList();
+        _db.OperativoGastos.RemoveRange(aBorrarOps);
+
+        await _db.SaveChangesAsync();
+
+        Aviso = $"Listo. Se sacaron {aBorrarPlantilla.Count} gasto(s) de las excursiones (y {aBorrarOps.Count} de las salidas) que eran proveedores. Ahora esos se cargan en la sección Proveedores.";
         return RedirectToPage();
     }
 }

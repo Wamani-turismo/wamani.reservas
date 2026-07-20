@@ -59,3 +59,22 @@
         </div>
     </form>
 </div>
+
+<div class="card" style="max-width:640px">
+    <h2>Ordenar gastos y proveedores</h2>
+    <p style="margin-top:0">
+        Saca de los <strong>gastos</strong> de las excursiones los ítems que en realidad son
+        <strong>proveedores</strong> (Auto, Chofer, Guía, Hospedaje, Restaurante, Cena). Esos se
+        manejan en la sección <strong>Proveedores</strong> del operativo (con seña y saldo).
+    </p>
+    <p class="hint" style="margin-top:0">
+        Ahora mismo hay <strong>@Model.GastosProveedor</strong> gasto(s) así cargado(s) en las excursiones.
+        No se tocan los demás gastos (nafta, entradas, snacks, desayuno, viáticos, etc.).
+    </p>
+    <form method="post" asp-page-handler="LimpiarGastos"
+          onsubmit="return confirm('¿Sacar Auto/Guía/Hospedaje/Cena de los gastos de todas las excursiones?');">
+        <div class="acciones-form">
+            <button type="submit" class="btn btn-primary">🧽 Sacar esos gastos</button>
+        </div>
+    </form>
+</div>

@@ -30,6 +30,7 @@ else
                     <th>Gastos listos</th>
                     <th class="num">Presupuesto</th>
                     <th>Proveedores</th>
+                    <th>Comprobantes</th>
                     <th></th>
                 </tr>
             </thead>
@@ -63,6 +64,16 @@ else
                         else
                         {
                             <span class="cliente-sub">—</span>
+                        }
+                    </td>
+                    <td data-label="Comprobantes">
+                        @if (s.Comprobantes > 0)
+                        {
+                            <span class="pill pill-ok">📎 @s.Comprobantes</span>
+                        }
+                        else
+                        {
+                            <span class="cliente-sub">— sin comprobantes —</span>
                         }
                     </td>
                     <td class="acciones" data-label="">

@@ -9,9 +9,14 @@
 <div class="toolbar">
     <div>
         <h1>Caja y patrimonio</h1>
-        <p class="subtitle" style="margin:0">Todo lo que entró menos todo lo que salió, y lo que retiraron los socios.</p>
+        <p class="subtitle" style="margin:0">Lo que generó la empresa, más lo que aportaron los socios, menos lo que retiraron.</p>
     </div>
 </div>
+
+@if (!string.IsNullOrEmpty(Model.Aviso))
+{
+    <div class="aviso-ok">@Model.Aviso</div>
+}
 
 <!-- Resumen -->
 <div class="fin-cards">
@@ -30,55 +35,100 @@
     <div class="fin-card fin-card-net">
         <div class="fin-label">Capital / Patrimonio</div>
         <div class="fin-val" style="color:var(--accent)">@Money(Model.Patrimonio)</div>
-        @if (Model.RetirosTotal > 0)
-        {
-            <div class="fin-label" style="margin-top:4px">ya restados @Money(Model.RetirosTotal) de retiros</div>
-        }
+        <div class="fin-label" style="margin-top:4px">+ @Money(Model.AportesTotal) aportes · − @Money(Model.RetirosTotal) retiros</div>
     </div>
 </div>
 
 <div class="card" style="margin-top:4px">
     <p style="margin:0;color:var(--ink-soft)">
-        <strong>Capital / Patrimonio</strong> = lo que tiene la empresa hoy = Caja @Money(Model.Caja) − Retiros @Money(Model.RetirosTotal) =
+        <strong>Patrimonio</strong> = lo que tiene la empresa hoy = Caja @Money(Model.Caja)
+        + Aportes @Money(Model.AportesTotal) − Retiros @Money(Model.RetirosTotal) =
         <strong style="color:var(--accent)">@Money(Model.Patrimonio)</strong>.
     </p>
 </div>
 
-@if (!string.IsNullOrEmpty(Model.Aviso))
-{
-    <div class="aviso-ok" style="margin-top:18px">@Model.Aviso</div>
-}
-
-<!-- Registrar un retiro -->
+<!-- ============ APORTES / INVERSIONES ============ -->
 <div class="card" style="margin-top:18px">
-    <h2>Registrar un retiro</h2>
-    <p class="hint" style="margin:-8px 0 14px">Cuando un socio saca plata del capital de la empresa.</p>
-    <form method="post" enctype="multipart/form-data" asp-page-handler="Agregar">
+    <h2>Aportes / Inversiones de los socios <span class="hint" style="font-weight:400">(suman al patrimonio)</span></h2>
+    <p class="hint" style="margin:-8px 0 14px">Cuando un socio pone plata, o se separa parte de lo ganado para invertir en la empresa (indumentaria, un auto, publicidad, etc.).</p>
+    <form method="post" enctype="multipart/form-data" asp-page-handler="AgregarAporte">
         <div class="form-grid">
-            <div class="field"><label>Fecha</label><input asp-for="NuevoFecha" type="date" /></div>
-            <div class="field"><label>Quién retiró</label><input asp-for="NuevoQuien" placeholder="Ej: Lautaro" /></div>
-            <div class="field full"><label>Motivo / nota (opcional)</label><input asp-for="NuevoDescripcion" placeholder="Ej: Retiro de ganancias" /></div>
-            <div class="field"><label>Monto</label><input asp-for="NuevoMonto" type="number" step="0.01" min="0" /></div>
-            <div class="field"><label>Comprobante (opcional)</label><input asp-for="NuevoComprobante" type="file" accept="image/*,.pdf" /></div>
+            <div class="field"><label>Fecha</label><input asp-for="ApFecha" type="date" /></div>
+            <div class="field"><label>Quién aportó</label><input asp-for="ApQuien" placeholder="Ej: Facundo" /></div>
+            <div class="field full"><label>En qué / nota</label><input asp-for="ApDescripcion" placeholder="Ej: Indumentaria, auto, publicidad…" /></div>
+            <div class="field"><label>Monto</label><input asp-for="ApMonto" type="number" step="0.01" min="0" /></div>
+            <div class="field"><label>Comprobante (opcional)</label><input asp-for="ApComprobante" type="file" accept="image/*,.pdf" /></div>
+        </div>
+        <div class="acciones-form" style="margin-top:12px">
+            <button type="submit" class="btn btn-primary">+ Registrar aporte</button>
+        </div>
+    </form>
+
+    <table class="tabla" style="margin-top:18px">
+        <thead>
+            <tr><th>Fecha</th><th>Quién</th><th>En qué</th><th class="num">Monto</th><th>Comprobante</th><th></th></tr>
+        </thead>
+        <tbody>
+        @if (Model.Aportes.Count == 0)
+        {
+            <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">Todavía no hay aportes registrados.</td></tr>
+        }
+        @foreach (var a in Model.Aportes)
+        {
+            <tr>
+                <td data-label="Fecha">@a.Fecha.ToString("dd/MM/yy")</td>
+                <td data-label="Quién">@(string.IsNullOrEmpty(a.Quien) ? "—" : a.Quien)</td>
+                <td data-label="En qué">@(string.IsNullOrEmpty(a.Descripcion) ? "—" : a.Descripcion)</td>
+                <td class="num" data-label="Monto" style="color:var(--ok)">@Money(a.Monto)</td>
+                <td data-label="Comprobante">
+                    @if (!string.IsNullOrEmpty(a.Comprobante)) { <a href="@a.Comprobante" target="_blank" class="hint">✔ ver</a> }
+                    else { <span class="cliente-sub">—</span> }
+                </td>
+                <td>
+                    <form method="post" asp-page-handler="EliminarAporte" asp-route-id="@a.Id" style="display:inline"
+                          onsubmit="return confirm('¿Borrar este aporte?');">
+                        <button type="submit" class="btn-mini btn-mini-danger">Quitar</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+        @if (Model.Aportes.Count > 0)
+        {
+            <tfoot>
+                <tr><td colspan="3"><strong>Total aportado</strong></td><td class="num"><strong style="color:var(--ok)">@Money(Model.AportesTotal)</strong></td><td colspan="2"></td></tr>
+            </tfoot>
+        }
+    </table>
+</div>
+
+<!-- ============ RETIROS ============ -->
+<div class="card" style="margin-top:18px">
+    <h2>Retiros de los socios <span class="hint" style="font-weight:400">(restan del patrimonio)</span></h2>
+    <p class="hint" style="margin:-8px 0 14px">Cuando un socio saca plata del capital de la empresa.</p>
+    <form method="post" enctype="multipart/form-data" asp-page-handler="AgregarRetiro">
+        <div class="form-grid">
+            <div class="field"><label>Fecha</label><input asp-for="RetFecha" type="date" /></div>
+            <div class="field"><label>Quién retiró</label><input asp-for="RetQuien" placeholder="Ej: Lautaro" /></div>
+            <div class="field full"><label>Motivo / nota (opcional)</label><input asp-for="RetDescripcion" placeholder="Ej: Retiro de ganancias" /></div>
+            <div class="field"><label>Monto</label><input asp-for="RetMonto" type="number" step="0.01" min="0" /></div>
+            <div class="field"><label>Comprobante (opcional)</label><input asp-for="RetComprobante" type="file" accept="image/*,.pdf" /></div>
         </div>
         <div class="acciones-form" style="margin-top:12px">
             <button type="submit" class="btn btn-primary">+ Registrar retiro</button>
         </div>
     </form>
-</div>
 
-<!-- Lista de retiros -->
-<div class="table-wrap" style="margin-top:18px">
-    <table class="tabla">
+    <table class="tabla" style="margin-top:18px">
         <thead>
             <tr><th>Fecha</th><th>Quién</th><th>Motivo</th><th class="num">Monto</th><th>Comprobante</th><th></th></tr>
         </thead>
         <tbody>
-        @if (Model.Lista.Count == 0)
+        @if (Model.Retiros.Count == 0)
         {
-            <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">Todavía no hay retiros registrados.</td></tr>
+            <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">Todavía no hay retiros registrados.</td></tr>
         }
-        @foreach (var r in Model.Lista)
+        @foreach (var r in Model.Retiros)
         {
             <tr>
                 <td data-label="Fecha">@r.Fecha.ToString("dd/MM/yy")</td>
@@ -86,17 +136,11 @@
                 <td data-label="Motivo">@(string.IsNullOrEmpty(r.Descripcion) ? "—" : r.Descripcion)</td>
                 <td class="num" data-label="Monto" style="color:var(--warn)">@Money(r.Monto)</td>
                 <td data-label="Comprobante">
-                    @if (!string.IsNullOrEmpty(r.Comprobante))
-                    {
-                        <a href="@r.Comprobante" target="_blank" class="hint">✔ ver</a>
-                    }
-                    else
-                    {
-                        <span class="cliente-sub">—</span>
-                    }
+                    @if (!string.IsNullOrEmpty(r.Comprobante)) { <a href="@r.Comprobante" target="_blank" class="hint">✔ ver</a> }
+                    else { <span class="cliente-sub">—</span> }
                 </td>
                 <td>
-                    <form method="post" asp-page-handler="Eliminar" asp-route-id="@r.Id" style="display:inline"
+                    <form method="post" asp-page-handler="EliminarRetiro" asp-route-id="@r.Id" style="display:inline"
                           onsubmit="return confirm('¿Borrar este retiro?');">
                         <button type="submit" class="btn-mini btn-mini-danger">Quitar</button>
                     </form>
@@ -104,14 +148,10 @@
             </tr>
         }
         </tbody>
-        @if (Model.Lista.Count > 0)
+        @if (Model.Retiros.Count > 0)
         {
             <tfoot>
-                <tr>
-                    <td colspan="3"><strong>Total retirado</strong></td>
-                    <td class="num"><strong style="color:var(--warn)">@Money(Model.RetirosTotal)</strong></td>
-                    <td colspan="2"></td>
-                </tr>
+                <tr><td colspan="3"><strong>Total retirado</strong></td><td class="num"><strong style="color:var(--warn)">@Money(Model.RetirosTotal)</strong></td><td colspan="2"></td></tr>
             </tfoot>
         }
     </table>

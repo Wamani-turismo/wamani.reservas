@@ -20,6 +20,7 @@ namespace Wamani.Reservas.Data
         public DbSet<Usuario> Usuarios => Set<Usuario>();
         public DbSet<GastoEmpresa> GastosEmpresa => Set<GastoEmpresa>();
         public DbSet<Retiro> Retiros => Set<Retiro>();
+        public DbSet<Aporte> Aportes => Set<Aporte>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

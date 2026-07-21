@@ -6,8 +6,9 @@ using Wamani.Reservas.Models;
 
 namespace Wamani.Reservas.Pages.Caja;
 
-// Caja / Patrimonio de la empresa: todo lo que entró menos todo lo que salió (caja),
-// y menos los retiros de los socios = capital actual de la empresa.
+// Caja / Patrimonio de la empresa:
+//   Caja = todo lo que entró − todo lo que salió (operativo).
+//   Patrimonio = Caja + Aportes de los socios − Retiros de los socios.
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -20,17 +21,27 @@ public class IndexModel : PageModel
 
     public decimal Ingresos { get; set; }        // todo lo cobrado (histórico)
     public decimal Egresos { get; set; }          // todo lo pagado (excursiones + proveedores + gastos empresa)
-    public decimal Caja => Ingresos - Egresos;    // plata que generó la empresa
+    public decimal Caja => Ingresos - Egresos;    // plata que generó la operación
+    public decimal AportesTotal { get; set; }
     public decimal RetirosTotal { get; set; }
-    public decimal Patrimonio => Caja - RetirosTotal;   // capital actual (lo que tiene la empresa)
+    public decimal Patrimonio => Caja + AportesTotal - RetirosTotal;   // capital actual de la empresa
 
-    public List<Retiro> Lista { get; set; } = new();
+    public List<Aporte> Aportes { get; set; } = new();
+    public List<Retiro> Retiros { get; set; } = new();
 
-    [BindProperty] public DateTime NuevoFecha { get; set; } = DateTime.Today;
-    [BindProperty] public string? NuevoQuien { get; set; }
-    [BindProperty] public string? NuevoDescripcion { get; set; }
-    [BindProperty] public decimal NuevoMonto { get; set; }
-    [BindProperty] public IFormFile? NuevoComprobante { get; set; }
+    // Form aportes
+    [BindProperty] public DateTime ApFecha { get; set; } = DateTime.Today;
+    [BindProperty] public string? ApQuien { get; set; }
+    [BindProperty] public string? ApDescripcion { get; set; }
+    [BindProperty] public decimal ApMonto { get; set; }
+    [BindProperty] public IFormFile? ApComprobante { get; set; }
+
+    // Form retiros
+    [BindProperty] public DateTime RetFecha { get; set; } = DateTime.Today;
+    [BindProperty] public string? RetQuien { get; set; }
+    [BindProperty] public string? RetDescripcion { get; set; }
+    [BindProperty] public decimal RetMonto { get; set; }
+    [BindProperty] public IFormFile? RetComprobante { get; set; }
 
     [TempData] public string? Aviso { get; set; }
 
@@ -44,48 +55,71 @@ public class IndexModel : PageModel
         var egEmpresa = (await _db.GastosEmpresa.ToListAsync()).Sum(g => g.Monto);
         Egresos = egGastos + egProv + egEmpresa;
 
-        Lista = await _db.Retiros.OrderByDescending(r => r.Fecha).ToListAsync();
-        RetirosTotal = Lista.Sum(r => r.Monto);
+        Aportes = await _db.Aportes.OrderByDescending(a => a.Fecha).ToListAsync();
+        AportesTotal = Aportes.Sum(a => a.Monto);
+
+        Retiros = await _db.Retiros.OrderByDescending(r => r.Fecha).ToListAsync();
+        RetirosTotal = Retiros.Sum(r => r.Monto);
     }
 
-    public async Task<IActionResult> OnPostAgregarAsync()
+    private async Task<string?> GuardarComprobanteAsync(IFormFile? archivo)
     {
-        if (NuevoMonto > 0)
+        if (archivo is null || archivo.Length == 0) return null;
+        var carpeta = Wamani.Reservas.Services.Comprobantes.Carpeta(_env);
+        Directory.CreateDirectory(carpeta);
+        var nombre = $"{Guid.NewGuid():N}{Path.GetExtension(archivo.FileName)}";
+        using (var st = new FileStream(Path.Combine(carpeta, nombre), FileMode.Create))
+            await archivo.CopyToAsync(st);
+        return $"/comprobantes/{nombre}";
+    }
+
+    public async Task<IActionResult> OnPostAgregarAporteAsync()
+    {
+        if (ApMonto > 0)
         {
-            var r = new Retiro
+            _db.Aportes.Add(new Aporte
             {
-                Fecha = NuevoFecha.Date,
-                Quien = string.IsNullOrWhiteSpace(NuevoQuien) ? null : NuevoQuien.Trim(),
-                Descripcion = string.IsNullOrWhiteSpace(NuevoDescripcion) ? null : NuevoDescripcion.Trim(),
-                Monto = NuevoMonto
-            };
+                Fecha = ApFecha.Date,
+                Quien = string.IsNullOrWhiteSpace(ApQuien) ? null : ApQuien.Trim(),
+                Descripcion = string.IsNullOrWhiteSpace(ApDescripcion) ? null : ApDescripcion.Trim(),
+                Monto = ApMonto,
+                Comprobante = await GuardarComprobanteAsync(ApComprobante)
+            });
+            await _db.SaveChangesAsync();
+            Aviso = "Aporte registrado.";
+        }
+        return RedirectToPage();
+    }
 
-            if (NuevoComprobante is not null && NuevoComprobante.Length > 0)
+    public async Task<IActionResult> OnPostEliminarAporteAsync(int id)
+    {
+        var a = await _db.Aportes.FindAsync(id);
+        if (a is not null) { _db.Aportes.Remove(a); await _db.SaveChangesAsync(); Aviso = "Aporte borrado."; }
+        return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostAgregarRetiroAsync()
+    {
+        if (RetMonto > 0)
+        {
+            _db.Retiros.Add(new Retiro
             {
-                var carpeta = Wamani.Reservas.Services.Comprobantes.Carpeta(_env);
-                Directory.CreateDirectory(carpeta);
-                var nombre = $"{Guid.NewGuid():N}{Path.GetExtension(NuevoComprobante.FileName)}";
-                using (var st = new FileStream(Path.Combine(carpeta, nombre), FileMode.Create))
-                    await NuevoComprobante.CopyToAsync(st);
-                r.Comprobante = $"/comprobantes/{nombre}";
-            }
-
-            _db.Retiros.Add(r);
+                Fecha = RetFecha.Date,
+                Quien = string.IsNullOrWhiteSpace(RetQuien) ? null : RetQuien.Trim(),
+                Descripcion = string.IsNullOrWhiteSpace(RetDescripcion) ? null : RetDescripcion.Trim(),
+                Monto = RetMonto,
+                Comprobante = await GuardarComprobanteAsync(RetComprobante)
+            });
             await _db.SaveChangesAsync();
             Aviso = "Retiro registrado.";
         }
         return RedirectToPage();
     }
 
-    public async Task<IActionResult> OnPostEliminarAsync(int id)
+    public async Task<IActionResult> OnPostEliminarRetiroAsync(int id)
     {
         var r = await _db.Retiros.FindAsync(id);
-        if (r is not null)
-        {
-            _db.Retiros.Remove(r);
-            await _db.SaveChangesAsync();
-            Aviso = "Retiro borrado.";
-        }
+        if (r is not null) { _db.Retiros.Remove(r); await _db.SaveChangesAsync(); Aviso = "Retiro borrado."; }
         return RedirectToPage();
     }
 }

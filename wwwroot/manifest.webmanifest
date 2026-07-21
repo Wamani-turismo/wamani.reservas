@@ -1,0 +1,16 @@
+{
+  "name": "Wamani Reservas",
+  "short_name": "Wamani",
+  "description": "Sistema de reservas de excursiones de Wamani (Jujuy).",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#22332f",
+  "theme_color": "#22332f",
+  "lang": "es-AR",
+  "icons": [
+    { "src": "/logo/app-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/logo/app-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/logo/app-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

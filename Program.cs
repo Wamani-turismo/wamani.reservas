@@ -305,7 +305,11 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+
+// Servir archivos estáticos, agregando el tipo del manifiesto de la app (PWA)
+var tiposArchivo = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+tiposArchivo.Mappings[".webmanifest"] = "application/manifest+json";
+app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = tiposArchivo });
 
 // Si hay disco persistente (internet), servir los comprobantes guardados ahí
 // en la misma dirección /comprobantes de siempre (así los links no cambian).

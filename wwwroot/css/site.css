@@ -507,3 +507,66 @@ input[type=file]::file-selector-button {
 .calc-linea b { color: var(--ink); }
 .link-mini { background: none; border: none; color: var(--accent); font-family: inherit; font-size: .78rem; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline; }
 .link-mini:hover { opacity: .8; }
+
+/* ============================================================= */
+/* ============  VISTA CELULAR (app) — ajustes finos  ========== */
+/* ============================================================= */
+
+/* En el celular el menú SIEMPRE se abre completo (con nombres), aunque
+   en la compu haya quedado "colapsado" (solo íconos). */
+@media (max-width: 900px) {
+  html.sb-collapsed { --sb-w: 240px; }
+  html.sb-collapsed .brand-logo-full { display: block; }
+  html.sb-collapsed .brand-logo-mini { display: none; }
+  html.sb-collapsed .sb-item > span:not(.sb-ico) { display: inline; }
+  html.sb-collapsed .sb-section { display: block; }
+  html.sb-collapsed .sb-item { justify-content: flex-start; padding: 12px 13px; }
+  html.sb-collapsed .sb-brand { justify-content: flex-start; padding: 20px 20px 16px; }
+
+  /* Ítems del menú más altos = más fáciles de tocar con el dedo */
+  .sb-item { padding: 13px 13px; }
+  .hamb { font-size: 1.5rem; padding: 6px 10px; }
+
+  /* Respetar la zona segura arriba (celulares con notch) en modo app */
+  .topbar2 { padding-top: max(12px, env(safe-area-inset-top)); }
+}
+
+/* Teléfonos (pantalla angosta) */
+@media (max-width: 640px) {
+  .container { padding: 16px 14px 40px; }
+  .topbar2 { padding-left: 14px; padding-right: 14px; gap: 8px; }
+  h1 { font-size: 1.35rem; }
+  .subtitle { font-size: .92rem; }
+  .card { padding: 18px 16px; border-radius: 16px; }
+  .card h2 { font-size: 1rem; }
+
+  /* El nombre de usuario se oculta para que no apriete la barra de arriba */
+  .user-nombre { display: none; }
+
+  /* Resumen financiero: 2 columnas cómodas */
+  .fin-cards { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .fin-card { padding: 14px 16px; border-radius: 16px; }
+  .fin-val { font-size: 1.25rem; }
+  .dueno-monto, .resumen .item .val { font-size: 1.2rem; }
+
+  /* Botones y acciones: buen tamaño para el dedo. Los de los formularios, a lo ancho */
+  .btn { padding: 12px 20px; }
+  .acciones-form { flex-direction: column; align-items: stretch; }
+  .acciones-form .btn { width: 100%; text-align: center; }
+  .toolbar { gap: 10px; }
+
+  /* Navegación de meses: que entre sin romperse */
+  .mes-nav { gap: 8px; }
+  .mes-nav .search { min-width: 0; width: 100%; }
+
+  /* Tablas en modo tarjeta: un poco más de aire */
+  .tabla td { padding: 9px 14px; }
+  .tabla td .btn-mini { width: 100%; }
+}
+
+/* Proveedores del operativo: una sola columna en teléfonos */
+@media (max-width: 560px) {
+  .prov-grid { grid-template-columns: 1fr; }
+  .prov-head { gap: 8px; }
+  .prov-select { min-width: 0; width: 100%; }
+}

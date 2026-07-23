@@ -170,6 +170,21 @@
     </script>
     @await RenderSectionAsync("Scripts", required: false)
     <script>
+        // Al elegir archivos en cualquier campo de comprobante, mostrar sus nombres
+        document.addEventListener('change', function (e) {
+            var inp = e.target;
+            if (!inp || inp.type !== 'file') return;
+            var previo = inp.parentNode ? inp.parentNode.querySelector('.elegidos') : null;
+            if (previo) previo.remove();
+            if (!inp.files || inp.files.length === 0) return;
+            var nombres = Array.prototype.map.call(inp.files, function (f) { return f.name; });
+            var div = document.createElement('div');
+            div.className = 'elegidos';
+            div.textContent = '📎 ' + nombres.length + ' archivo(s): ' + nombres.join(' · ');
+            inp.insertAdjacentElement('afterend', div);
+        });
+    </script>
+    <script>
         // Registrar el service worker (hace que la app sea instalable en el celular)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {

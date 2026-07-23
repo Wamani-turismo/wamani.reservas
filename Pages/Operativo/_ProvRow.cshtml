@@ -43,11 +43,8 @@
         </div>
         <div class="field">
             <label>Comprobante seña</label>
-            <input type="file" name="provcompsena_@Model.Key" accept="image/*,.pdf" />
-            @if (!string.IsNullOrEmpty(a?.ComprobanteSena))
-            {
-                <a href="@a.ComprobanteSena" target="_blank" class="hint">✔ ver</a>
-            }
+            <input type="file" name="provcompsena_@Model.Key" accept="image/*,.pdf" multiple />
+            <partial name="_Adjuntos" model="@(a?.ComprobanteSena ?? "")" />
         </div>
         <div class="field">
             <label>Saldo ($)</label>
@@ -55,11 +52,8 @@
         </div>
         <div class="field">
             <label>Comprobante saldo</label>
-            <input type="file" name="provcompsaldo_@Model.Key" accept="image/*,.pdf" />
-            @if (!string.IsNullOrEmpty(a?.ComprobanteSaldo))
-            {
-                <a href="@a.ComprobanteSaldo" target="_blank" class="hint">✔ ver</a>
-            }
+            <input type="file" name="provcompsaldo_@Model.Key" accept="image/*,.pdf" multiple />
+            <partial name="_Adjuntos" model="@(a?.ComprobanteSaldo ?? "")" />
         </div>
     </div>
 </div>

@@ -570,3 +570,17 @@ input[type=file]::file-selector-button {
   .prov-head { gap: 8px; }
   .prov-select { min-width: 0; width: 100%; }
 }
+
+/* ---------- Comprobantes adjuntos (con nombre del archivo) ---------- */
+.adjuntos { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.adjunto {
+  display: inline-block; max-width: 100%; font-size: .8rem; font-weight: 600;
+  color: var(--accent); background: var(--accent-soft);
+  padding: 4px 10px; border-radius: 999px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.adjunto:hover { text-decoration: none; filter: brightness(.97); }
+.adjuntos-cant { font-size: .74rem; color: var(--muted); }
+/* Nombre de los archivos recién elegidos (antes de guardar) */
+.elegidos { margin-top: 5px; font-size: .78rem; color: var(--ink-soft); }
+.elegidos b { color: var(--ink); }

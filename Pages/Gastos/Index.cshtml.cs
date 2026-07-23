@@ -30,7 +30,7 @@ public class IndexModel : PageModel
     [BindProperty] public string NuevoTipo { get; set; } = "Fijo";
     [BindProperty] public string? NuevoDescripcion { get; set; }
     [BindProperty] public decimal NuevoMonto { get; set; }
-    [BindProperty] public IFormFile? NuevoComprobante { get; set; }
+    [BindProperty] public List<IFormFile> NuevoComprobante { get; set; } = new();
 
     [TempData] public string? Aviso { get; set; }
 
@@ -65,15 +65,8 @@ public class IndexModel : PageModel
                 Monto = NuevoMonto
             };
 
-            if (NuevoComprobante is not null && NuevoComprobante.Length > 0)
-            {
-                var carpeta = Wamani.Reservas.Services.Comprobantes.Carpeta(_env);
-                Directory.CreateDirectory(carpeta);
-                var nombre = $"{Guid.NewGuid():N}{Path.GetExtension(NuevoComprobante.FileName)}";
-                using (var st = new FileStream(Path.Combine(carpeta, nombre), FileMode.Create))
-                    await NuevoComprobante.CopyToAsync(st);
-                g.Comprobante = $"/comprobantes/{nombre}";
-            }
+            g.Comprobante = await Wamani.Reservas.Services.Adjuntos.AgregarAsync(
+                NuevoComprobante, Wamani.Reservas.Services.Comprobantes.Carpeta(_env), null);
 
             _db.GastosEmpresa.Add(g);
             await _db.SaveChangesAsync();

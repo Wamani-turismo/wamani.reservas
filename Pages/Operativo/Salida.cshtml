@@ -121,11 +121,8 @@
                         <div class="calc-linea"></div>
                     </td>
                     <td data-label="Comprobante">
-                        <input type="file" name="comp_@g.Id" accept="image/*,.pdf" class="in-comp" />
-                        @if (!string.IsNullOrEmpty(g.Comprobante))
-                        {
-                            <a href="@g.Comprobante" target="_blank" class="hint">✔ ver comprobante</a>
-                        }
+                        <input type="file" name="comp_@g.Id" accept="image/*,.pdf" class="in-comp" multiple />
+                        <partial name="_Adjuntos" model="@(g.Comprobante ?? "")" />
                     </td>
                     <td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>
                 </tr>
@@ -227,7 +224,7 @@
                 '<td data-label="Listo"><span class="cliente-sub">guardá primero</span></td>' +
                 '<td data-label="Ítem"><input type="hidden" name="Ids" value="0" /><input type="hidden" name="Keys" value="' + key + '" /><input name="Nombres" placeholder="Ej: Peaje" /></td>' +
                 '<td class="num" data-label="Precio y total"><input type="hidden" name="EsManual" value="1" class="es-manual" /><input name="Precios" type="number" step="0.01" min="0" value="" class="in-precio" /><div class="calc-linea"><span class="cliente-sub">total a mano</span></div></td>' +
-                '<td data-label="Comprobante"><input type="file" name="comp_' + key + '" accept="image/*,.pdf" class="in-comp" /></td>' +
+                '<td data-label="Comprobante"><input type="file" name="comp_' + key + '" accept="image/*,.pdf" class="in-comp" multiple /></td>' +
                 '<td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>';
             document.getElementById('gastosBody').appendChild(tr);
             tr.querySelector('input[name=Nombres]').focus();
@@ -275,7 +272,7 @@
             // renombrar los campos de comprobante con la clave nueva y limpiarlos
             var fSena = clone.querySelector('input[name^="provcompsena_"]'); if (fSena) { fSena.name = 'provcompsena_' + key; fSena.value = ''; }
             var fSaldo = clone.querySelector('input[name^="provcompsaldo_"]'); if (fSaldo) { fSaldo.name = 'provcompsaldo_' + key; fSaldo.value = ''; }
-            clone.querySelectorAll('.prov-grid .field a').forEach(function (a) { a.remove(); });  // sacar los "✔ ver" heredados
+            clone.querySelectorAll('.adjuntos').forEach(function (d) { d.remove(); });  // sacar los comprobantes heredados
             var pend = clone.querySelector('.prov-pend'); if (pend) pend.textContent = '';
             group.appendChild(clone);
             recalcularProv();

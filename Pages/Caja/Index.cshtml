@@ -57,7 +57,7 @@
             <div class="field"><label>Quién aportó</label><input asp-for="ApQuien" placeholder="Ej: Facundo" /></div>
             <div class="field full"><label>En qué / nota</label><input asp-for="ApDescripcion" placeholder="Ej: Indumentaria, auto, publicidad…" /></div>
             <div class="field"><label>Monto</label><input asp-for="ApMonto" type="number" step="0.01" min="0" /></div>
-            <div class="field"><label>Comprobante (opcional)</label><input asp-for="ApComprobante" type="file" accept="image/*,.pdf" /></div>
+            <div class="field"><label>Comprobante (opcional)</label><input asp-for="ApComprobante" type="file" accept="image/*,.pdf" multiple /></div>
         </div>
         <div class="acciones-form" style="margin-top:12px">
             <button type="submit" class="btn btn-primary">+ Registrar aporte</button>
@@ -81,7 +81,7 @@
                 <td data-label="En qué">@(string.IsNullOrEmpty(a.Descripcion) ? "—" : a.Descripcion)</td>
                 <td class="num" data-label="Monto" style="color:var(--ok)">@Money(a.Monto)</td>
                 <td data-label="Comprobante">
-                    @if (!string.IsNullOrEmpty(a.Comprobante)) { <a href="@a.Comprobante" target="_blank" class="hint">✔ ver</a> }
+                    @if (!string.IsNullOrEmpty(a.Comprobante)) { <partial name="_Adjuntos" model="@a.Comprobante" /> }
                     else { <span class="cliente-sub">—</span> }
                 </td>
                 <td>
@@ -112,7 +112,7 @@
             <div class="field"><label>Quién retiró</label><input asp-for="RetQuien" placeholder="Ej: Lautaro" /></div>
             <div class="field full"><label>Motivo / nota (opcional)</label><input asp-for="RetDescripcion" placeholder="Ej: Retiro de ganancias" /></div>
             <div class="field"><label>Monto</label><input asp-for="RetMonto" type="number" step="0.01" min="0" /></div>
-            <div class="field"><label>Comprobante (opcional)</label><input asp-for="RetComprobante" type="file" accept="image/*,.pdf" /></div>
+            <div class="field"><label>Comprobante (opcional)</label><input asp-for="RetComprobante" type="file" accept="image/*,.pdf" multiple /></div>
         </div>
         <div class="acciones-form" style="margin-top:12px">
             <button type="submit" class="btn btn-primary">+ Registrar retiro</button>
@@ -136,7 +136,7 @@
                 <td data-label="Motivo">@(string.IsNullOrEmpty(r.Descripcion) ? "—" : r.Descripcion)</td>
                 <td class="num" data-label="Monto" style="color:var(--warn)">@Money(r.Monto)</td>
                 <td data-label="Comprobante">
-                    @if (!string.IsNullOrEmpty(r.Comprobante)) { <a href="@r.Comprobante" target="_blank" class="hint">✔ ver</a> }
+                    @if (!string.IsNullOrEmpty(r.Comprobante)) { <partial name="_Adjuntos" model="@r.Comprobante" /> }
                     else { <span class="cliente-sub">—</span> }
                 </td>
                 <td>

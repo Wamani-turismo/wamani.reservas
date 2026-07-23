@@ -170,7 +170,7 @@
                     <td data-label="Comprobante">
                         @if (!string.IsNullOrEmpty(g.Comprobante))
                         {
-                            <a href="@g.Comprobante" target="_blank" class="hint">✔ ver</a>
+                            <partial name="_Adjuntos" model="@g.Comprobante" />
                         }
                         else
                         {

@@ -133,15 +133,9 @@
             </div>
             <div class="field">
                 <label>Comprobante de la seña</label>
-                <input type="file" name="SenaArchivo" accept="image/*,.pdf" />
-                @if (!string.IsNullOrEmpty(Model.Reserva.SenaComprobante))
-                {
-                    <div class="comprobante-actual">
-                        ✔ Ya hay un comprobante cargado —
-                        <a href="@Model.Reserva.SenaComprobante" target="_blank">ver</a>.
-                        <span class="hint">Subí otro solo si querés reemplazarlo.</span>
-                    </div>
-                }
+                <input type="file" name="SenaArchivo" accept="image/*,.pdf" multiple />
+                <div class="hint">Podés subir más de uno (si la seña se pagó en varias veces).</div>
+                <partial name="_Adjuntos" model="@(Model.Reserva.SenaComprobante ?? "")" />
             </div>
         </div>
     </div>
@@ -164,15 +158,9 @@
             </div>
             <div class="field">
                 <label>Comprobante del saldo</label>
-                <input type="file" name="SaldoArchivo" accept="image/*,.pdf" />
-                @if (!string.IsNullOrEmpty(Model.Reserva.SaldoComprobante))
-                {
-                    <div class="comprobante-actual">
-                        ✔ Ya hay un comprobante cargado —
-                        <a href="@Model.Reserva.SaldoComprobante" target="_blank">ver</a>.
-                        <span class="hint">Subí otro solo si querés reemplazarlo.</span>
-                    </div>
-                }
+                <input type="file" name="SaldoArchivo" accept="image/*,.pdf" multiple />
+                <div class="hint">Podés subir más de uno (si el saldo se pagó en varias veces).</div>
+                <partial name="_Adjuntos" model="@(Model.Reserva.SaldoComprobante ?? "")" />
             </div>
         </div>
     </div>

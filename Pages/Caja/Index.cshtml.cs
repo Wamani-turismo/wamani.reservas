@@ -34,14 +34,14 @@ public class IndexModel : PageModel
     [BindProperty] public string? ApQuien { get; set; }
     [BindProperty] public string? ApDescripcion { get; set; }
     [BindProperty] public decimal ApMonto { get; set; }
-    [BindProperty] public IFormFile? ApComprobante { get; set; }
+    [BindProperty] public List<IFormFile> ApComprobante { get; set; } = new();
 
     // Form retiros
     [BindProperty] public DateTime RetFecha { get; set; } = DateTime.Today;
     [BindProperty] public string? RetQuien { get; set; }
     [BindProperty] public string? RetDescripcion { get; set; }
     [BindProperty] public decimal RetMonto { get; set; }
-    [BindProperty] public IFormFile? RetComprobante { get; set; }
+    [BindProperty] public List<IFormFile> RetComprobante { get; set; } = new();
 
     [TempData] public string? Aviso { get; set; }
 
@@ -62,15 +62,11 @@ public class IndexModel : PageModel
         RetirosTotal = Retiros.Sum(r => r.Monto);
     }
 
-    private async Task<string?> GuardarComprobanteAsync(IFormFile? archivo)
+    // Guarda uno o varios comprobantes conservando el nombre original
+    private async Task<string?> GuardarComprobanteAsync(IEnumerable<IFormFile>? archivos)
     {
-        if (archivo is null || archivo.Length == 0) return null;
         var carpeta = Wamani.Reservas.Services.Comprobantes.Carpeta(_env);
-        Directory.CreateDirectory(carpeta);
-        var nombre = $"{Guid.NewGuid():N}{Path.GetExtension(archivo.FileName)}";
-        using (var st = new FileStream(Path.Combine(carpeta, nombre), FileMode.Create))
-            await archivo.CopyToAsync(st);
-        return $"/comprobantes/{nombre}";
+        return await Wamani.Reservas.Services.Adjuntos.AgregarAsync(archivos, carpeta, null);
     }
 
     public async Task<IActionResult> OnPostAgregarAporteAsync()

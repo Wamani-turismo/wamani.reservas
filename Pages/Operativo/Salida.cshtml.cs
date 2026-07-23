@@ -180,8 +180,6 @@ public class SalidaModel : PageModel
             // fila, o una temporal (ej "n1") si es una fila recién agregada que todavía no
             // tiene id. Así una fila NUEVA también puede traer su comprobante en el mismo guardado.
             var clave = i < Keys.Count ? Keys[i] : id.ToString();
-            var archivo = Request.Form.Files[$"comp_{clave}"];
-            var guardado = await GuardarArchivoAsync(archivo);
 
             if (id == 0)
             {
@@ -197,7 +195,7 @@ public class SalidaModel : PageModel
                     Comprado = false
                 };
                 if (valor > 0) nuevo.FechaPago = DateTime.Today;
-                if (guardado is not null) nuevo.Comprobante = guardado;
+                nuevo.Comprobante = await GuardarArchivosAsync($"comp_{clave}", null);
                 _db.OperativoGastos.Add(nuevo);
             }
             else
@@ -223,7 +221,7 @@ public class SalidaModel : PageModel
                     if (g.Precio > 0 && g.FechaPago is null) g.FechaPago = DateTime.Today;
                     if (g.Precio == 0) g.FechaPago = null;
 
-                    if (guardado is not null) g.Comprobante = guardado;
+                    g.Comprobante = await GuardarArchivosAsync($"comp_{clave}", g.Comprobante);
 
                     idsEnviados.Add(id);
                 }
@@ -245,8 +243,6 @@ public class SalidaModel : PageModel
         }
         salida.ServiciosPagados = ServiciosPagados;
 
-        var nuevoComp = await GuardarArchivoAsync(ComprobanteArchivo);
-        if (nuevoComp is not null) salida.Comprobante = nuevoComp;
 
         // ---- Proveedores por tipo ----
         var provExistentes = await _db.OperativoProveedores
@@ -296,12 +292,10 @@ public class SalidaModel : PageModel
             if (saldo > 0 && row.FechaSaldo is null) row.FechaSaldo = DateTime.Today;
             if (saldo == 0) row.FechaSaldo = null;
 
-            // Comprobantes por clave de fila (funciona también en filas nuevas)
+            // Comprobantes por clave de fila (funciona también en filas nuevas y admite varios)
             var provKey = i < ProvKeys.Count ? ProvKeys[i] : rowId.ToString();
-            var gSena = await GuardarArchivoAsync(Request.Form.Files[$"provcompsena_{provKey}"]);
-            if (gSena is not null) row.ComprobanteSena = gSena;
-            var gSaldo = await GuardarArchivoAsync(Request.Form.Files[$"provcompsaldo_{provKey}"]);
-            if (gSaldo is not null) row.ComprobanteSaldo = gSaldo;
+            row.ComprobanteSena = await GuardarArchivosAsync($"provcompsena_{provKey}", row.ComprobanteSena);
+            row.ComprobanteSaldo = await GuardarArchivosAsync($"provcompsaldo_{provKey}", row.ComprobanteSaldo);
         }
 
         // Borrar filas que se quitaron en la pantalla (existían y no volvieron)
@@ -314,16 +308,13 @@ public class SalidaModel : PageModel
             new { ExcursionId, Fecha = Fecha.ToString("yyyy-MM-dd"), guardado = true });
     }
 
-    private async Task<string?> GuardarArchivoAsync(IFormFile? archivo)
+    // Guarda TODOS los archivos que vinieron en ese campo y los agrega a los que ya había
+    // (así una seña puede tener 2 o más comprobantes). Devuelve el valor para la columna.
+    private async Task<string?> GuardarArchivosAsync(string campo, string? actual)
     {
-        if (archivo is null || archivo.Length == 0) return null;
         var carpeta = Wamani.Reservas.Services.Comprobantes.Carpeta(_env);
-        Directory.CreateDirectory(carpeta);
-        var nombre = $"{Guid.NewGuid():N}{Path.GetExtension(archivo.FileName)}";
-        var ruta = Path.Combine(carpeta, nombre);
-        using (var stream = new FileStream(ruta, FileMode.Create))
-            await archivo.CopyToAsync(stream);
-        return $"/comprobantes/{nombre}";
+        return await Wamani.Reservas.Services.Adjuntos
+            .AgregarAsync(Request.Form.Files.GetFiles(campo), carpeta, actual);
     }
 
     [BindProperty(SupportsGet = true)]

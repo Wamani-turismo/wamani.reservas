@@ -20,11 +20,12 @@ public class CargarModel : PageModel
     [BindProperty]
     public Reserva Reserva { get; set; } = new();
 
+    // Pueden ser VARIOS comprobantes (ej: una seña pagada en 2 transferencias)
     [BindProperty]
-    public IFormFile? SenaArchivo { get; set; }
+    public List<IFormFile> SenaArchivo { get; set; } = new();
 
     [BindProperty]
-    public IFormFile? SaldoArchivo { get; set; }
+    public List<IFormFile> SaldoArchivo { get; set; } = new();
 
     // Lista de excursiones para el desplegable (con precio y mínimo en data-attributes)
     public List<Excursion> Excursiones { get; set; } = new();
@@ -111,8 +112,8 @@ public class CargarModel : PageModel
         {
             // ---- Alta ----
             Reserva.CreadaEl = DateTime.Now;
-            Reserva.SenaComprobante = await GuardarArchivoAsync(SenaArchivo);
-            Reserva.SaldoComprobante = await GuardarArchivoAsync(SaldoArchivo);
+            Reserva.SenaComprobante = await GuardarArchivosAsync(SenaArchivo, null);
+            Reserva.SaldoComprobante = await GuardarArchivosAsync(SaldoArchivo, null);
             _db.Reservas.Add(Reserva);
         }
         else
@@ -145,11 +146,9 @@ public class CargarModel : PageModel
 
             db.EstadoManual = Reserva.EstadoManual;
 
-            var nuevaSena = await GuardarArchivoAsync(SenaArchivo);
-            if (nuevaSena is not null) db.SenaComprobante = nuevaSena;
-
-            var nuevoSaldo = await GuardarArchivoAsync(SaldoArchivo);
-            if (nuevoSaldo is not null) db.SaldoComprobante = nuevoSaldo;
+            // Los comprobantes nuevos se AGREGAN a los que ya había (no los pisan)
+            db.SenaComprobante = await GuardarArchivosAsync(SenaArchivo, db.SenaComprobante);
+            db.SaldoComprobante = await GuardarArchivosAsync(SaldoArchivo, db.SaldoComprobante);
         }
 
         await _db.SaveChangesAsync();
@@ -245,22 +244,11 @@ public class CargarModel : PageModel
         return RedirectToPage("/Reservas/Index", new { Aviso = "Reserva eliminada." });
     }
 
-    private async Task<string?> GuardarArchivoAsync(IFormFile? archivo)
+    // Guarda uno o varios comprobantes conservando el nombre original,
+    // y los agrega a los que ya estaban cargados.
+    private async Task<string?> GuardarArchivosAsync(IEnumerable<IFormFile>? archivos, string? actual)
     {
-        if (archivo is null || archivo.Length == 0) return null;
-
         var carpeta = Wamani.Reservas.Services.Comprobantes.Carpeta(_env);
-        Directory.CreateDirectory(carpeta);
-
-        var extension = Path.GetExtension(archivo.FileName);
-        var nombre = $"{Guid.NewGuid():N}{extension}";
-        var rutaFisica = Path.Combine(carpeta, nombre);
-
-        using (var stream = new FileStream(rutaFisica, FileMode.Create))
-        {
-            await archivo.CopyToAsync(stream);
-        }
-
-        return $"/comprobantes/{nombre}";
+        return await Wamani.Reservas.Services.Adjuntos.AgregarAsync(archivos, carpeta, actual);
     }
 }

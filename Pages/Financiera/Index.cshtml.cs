@@ -30,6 +30,8 @@ public class IndexModel : PageModel
         public decimal Neta => Ingreso - Gastos;
         // % de ganancia sobre el COSTO (cuánto se gana sobre lo gastado), como la planilla
         public decimal MargenPct => Gastos > 0 ? Math.Round(Neta / Gastos * 100, 0) : 0;
+        // Salió gente pero no hubo plata: son las reservas viejas (históricas)
+        public bool SinPlata => Reservas > 0 && Ingreso == 0 && Gastos == 0;
     }
 
     public class GastoTipo
@@ -53,6 +55,7 @@ public class IndexModel : PageModel
         ? Math.Round(Neta / (Gastos + GastosEmpresaTotal) * 100, 0) : 0;
     public int TotalReservas { get; set; }
     public int TotalPersonas { get; set; }
+    public int HistoricasDelMes { get; set; }   // reservas viejas (sin plata) que salieron este mes
 
     public async Task OnGetAsync()
     {
@@ -101,12 +104,16 @@ public class IndexModel : PageModel
                 gastoPorExc[p.ExcursionId] = gastoPorExc.GetValueOrDefault(p.ExcursionId) + salio;
         }
 
-        // ---- Reservas del mes: las que MOVIERON plata este mes (cobraste seña o saldo),
-        //      así las personas/reservas coinciden con la plata que se ve (aunque la
-        //      excursión salga otro mes) ----
-        var reservasDelMes = reservas.Where(r => EnMes(r.SenaFecha) || EnMes(r.SaldoFecha)).ToList();
+        // ---- Reservas del mes: las que MOVIERON plata este mes (cobraste seña o saldo)
+        //      MÁS las que SALIERON este mes (aunque no tengan plata cargada, como las
+        //      reservas históricas). Si una cumple las dos, se cuenta una sola vez. ----
+        var reservasDelMes = reservas
+            .Where(r => EnMes(r.SenaFecha) || EnMes(r.SaldoFecha)
+                     || (r.FechaDesde >= MesActual && r.FechaDesde < fin))
+            .ToList();
         TotalReservas = reservasDelMes.Count;
         TotalPersonas = reservasDelMes.Sum(r => r.CantidadPersonas);
+        HistoricasDelMes = reservasDelMes.Count(r => r.NombreCliente == Reserva.NombreHistorica);
         var reservasPorExc = reservasDelMes.GroupBy(r => r.ExcursionId ?? 0)
             .ToDictionary(g => g.Key, g => (Cant: g.Count(), Pers: g.Sum(x => x.CantidadPersonas)));
 

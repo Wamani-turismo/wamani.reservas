@@ -23,7 +23,7 @@ public class MantenimientoModel : PageModel
     public int HistoricasCargadas { get; set; }
 
     // Nombre con el que se cargan las reservas viejas (previas al sistema)
-    private const string NOMBRE_HISTORICA = "Reservas Históricas";
+    private const string NOMBRE_HISTORICA = Reserva.NombreHistorica;
 
     // Nombres de gastos que en realidad son proveedores (se manejan con seña + saldo).
     private static readonly HashSet<string> NombresProveedor = new(StringComparer.OrdinalIgnoreCase)

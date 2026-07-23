@@ -53,6 +53,10 @@
     <div class="fin-card">
         <div class="fin-label">Reservas del mes</div>
         <div class="fin-val">@Model.TotalReservas <span style="font-size:1rem;color:var(--muted)">res</span> · @Model.TotalPersonas <span style="font-size:1rem;color:var(--muted)">pers</span></div>
+        @if (Model.HistoricasDelMes > 0)
+        {
+            <div class="fin-label" style="margin-top:4px">incluye @Model.HistoricasDelMes histórica(s), sin plata</div>
+        }
     </div>
 </div>
 
@@ -92,7 +96,13 @@
         @foreach (var l in Model.Lineas)
         {
             <tr>
-                <td data-label="Excursión"><strong>@l.Excursion</strong></td>
+                <td data-label="Excursión">
+                    <strong>@l.Excursion</strong>
+                    @if (l.SinPlata)
+                    {
+                        <span class="pill pill-muted" style="margin-left:6px">histórica</span>
+                    }
+                </td>
                 <td data-label="Reservas">@l.Reservas</td>
                 <td data-label="Personas">@l.Personas</td>
                 <td class="num" data-label="Ingreso">@Money(l.Ingreso)</td>

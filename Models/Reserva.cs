@@ -7,6 +7,10 @@ namespace Wamani.Reservas.Models
     // Todos los montos están en PESOS ARGENTINOS.
     public class Reserva
     {
+        // Nombre con el que se cargan las reservas viejas (previas al sistema).
+        // No tienen plata cargada: cuentan como registro pero no mueven Finanzas.
+        public const string NombreHistorica = "Reservas Históricas";
+
         public int Id { get; set; }
 
         // ---------- Excursión elegida ----------

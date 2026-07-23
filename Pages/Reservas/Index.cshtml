@@ -262,7 +262,13 @@ else
                             <div class="cliente-nombre">@r.NombreCliente</div>
                             <div class="cliente-sub">@r.Telefono</div>
                         </td>
-                        <td data-label="Personas">@r.CantidadPersonas</td>
+                        <td data-label="Personas">
+                            @r.CantidadPersonas
+                            @if (r.CantidadMenores > 0)
+                            {
+                                <div class="cliente-sub" title="Menores en esta reserva">👶 @r.CantidadMenores menor(es)</div>
+                            }
+                        </td>
                         <td class="num" data-label="Total">
                             @Money(r.TotalConDescuento())
                             @if (r.PrecioManual)

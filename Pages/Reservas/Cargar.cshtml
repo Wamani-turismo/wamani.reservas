@@ -77,9 +77,24 @@
             </div>
 
             <div class="field">
+                <label asp-for="Reserva.CantidadMenores"></label>
+                <input asp-for="Reserva.CantidadMenores" type="number" min="0" id="inMenores" />
+                <div class="hint">Cuántos menores van (para tenerlo en cuenta en la salida).</div>
+            </div>
+            <div class="field">
                 <label asp-for="Reserva.DescuentoPct"></label>
                 <input asp-for="Reserva.DescuentoPct" type="number" step="0.01" min="0" max="100" id="inDesc" />
                 <div class="hint">Dejalo en 0 si no hay descuento.</div>
+            </div>
+            <div class="field">
+                <label asp-for="Reserva.DescuentoMonto"></label>
+                <input asp-for="Reserva.DescuentoMonto" type="number" step="0.01" min="0" id="inDescMonto" />
+                <div class="hint">Descuento en pesos (ej: menores que no pagan).</div>
+            </div>
+            <div class="field full">
+                <label asp-for="Reserva.DescuentoMotivo"></label>
+                <input asp-for="Reserva.DescuentoMotivo" placeholder="Ej: 2 menores de 5 años no pagan" />
+                <div class="hint">Por qué se hace ese descuento (aparece en el comprobante).</div>
             </div>
             <div class="field">
                 <label asp-for="Reserva.EstadoManual">Estado</label>
@@ -262,11 +277,13 @@
             if (!manual) inPrecio.value = precioExc;   // muestra el precio del catálogo (referencia)
             const precio = manual ? (parseFloat(inPrecio.value) || 0) : precioExc;
             const desc   = parseFloat(document.getElementById("inDesc").value) || 0;
+            const descM  = parseFloat(document.getElementById("inDescMonto").value) || 0;
             const sena   = parseFloat(document.getElementById("inSena").value) || 0;
             const saldo  = parseFloat(document.getElementById("inSaldo").value) || 0;
 
             const subtotal = precio * pers;
-            const totalConDesc = subtotal * (1 - desc / 100);
+            // primero el %, después el descuento en pesos
+            const totalConDesc = Math.max(0, subtotal * (1 - desc / 100) - descM);
             const cobrado = sena + saldo;
             const pend = Math.max(0, totalConDesc - cobrado);
 
@@ -291,7 +308,7 @@
                 aviso.style.display = "none";
             }
         }
-        ["selExc","inPers","inDesc","inSena","inSaldo","inPrecio"].forEach(id =>
+        ["selExc","inPers","inDesc","inDescMonto","inSena","inSaldo","inPrecio"].forEach(id =>
             document.getElementById(id).addEventListener("input", recalcular));
         document.getElementById("chkManual").addEventListener("change", recalcular);
         recalcular();

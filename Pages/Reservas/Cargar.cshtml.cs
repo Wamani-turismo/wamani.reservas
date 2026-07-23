@@ -135,6 +135,9 @@ public class CargarModel : PageModel
             db.FechaDesde = Reserva.FechaDesde;
             db.FechaHasta = Reserva.FechaHasta;
             db.DescuentoPct = Reserva.DescuentoPct;
+            db.DescuentoMonto = Reserva.DescuentoMonto;
+            db.DescuentoMotivo = Reserva.DescuentoMotivo;
+            db.CantidadMenores = Reserva.CantidadMenores;
 
             db.SenaMonto = Reserva.SenaMonto;
             db.SenaFecha = Reserva.SenaFecha;

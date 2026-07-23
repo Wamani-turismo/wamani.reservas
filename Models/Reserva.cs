@@ -73,6 +73,20 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Descuento (%)")]
         public decimal DescuentoPct { get; set; } = 0m;
 
+        // Descuento en PESOS (además del %), por ejemplo cuando hay menores que no pagan
+        [Range(0, 999999999)]
+        [Display(Name = "Descuento ($)")]
+        public decimal DescuentoMonto { get; set; } = 0m;
+
+        [MaxLength(160)]
+        [Display(Name = "Motivo del descuento")]
+        public string? DescuentoMotivo { get; set; }
+
+        // Cuántos menores van (para tenerlo en cuenta al armar la salida)
+        [Range(0, 200)]
+        [Display(Name = "Menores")]
+        public int CantidadMenores { get; set; } = 0;
+
         // ---------- Seña ----------
         [Range(0, 999999999)]
         [Display(Name = "Seña - monto")]
@@ -118,9 +132,13 @@ namespace Wamani.Reservas.Models
         public decimal Subtotal()
             => Math.Round(PrecioPorPersona * CantidadPersonas, 2);
 
-        // Total ya con el descuento aplicado
+        // Total: al subtotal se le aplica el % y después se le resta el descuento en pesos
         public decimal TotalConDescuento()
-            => Math.Round(Subtotal() * (1 - DescuentoPct / 100m), 2);
+        {
+            var conPorcentaje = Subtotal() * (1 - DescuentoPct / 100m);
+            var total = conPorcentaje - DescuentoMonto;
+            return Math.Round(total < 0 ? 0 : total, 2);
+        }
 
         // Cuánto se cobró (seña + saldo)
         public decimal Cobrado()

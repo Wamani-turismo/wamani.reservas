@@ -84,14 +84,33 @@ public static class ReservaPdf
                             ? r.FechaDesde.ToString("dddd d 'de' MMMM 'de' yyyy", ci)
                             : $"{r.FechaDesde:dd/MM/yyyy} al {r.FechaHasta:dd/MM/yyyy}";
                         c.Item().PaddingTop(2).Text(Mayus(fechas)).FontSize(11).FontColor(Gris);
-                        c.Item().PaddingTop(6).Text($"A nombre de {r.NombreCliente}  ·  {r.CantidadPersonas} persona(s)")
-                            .FontSize(11).FontColor(Tinta);
+                        var quienes = $"A nombre de {r.NombreCliente}  ·  {r.CantidadPersonas} persona(s)"
+                                    + (r.CantidadMenores > 0 ? $"  ·  {r.CantidadMenores} menor(es)" : "");
+                        c.Item().PaddingTop(6).Text(quienes).FontSize(11).FontColor(Tinta);
                     });
 
                     // --- Plata ---
                     col.Item().Background("#FFFDF7").Border(1).BorderColor(Linea).Padding(20).Column(c =>
                     {
                         c.Item().Text("Detalle del pago").FontSize(12).Bold().FontColor(VerdeOscuro);
+
+                        // Descuento en pesos con su motivo (si lo hay)
+                        if (r.DescuentoMonto > 0)
+                        {
+                            c.Item().PaddingTop(10).Row(row =>
+                            {
+                                row.RelativeItem().Text(t =>
+                                {
+                                    t.Span("Subtotal ").FontSize(10).FontColor(Gris);
+                                    t.Span(Money(r.Subtotal())).FontSize(10).FontColor(Tinta);
+                                    t.Span("   −   ").FontSize(10).FontColor(Gris);
+                                    t.Span($"Descuento {Money(r.DescuentoMonto)}").FontSize(10).Bold().FontColor(Coral);
+                                    if (!string.IsNullOrWhiteSpace(r.DescuentoMotivo))
+                                        t.Span($"  ({r.DescuentoMotivo})").FontSize(10).FontColor(Gris);
+                                });
+                            });
+                        }
+
                         c.Item().PaddingTop(12).Row(row =>
                         {
                             row.RelativeItem().Column(x =>

@@ -88,6 +88,9 @@ using (var scope = app.Services.CreateScope())
     // Agrega columnas nuevas SIN borrar los datos existentes (para bases ya creadas)
     EnsureSqliteColumn(db, "Reservas", "PrecioManual", "INTEGER NOT NULL DEFAULT 0");
     EnsureSqliteColumn(db, "Reservas", "EsTravesia", "INTEGER NOT NULL DEFAULT 0");
+    EnsureSqliteColumn(db, "Reservas", "DescuentoMonto", "TEXT NOT NULL DEFAULT '0'");
+    EnsureSqliteColumn(db, "Reservas", "DescuentoMotivo", "TEXT NULL");
+    EnsureSqliteColumn(db, "Reservas", "CantidadMenores", "INTEGER NOT NULL DEFAULT 0");
     EnsureSqliteColumn(db, "Excursiones", "EsTravesia", "INTEGER NOT NULL DEFAULT 0");
     EnsureSqliteColumn(db, "OperativoGastos", "Comprobante", "TEXT NULL");
     EnsureSqliteColumn(db, "Excursiones", "GuiaBreve", "TEXT NULL");
@@ -227,6 +230,10 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""PrecioUnitario"" numeric;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""TipoCalculo"" text NOT NULL DEFAULT 'Por persona';");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""GastosExcursion"" ADD COLUMN IF NOT EXISTS ""EsProveedor"" boolean NOT NULL DEFAULT false;");
+        // Descuento en pesos + motivo + menores en la reserva
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Reservas"" ADD COLUMN IF NOT EXISTS ""DescuentoMonto"" numeric NOT NULL DEFAULT 0;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Reservas"" ADD COLUMN IF NOT EXISTS ""DescuentoMotivo"" text;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Reservas"" ADD COLUMN IF NOT EXISTS ""CantidadMenores"" integer NOT NULL DEFAULT 0;");
         // Tabla de gastos generales de la empresa (nueva; EnsureCreated no la agrega a una base ya creada)
         db.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS ""GastosEmpresa"" (

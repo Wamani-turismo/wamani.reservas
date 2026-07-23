@@ -57,6 +57,12 @@ public class IndexModel : PageModel
     [DataType(DataType.Date)]
     public DateTime? FiltroFecha { get; set; }
 
+    // Por defecto NO se muestran las reservas que ya terminaron (quedan en el Historial)
+    [BindProperty(SupportsGet = true)]
+    public bool VerPasadas { get; set; }
+
+    public int PasadasOcultas { get; set; }
+
     [BindProperty(SupportsGet = true)]
     public string? Aviso { get; set; }
 
@@ -221,6 +227,14 @@ public class IndexModel : PageModel
 
         if (FiltroFecha is DateTime f)
             q = q.Where(x => x.FechaDesde.Date <= f.Date && x.FechaHasta.Date >= f.Date);
+
+        // Ocultar las que YA TERMINARON (quedan guardadas en el Historial), salvo que
+        // se pidan expresamente o que se esté buscando algo puntual (nombre o fecha).
+        var hoy = DateTime.Today;
+        PasadasOcultas = todas.Count(x => x.FechaHasta.Date < hoy);
+        bool buscandoAlgo = !string.IsNullOrWhiteSpace(Buscar) || FiltroFecha is not null;
+        if (!VerPasadas && !buscandoAlgo)
+            q = q.Where(x => x.FechaHasta.Date >= hoy);
 
         Reservas = q.ToList();
 

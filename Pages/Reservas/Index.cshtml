@@ -170,9 +170,21 @@
         <option value="Pagado" selected="@(Model.FiltroEstado == "Pagado")">Pagado</option>
     </select>
     <input class="search" type="date" name="FiltroFecha" value="@(Model.FiltroFecha?.ToString("yyyy-MM-dd"))" />
+    <label class="check-linea" title="Mostrar también las reservas cuyas fechas ya pasaron">
+        <input type="checkbox" name="VerPasadas" value="true" @(Model.VerPasadas ? "checked" : "") />
+        <span>Ver las que ya pasaron</span>
+    </label>
     <button type="submit" class="btn btn-ghost">Filtrar</button>
     <a class="btn btn-ghost" asp-page="/Reservas/Index">Limpiar</a>
 </form>
+
+@if (!Model.VerPasadas && Model.PasadasOcultas > 0)
+{
+    <p class="hint" style="margin:-8px 0 16px">
+        Se ocultaron <strong>@Model.PasadasOcultas</strong> reserva(s) que ya pasaron —
+        están guardadas en el <a asp-page="/Historial/Index">Historial</a>.
+    </p>
+}
 
 @if (Model.Reservas.Count == 0)
 {

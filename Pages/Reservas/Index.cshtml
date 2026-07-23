@@ -283,7 +283,17 @@ else
                             }
                         </td>
                         <td class="acciones" data-label="">
+                            @{
+                                var pdfUrl = Url.Page("/Reservas/Index", "Pdf", new { id = r.Id });
+                                var pdfNombre = "Reserva - " + new string(r.NombreCliente
+                                    .Where(ch => char.IsLetterOrDigit(ch) || ch == ' ').ToArray()).Trim() + ".pdf";
+                            }
                             <div class="acciones-fila">
+                                <button type="button" class="btn-mini btn-mini-ghost"
+                                        title="Mandarle el comprobante al cliente por WhatsApp"
+                                        onclick="compartirPdf('@pdfUrl', '@pdfNombre')">
+                                    📄 Enviar PDF
+                                </button>
                                 <a class="btn-mini btn-mini-ghost" asp-page="/Reservas/Cargar" asp-route-id="@r.Id">✏️ Editar</a>
                                 <form method="post" asp-page-handler="Eliminar" asp-route-id="@r.Id" style="display:inline"
                                       onsubmit="return confirm('¿Eliminar la reserva de @r.NombreCliente? (Ej: se canceló). No se puede deshacer.');">
@@ -327,6 +337,30 @@ else
 }
 
 @section Scripts {
+    <script>
+        // Genera el comprobante y abre el menú de compartir del celular (para mandarlo
+        // por WhatsApp). En la compu, donde no se puede compartir archivos, lo descarga.
+        async function compartirPdf(url, nombre) {
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('no se pudo generar');
+                const blob = await res.blob();
+                const archivo = new File([blob], nombre, { type: 'application/pdf' });
+                if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+                    await navigator.share({ files: [archivo], title: nombre });
+                    return;
+                }
+                // Sin menú de compartir: se descarga
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = nombre;
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+            } catch (e) {
+                window.open(url, '_blank');
+            }
+        }
+    </script>
     <script>
         function abrirServ(id) { var m = document.getElementById('servModal-' + id); if (m) m.style.display = 'flex'; }
         function cerrarServ(id) { var m = document.getElementById('servModal-' + id); if (m) m.style.display = 'none'; }

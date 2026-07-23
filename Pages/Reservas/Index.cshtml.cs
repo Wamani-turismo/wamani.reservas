@@ -11,7 +11,35 @@ namespace Wamani.Reservas.Pages.Reservas;
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
-    public IndexModel(AppDbContext db) => _db = db;
+    private readonly IWebHostEnvironment _env;
+    public IndexModel(AppDbContext db, IWebHostEnvironment env)
+    {
+        _db = db;
+        _env = env;
+    }
+
+    // Comprobante de reserva en PDF (para mandarle al cliente por WhatsApp)
+    public async Task<IActionResult> OnGetPdfAsync(int id)
+    {
+        var r = await _db.Reservas.FirstOrDefaultAsync(x => x.Id == id);
+        if (r is null) return RedirectToPage("/Reservas/Index");
+
+        var pasajeros = await _db.Pasajeros.Where(p => p.ReservaId == id)
+            .OrderBy(p => p.Id).ToListAsync();
+        var exc = r.ExcursionId is int exId
+            ? await _db.Excursiones.FirstOrDefaultAsync(e => e.Id == exId)
+            : null;
+
+        var logo = Path.Combine(_env.WebRootPath, "logo", "logo-pdf.png");
+        var montanas = Path.Combine(_env.WebRootPath, "logo", "pdf-montanas.png");
+        var pdf = Wamani.Reservas.Services.ReservaPdf.Generar(r, pasajeros, exc, logo, montanas);
+
+        var nombre = $"Reserva - {Limpio(r.NombreCliente)} - {r.FechaDesde:dd-MM-yyyy}.pdf";
+        return File(pdf, "application/pdf", nombre);
+    }
+
+    private static string Limpio(string s)
+        => new string((s ?? "").Where(c => char.IsLetterOrDigit(c) || c == ' ' || c == '-').ToArray()).Trim();
 
     public List<Reserva> Reservas { get; set; } = new();
     public List<SelectListItem> ExcursionesOpciones { get; set; } = new();

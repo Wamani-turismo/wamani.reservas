@@ -79,3 +79,33 @@
         </div>
     </form>
 </div>
+
+<div class="card" style="max-width:640px">
+    <h2>Cargar reservas viejas (julio 2026)</h2>
+    <p style="margin-top:0">
+        Carga de una vez las reservas que ya existían <strong>antes de tener el sistema</strong>,
+        solo como registro. Van <strong>sin precios ni pagos</strong>, así que
+        <strong>NO afectan Finanzas</strong> (ni ganancia ni gastos). Quedan como <em>Pagado</em>.
+    </p>
+    <ul class="serv-lista" style="margin-top:0">
+        <li>Cascada Santuyoc / Angosto de Jaire — 1 reserva, 3 personas — 13/07</li>
+        <li>Conociendo las Yungas — 3 reservas (1 persona c/u = 3) — 15/07 al 17/07</li>
+        <li>Humahuaca – Las Yungas — 1 reserva, 2 personas — 19/07 al 23/07</li>
+        <li>Yungas Express — 1 reserva, 4 personas — 20/07 al 21/07</li>
+    </ul>
+
+    @if (Model.HistoricasCargadas > 0)
+    {
+        <div class="aviso-ok" style="margin:14px 0">
+            Ya hay <strong>@Model.HistoricasCargadas</strong> reserva(s) histórica(s) cargada(s).
+            Si volvés a apretar el botón, no se duplican.
+        </div>
+    }
+
+    <form method="post" asp-page-handler="ImportarHistoricas"
+          onsubmit="return confirm('¿Cargar las 6 reservas viejas de julio 2026?');">
+        <div class="acciones-form">
+            <button type="submit" class="btn btn-primary">📥 Cargar reservas viejas</button>
+        </div>
+    </form>
+</div>

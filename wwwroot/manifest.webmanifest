@@ -2,7 +2,7 @@
   "name": "Wamani Reservas",
   "short_name": "Wamani",
   "description": "Sistema de reservas de excursiones de Wamani (Jujuy).",
-  "start_url": "/",
+  "start_url": "/panel",
   "scope": "/",
   "display": "standalone",
   "background_color": "#22332f",

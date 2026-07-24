@@ -22,6 +22,12 @@ namespace Wamani.Reservas.Data
         public DbSet<Retiro> Retiros => Set<Retiro>();
         public DbSet<Aporte> Aportes => Set<Aporte>();
 
+        // --- Contenido de la LANDING (página pública), editable desde "🌐 Web" ---
+        public DbSet<ContenidoWeb> ContenidoWeb => Set<ContenidoWeb>();
+        public DbSet<ExcursionWeb> ExcursionesWeb => Set<ExcursionWeb>();
+        public DbSet<TestimonioWeb> TestimoniosWeb => Set<TestimonioWeb>();
+        public DbSet<IntegranteWeb> IntegrantesWeb => Set<IntegranteWeb>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -1,0 +1,46 @@
+@page "/panel-web"
+@model Wamani.Reservas.Pages.Web.IndexModel
+@{
+    ViewData["Title"] = "Web";
+}
+
+<div class="toolbar">
+    <div>
+        <h1>🌐 Página web</h1>
+        <p class="subtitle" style="margin:0">Editá lo que ven los visitantes en la web pública de Wamani.</p>
+    </div>
+    <a class="btn btn-ghost" href="/web/" target="_blank">👁️ Ver la web</a>
+</div>
+
+<div class="web-hub">
+    <a class="web-card" asp-page="/Web/Contenido">
+        <div class="web-ico">📞</div>
+        <h3>Datos y textos</h3>
+        <p>Teléfono de WhatsApp, redes, email, ubicación y los textos de la página.</p>
+    </a>
+    <a class="web-card" asp-page="/Web/Excursiones">
+        <div class="web-ico">🏔️</div>
+        <h3>Excursiones y travesías</h3>
+        <p>Agregá, editá, prendé o apagá las experiencias que aparecen en la web.</p>
+    </a>
+    <a class="web-card" asp-page="/Web/Testimonios">
+        <div class="web-ico">💬</div>
+        <h3>Testimonios</h3>
+        <p>Los comentarios de viajeros que se muestran en la página.</p>
+    </a>
+    <a class="web-card" asp-page="/Web/Equipo">
+        <div class="web-ico">👥</div>
+        <h3>Equipo</h3>
+        <p>Las fotos y descripciones de los integrantes de Wamani.</p>
+    </a>
+</div>
+
+<style>
+.web-hub{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));margin-top:8px}
+.web-card{display:block;background:#fff;border:1px solid var(--line,#e6e2d8);border-radius:16px;
+    padding:20px;text-decoration:none;color:inherit;transition:.15s;box-shadow:0 4px 14px rgba(0,0,0,.05)}
+.web-card:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,.1)}
+.web-ico{font-size:2rem;margin-bottom:8px}
+.web-card h3{margin:0 0 6px}
+.web-card p{margin:0;color:#777;font-size:.9rem}
+</style>

@@ -1,0 +1,50 @@
+@page "/panel-web/excursiones"
+@model Wamani.Reservas.Pages.Web.ExcursionesModel
+@{
+    ViewData["Title"] = "Excursiones de la web";
+}
+
+<div class="toolbar">
+    <div>
+        <h1>🏔️ Excursiones y travesías</h1>
+        <p class="subtitle" style="margin:0">Las experiencias que aparecen en la web pública.</p>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+        <a class="btn btn-ghost" asp-page="/Web/Index">← Volver</a>
+        <a class="btn-nueva" asp-page="/Web/ExcursionEditar">+ Nueva excursión</a>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Aviso))
+{
+    <div class="aviso-ok">@Model.Aviso</div>
+}
+
+<div class="table-wrap">
+    <table class="tabla">
+        <thead><tr><th>Orden</th><th>Nombre</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var e in Model.Lista)
+        {
+            <tr style="@(e.Activa ? "" : "opacity:.5")">
+                <td data-label="Orden">@e.Orden</td>
+                <td data-label="Nombre"><strong>@e.Nombre</strong><br><small style="color:#999">@e.Chip</small></td>
+                <td data-label="Tipo">@(e.EsTravesia ? "Travesía" : "Día")</td>
+                <td data-label="Estado">@(e.Activa ? "✅ En la web" : "⛔ Oculta")</td>
+                <td class="acciones" data-label="">
+                    <div class="acciones-fila">
+                        <a class="btn-mini btn-mini-ghost" asp-page="/Web/ExcursionEditar" asp-route-id="@e.Id">✏️ Editar</a>
+                        <form method="post" asp-page-handler="Activar" asp-route-id="@e.Id" style="display:inline">
+                            <button type="submit" class="btn-mini btn-mini-ghost">@(e.Activa ? "🙈 Ocultar" : "👁️ Mostrar")</button>
+                        </form>
+                        <form method="post" asp-page-handler="Eliminar" asp-route-id="@e.Id" style="display:inline"
+                              onsubmit="return confirm('¿Eliminar &quot;@e.Nombre&quot; de la web?');">
+                            <button type="submit" class="btn-mini btn-mini-danger">🗑</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

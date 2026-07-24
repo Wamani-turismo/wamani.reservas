@@ -1,0 +1,118 @@
+@page "/panel-web/excursion/{id:int?}"
+@model Wamani.Reservas.Pages.Web.ExcursionEditarModel
+@{
+    ViewData["Title"] = Model.EsNueva ? "Nueva excursión" : "Editar excursión";
+}
+
+<div class="toolbar">
+    <div>
+        <h1>@(Model.EsNueva ? "➕ Nueva excursión" : "✏️ Editar excursión")</h1>
+        <p class="subtitle" style="margin:0">Todo lo que cargues acá aparece en la web.</p>
+    </div>
+    <a class="btn btn-ghost" asp-page="/Web/Excursiones">← Volver</a>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="form-card">
+    <input type="hidden" asp-for="Ex.Id" />
+
+    <div class="campo">
+        <label asp-for="Ex.Nombre"></label>
+        <input class="input" asp-for="Ex.Nombre" placeholder="Ej: Termas de Jordán" />
+    </div>
+
+    <div class="grid2">
+        <div class="campo">
+            <label asp-for="Ex.Chip"></label>
+            <input class="input" asp-for="Ex.Chip" placeholder="Día completo · Travesía · 3 días" />
+        </div>
+        <div class="campo">
+            <label asp-for="Ex.Orden"></label>
+            <input class="input" asp-for="Ex.Orden" type="number" />
+            <small>Más chico = aparece primero.</small>
+        </div>
+    </div>
+
+    <div class="grid2">
+        <div class="campo campo-check">
+            <label><input type="checkbox" asp-for="Ex.EsTravesia" /> Es travesía (varios días)</label>
+        </div>
+        <div class="campo campo-check">
+            <label><input type="checkbox" asp-for="Ex.Activa" /> Mostrar en la web</label>
+        </div>
+    </div>
+
+    <div class="campo">
+        <label asp-for="Ex.Color"></label>
+        <div style="display:flex;gap:10px;align-items:center">
+            <input class="input" asp-for="Ex.Color" placeholder="58,110,90" style="max-width:180px" />
+            <span id="muestraColor" style="width:34px;height:34px;border-radius:8px;border:1px solid #ccc;display:inline-block"></span>
+            <small>Color de la tarjeta. Tres números R,G,B (0 a 255).</small>
+        </div>
+    </div>
+
+    <div class="campo">
+        <label>Foto</label>
+        @if (!string.IsNullOrEmpty(Model.Ex.Foto))
+        {
+            <div style="margin-bottom:8px">
+                <img src="/web/img/@Model.Ex.Foto" alt="foto actual" style="height:90px;border-radius:10px;object-fit:cover" onerror="this.style.display='none'" />
+            </div>
+        }
+        <input class="input" asp-for="FotoArchivo" type="file" accept="image/*" />
+        <small>Subí una foto (vertical u horizontal). Si no subís nada, se mantiene la actual.</small>
+    </div>
+
+    <div class="campo">
+        <label asp-for="Ex.Resumen"></label>
+        <textarea class="input" asp-for="Ex.Resumen" rows="2"></textarea>
+    </div>
+
+    <div class="campo">
+        <label asp-for="Ex.Datos"></label>
+        <textarea class="input" asp-for="Ex.Datos" rows="4" placeholder="🕐 10 hs&#10;🚌 Salida 9:00 · SSJ&#10;👥 2 a 15 personas&#10;🥾 Dificultad baja"></textarea>
+        <small>Un dato por renglón (apretá Enter para separar).</small>
+    </div>
+
+    <div class="campo">
+        <label asp-for="Ex.Itinerario"></label>
+        <textarea class="input" asp-for="Ex.Itinerario" rows="6"></textarea>
+        <small>Un paso por renglón.</small>
+    </div>
+
+    <div class="campo">
+        <label asp-for="Ex.Incluye"></label>
+        <textarea class="input" asp-for="Ex.Incluye" rows="5"></textarea>
+        <small>Un ítem por renglón.</small>
+    </div>
+
+    <div class="campo">
+        <label asp-for="Ex.Llevar"></label>
+        <textarea class="input" asp-for="Ex.Llevar" rows="2"></textarea>
+    </div>
+
+    <div style="margin-top:18px">
+        <button type="submit" class="btn-nueva">💾 Guardar excursión</button>
+    </div>
+</form>
+
+<style>
+.form-card{background:#fff;border:1px solid var(--line,#e6e2d8);border-radius:16px;padding:22px;max-width:760px}
+.campo{margin-bottom:14px}
+.campo label{display:block;font-weight:600;font-size:.9rem;margin-bottom:5px}
+.campo small{display:block;color:#888;font-size:.8rem;margin-top:4px}
+.campo-check label{font-weight:500;display:flex;gap:8px;align-items:center;cursor:pointer}
+.input{width:100%;padding:10px 12px;border:1px solid #d8d3c6;border-radius:10px;font:inherit;background:#fff}
+.input:focus{outline:none;border-color:var(--accent,#d2673a)}
+.grid2{display:grid;gap:14px;grid-template-columns:1fr 1fr}
+@@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+</style>
+
+<script>
+// Muestra el color elegido al lado del campo
+(function(){
+  var inp = document.getElementById("Ex_Color");
+  var m = document.getElementById("muestraColor");
+  function pintar(){ if(inp && m) m.style.background = "rgb(" + (inp.value || "58,110,90") + ")"; }
+  if(inp){ inp.addEventListener("input", pintar); pintar(); }
+})();
+</script>

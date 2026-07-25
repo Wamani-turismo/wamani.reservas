@@ -351,6 +351,18 @@ using (var scope = app.Services.CreateScope())
 
     // Carga el contenido actual de la landing la primera vez (si está vacío)
     Wamani.Reservas.Services.SeedWeb.Ejecutar(db);
+
+    // Corrección (una sola vez): SOLO Tilcara-Calilegua, Humahuaca-Yungas e
+    // Iruya-Nazareno son travesías. Las demás son excursiones (aunque duren
+    // varios días). Como el guard es EsTravesia==true, una vez corregidas no se
+    // vuelven a tocar; si los chicos después cambian algo desde el panel, queda.
+    var claves = new[] { "yungas", "yungas-express", "ecolodge" };
+    foreach (var e in db.ExcursionesWeb.Where(x => x.EsTravesia && claves.Contains(x.Clave)))
+    {
+        e.EsTravesia = false;
+        e.Chip = e.Chip.Replace("Travesía · ", "").Replace("Travesía", "").Trim();
+    }
+    db.SaveChanges();
 }
 
 // Configuración del sitio

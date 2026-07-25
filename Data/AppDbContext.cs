@@ -27,6 +27,7 @@ namespace Wamani.Reservas.Data
         public DbSet<ExcursionWeb> ExcursionesWeb => Set<ExcursionWeb>();
         public DbSet<TestimonioWeb> TestimoniosWeb => Set<TestimonioWeb>();
         public DbSet<IntegranteWeb> IntegrantesWeb => Set<IntegranteWeb>();
+        public DbSet<VideoWeb> VideosWeb => Set<VideoWeb>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

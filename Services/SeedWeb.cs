@@ -102,6 +102,14 @@ namespace Wamani.Reservas.Services
                 );
             }
 
+            if (!db.VideosWeb.Any())
+            {
+                db.VideosWeb.AddRange(
+                    new VideoWeb { Titulo = "Una experiencia inolvidable", Descripcion = "Lo que sintió una viajera al vivir la travesía con nosotros.", Archivo = "video-testimonio.mp4", Poster = "video-testimonio-poster.webp", Vertical = true, Orden = 10 },
+                    new VideoWeb { Titulo = "Llegar a la cima", Descripcion = "La bandera flameando en el refugio de montaña, entre la niebla.", Archivo = "video-bandera.mp4", Poster = "video-bandera-poster.webp", Vertical = false, Orden = 20 }
+                );
+            }
+
             db.SaveChanges();
         }
 

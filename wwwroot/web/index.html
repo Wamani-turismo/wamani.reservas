@@ -336,6 +336,22 @@ section{padding:3.4rem 0}
 }
 .integrante .bio{padding:1rem 1.15rem 1.25rem;font-size:.9rem;color:var(--texto-suave)}
 
+/* ── Videos (testimonios y momentos) ──────────────────────── */
+.videos-grid{display:grid;gap:1.3rem;grid-template-columns:1fr;justify-items:center}
+.video-card{
+  background:var(--panel);border:1px solid var(--linea);border-radius:var(--radio);
+  overflow:hidden;width:100%;max-width:340px;box-shadow:var(--sombra);
+}
+.video-card video{width:100%;display:block;background:#000;aspect-ratio:9/16;object-fit:cover}
+.video-card.horizontal{max-width:540px}
+.video-card.horizontal video{aspect-ratio:16/9}
+.video-card .vc-cuerpo{padding:1rem 1.15rem 1.2rem}
+.video-card h3{font-size:1.18rem;color:#fff}
+.video-card p{font-size:.88rem;color:var(--texto-suave);margin-top:.25rem}
+@media (min-width:760px){
+  .videos-grid{grid-template-columns:repeat(auto-fit,minmax(280px,max-content));justify-content:center;align-items:start}
+}
+
 /* ── Testimonios compactos ────────────────────────────────── */
 .testimonios{display:grid;gap:1rem;grid-template-columns:1fr}
 .testimonio{
@@ -533,6 +549,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
     <nav class="menu" aria-label="Navegación principal">
       <a href="#experiencias">Experiencias</a>
       <a href="#mapa">Mapa</a>
+      <a href="#videos">Videos</a>
       <a href="#porque">Quiénes somos</a>
       <a href="#contacto">Contacto</a>
     </nav>
@@ -544,6 +561,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
     <nav class="menu-movil" aria-label="Menú móvil">
       <a href="#experiencias" onclick="cerrarMenu()">Experiencias</a>
       <a href="#mapa" onclick="cerrarMenu()">Mapa</a>
+      <a href="#videos" onclick="cerrarMenu()">Videos</a>
       <a href="#porque" onclick="cerrarMenu()">Quiénes somos</a>
       <a href="#contacto" onclick="cerrarMenu()">Contacto</a>
     </nav>
@@ -705,6 +723,19 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
         <div><h3>Todo resuelto</h3><p>Traslados, entradas, snacks, seguro y botiquín incluidos.</p></div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ═════════════ VIDEOS (testimonios y momentos) ═════════════
+     Se llenan desde el sistema. La sección se oculta sola si no hay videos. -->
+<section id="videos" style="padding-top:.5rem;display:none">
+  <div class="contenedor rev">
+    <div class="encabezado-seccion">
+      <span class="mini">Historias reales</span>
+      <h2>Wamani <em>en video</em></h2>
+      <p>Momentos y testimonios de quienes vivieron la experiencia.</p>
+    </div>
+    <div class="videos-grid" id="videos-grid"></div>
   </div>
 </section>
 
@@ -1028,6 +1059,22 @@ if (D){
       return '<div class="testimonio"><div class="estrellas">★★★★★</div><p>“' + t.texto +
              '”</p><b>' + t.nombre + '</b><small>' + t.lugar + '</small></div>';
     }).join("");
+  }
+
+  // Videos (testimonios y momentos)
+  if (D.videos){
+    const cv = document.getElementById("videos-grid");
+    const sv = document.getElementById("videos");
+    if (cv && D.videos.length){
+      cv.innerHTML = D.videos.map(function(v){
+        const poster = v.poster ? ' poster="img/' + v.poster + '"' : '';
+        return '<div class="video-card' + (v.vertical ? '' : ' horizontal') + '">' +
+          '<video controls preload="metadata" playsinline' + poster + '>' +
+          '<source src="img/' + v.archivo + '" type="video/mp4"></video>' +
+          '<div class="vc-cuerpo"><h3>' + v.titulo + '</h3><p>' + v.desc + '</p></div></div>';
+      }).join("");
+      if (sv) sv.style.display = "";   // mostrar la sección
+    }
   }
 
   // Equipo

@@ -116,6 +116,33 @@ namespace Wamani.Reservas.Models
         public bool Activo { get; set; } = true;
     }
 
+    // Un video (testimonio o momento) que se muestra en la web
+    public class VideoWeb
+    {
+        public int Id { get; set; }
+
+        [Display(Name = "Título")]
+        public string Titulo { get; set; } = "";
+
+        [Display(Name = "Descripción corta")]
+        public string Descripcion { get; set; } = "";
+
+        [Display(Name = "Archivo de video (mp4)")]
+        public string Archivo { get; set; } = "";
+
+        [Display(Name = "Foto de portada (opcional)")]
+        public string Poster { get; set; } = "";
+
+        [Display(Name = "Es vertical (video de celular)")]
+        public bool Vertical { get; set; } = true;
+
+        [Display(Name = "Orden")]
+        public int Orden { get; set; } = 100;
+
+        [Display(Name = "Mostrar en la web")]
+        public bool Activo { get; set; } = true;
+    }
+
     // Un integrante del equipo
     public class IntegranteWeb
     {

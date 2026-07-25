@@ -375,6 +375,10 @@ using (var scope = app.Services.CreateScope())
         e.Chip = e.Chip.Replace("Travesía · ", "").Replace("Travesía", "").Trim();
     }
     db.SaveChanges();
+
+    // El video de la bandera no combinaba (tamaño distinto) → se saca. Una sola vez.
+    var banderas = db.VideosWeb.Where(v => v.Archivo == "video-bandera.mp4").ToList();
+    if (banderas.Count > 0) { db.VideosWeb.RemoveRange(banderas); db.SaveChanges(); }
 }
 
 // Configuración del sitio

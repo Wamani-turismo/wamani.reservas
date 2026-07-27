@@ -14,6 +14,7 @@
 
 <form method="post" enctype="multipart/form-data" class="form-card">
     <input type="hidden" asp-for="Ex.Id" />
+    <input type="hidden" asp-for="Ex.Clave" />
 
     <div class="campo">
         <label asp-for="Ex.Nombre"></label>
@@ -51,7 +52,7 @@
     </div>
 
     <div class="campo">
-        <label>Foto</label>
+        <label>Foto principal</label>
         @if (!string.IsNullOrEmpty(Model.Ex.Foto))
         {
             <div style="margin-bottom:8px">
@@ -59,7 +60,25 @@
             </div>
         }
         <input class="input" asp-for="FotoArchivo" type="file" accept="image/*" />
-        <small>Subí una foto (vertical u horizontal). Si no subís nada, se mantiene la actual.</small>
+        <small>Es la que se ve en la tarjeta. Si no subís nada, se mantiene la actual.</small>
+    </div>
+
+    <div class="campo">
+        <label>Fotos adicionales (galería de la ficha)</label>
+        @if (Model.FotosExtra.Any())
+        {
+            <div class="fotos-extra">
+                @foreach (var f in Model.FotosExtra)
+                {
+                    <label class="foto-extra">
+                        <img src="/web/img/@f" onerror="this.style.display='none'" />
+                        <span class="quitar"><input type="checkbox" name="Quitar" value="@f" /> Quitar</span>
+                    </label>
+                }
+            </div>
+        }
+        <input class="input" name="FotosNuevas" type="file" accept="image/*" multiple />
+        <small>Podés elegir <b>varias a la vez</b>. Se muestran como una galería en la ficha, sin deformarse. Tildá "Quitar" para sacar alguna.</small>
     </div>
 
     <div class="campo">
@@ -105,6 +124,10 @@
 .input:focus{outline:none;border-color:var(--accent,#d2673a)}
 .grid2{display:grid;gap:14px;grid-template-columns:1fr 1fr}
 @@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+.fotos-extra{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+.foto-extra{display:inline-flex;flex-direction:column;gap:4px;font-size:.78rem;cursor:pointer}
+.foto-extra img{height:80px;width:80px;object-fit:cover;border-radius:10px;border:1px solid #d8d3c6}
+.foto-extra .quitar{display:flex;gap:4px;align-items:center;color:#a05}
 </style>
 
 <script>

@@ -69,8 +69,12 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Color (R,G,B — ej: 58,110,90)")]
         public string Color { get; set; } = "58,110,90";
 
-        [Display(Name = "Foto (nombre de archivo en la carpeta de fotos)")]
+        [Display(Name = "Foto principal (nombre de archivo)")]
         public string Foto { get; set; } = "";
+
+        // Fotos adicionales para la galería de la ficha (un nombre de archivo por renglón)
+        [Display(Name = "Fotos adicionales")]
+        public string Fotos { get; set; } = "";
 
         [Display(Name = "Descripción corta")]
         public string Resumen { get; set; } = "";

@@ -18,7 +18,20 @@ public class ExcursionEditarModel : PageModel
     [BindProperty]
     public IFormFile? FotoArchivo { get; set; }
 
+    // Fotos adicionales para la galería (se pueden subir varias a la vez)
+    [BindProperty]
+    public List<IFormFile>? FotosNuevas { get; set; }
+
+    // Nombres de fotos adicionales que se marcaron para quitar
+    [BindProperty]
+    public List<string>? Quitar { get; set; }
+
     public bool EsNueva => Ex.Id == 0;
+
+    // Lista de fotos adicionales ya guardadas (para mostrarlas en el form)
+    public List<string> FotosExtra => (Ex.Fotos ?? "")
+        .Replace("\r", "").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .ToList();
 
     public IActionResult OnGet(int? id)
     {
@@ -39,9 +52,19 @@ public class ExcursionEditarModel : PageModel
 
         var foto = await FotosWeb.Guardar(FotoArchivo, null, _env);
 
+        // Guardar las fotos adicionales que subieron ahora
+        var subidas = new List<string>();
+        if (FotosNuevas != null)
+            foreach (var f in FotosNuevas)
+            {
+                var n = await FotosWeb.Guardar(f, null, _env);
+                if (!string.IsNullOrEmpty(n)) subidas.Add(n);
+            }
+
         if (Ex.Id == 0)
         {
             if (!string.IsNullOrEmpty(foto)) Ex.Foto = foto;
+            Ex.Fotos = string.Join("\n", subidas);
             _db.ExcursionesWeb.Add(Ex);
         }
         else
@@ -61,6 +84,14 @@ public class ExcursionEditarModel : PageModel
             actual.Orden = Ex.Orden;
             actual.Activa = Ex.Activa;
             if (!string.IsNullOrEmpty(foto)) actual.Foto = foto;   // solo si subieron una nueva
+
+            // Fotos adicionales: quitar las marcadas y sumar las nuevas
+            var lista = (actual.Fotos ?? "")
+                .Replace("\r", "").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToList();
+            if (Quitar != null) lista = lista.Where(x => !Quitar.Contains(x)).ToList();
+            lista.AddRange(subidas);
+            actual.Fotos = string.Join("\n", lista);
         }
         await _db.SaveChangesAsync();
         return RedirectToPage("/Web/Excursiones", new { Aviso = "Excursión guardada." });

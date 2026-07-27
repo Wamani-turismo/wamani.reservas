@@ -424,6 +424,17 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
 .mg-cerrar:hover{background:var(--coral)}
 .mg-foto{aspect-ratio:16/9;overflow:hidden;margin-top:-3.2rem;border-radius:26px 26px 0 0}
 .mg-foto img{width:100%;height:100%;object-fit:cover}
+/* Galería de fotos de la ficha (deslizable, sin deformar) */
+.mg-galeria{
+  display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;
+  margin-top:-3.2rem;border-radius:26px 26px 0 0;background:#0d1512;
+}
+.mg-galeria::-webkit-scrollbar{display:none}
+.mg-slide{flex:0 0 100%;scroll-snap-align:center;aspect-ratio:4/3}
+.mg-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.mg-dots{display:flex;gap:7px;justify-content:center;padding:.7rem 0 .1rem}
+.mg-dots span{width:7px;height:7px;border-radius:50%;background:rgba(216,192,150,.3);transition:.2s}
+.mg-dots span.on{background:var(--dorado);transform:scale(1.15)}
 .mg-cuerpo{padding:1.4rem 1.5rem 1.7rem}
 .mg-chip{
   display:inline-block;background:rgba(210,103,58,.9);color:#fff;
@@ -516,6 +527,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
     margin:.6rem auto -.2rem;border-radius:999px;background:rgba(216,192,150,.5);z-index:4;
   }
   .mg-foto{margin-top:0;border-radius:0}
+  .mg-galeria{margin-top:0;border-radius:0}
   /* cerrar: pinneado arriba a la derecha mientras se desliza la hoja */
   .mg-cerrar{position:sticky;top:.5rem;float:right;margin:0 .6rem -2.6rem 0;
     width:40px;height:40px;background:rgba(15,22,19,.78);backdrop-filter:blur(4px);
@@ -628,17 +640,17 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
             <text class="region" x="468" y="330" transform="rotate(75 468 330)">Yungas</text>
             <circle class="pto-salida" cx="375" cy="516" r="5"/>
             <text class="lbl-salida" x="300" y="545">San Salvador de Jujuy</text>
-            <g class="punto" data-id="salinas" transform="translate(249,394)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Atardecer en las Salinas</title></g>
-            <g class="punto" data-id="quebrada" transform="translate(365,305)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Recorriendo la Quebrada</title></g>
-            <g class="punto" data-id="jordan" transform="translate(451,392)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Termas de Jordán</title></g>
-            <g class="punto" data-id="lagunas" transform="translate(338,494)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Ruta de Lagunas y Termas</title></g>
-            <g class="punto" data-id="santuyoc" transform="translate(349,468)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Cascada Santuyoc y Angosto de Jaire</title></g>
-            <g class="punto" data-id="yungas" transform="translate(437,373)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Conociendo las Yungas</title></g>
+            <g class="punto" data-id="atardecer-en-las-salinas" transform="translate(249,394)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Atardecer en las Salinas</title></g>
+            <g class="punto" data-id="recorriendo-la-quebrada" transform="translate(365,305)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Recorriendo la Quebrada</title></g>
+            <g class="punto" data-id="termas-de-jordan" transform="translate(451,392)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Termas de Jordán</title></g>
+            <g class="punto" data-id="ruta-de-lagunas-y-termas" transform="translate(338,494)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Ruta de Lagunas y Termas</title></g>
+            <g class="punto" data-id="cascada-santuyoc-y-angosto-de-jaire" transform="translate(349,468)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Cascada Santuyoc y Angosto de Jaire</title></g>
+            <g class="punto" data-id="conociendo-las-yungas" transform="translate(437,373)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Conociendo las Yungas</title></g>
             <g class="punto" data-id="yungas-express" transform="translate(465,408)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Yungas Express</title></g>
             <g class="punto travesia" data-id="humahuaca-yungas" transform="translate(414,335)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Humahuaca – Yungas</title></g>
-            <g class="punto travesia" data-id="tilcara" transform="translate(371,384)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Tilcara – Calilegua</title></g>
-            <g class="punto travesia" data-id="iruya" transform="translate(391,215)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Iruya – Nazareno</title></g>
-            <g class="punto" data-id="ecolodge" transform="translate(357,500)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Especial EcoLodge de la Selva</title></g>
+            <g class="punto travesia" data-id="tilcara-calilegua" transform="translate(371,384)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Tilcara – Calilegua</title></g>
+            <g class="punto travesia" data-id="iruya-nazareno" transform="translate(391,215)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Iruya – Nazareno</title></g>
+            <g class="punto" data-id="especial-ecolodge-de-la-selva" transform="translate(357,500)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Especial EcoLodge de la Selva</title></g>
           </svg>
           <div class="mapa-leyenda">
             <span><i style="background:var(--coral)"></i> Excursión de un día</span>
@@ -921,6 +933,7 @@ if (D && D.excursiones && D.excursiones.length){
   GUIAS = {}; ORDEN = [];
   D.excursiones.forEach(function(e){
     GUIAS[e.clave] = { n:e.n, chip:e.chip, t:e.t, c:e.c, img:"img/"+e.img,
+      fotos:(e.fotos && e.fotos.length ? e.fotos : [e.img]).map(function(f){ return "img/"+f; }),
       resumen:e.resumen, datos:e.datos, itinerario:e.itinerario, incluye:e.incluye, llevar:e.llevar };
     ORDEN.push(e.clave);
   });
@@ -984,7 +997,12 @@ function abrirGuia(id){
   if (!g) return;
   const msg = "¡Hola! Quiero consultar por " + g.n + ".";
   modalCont.innerHTML =
-    '<div class="mg-foto"><img src="' + g.img + '" alt="' + g.n + '"></div>' +
+    (function(){
+      const fs = (g.fotos && g.fotos.length) ? g.fotos : [g.img];
+      const slides = fs.map(function(f){ return '<div class="mg-slide"><img src="' + f + '" alt="' + g.n + '"></div>'; }).join('');
+      const dots = fs.length > 1 ? '<div class="mg-dots">' + fs.map(function(_,i){ return '<span' + (i===0?' class="on"':'') + '></span>'; }).join('') + '</div>' : '';
+      return '<div class="mg-galeria" id="mg-galeria">' + slides + '</div>' + dots;
+    })() +
     '<div class="mg-cuerpo">' +
       '<span class="mg-chip' + (g.t ? " trav" : "") + '">' + g.chip + '</span>' +
       '<h3>' + g.n + '</h3>' +
@@ -993,7 +1011,9 @@ function abrirGuia(id){
       '<h4>Itinerario</h4><ul>' + g.itinerario.map(i => "<li>" + i + "</li>").join("") + '</ul>' +
       '<h4>Qué incluye</h4><ul>' + g.incluye.map(i => "<li>" + i + "</li>").join("") + '</ul>' +
       '<h4>Qué llevar</h4><p class="mg-resumen">' + g.llevar + '</p>' +
-      '<p class="mg-condiciones">Reserva: seña del 50% · saldo hasta 48 hs antes · cancelación hasta 4 días antes retiene el 30%.</p>' +
+      '<p class="mg-condiciones">' + (g.t
+        ? 'Se reserva con una seña del 50% y el saldo se abona hasta 7 días antes de realizar la travesía. En caso de cancelar, se retendrá la totalidad de la seña.'
+        : 'Se reserva con una seña del 50% y el saldo se abona hasta 4 días antes de realizar la excursión. En caso de cancelar, se retendrá la totalidad de la seña.') + '</p>' +
       '<div class="mg-cta">' +
         '<a class="btn btn-coral" target="_blank" rel="noopener" href="https://wa.me/' + NUMERO_WHATSAPP + '?text=' + encodeURIComponent(msg) + '">💬 Consultar por WhatsApp</a>' +
         '<button class="btn btn-borde" onclick="cerrarGuia()">Seguir explorando</button>' +
@@ -1001,6 +1021,15 @@ function abrirGuia(id){
     '</div>';
   modalFondo.classList.add("abierto");
   document.body.style.overflow = "hidden";
+  // Puntitos de la galería: se marcan según la foto que se está viendo
+  const gal = document.getElementById("mg-galeria");
+  const dots = modalCont.querySelectorAll(".mg-dots span");
+  if (gal && dots.length){
+    gal.addEventListener("scroll", function(){
+      const i = Math.round(gal.scrollLeft / gal.clientWidth);
+      dots.forEach(function(d,j){ d.classList.toggle("on", j === i); });
+    });
+  }
 }
 function cerrarGuia(){
   modalFondo.classList.remove("abierto");
@@ -1011,6 +1040,8 @@ document.addEventListener("keydown", function(e){ if (e.key === "Escape") cerrar
 /* ═══ Mapa: panel lateral (usa los mismos datos de GUIAS) ═══ */
 const panelMapa = document.getElementById("mapa-panel");
 document.querySelectorAll(".punto").forEach(function(p){
+  // Si no hay una excursión activa para este punto, no lo mostramos
+  if (!GUIAS[p.dataset.id]) { p.style.display = "none"; return; }
   p.addEventListener("click", function(){
     const g = GUIAS[p.dataset.id];
     if (!g) return;

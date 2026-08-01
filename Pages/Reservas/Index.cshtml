@@ -238,6 +238,21 @@ else
                             </button>
                         }
                     }
+                    @{
+                        var conServ = g.Reservas.Where(x => Model.TieneServiciosReserva(x)).ToList();
+                        var faltaServ = conServ.Sum(x => Model.FaltaServiciosReserva(x));
+                    }
+                    @if (conServ.Count > 0)
+                    {
+                        @if (faltaServ <= 0.01m)
+                        {
+                            <span class="pill pill-ok" title="Hospedaje / comidas de cada reserva">🏨 Servicios de reservas pagos ✓</span>
+                        }
+                        else
+                        {
+                            <span class="pill pill-warn" title="Hospedaje / comidas de cada reserva">🏨 Reservas: falta @Money(faltaServ)</span>
+                        }
+                    }
                     <a class="btn-mini btn-mini-ghost" asp-page="/Operativo/Salida"
                        asp-route-excursionId="@g.ExcursionId" asp-route-fecha="@g.FechaDesde.ToString("yyyy-MM-dd")">🎒 Operativo</a>
                 </div>
@@ -307,6 +322,9 @@ else
                                     .Where(ch => char.IsLetterOrDigit(ch) || ch == ' ').ToArray()).Trim() + ".pdf";
                             }
                             <div class="acciones-fila">
+                                <a class="btn-mini btn-mini-ghost" title="Preparar / pagar los servicios de esta reserva"
+                                   asp-page="/Operativo/Salida"
+                                   asp-route-excursionId="@g.ExcursionId" asp-route-fecha="@g.FechaDesde.ToString("yyyy-MM-dd")">🎒 Operativo</a>
                                 <button type="button" class="btn-mini btn-mini-ghost"
                                         title="Mandarle el comprobante al cliente por WhatsApp"
                                         onclick="compartirPdf('@pdfUrl', '@pdfNombre')">

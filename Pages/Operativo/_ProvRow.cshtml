@@ -20,10 +20,18 @@
         </select>
         @if (Model.ConPasajero)
         {
-            <input name="ProvParaQuien" class="prov-para" placeholder="¿Para quién? (ej: Guada)" value="@a?.ParaQuien" />
+            <select name="ProvReservaIds" class="prov-para" title="¿De qué reserva es este servicio?">
+                <option value="0">— reserva… —</option>
+                @foreach (var res in Model.Reservas)
+                {
+                    <option value="@res.Id" selected="@(a?.ReservaId == res.Id)">@res.NombreCliente</option>
+                }
+            </select>
+            <input type="hidden" name="ProvParaQuien" value="@a?.ParaQuien" />
         }
         else
         {
+            <input type="hidden" name="ProvReservaIds" value="0" />
             <input type="hidden" name="ProvParaQuien" value="@a?.ParaQuien" />
         }
         <span class="prov-falta-wrap">Falta: <strong class="prov-pend"></strong></span>

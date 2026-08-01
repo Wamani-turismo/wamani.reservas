@@ -13,6 +13,10 @@ namespace Wamani.Reservas.Models
         // "Guía" | "Hospedaje" | "Restaurante" | "Auto"
         public string Tipo { get; set; } = "";
 
+        // A qué RESERVA pertenece este servicio (hospedaje/restaurante son por persona).
+        // Los compartidos (guía, auto) van sin reserva (null) = a nivel salida.
+        public int? ReservaId { get; set; }
+
         public int? ProveedorId { get; set; }
         public string ProveedorNombre { get; set; } = "";   // snapshot del nombre
 

@@ -14,6 +14,7 @@ public class ProvRowVm
     public List<Proveedor> Cat { get; set; } = new();
     public bool ConPasajero { get; set; }   // hospedaje/restaurante: se pueden agregar varios (por persona)
     public string Key { get; set; } = "";   // clave para asociar el comprobante a la fila (id real o temporal si es nueva)
+    public List<Reserva> Reservas { get; set; } = new();   // reservas de la salida (para elegir de quién es el servicio)
 }
 
 public class SalidaModel : PageModel
@@ -62,6 +63,7 @@ public class SalidaModel : PageModel
     [BindProperty] public List<string> ProvSenas { get; set; } = new();
     [BindProperty] public List<string> ProvSaldos { get; set; } = new();
     [BindProperty] public List<string?> ProvParaQuien { get; set; } = new();
+    [BindProperty] public List<int> ProvReservaIds { get; set; } = new();   // a qué reserva pertenece (hospedaje/restaurante)
 
     private async Task CargarAsync()
     {
@@ -278,7 +280,10 @@ public class SalidaModel : PageModel
                 if (vacia) { _db.OperativoProveedores.Remove(row); continue; }
             }
 
+            var resId = i < ProvReservaIds.Count ? ProvReservaIds[i] : 0;
+
             row.Tipo = tipo;
+            row.ReservaId = resId == 0 ? null : resId;
             row.ProveedorId = provId == 0 ? null : provId;
             row.ProveedorNombre = provId != 0 && catalogo.TryGetValue(provId, out var n) ? n : "";
             row.Total = total;

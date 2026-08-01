@@ -64,6 +64,14 @@ public class IndexModel : PageModel
     public bool ServiciosTodoPagado(Reserva r)
         => ServiciosPagados.Contains(ClaveSalida(r)) || (TieneServicios(r) && FaltanServicios(r) == 0);
 
+    // ---- Servicios POR RESERVA (hospedaje/restaurante asignados a esa reserva) ----
+    public Dictionary<int, decimal> ServReservaFalta { get; set; } = new();
+    public Dictionary<int, int> ServReservaTotal { get; set; } = new();
+
+    public bool TieneServiciosReserva(Reserva r) => ServReservaTotal.GetValueOrDefault(r.Id, 0) > 0;
+    public decimal FaltaServiciosReserva(Reserva r) => ServReservaFalta.GetValueOrDefault(r.Id, 0m);
+    public bool ServiciosReservaPagados(Reserva r) => TieneServiciosReserva(r) && FaltaServiciosReserva(r) <= 0.01m;
+
     // Pasajeros totales de la salida de esta reserva (excursión + fecha check-in)
     public int PasajerosDeLaSalida(Reserva r)
         => PasajerosPorSalida.TryGetValue(ClaveSalida(r), out var t) ? t : r.CantidadPersonas;
@@ -178,9 +186,12 @@ public class IndexModel : PageModel
             .Select(s => $"{s.ExcursionId}|{s.Fecha:yyyy-MM-dd}")
             .ToHashSet();
 
-        // "Servicios" = los PROVEEDORES de la salida (guía, auto, hospedaje, restaurante).
-        // "Faltan servicios" = proveedores con saldo pendiente (aún no pagados del todo).
-        var provsPorSalida = (await _db.OperativoProveedores.ToListAsync())
+        // "Servicios" = los PROVEEDORES (guía, auto, hospedaje, restaurante).
+        // Los COMPARTIDOS de la salida (sin reserva asignada) van al encabezado; los que
+        // están asignados a una reserva (hospedaje/restaurante por persona) van por reserva.
+        var todosProvs = await _db.OperativoProveedores.ToListAsync();
+
+        var provsPorSalida = todosProvs
             .GroupBy(o => $"{o.ExcursionId}|{o.Fecha:yyyy-MM-dd}")
             .ToDictionary(g => g.Key, g => g.ToList());
 
@@ -189,13 +200,23 @@ public class IndexModel : PageModel
             var clave = ClaveSalida(r);
             if (ServiciosFaltantes.ContainsKey(clave)) continue;
 
-            var provs = provsPorSalida.GetValueOrDefault(clave) ?? new();
+            // Encabezado de la salida: solo los proveedores COMPARTIDOS (sin reserva)
+            var provs = (provsPorSalida.GetValueOrDefault(clave) ?? new())
+                .Where(p => p.ReservaId == null).ToList();
             var conTotal = provs.Where(p => p.Total > 0).ToList();
             ServiciosTotal[clave] = conTotal.Count;
             ServiciosFaltantes[clave] = conTotal
                 .Where(p => p.Pendiente() > 0)
                 .Select(p => string.IsNullOrWhiteSpace(p.ProveedorNombre) ? p.Tipo : $"{p.Tipo}: {p.ProveedorNombre}")
                 .ToList();
+        }
+
+        // Servicios POR RESERVA (hospedaje/restaurante asignados a cada reserva)
+        foreach (var grupo in todosProvs.Where(p => p.ReservaId is int).GroupBy(p => p.ReservaId!.Value))
+        {
+            var conTotal = grupo.Where(p => p.Total > 0).ToList();
+            ServReservaTotal[grupo.Key] = conTotal.Count;
+            ServReservaFalta[grupo.Key] = conTotal.Sum(p => p.Pendiente());
         }
 
         // ---- Detección de coincidencias para el modal ----

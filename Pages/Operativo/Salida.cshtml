@@ -47,8 +47,8 @@
             {
                 var cat = Model.CatalogoPorTipo.GetValueOrDefault(tipo) ?? new();
                 var asigs = Model.ProvPorTipo.GetValueOrDefault(tipo) ?? new();
-                var rows = asigs.Select(a => new Wamani.Reservas.Pages.Operativo.ProvRowVm { Tipo = tipo, Asig = a, Cat = cat, ConPasajero = conPasajero, Key = a.Id.ToString() }).ToList();
-                if (rows.Count == 0) rows.Add(new Wamani.Reservas.Pages.Operativo.ProvRowVm { Tipo = tipo, Asig = null, Cat = cat, ConPasajero = conPasajero, Key = "new-" + tipo });
+                var rows = asigs.Select(a => new Wamani.Reservas.Pages.Operativo.ProvRowVm { Tipo = tipo, Asig = a, Cat = cat, ConPasajero = conPasajero, Key = a.Id.ToString(), Reservas = Model.Reservas }).ToList();
+                if (rows.Count == 0) rows.Add(new Wamani.Reservas.Pages.Operativo.ProvRowVm { Tipo = tipo, Asig = null, Cat = cat, ConPasajero = conPasajero, Key = "new-" + tipo, Reservas = Model.Reservas });
                 return rows;
             }
         }
@@ -268,7 +268,7 @@
             var pk = clone.querySelector('input[name=ProvKeys]'); if (pk) pk.value = key;
             var sel = clone.querySelector('select[name=ProvProveedorIds]'); if (sel) sel.value = '0';
             clone.querySelectorAll('.prov-total,.prov-sena,.prov-saldo').forEach(function (i) { i.value = ''; i.readOnly = false; i.style.background = ''; });
-            var pq = clone.querySelector('.prov-para'); if (pq) pq.value = '';
+            var pq = clone.querySelector('.prov-para'); if (pq) pq.value = '0';   // desplegable de reserva
             // renombrar los campos de comprobante con la clave nueva y limpiarlos
             var fSena = clone.querySelector('input[name^="provcompsena_"]'); if (fSena) { fSena.name = 'provcompsena_' + key; fSena.value = ''; }
             var fSaldo = clone.querySelector('input[name^="provcompsaldo_"]'); if (fSaldo) { fSaldo.name = 'provcompsaldo_' + key; fSaldo.value = ''; }

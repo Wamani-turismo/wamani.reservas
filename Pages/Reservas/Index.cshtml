@@ -228,12 +228,13 @@ else
                     {
                         @if (Model.ServiciosTodoPagado(primera))
                         {
-                            <span class="pill pill-ok">🧾 Servicios pagados ✓</span>
+                            <span class="pill pill-ok" title="Guía, auto: lo compartido de la salida">🚐 Compartidos pagados ✓</span>
                         }
                         else
                         {
-                            <button type="button" class="pill pill-warn pill-btn" onclick="abrirServ(@primera.Id)">
-                                🧾 Faltan @Model.FaltanServicios(primera) servicio(s)
+                            <button type="button" class="pill pill-warn pill-btn" onclick="abrirServ(@primera.Id)"
+                                    title="Guía, auto: lo compartido de la salida">
+                                🚐 Faltan @Model.FaltanServicios(primera) compartido(s)
                             </button>
                         }
                     }
@@ -286,6 +287,17 @@ else
                             @if (!r.EstaPaga() && r.Cobrado() > 0)
                             {
                                 <div class="cliente-sub">falta @Money(r.Pendiente())</div>
+                            }
+                            @if (Model.TieneServiciosReserva(r))
+                            {
+                                @if (Model.ServiciosReservaPagados(r))
+                                {
+                                    <div style="margin-top:4px"><span class="pill pill-ok" title="Hospedaje / comidas de esta reserva">🏨 Servicios ✓</span></div>
+                                }
+                                else
+                                {
+                                    <div style="margin-top:4px"><span class="pill pill-warn" title="Hospedaje / comidas de esta reserva">🏨 Falta @Money(Model.FaltaServiciosReserva(r))</span></div>
+                                }
                             }
                         </td>
                         <td class="acciones" data-label="">

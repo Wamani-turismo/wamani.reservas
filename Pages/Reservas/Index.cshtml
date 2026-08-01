@@ -215,38 +215,47 @@ else
                         }
                     </div>
                 </div>
+                @{
+                    var conServ = g.Reservas.Where(x => Model.TieneServiciosReserva(x)).ToList();
+                    var faltaServ = conServ.Sum(x => Model.FaltaServiciosReserva(x));
+                    var compartidosPend = Model.TieneServicios(primera) && !Model.ServiciosTodoPagado(primera);
+                    var operativoPend = compartidosPend || faltaServ > 0.01m;
+                }
                 <div class="salida-pills">
-                    @if (g.Sale)
-                    {
-                        <span class="pill pill-ok">✔ Sale</span>
-                    }
-                    else
+                    @* ---- Estado general: honesto (mira gente Y operativo pago) ---- *@
+                    @if (!g.Sale)
                     {
                         <span class="pill pill-warn">Faltan @g.Faltan p/ mínimo</span>
                     }
+                    else if (operativoPend)
+                    {
+                        <span class="pill pill-warn" title="Hay gente suficiente, pero falta pagar el operativo">⏳ Falta pagar el operativo</span>
+                    }
+                    else
+                    {
+                        <span class="pill pill-ok">✔ Lista para salir</span>
+                    }
+
+                    @* ---- Detalle ---- *@
                     @if (Model.TieneServicios(primera))
                     {
                         @if (Model.ServiciosTodoPagado(primera))
                         {
-                            <span class="pill pill-ok" title="Guía, auto: lo compartido de la salida">🚐 Compartidos pagados ✓</span>
+                            <span class="pill pill-ok" title="Guía, auto: lo compartido de la salida">🚐 Compartidos ✓</span>
                         }
                         else
                         {
                             <button type="button" class="pill pill-warn pill-btn" onclick="abrirServ(@primera.Id)"
                                     title="Guía, auto: lo compartido de la salida">
-                                🚐 Faltan @Model.FaltanServicios(primera) compartido(s)
+                                🚐 Falta pagar compartidos
                             </button>
                         }
-                    }
-                    @{
-                        var conServ = g.Reservas.Where(x => Model.TieneServiciosReserva(x)).ToList();
-                        var faltaServ = conServ.Sum(x => Model.FaltaServiciosReserva(x));
                     }
                     @if (conServ.Count > 0)
                     {
                         @if (faltaServ <= 0.01m)
                         {
-                            <span class="pill pill-ok" title="Hospedaje / comidas de cada reserva">🏨 Servicios de reservas pagos ✓</span>
+                            <span class="pill pill-ok" title="Hospedaje / comidas de cada reserva">🏨 Servicios reservas ✓</span>
                         }
                         else
                         {

@@ -25,7 +25,14 @@
 <div class="fin-cards">
     <div class="fin-card"><div class="fin-label">Ingresos (cobrado en el año)</div><div class="fin-val">@Money(Model.Ingreso)</div></div>
     <div class="fin-card"><div class="fin-label">Egresos (pagado en el año)</div><div class="fin-val" style="color:var(--warn)">@Money(Model.Gastos)</div></div>
-    <div class="fin-card fin-card-net"><div class="fin-label">Ganancia neta</div><div class="fin-val" style="color:var(--accent)">@Money(Model.Neta)</div></div>
+    <div class="fin-card fin-card-net">
+        <div class="fin-label">Ganancia neta</div>
+        <div class="fin-val" style="color:var(--accent)">@Money(Model.Neta)</div>
+        @if (Model.GastosEmpresaTotal > 0)
+        {
+            <div class="fin-label" style="margin-top:4px">ya descontados @Money(Model.GastosEmpresaTotal) de gastos de empresa</div>
+        }
+    </div>
     <div class="fin-card"><div class="fin-label">Salidas del año</div><div class="fin-val">@Model.TotalReservas · @Model.TotalPersonas</div></div>
 </div>
 

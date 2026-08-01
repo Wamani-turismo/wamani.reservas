@@ -22,7 +22,8 @@ public class AnualModel : PageModel
         public int Personas { get; set; }
         public decimal Ingreso { get; set; }
         public decimal Gastos { get; set; }
-        public decimal Neta => Ingreso - Gastos;
+        public decimal GastosEmpresa { get; set; }
+        public decimal Neta => Ingreso - Gastos - GastosEmpresa;
     }
 
     public class LineaExc
@@ -39,8 +40,9 @@ public class AnualModel : PageModel
     public List<LineaExc> Ranking { get; set; } = new();
 
     public decimal Ingreso { get; set; }
-    public decimal Gastos { get; set; }
-    public decimal Neta => Ingreso - Gastos;
+    public decimal Gastos { get; set; }                 // egresos de excursiones (operativo)
+    public decimal GastosEmpresaTotal { get; set; }     // gastos generales de la empresa del año
+    public decimal Neta => Ingreso - Gastos - GastosEmpresaTotal;
     public decimal PorDueno => Math.Round(Neta / 3m, 2);
     public int TotalReservas { get; set; }
     public int TotalPersonas { get; set; }
@@ -49,7 +51,8 @@ public class AnualModel : PageModel
     public bool HayAnioPrevio { get; set; }
     public decimal IngresoPrev { get; set; }
     public decimal GastosPrev { get; set; }
-    public decimal NetaPrev => IngresoPrev - GastosPrev;
+    public decimal GastosEmpresaPrev { get; set; }
+    public decimal NetaPrev => IngresoPrev - GastosPrev - GastosEmpresaPrev;
     public int ReservasPrev { get; set; }
 
     public decimal VarNetaPct => NetaPrev == 0 ? 0 : Math.Round((Neta - NetaPrev) / Math.Abs(NetaPrev) * 100, 1);
@@ -63,7 +66,13 @@ public class AnualModel : PageModel
         var reservas = await _db.Reservas.ToListAsync();
         var ops = await _db.OperativoGastos.ToListAsync();
         var provs = await _db.OperativoProveedores.ToListAsync();
+        var gastosEmp = await _db.GastosEmpresa.ToListAsync();
         var excNombres = await _db.Excursiones.ToDictionaryAsync(e => e.Id, e => e.Nombre);
+
+        // Gastos generales de la empresa (publicidad, botiquín, etc.) por fecha
+        decimal GastoEmpresaDe(int anio, int? mes = null)
+            => gastosEmp.Where(g => g.Fecha.Year == anio && (mes == null || g.Fecha.Month == mes))
+                        .Sum(g => g.Monto);
 
         // Plata que entró / salió, por fecha de pago
         decimal IngresoDe(int anio, int? mes = null)
@@ -91,12 +100,14 @@ public class AnualModel : PageModel
                 Reservas = resM.Count,
                 Personas = resM.Sum(r => r.CantidadPersonas),
                 Ingreso = IngresoDe(Anio, m),
-                Gastos = GastoDe(Anio, m)
+                Gastos = GastoDe(Anio, m),
+                GastosEmpresa = GastoEmpresaDe(Anio, m)
             });
         }
 
         Ingreso = Meses.Sum(x => x.Ingreso);
         Gastos = Meses.Sum(x => x.Gastos);
+        GastosEmpresaTotal = Meses.Sum(x => x.GastosEmpresa);
         TotalReservas = resAnio.Count;
         TotalPersonas = resAnio.Sum(r => r.CantidadPersonas);
 
@@ -147,6 +158,7 @@ public class AnualModel : PageModel
         ReservasPrev = resPrev.Count;
         IngresoPrev = IngresoDe(Anio - 1);
         GastosPrev = GastoDe(Anio - 1);
+        GastosEmpresaPrev = GastoEmpresaDe(Anio - 1);
         HayAnioPrevio = resPrev.Count > 0 || IngresoPrev != 0 || GastosPrev != 0;
     }
 }

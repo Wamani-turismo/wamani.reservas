@@ -1,0 +1,32 @@
+@model Wamani.Reservas.Pages.Operativo.GastoRowVm
+@{
+    var g = Model.G;
+    var esManual = g.PrecioUnitario is null;
+    var tipo = string.IsNullOrWhiteSpace(g.TipoCalculo) ? "Por persona" : g.TipoCalculo;
+    var uni = tipo == "Por auto" ? "autos" : "personas";
+    var tipoLabel = tipo == "Fijo" ? "Fijo" : tipo == "Por auto" ? "Por auto (chofer-guía)" : "Por persona";
+    var valorInput = esManual ? g.Precio : (g.PrecioUnitario ?? 0);
+    string Num(decimal m) => m.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+}
+<tr class="gasto-row" data-tipo="@tipo" data-mult="@Model.Mult" data-uni="@uni">
+    <td data-label="Listo">
+        <input type="checkbox" name="Comprados" value="@g.Id" class="chk-listo" style="width:20px;height:20px" @(g.Comprado ? "checked" : "") />
+    </td>
+    <td data-label="Ítem">
+        <input type="hidden" name="Ids" value="@g.Id" />
+        <input type="hidden" name="Keys" value="@g.Id" />
+        <input type="hidden" name="GastoReservaIds" value="@Model.ReservaId" />
+        <input name="Nombres" value="@g.Nombre" />
+        <div class="cliente-sub">@tipoLabel</div>
+    </td>
+    <td class="num" data-label="Precio y total">
+        <input type="hidden" name="EsManual" value="@(esManual ? "1" : "0")" class="es-manual" />
+        <input name="Precios" type="number" step="0.01" min="0" value="@Num(valorInput)" class="in-precio" />
+        <div class="calc-linea"></div>
+    </td>
+    <td data-label="Comprobante">
+        <input type="file" name="comp_@g.Id" accept="image/*,.pdf" class="in-comp" multiple />
+        <partial name="_Adjuntos" model="@(g.Comprobante ?? "")" />
+    </td>
+    <td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>
+</tr>

@@ -584,3 +584,8 @@ input[type=file]::file-selector-button {
 /* Nombre de los archivos recién elegidos (antes de guardar) */
 .elegidos { margin-top: 5px; font-size: .78rem; color: var(--ink-soft); }
 .elegidos b { color: var(--ink); }
+
+/* Operativo: encabezados de grupo (compartido / por reserva) */
+.tabla tr.grupo-head td { background: var(--verde-oscuro); color: var(--dorado); font-weight: 700; font-size: .82rem; letter-spacing: .02em; padding: 9px 16px; }
+.tabla tr.gasto-add td { background: transparent; border: none; padding: 6px 16px 14px; }
+.tabla tr.gasto-vacio td { color: var(--muted); font-style: italic; }

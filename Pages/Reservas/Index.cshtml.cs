@@ -186,12 +186,16 @@ public class IndexModel : PageModel
             .Select(s => $"{s.ExcursionId}|{s.Fecha:yyyy-MM-dd}")
             .ToHashSet();
 
-        // "Servicios" = los PROVEEDORES (guía, auto, hospedaje, restaurante).
-        // Los COMPARTIDOS de la salida (sin reserva asignada) van al encabezado; los que
-        // están asignados a una reserva (hospedaje/restaurante por persona) van por reserva.
+        // "Operativo" = gastos (por persona / compartidos) + proveedores (hospedaje/restaurante
+        // por reserva; guía/auto compartidos). Lo COMPARTIDO (sin reserva) va al encabezado;
+        // lo asignado a una reserva va por reserva.
         var todosProvs = await _db.OperativoProveedores.ToListAsync();
+        var todosGastos = await _db.OperativoGastos.ToListAsync();
 
         var provsPorSalida = todosProvs
+            .GroupBy(o => $"{o.ExcursionId}|{o.Fecha:yyyy-MM-dd}")
+            .ToDictionary(g => g.Key, g => g.ToList());
+        var gastosPorSalida = todosGastos
             .GroupBy(o => $"{o.ExcursionId}|{o.Fecha:yyyy-MM-dd}")
             .ToDictionary(g => g.Key, g => g.ToList());
 
@@ -200,23 +204,26 @@ public class IndexModel : PageModel
             var clave = ClaveSalida(r);
             if (ServiciosFaltantes.ContainsKey(clave)) continue;
 
-            // Encabezado de la salida: solo los proveedores COMPARTIDOS (sin reserva)
-            var provs = (provsPorSalida.GetValueOrDefault(clave) ?? new())
-                .Where(p => p.ReservaId == null).ToList();
-            var conTotal = provs.Where(p => p.Total > 0).ToList();
-            ServiciosTotal[clave] = conTotal.Count;
-            ServiciosFaltantes[clave] = conTotal
-                .Where(p => p.Pendiente() > 0)
-                .Select(p => string.IsNullOrWhiteSpace(p.ProveedorNombre) ? p.Tipo : $"{p.Tipo}: {p.ProveedorNombre}")
+            // Encabezado de la salida: SOLO lo compartido (sin reserva): guía/auto + gastos por auto/fijo
+            var provsComp = (provsPorSalida.GetValueOrDefault(clave) ?? new()).Where(p => p.ReservaId == null && p.Total > 0).ToList();
+            var gastosComp = (gastosPorSalida.GetValueOrDefault(clave) ?? new()).Where(o => o.ReservaId == null && o.Precio > 0).ToList();
+            ServiciosTotal[clave] = provsComp.Count + gastosComp.Count;
+            ServiciosFaltantes[clave] = provsComp.Where(p => p.Pendiente() > 0)
+                    .Select(p => string.IsNullOrWhiteSpace(p.ProveedorNombre) ? p.Tipo : $"{p.Tipo}: {p.ProveedorNombre}")
+                .Concat(gastosComp.Where(o => !o.Comprado).Select(o => o.Nombre))
                 .ToList();
         }
 
-        // Servicios POR RESERVA (hospedaje/restaurante asignados a cada reserva)
-        foreach (var grupo in todosProvs.Where(p => p.ReservaId is int).GroupBy(p => p.ReservaId!.Value))
+        // Operativo POR RESERVA (gastos + hospedaje/restaurante asignados a cada reserva)
+        foreach (var r in todas)
         {
-            var conTotal = grupo.Where(p => p.Total > 0).ToList();
-            ServReservaTotal[grupo.Key] = conTotal.Count;
-            ServReservaFalta[grupo.Key] = conTotal.Sum(p => p.Pendiente());
+            var clave = ClaveSalida(r);
+            var provsR = (provsPorSalida.GetValueOrDefault(clave) ?? new()).Where(p => p.ReservaId == r.Id && p.Total > 0).ToList();
+            var gastosR = (gastosPorSalida.GetValueOrDefault(clave) ?? new()).Where(o => o.ReservaId == r.Id && o.Precio > 0).ToList();
+            var cantidad = provsR.Count + gastosR.Count;
+            if (cantidad == 0) continue;
+            ServReservaTotal[r.Id] = cantidad;
+            ServReservaFalta[r.Id] = provsR.Sum(p => p.Pendiente()) + gastosR.Where(o => !o.Comprado).Sum(o => o.Precio);
         }
 
         // ---- Detección de coincidencias para el modal ----

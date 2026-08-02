@@ -109,6 +109,7 @@ using (var scope = app.Services.CreateScope())
     EnsureSqliteColumn(db, "OperativoGastos", "FechaPago", "TEXT NULL");
     EnsureSqliteColumn(db, "OperativoGastos", "PrecioUnitario", "TEXT NULL");
     EnsureSqliteColumn(db, "OperativoGastos", "TipoCalculo", "TEXT NOT NULL DEFAULT 'Por persona'");
+    EnsureSqliteColumn(db, "OperativoGastos", "ReservaId", "INTEGER NULL");
     EnsureSqliteColumn(db, "OperativoProveedores", "FechaSena", "TEXT NULL");
     EnsureSqliteColumn(db, "OperativoProveedores", "FechaSaldo", "TEXT NULL");
     EnsureSqliteColumn(db, "OperativoProveedores", "ReservaId", "INTEGER NULL");
@@ -271,6 +272,7 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Reservas"" ADD COLUMN IF NOT EXISTS ""DescuentoMotivo"" text;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Reservas"" ADD COLUMN IF NOT EXISTS ""CantidadMenores"" integer NOT NULL DEFAULT 0;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoProveedores"" ADD COLUMN IF NOT EXISTS ""ReservaId"" integer;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""ReservaId"" integer;");
         // Tabla de gastos generales de la empresa (nueva; EnsureCreated no la agrega a una base ya creada)
         db.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS ""GastosEmpresa"" (

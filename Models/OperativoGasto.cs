@@ -15,6 +15,11 @@ namespace Wamani.Reservas.Models
         // Fecha de salida (check-in) de la excursión
         public DateTime Fecha { get; set; }
 
+        // A qué RESERVA pertenece este gasto. Los gastos "por persona" (hospedaje, comidas,
+        // entradas…) van por reserva. Los compartidos ("por auto" / "fijo": nafta, guía…)
+        // van sin reserva (null) = una sola vez para toda la salida.
+        public int? ReservaId { get; set; }
+
         [Required, MaxLength(80)]
         public string Nombre { get; set; } = "";
 

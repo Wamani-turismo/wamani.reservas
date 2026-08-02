@@ -6,6 +6,14 @@ using Wamani.Reservas.Models;
 
 namespace Wamani.Reservas.Pages.Operativo;
 
+// Datos para renderizar una fila de gasto (partial _GastoRow)
+public class GastoRowVm
+{
+    public OperativoGasto G { get; set; } = new();
+    public int Mult { get; set; }         // por cuánto se multiplica el unitario
+    public int ReservaId { get; set; }    // 0 = compartido de la salida
+}
+
 // Datos para renderizar una fila de proveedor (partial _ProvRow)
 public class ProvRowVm
 {
@@ -50,6 +58,7 @@ public class SalidaModel : PageModel
     [BindProperty] public List<string> Nombres { get; set; } = new();
     [BindProperty] public List<string> Precios { get; set; } = new();   // unitario (auto) o total (a mano) según el modo
     [BindProperty] public List<string> EsManual { get; set; } = new();  // "1" si el monto se cargó a mano
+    [BindProperty] public List<int> GastoReservaIds { get; set; } = new();  // a qué reserva pertenece el gasto (0 = compartido)
     [BindProperty] public List<int> Comprados { get; set; } = new();  // ids tildados
     [BindProperty] public bool ServiciosPagados { get; set; }
     [BindProperty] public IFormFile? ComprobanteArchivo { get; set; }
@@ -101,15 +110,15 @@ public class SalidaModel : PageModel
 
     public async Task<IActionResult> OnGetAsync()
     {
-        // Sincronizar los gastos de la excursión con esta salida: agrega los que falten.
-        // Así, si después de abrir el operativo agregás gastos a la excursión, aparecen
-        // acá la próxima vez que entrás (antes solo se copiaban la PRIMERA vez).
-        // Aparecen los gastos a comprar/preparar. Los marcados "es proveedor" (guía, auto,
-        // hospedaje, restaurante) NO se materializan acá: cuentan en la Rentabilidad pero se
-        // pagan en la sección Proveedores (con seña + saldo).
-        int pasajeros = await _db.Reservas
+        // Los gastos "Por persona" (hospedaje, comidas, entradas…) se materializan POR CADA
+        // reserva (× la gente de esa reserva). Los "Por auto"/"Fijo" (nafta, etc.) y los
+        // proveedores Auto/Guía son COMPARTIDOS de la salida (una sola vez). Así, cuando se
+        // suma una reserva nueva, lo suyo arranca SIN pagar y la salida no figura "lista".
+        var reservas = await _db.Reservas
             .Where(r => r.ExcursionId == ExcursionId && r.FechaDesde.Date == Fecha.Date)
-            .SumAsync(r => r.CantidadPersonas);
+            .OrderBy(r => r.NombreCliente)
+            .ToListAsync();
+        int pasajeros = reservas.Sum(r => r.CantidadPersonas);
 
         var plantilla = await _db.GastosExcursion
             .Where(g => g.ExcursionId == ExcursionId && !g.EsProveedor)
@@ -119,36 +128,69 @@ public class SalidaModel : PageModel
         var yaCargados = await _db.OperativoGastos
             .Where(o => o.ExcursionId == ExcursionId && o.Fecha.Date == Fecha.Date)
             .ToListAsync();
-        var nombresCargados = yaCargados
-            .Select(o => (o.Nombre ?? "").Trim().ToLowerInvariant())
-            .ToHashSet();
 
+        static string Norm(string? s) => (s ?? "").Trim().ToLowerInvariant();
         bool cambio = false;
-        foreach (var p in plantilla)
+
+        // Limpiar gastos "por persona" del modelo viejo que quedaron COMPARTIDOS (sin reserva).
+        // Los que se agregaron a mano (PrecioUnitario null) NO se tocan.
+        var viejos = yaCargados
+            .Where(g => g.ReservaId == null && g.TipoCalculo == "Por persona" && g.PrecioUnitario != null)
+            .ToList();
+        if (viejos.Count > 0)
         {
-            if (nombresCargados.Contains((p.Nombre ?? "").Trim().ToLowerInvariant())) continue;
-            var tipo = string.IsNullOrWhiteSpace(p.TipoCalculo) ? "Por persona" : p.TipoCalculo;
-            _db.OperativoGastos.Add(new OperativoGasto
-            {
-                ExcursionId = ExcursionId,
-                Fecha = Fecha.Date,
-                Nombre = p.Nombre ?? "",
-                TipoCalculo = tipo,
-                PrecioUnitario = p.Precio,   // lo que se carga como "por persona/por auto"
-                Precio = p.Precio * OperativoGasto.Multiplicador(tipo, pasajeros),  // total
-                Comprado = false
-            });
+            _db.OperativoGastos.RemoveRange(viejos);
+            yaCargados = yaCargados.Except(viejos).ToList();
             cambio = true;
         }
 
-        // Refrescar el total de los gastos automáticos por si cambió la cantidad de gente
+        foreach (var p in plantilla)
+        {
+            var tipo = string.IsNullOrWhiteSpace(p.TipoCalculo) ? "Por persona" : p.TipoCalculo;
+
+            if (tipo == "Por persona")
+            {
+                // Un gasto por CADA reserva (× la gente de esa reserva)
+                foreach (var r in reservas)
+                {
+                    if (yaCargados.Any(o => o.ReservaId == r.Id && Norm(o.Nombre) == Norm(p.Nombre))) continue;
+                    _db.OperativoGastos.Add(new OperativoGasto
+                    {
+                        ExcursionId = ExcursionId, Fecha = Fecha.Date, ReservaId = r.Id,
+                        Nombre = p.Nombre ?? "", TipoCalculo = tipo,
+                        PrecioUnitario = p.Precio,
+                        Precio = p.Precio * r.CantidadPersonas,
+                        Comprado = false
+                    });
+                    cambio = true;
+                }
+            }
+            else
+            {
+                // Compartido (por auto / fijo): una sola vez para la salida
+                if (yaCargados.Any(o => o.ReservaId == null && Norm(o.Nombre) == Norm(p.Nombre))) continue;
+                _db.OperativoGastos.Add(new OperativoGasto
+                {
+                    ExcursionId = ExcursionId, Fecha = Fecha.Date, ReservaId = null,
+                    Nombre = p.Nombre ?? "", TipoCalculo = tipo,
+                    PrecioUnitario = p.Precio,
+                    Precio = p.Precio * OperativoGasto.Multiplicador(tipo, pasajeros),
+                    Comprado = false
+                });
+                cambio = true;
+            }
+        }
+
+        // Refrescar los totales automáticos por si cambió la cantidad de gente
+        var paxPorReserva = reservas.ToDictionary(r => r.Id, r => r.CantidadPersonas);
         foreach (var g in yaCargados)
         {
-            if (g.PrecioUnitario is decimal u)
-            {
-                var nuevoTotal = u * OperativoGasto.Multiplicador(g.TipoCalculo, pasajeros);
-                if (g.Precio != nuevoTotal) { g.Precio = nuevoTotal; cambio = true; }
-            }
+            if (g.PrecioUnitario is not decimal u) continue;
+            int mult = g.ReservaId is int rid
+                ? (paxPorReserva.TryGetValue(rid, out var px) ? px : 0)          // por persona de esa reserva
+                : OperativoGasto.Multiplicador(g.TipoCalculo, pasajeros);          // compartido
+            var nuevoTotal = u * mult;
+            if (g.Precio != nuevoTotal) { g.Precio = nuevoTotal; cambio = true; }
         }
         if (cambio) await _db.SaveChangesAsync();
 
@@ -162,9 +204,16 @@ public class SalidaModel : PageModel
             .Where(o => o.ExcursionId == ExcursionId && o.Fecha.Date == Fecha.Date)
             .ToListAsync();
 
-        int pasajeros = await _db.Reservas
+        var reservasSalida = await _db.Reservas
             .Where(r => r.ExcursionId == ExcursionId && r.FechaDesde.Date == Fecha.Date)
-            .SumAsync(r => r.CantidadPersonas);
+            .ToListAsync();
+        int pasajeros = reservasSalida.Sum(r => r.CantidadPersonas);
+        var paxPorReserva = reservasSalida.ToDictionary(r => r.Id, r => r.CantidadPersonas);
+
+        // Total de un gasto automático: unitario × gente (de su reserva, o de la salida si es compartido)
+        int MultDe(OperativoGasto g) => g.ReservaId is int rid
+            ? (paxPorReserva.TryGetValue(rid, out var px) ? px : 0)
+            : OperativoGasto.Multiplicador(g.TipoCalculo, pasajeros);
 
         var idsEnviados = new HashSet<int>();
 
@@ -183,6 +232,8 @@ public class SalidaModel : PageModel
             // tiene id. Así una fila NUEVA también puede traer su comprobante en el mismo guardado.
             var clave = i < Keys.Count ? Keys[i] : id.ToString();
 
+            var resGasto = i < GastoReservaIds.Count ? GastoReservaIds[i] : 0;
+
             if (id == 0)
             {
                 // Fila nueva agregada a mano en el operativo → el monto es el total directo.
@@ -190,6 +241,7 @@ public class SalidaModel : PageModel
                 {
                     ExcursionId = ExcursionId,
                     Fecha = Fecha.Date,
+                    ReservaId = resGasto == 0 ? null : resGasto,
                     Nombre = nombre,
                     TipoCalculo = "Por persona",
                     PrecioUnitario = null,   // a mano
@@ -216,7 +268,7 @@ public class SalidaModel : PageModel
                     else
                     {
                         g.PrecioUnitario = valor;   // precio unitario (por persona / por auto)
-                        g.Precio = valor * OperativoGasto.Multiplicador(g.TipoCalculo, pasajeros);
+                        g.Precio = valor * MultDe(g);
                     }
 
                     // La fecha del gasto se toma sola el día que se carga el monto

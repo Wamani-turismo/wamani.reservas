@@ -40,6 +40,12 @@ else
             </summary>
 
             <div class="hist-salida-body">
+                <div style="margin-bottom:14px">
+                    <a class="btn-mini btn-mini-ghost" asp-page="/Rentabilidad/Comparar"
+                       asp-route-excursionId="@s.ExcursionId" asp-route-fecha="@s.Fecha.ToString("yyyy-MM-dd")">
+                        📊 Comparar teórica vs real
+                    </a>
+                </div>
                 <!-- Pasajeros -->
                 <h3 class="hist-bloque-tit">👥 Pasajeros y pagos</h3>
                 <div class="tabla-wrap">

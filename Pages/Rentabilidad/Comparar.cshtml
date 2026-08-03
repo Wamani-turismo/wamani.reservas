@@ -1,0 +1,175 @@
+@page
+@model Wamani.Reservas.Pages.Rentabilidad.CompararModel
+@{
+    ViewData["Title"] = "Teórica vs Real · " + Model.Excursion.Nombre;
+    string M(decimal m) => Wamani.Reservas.Pages.Rentabilidad.CompararModel.Money(m);
+    // Diferencia con signo y color: + = se gastó más que lo estimado
+    string DifTxt(decimal d) => (d > 0 ? "+ " : d < 0 ? "− " : "") + M(System.Math.Abs(d));
+}
+
+<style>
+    .comp-prov { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+    @@media (max-width:700px){ .comp-prov { grid-template-columns:1fr; } }
+    .lista-simple { list-style:none; margin:0; padding:0; }
+    .lista-simple li { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--line); }
+    .comp-sub { margin-top:10px; font-size:1.02rem; }
+</style>
+
+<div class="toolbar">
+    <div>
+        <h1>Teórica vs Real</h1>
+        <p class="subtitle" style="margin:0">
+            @Model.Excursion.Nombre · sale el @Model.Fecha.ToString("dd/MM/yy")
+            · @Model.Pax pasajero(s)@(Model.Autos > 0 ? $" · {Model.Autos} auto(s)" : "")
+        </p>
+    </div>
+    <div class="salida-pills">
+        <a class="btn btn-ghost" asp-page="/Operativo/Index">← Volver</a>
+        <a class="btn-nueva" asp-page="/Operativo/Salida"
+           asp-route-excursionId="@Model.ExcursionId" asp-route-fecha="@Model.Fecha.ToString("yyyy-MM-dd")">🎒 Ir al operativo</a>
+    </div>
+</div>
+
+@if (!Model.HayReservas)
+{
+    <div class="card"><p>No encontré reservas para esta salida. Revisá que la fecha sea la de check-in de la excursión.</p></div>
+}
+else if (!Model.HayOperativo)
+{
+    <div class="card">
+        <p>Esta salida todavía <strong>no tiene nada cargado en el operativo</strong>, así que no hay "real" para comparar.
+        Abrí el <a asp-page="/Operativo/Salida" asp-route-excursionId="@Model.ExcursionId" asp-route-fecha="@Model.Fecha.ToString("yyyy-MM-dd")">operativo de la salida</a> y cargá los gastos/proveedores.</p>
+    </div>
+}
+else
+{
+    <!-- Resumen -->
+    <div class="card">
+        <div class="fin-cards">
+            <div class="fin-card">
+                <div class="fin-label">Costo teórico (plantilla)</div>
+                <div class="fin-val">@M(Model.TeoricaTotal)</div>
+                <div class="hint" style="margin-top:4px">lo que debería costar según la excursión</div>
+            </div>
+            <div class="fin-card">
+                <div class="fin-label">Costo real (operativo)</div>
+                <div class="fin-val" style="color:var(--warn)">@M(Model.RealTotal)</div>
+                <div class="hint" style="margin-top:4px">lo que de verdad cargaste en esta salida</div>
+            </div>
+            <div class="fin-card fin-card-net">
+                <div class="fin-label">Diferencia</div>
+                <div class="fin-val" style="color:@(Model.Diferencia > 0 ? "var(--warn)" : "var(--ok)")">@DifTxt(Model.Diferencia)</div>
+                <div class="hint" style="margin-top:4px">@(Model.Diferencia > 0 ? "gastaste MÁS que lo estimado" : Model.Diferencia < 0 ? "gastaste MENOS que lo estimado" : "coincide justo")</div>
+            </div>
+        </div>
+        <p class="hint" style="margin-top:14px">
+            🟠 lo naranja es lo que <strong>cargaste de más</strong> (está en el operativo pero no en la plantilla de la excursión) ·
+            ⚪ lo gris es lo que está en la plantilla pero <strong>no cargaste</strong> en el operativo.
+        </p>
+    </div>
+
+    <!-- Gastos (comparados por nombre) -->
+    <div class="card">
+        <h2>Gastos a comprar / preparar</h2>
+        @if (Model.Gastos.Count == 0)
+        {
+            <p class="hint">No hay gastos para comparar.</p>
+        }
+        else
+        {
+        <div class="tabla-wrap">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Concepto</th>
+                    <th class="num">Teórica</th>
+                    <th class="num">Real</th>
+                    <th class="num">Diferencia</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var f in Model.Gastos)
+                {
+                    var bg = f.Estado == "soloReal" ? "background:var(--warn-soft)"
+                           : f.Estado == "soloTeorica" ? "background:var(--bg)" : "";
+                    <tr style="@bg">
+                        <td data-label="Concepto">
+                            @f.Concepto
+                            @if (f.Estado == "soloReal") { <span class="pill pill-warn" style="margin-left:6px">no está en la plantilla</span> }
+                            else if (f.Estado == "soloTeorica") { <span class="pill" style="margin-left:6px">no lo cargaste</span> }
+                        </td>
+                        <td class="num" data-label="Teórica">@(f.Teorica > 0 ? M(f.Teorica) : "—")</td>
+                        <td class="num" data-label="Real">@(f.Real > 0 ? M(f.Real) : "—")</td>
+                        <td class="num" data-label="Diferencia" style="color:@(f.Dif > 0 ? "var(--warn)" : f.Dif < 0 ? "var(--ok)" : "inherit")">
+                            @(f.Dif == 0 ? "—" : DifTxt(f.Dif))
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr style="font-weight:700;border-top:2px solid var(--line)">
+                    <td>Subtotal gastos</td>
+                    <td class="num">@M(Model.TeoricaGastos)</td>
+                    <td class="num" style="color:var(--warn)">@M(Model.RealGastos)</td>
+                    <td class="num">@DifTxt(Model.RealGastos - Model.TeoricaGastos)</td>
+                </tr>
+            </tfoot>
+        </table>
+        </div>
+        }
+    </div>
+
+    <!-- Proveedores / servicios (listas lado a lado) -->
+    <div class="card">
+        <h2>Proveedores / servicios</h2>
+        <p class="hint" style="margin-top:-4px;margin-bottom:14px">
+            Guía, hospedajes y traslados. Acá comparamos los <strong>subtotales</strong> (la plantilla no tiene los nombres exactos de cada proveedor).
+        </p>
+        <div class="comp-prov">
+            <div>
+                <div class="fin-label" style="margin-bottom:8px">Estimado (plantilla)</div>
+                @if (Model.ProvTeorica.Count == 0) { <p class="hint">— sin costos de proveedor en la plantilla —</p> }
+                else
+                {
+                    <ul class="lista-simple">
+                        @foreach (var i in Model.ProvTeorica)
+                        {
+                            <li><span>@i.Nombre</span><span class="num">@M(i.Monto)</span></li>
+                        }
+                    </ul>
+                }
+                <div class="comp-sub">Subtotal: <strong>@M(Model.TeoricaProv)</strong></div>
+            </div>
+            <div>
+                <div class="fin-label" style="margin-bottom:8px">Real (cargado en el operativo)</div>
+                @if (Model.ProvReal.Count == 0) { <p class="hint">— no cargaste proveedores en esta salida —</p> }
+                else
+                {
+                    <ul class="lista-simple">
+                        @foreach (var i in Model.ProvReal)
+                        {
+                            <li>
+                                <span>@i.Nombre @if (i.Extra != null) { <span class="pill pill-warn" style="margin-left:4px">@i.Extra</span> }</span>
+                                <span class="num">@M(i.Monto)</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                <div class="comp-sub" style="color:var(--warn)">Subtotal: <strong>@M(Model.RealProv)</strong></div>
+            </div>
+        </div>
+        <div class="comp-sub" style="border-top:2px solid var(--line);margin-top:10px;padding-top:10px">
+            Diferencia proveedores: <strong style="color:@((Model.RealProv - Model.TeoricaProv) > 0 ? "var(--warn)" : "var(--ok)")">@DifTxt(Model.RealProv - Model.TeoricaProv)</strong>
+        </div>
+    </div>
+
+    <!-- Contexto: ganancia -->
+    <div class="card">
+        <h2>Para referencia</h2>
+        <div class="fin-cards">
+            <div class="fin-card"><div class="fin-label">Ingreso (@Model.Pax × precio)</div><div class="fin-val">@M(Model.Ingreso)</div></div>
+            <div class="fin-card"><div class="fin-label">Ganancia teórica</div><div class="fin-val">@M(Model.GananciaTeorica)</div></div>
+            <div class="fin-card fin-card-net"><div class="fin-label">Ganancia real</div><div class="fin-val" style="color:var(--accent)">@M(Model.GananciaReal)</div></div>
+        </div>
+    </div>
+}

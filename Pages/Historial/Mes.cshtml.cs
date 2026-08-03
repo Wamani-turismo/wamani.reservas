@@ -46,6 +46,7 @@ public class MesModel : PageModel
 
     public class SalidaDetalle
     {
+        public int ExcursionId;
         public string Excursion = "";
         public DateTime Fecha;
         public int Pasajeros;
@@ -94,6 +95,7 @@ public class MesModel : PageModel
 
                 var d = new SalidaDetalle
                 {
+                    ExcursionId = exId,
                     Excursion = g.Key.Excursion,
                     Fecha = fecha,
                     Pasajeros = g.Sum(r => r.CantidadPersonas),

@@ -246,7 +246,9 @@ public class SalidaModel : PageModel
                     TipoCalculo = "Por persona",
                     PrecioUnitario = null,   // a mano
                     Precio = valor,
-                    Comprado = false
+                    // Un gasto agregado a mano es plata que ya se gastó de verdad: nace
+                    // tildado y con fecha de pago. (La regla es siempre: tilde = pagado.)
+                    Comprado = valor > 0
                 };
                 if (valor > 0) nuevo.FechaPago = DateTime.Today;
                 nuevo.Comprobante = await GuardarArchivosAsync($"comp_{clave}", null);
@@ -271,9 +273,13 @@ public class SalidaModel : PageModel
                         g.Precio = valor * MultDe(g);
                     }
 
-                    // La fecha del gasto se toma sola el día que se carga el monto
-                    if (g.Precio > 0 && g.FechaPago is null) g.FechaPago = DateTime.Today;
-                    if (g.Precio == 0) g.FechaPago = null;
+                    // La fecha de pago se toma sola el día que se TILDA el gasto como listo.
+                    // Antes se ponía con sólo tener precio: como la plantilla de la excursión
+                    // se copia con los precios ya cargados, alcanzaba con guardar una vez para
+                    // que TODA la estimación (guía, viáticos, traslados…) contara como plata
+                    // pagada ese día. Ahora el tilde "LISTO" es el único que confirma el pago.
+                    if (comprado && g.Precio > 0 && g.FechaPago is null) g.FechaPago = DateTime.Today;
+                    if (!comprado || g.Precio == 0) g.FechaPago = null;
 
                     g.Comprobante = await GuardarArchivosAsync($"comp_{clave}", g.Comprobante);
 

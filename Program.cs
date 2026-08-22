@@ -339,6 +339,21 @@ using (var scope = app.Services.CreateScope())
             );");
     }
 
+    // Un gasto del operativo sin tildar NO está pagado: no puede tener fecha de pago.
+    // Hasta ahora la fecha se ponía sola con sólo tener precio, así que toda la estimación
+    // copiada de la plantilla quedaba marcada como plata pagada y restaba en Finanzas y en
+    // Caja sin que nadie hubiera gastado nada. Esto lo deja consistente (y como la regla
+    // nueva ya no estampa fechas sin tilde, en adelante no cambia nada).
+    {
+        var sinTilde = db.OperativoGastos.Where(o => !o.Comprado && o.FechaPago != null).ToList();
+        if (sinTilde.Count > 0)
+        {
+            foreach (var g in sinTilde) g.FechaPago = null;
+            db.SaveChanges();
+            Console.WriteLine($"[migracion] {sinTilde.Count} gastos del operativo sin tildar: se les quitó la fecha de pago.");
+        }
+    }
+
     // El tipo de costo "Por guía" se unificó con "Por auto" (en Wamani el chofer es el guía).
     // Pasamos los gastos que hayan quedado como "Por guía" a "Por auto". No pierde datos.
     db.Database.ExecuteSqlRaw(

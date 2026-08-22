@@ -50,8 +50,15 @@ public class IndexModel : PageModel
         var reservas = await _db.Reservas.ToListAsync();
         Ingresos = reservas.Sum(r => (r.SenaMonto ?? 0) + (r.SaldoMonto ?? 0));
 
-        var egGastos = (await _db.OperativoGastos.ToListAsync()).Sum(o => o.Precio);
-        var egProv = (await _db.OperativoProveedores.ToListAsync()).Sum(p => p.Sena + p.Saldo);
+        // OJO: acá sólo cuenta la plata que REALMENTE salió. Un gasto del operativo sin
+        // FechaPago es una estimación copiada de la plantilla de la excursión (todavía no
+        // se compró ni se pagó), así que no puede restar de la caja. Igual con la seña y
+        // el saldo de cada proveedor: sólo restan si tienen su fecha de pago cargada.
+        var egGastos = (await _db.OperativoGastos.ToListAsync())
+            .Where(o => o.FechaPago != null)
+            .Sum(o => o.Precio);
+        var egProv = (await _db.OperativoProveedores.ToListAsync())
+            .Sum(p => (p.FechaSena != null ? p.Sena : 0) + (p.FechaSaldo != null ? p.Saldo : 0));
         var egEmpresa = (await _db.GastosEmpresa.ToListAsync()).Sum(g => g.Monto);
         Egresos = egGastos + egProv + egEmpresa;
 

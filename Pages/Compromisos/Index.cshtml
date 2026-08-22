@@ -1,0 +1,168 @@
+@page
+@model Wamani.Reservas.Pages.Compromisos.IndexModel
+@{
+    ViewData["Title"] = "Compromisos";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+    string Dia(DateTime d) => d.ToString("dd/MM/yy", ci);
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Compromisos</h1>
+        <p class="subtitle" style="margin:0">
+            La plata que todavía está en el aire de las salidas ya vendidas: lo que falta cobrar
+            y lo que falta pagarle a los proveedores. No incluye los gastos del operativo
+            (nafta, entradas, comidas), que se van cargando a medida que pasa cada salida.
+        </p>
+    </div>
+</div>
+
+<!-- Resumen -->
+<div class="fin-cards">
+    <div class="fin-card">
+        <div class="fin-label">Caja hoy</div>
+        <div class="fin-val">@Money(Model.CajaHoy)</div>
+        <div class="fin-label" style="margin-top:4px">lo que ya se cobró menos lo ya pagado</div>
+    </div>
+    <div class="fin-card">
+        <div class="fin-label">+ Falta cobrar</div>
+        <div class="fin-val" style="color:var(--ok,#2e7d32)">@Money(Model.PorCobrar)</div>
+        <div class="fin-label" style="margin-top:4px">@Model.Cobros.Count saldo(s) de reservas</div>
+    </div>
+    <div class="fin-card">
+        <div class="fin-label">− Falta pagar</div>
+        <div class="fin-val" style="color:var(--warn)">@Money(Model.PorPagar)</div>
+        <div class="fin-label" style="margin-top:4px">@Model.Pagos.Count proveedor(es) reservado(s)</div>
+    </div>
+    <div class="fin-card fin-card-net">
+        <div class="fin-label">Plata proyectada</div>
+        <div class="fin-val" style="color:var(--accent)">@Money(Model.Proyectado)</div>
+        <div class="fin-label" style="margin-top:4px">cuando termines de cobrar y pagar todo</div>
+    </div>
+</div>
+
+<div class="card" style="margin-top:4px">
+    <p style="margin:0;color:var(--ink-soft)">
+        <strong>Proyectado</strong> = Caja hoy @Money(Model.CajaHoy)
+        + falta cobrar @Money(Model.PorCobrar)
+        − falta pagar @Money(Model.PorPagar)
+        = <strong>@Money(Model.Proyectado)</strong>.
+    </p>
+</div>
+
+@if (Model.CobrarVencido > 0 || Model.PagarVencido > 0)
+{
+    <div class="aviso-ok" style="background:var(--warn-bg,#fff4e5);border-color:var(--warn)">
+        <strong>Ojo con lo vencido:</strong>
+        @if (Model.CobrarVencido > 0)
+        {
+            <span>hay @Money(Model.CobrarVencido) sin cobrar de salidas que ya pasaron.</span>
+        }
+        @if (Model.PagarVencido > 0)
+        {
+            <span>Hay @Money(Model.PagarVencido) sin pagar de salidas que ya pasaron.</span>
+        }
+    </div>
+}
+
+<!-- Falta cobrar -->
+<div class="card" style="margin-top:12px">
+    <h2 style="margin-top:0">Falta cobrar (saldos de reservas)</h2>
+    <p class="subtitle">Normalmente es el 50% que queda después de la seña.</p>
+
+    @if (Model.Cobros.Count == 0)
+    {
+        <p style="color:var(--ink-soft)">No queda nada por cobrar. Todas las reservas están pagas.</p>
+    }
+    else
+    {
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Sale</th><th>Excursión</th><th>Pasajero</th>
+                    <th style="text-align:right">Pers.</th>
+                    <th style="text-align:right">Total</th>
+                    <th style="text-align:right">Cobrado</th>
+                    <th style="text-align:right">Falta cobrar</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model.Cobros)
+                {
+                    <tr>
+                        <td>
+                            @Dia(c.Fecha)
+                            @if (c.YaPaso)
+                            {
+                                <span style="display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;color:#fff;background:var(--warn)">ya pasó</span>
+                            }
+                        </td>
+                        <td>@c.Excursion</td>
+                        <td>@c.Cliente</td>
+                        <td style="text-align:right">@c.Personas</td>
+                        <td style="text-align:right">@Money(c.Total)</td>
+                        <td style="text-align:right">@Money(c.Cobrado)</td>
+                        <td style="text-align:right"><strong>@Money(c.Falta)</strong></td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="6" style="text-align:right"><strong>Total a cobrar</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.PorCobrar)</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+</div>
+
+<!-- Falta pagar -->
+<div class="card" style="margin-top:12px">
+    <h2 style="margin-top:0">Falta pagar (proveedores ya reservados)</h2>
+    <p class="subtitle">Guías, hospedajes, restaurantes y autos que ya tienen lugar tomado y todavía deben saldo.</p>
+
+    @if (Model.Pagos.Count == 0)
+    {
+        <p style="color:var(--ink-soft)">No queda nada por pagar a proveedores.</p>
+    }
+    else
+    {
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Sale</th><th>Excursión</th><th>Tipo</th><th>Proveedor</th>
+                    <th style="text-align:right">Total</th>
+                    <th style="text-align:right">Pagado</th>
+                    <th style="text-align:right">Falta pagar</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model.Pagos)
+                {
+                    <tr>
+                        <td>
+                            @Dia(p.Fecha)
+                            @if (p.YaPaso)
+                            {
+                                <span style="display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;color:#fff;background:var(--warn)">ya pasó</span>
+                            }
+                        </td>
+                        <td>@p.Excursion</td>
+                        <td>@p.Tipo</td>
+                        <td>@p.Proveedor</td>
+                        <td style="text-align:right">@Money(p.Total)</td>
+                        <td style="text-align:right">@Money(p.Pagado)</td>
+                        <td style="text-align:right"><strong>@Money(p.Falta)</strong></td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="6" style="text-align:right"><strong>Total a pagar</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.PorPagar)</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+</div>

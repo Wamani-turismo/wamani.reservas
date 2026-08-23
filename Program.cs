@@ -354,6 +354,32 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
+    // Gastos huérfanos: quedaron colgados de una "salida" (excursión + fecha) que no tiene
+    // ninguna reserva. Pasa si se abre el operativo de una fecha equivocada, o si después
+    // se borran/mueven todas las reservas de esa salida. Sólo se borran los que son
+    // claramente basura: sin tildar, sin fecha de pago y sin comprobante. Si alguno tiene
+    // plata o papeles cargados NO se toca, para no perder nada por las dudas.
+    {
+        var salidasReales = db.Reservas
+            .Select(r => new { r.ExcursionId, r.FechaDesde })
+            .ToList()
+            .Select(x => (Exc: x.ExcursionId ?? 0, Fecha: x.FechaDesde.Date))
+            .ToHashSet();
+
+        var huerfanos = db.OperativoGastos
+            .Where(o => !o.Comprado && o.FechaPago == null && o.Comprobante == null)
+            .ToList()
+            .Where(o => !salidasReales.Contains((o.ExcursionId, o.Fecha.Date)))
+            .ToList();
+
+        if (huerfanos.Count > 0)
+        {
+            db.OperativoGastos.RemoveRange(huerfanos);
+            db.SaveChanges();
+            Console.WriteLine($"[migracion] {huerfanos.Count} gasto(s) de salidas sin reservas: borrados.");
+        }
+    }
+
     // El tipo de costo "Por guía" se unificó con "Por auto" (en Wamani el chofer es el guía).
     // Pasamos los gastos que hayan quedado como "Por guía" a "Por auto". No pierde datos.
     db.Database.ExecuteSqlRaw(

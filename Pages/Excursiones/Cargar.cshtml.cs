@@ -135,14 +135,24 @@ public class CargarModel : PageModel
         var etapasViejas = await _db.EtapasExcursion.Where(e => e.ExcursionId == excursionId).ToListAsync();
         _db.EtapasExcursion.RemoveRange(etapasViejas);
 
+        // Para poder usar el nombre del refugio como lugar cuando no se escribió ninguno
+        var nombresProv = await _db.Proveedores.ToDictionaryAsync(p => p.Id, p => p.Nombre);
+
         int noche = 0;
         for (int i = 0; i < EtapaLugares.Count; i++)
         {
             var lugar = (EtapaLugares[i] ?? "").Trim();
-            if (string.IsNullOrWhiteSpace(lugar)) continue;   // fila vacía → se ignora
+            var provId = i < EtapaProveedorIds.Count ? EtapaProveedorIds[i] : 0;
+
+            // Si no se escribió el lugar pero sí se eligió el refugio, se usa su nombre.
+            // (Antes la fila se descartaba en silencio y parecía que no guardaba nada.)
+            if (string.IsNullOrWhiteSpace(lugar) && provId != 0)
+                lugar = nombresProv.TryGetValue(provId, out var pn) ? pn : "";
+
+            // Fila realmente vacía (ni lugar ni refugio) → se ignora
+            if (string.IsNullOrWhiteSpace(lugar)) continue;
 
             noche++;
-            var provId = i < EtapaProveedorIds.Count ? EtapaProveedorIds[i] : 0;
             var incluye = (i < EtapaIncluye.Count ? EtapaIncluye[i] : null)?.Trim();
 
             _db.EtapasExcursion.Add(new EtapaExcursion

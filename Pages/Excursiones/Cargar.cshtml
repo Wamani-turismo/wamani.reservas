@@ -101,29 +101,34 @@
     </div>
 
     <!-- ---------- Etapas de la travesía (dónde se duerme cada noche) ---------- -->
-    <div class="card">
-        <h2>Etapas de la travesía</h2>
+    @* Sólo tiene sentido en travesías de varios días: se muestra/esconde con la casilla
+       "Es travesía" de arriba (ver el script al final). *@
+    <div class="card" id="cardEtapas" style="@(Model.Excursion.EsTravesia ? "" : "display:none")">
+        <h2>Dónde se duerme cada noche</h2>
         <p class="hint" style="margin:-8px 0 14px">
-            Sólo para travesías de varios días. Cargá una fila por cada NOCHE, en orden: el lugar
-            donde se duerme y el refugio que se usa habitualmente ahí.
+            Cargá una fila por cada NOCHE de la travesía, en orden. Elegí el refugio y listo:
+            el resto se completa solo.
             <br />
-            Los refugios se dan de alta en <a asp-page="/Proveedores/Cargar" target="_blank">Proveedores</a>
-            como siempre (tipo Hospedaje, con lo que cobran). Acá sólo se dice qué refugio va en qué
-            lugar de la ruta. El <strong>precio por persona se puede dejar vacío</strong>: sale del
-            proveedor. Se completa acá sólo si en esta travesía cobran distinto.
+            <strong>¿Para qué sirve, si el refugio ya está en Proveedores?</strong>
+            En Proveedores está <em>quién es y cuánto cobra</em>. Acá se dice <em>en qué noche de
+            esta travesía se usa</em>. Con eso, en el operativo de cada salida el hospedaje sale
+            listo: <strong>una fila por noche con todo el grupo junto</strong> (personas × precio),
+            en vez de tener que agregar a mano una fila por cada pasajero en cada refugio.
             <br />
-            Después, en el operativo de cada salida, el hospedaje aparece como <strong>una sola fila
-            por lugar</strong> (personas × precio) en vez de una fila por cada pasajero en cada refugio.
-            El refugio y el precio se pueden cambiar en cada salida sin tocar esto.
+            El <strong>lugar</strong> es opcional: si lo dejás vacío se usa el nombre del refugio.
+            Conviene escribirlo cuando el lugar y el refugio no se llaman igual (por ejemplo lugar
+            TILCARA con un hostel que tiene otro nombre), así el día que cambies de refugio la
+            noche se sigue llamando igual.
             <br />
-            Si es una excursión de un día, dejá esta parte vacía.
+            El <strong>precio por persona</strong> también es opcional: sale de Proveedores. Se
+            completa acá sólo si en esta travesía te cobran distinto.
         </p>
 
         <table class="tabla" id="tablaEtapas">
             <thead>
                 <tr>
                     <th style="width:70px">Noche</th>
-                    <th>Lugar</th>
+                    <th>Lugar <span class="hint" style="font-weight:400">(opcional)</span></th>
                     <th style="width:220px">Refugio / hospedaje habitual</th>
                     <th class="num" style="width:150px">Precio p/persona <span class="hint" style="font-weight:400">(opcional)</span></th>
                     <th>Comidas incluidas</th>
@@ -136,7 +141,7 @@
                     var et = Model.Etapas[i];
                     <tr class="etapa-row">
                         <td data-label="Noche" class="etapa-nro">@(i + 1)</td>
-                        <td data-label="Lugar"><input name="EtapaLugares" value="@et.Lugar" placeholder="Ej: YUTO PAMPA" /></td>
+                        <td data-label="Lugar"><input name="EtapaLugares" value="@et.Lugar" placeholder="(igual que el refugio)" /></td>
                         <td data-label="Refugio">
                             <select name="EtapaProveedorIds">
                                 <option value="0">— sin asignar —</option>
@@ -236,7 +241,7 @@
             tr.className = 'etapa-row';
             tr.innerHTML =
                 '<td data-label="Noche" class="etapa-nro"></td>' +
-                '<td data-label="Lugar"><input name="EtapaLugares" placeholder="Ej: YUTO PAMPA" /></td>' +
+                '<td data-label="Lugar"><input name="EtapaLugares" placeholder="(igual que el refugio)" /></td>' +
                 '<td data-label="Refugio"><select name="EtapaProveedorIds">' + OPCIONES_HOSPEDAJE + '</select></td>' +
                 '<td class="num" data-label="Precio por persona"><input name="EtapaPrecios" type="number" step="0.01" min="0" /></td>' +
                 '<td data-label="Incluye"><input name="EtapaIncluye" placeholder="Ej: merienda + cena + desayuno" /></td>' +
@@ -256,5 +261,15 @@
                 filas[i].querySelector('.etapa-nro').textContent = (i + 1);
             }
         }
+
+        // Las noches sólo aplican a travesías: la sección aparece al tildar "Es travesía".
+        (function () {
+            var chk = document.getElementById('Excursion_EsTravesia');
+            var card = document.getElementById('cardEtapas');
+            if (!chk || !card) return;
+            chk.addEventListener('change', function () {
+                card.style.display = chk.checked ? '' : 'none';
+            });
+        })();
     </script>
 }

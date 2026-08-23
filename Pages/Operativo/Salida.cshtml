@@ -71,7 +71,7 @@
                 </div>
 
                 @* Hospedajes cargados antes de tener etapas, o que no coinciden con ningún lugar *@
-                @{ var sueltos = Model.ProvPorTipo.GetValueOrDefault("Hospedaje") ?? new(); }
+                var sueltos = Model.ProvPorTipo.GetValueOrDefault("Hospedaje") ?? new List<Wamani.Reservas.Models.OperativoProveedor>();
                 @if (sueltos.Count > 0)
                 {
                     <p class="hint" style="margin:14px 0 8px">

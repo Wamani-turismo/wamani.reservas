@@ -37,11 +37,15 @@ public class EtapaRowVm
     public string Key { get; set; } = "";
     public int ProveedorSugerido { get; set; }         // refugio habitual de la plantilla
     public decimal PrecioSugerido { get; set; }        // precio por persona de la plantilla
+    public decimal PrecioCatalogo { get; set; }        // lo que cobra ese refugio según Proveedores
     public int PersonasSalida { get; set; }            // cuánta gente va en la salida
 
-    // Lo que se muestra: si ya hay algo cargado se respeta; si no, la sugerencia de la plantilla.
+    // Lo que se muestra: si ya hay algo cargado se respeta; si no, la sugerencia de la
+    // plantilla; y si la plantilla no tiene precio, lo que cobra el refugio en Proveedores
+    // (así no hay que escribir el precio dos veces).
     public int ProveedorId => Asig?.ProveedorId ?? ProveedorSugerido;
-    public decimal PrecioPorPersona => Asig?.PrecioPorPersona ?? PrecioSugerido;
+    public decimal PrecioPorPersona =>
+        Asig?.PrecioPorPersona ?? (PrecioSugerido > 0 ? PrecioSugerido : PrecioCatalogo);
     public int Personas => Asig?.Personas ?? PersonasSalida;
     public decimal Total => Asig?.Total ?? (PrecioPorPersona * Personas);
 }
@@ -163,6 +167,7 @@ public class SalidaModel : PageModel
                 Key = "etapa-" + e.Orden,
                 ProveedorSugerido = e.ProveedorId ?? 0,
                 PrecioSugerido = e.PrecioPorPersona,
+                PrecioCatalogo = catHosp.FirstOrDefault(p => p.Id == e.ProveedorId)?.Precio ?? 0,
                 PersonasSalida = PasajerosSalida
             }).ToList();
 

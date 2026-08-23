@@ -105,7 +105,12 @@
         <h2>Etapas de la travesía</h2>
         <p class="hint" style="margin:-8px 0 14px">
             Sólo para travesías de varios días. Cargá una fila por cada NOCHE, en orden: el lugar
-            donde se duerme, el refugio que se usa habitualmente ahí y cuánto cobra por persona.
+            donde se duerme y el refugio que se usa habitualmente ahí.
+            <br />
+            Los refugios se dan de alta en <a asp-page="/Proveedores/Cargar" target="_blank">Proveedores</a>
+            como siempre (tipo Hospedaje, con lo que cobran). Acá sólo se dice qué refugio va en qué
+            lugar de la ruta. El <strong>precio por persona se puede dejar vacío</strong>: sale del
+            proveedor. Se completa acá sólo si en esta travesía cobran distinto.
             <br />
             Después, en el operativo de cada salida, el hospedaje aparece como <strong>una sola fila
             por lugar</strong> (personas × precio) en vez de una fila por cada pasajero en cada refugio.
@@ -120,7 +125,7 @@
                     <th style="width:70px">Noche</th>
                     <th>Lugar</th>
                     <th style="width:220px">Refugio / hospedaje habitual</th>
-                    <th class="num" style="width:150px">Precio por persona</th>
+                    <th class="num" style="width:150px">Precio p/persona <span class="hint" style="font-weight:400">(opcional)</span></th>
                     <th>Comidas incluidas</th>
                     <th style="width:60px"></th>
                 </tr>

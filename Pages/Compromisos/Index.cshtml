@@ -5,15 +5,15 @@
     var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
     string Money(decimal m) => "$ " + m.ToString("N0", ci);
     string Dia(DateTime d) => d.ToString("dd/MM/yy", ci);
+    var pasoChip = "display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;color:#fff;background:var(--warn)";
 }
 
 <div class="toolbar">
     <div>
         <h1>Compromisos</h1>
         <p class="subtitle" style="margin:0">
-            La plata que todavía está en el aire de las salidas ya vendidas: lo que falta cobrar
-            y lo que falta pagarle a los proveedores. No incluye los gastos del operativo
-            (nafta, entradas, comidas), que se van cargando a medida que pasa cada salida.
+            Cuánta plata neta queda de las salidas que ya tienen reservas: lo que hay en caja hoy,
+            más lo que falta cobrar, menos todo lo que falta pagar.
         </p>
     </div>
 </div>
@@ -23,20 +23,22 @@
     <div class="fin-card">
         <div class="fin-label">Caja hoy</div>
         <div class="fin-val">@Money(Model.CajaHoy)</div>
-        <div class="fin-label" style="margin-top:4px">lo que ya se cobró menos lo ya pagado</div>
+        <div class="fin-label" style="margin-top:4px">lo ya cobrado menos lo ya pagado</div>
     </div>
     <div class="fin-card">
         <div class="fin-label">+ Falta cobrar</div>
-        <div class="fin-val" style="color:var(--ok,#2e7d32)">@Money(Model.PorCobrar)</div>
+        <div class="fin-val" style="color:var(--ok)">@Money(Model.PorCobrar)</div>
         <div class="fin-label" style="margin-top:4px">@Model.Cobros.Count saldo(s) de reservas</div>
     </div>
     <div class="fin-card">
         <div class="fin-label">− Falta pagar</div>
         <div class="fin-val" style="color:var(--warn)">@Money(Model.PorPagar)</div>
-        <div class="fin-label" style="margin-top:4px">@Model.Pagos.Count proveedor(es) reservado(s)</div>
+        <div class="fin-label" style="margin-top:4px">
+            @Money(Model.PorPagarGastos) gastos · @Money(Model.PorPagarProveedores) proveedores
+        </div>
     </div>
     <div class="fin-card fin-card-net">
-        <div class="fin-label">Plata proyectada</div>
+        <div class="fin-label">Plata neta proyectada</div>
         <div class="fin-val" style="color:var(--accent)">@Money(Model.Proyectado)</div>
         <div class="fin-label" style="margin-top:4px">cuando termines de cobrar y pagar todo</div>
     </div>
@@ -46,8 +48,14 @@
     <p style="margin:0;color:var(--ink-soft)">
         <strong>Proyectado</strong> = Caja hoy @Money(Model.CajaHoy)
         + falta cobrar @Money(Model.PorCobrar)
-        − falta pagar @Money(Model.PorPagar)
+        − gastos del operativo @Money(Model.PorPagarGastos)
+        − proveedores @Money(Model.PorPagarProveedores)
         = <strong>@Money(Model.Proyectado)</strong>.
+    </p>
+    <p style="margin:8px 0 0;color:var(--ink-soft)">
+        Los <strong>gastos del operativo</strong> salen de la plantilla de cada excursión: son una
+        estimación hasta que los vas cargando y tildando. Los <strong>proveedores</strong> ya tienen
+        lugar tomado y precio acordado, así que esa deuda es firme. Por eso van separados.
     </p>
 </div>
 
@@ -95,7 +103,7 @@
                             @Dia(c.Fecha)
                             @if (c.YaPaso)
                             {
-                                <span style="display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;color:#fff;background:var(--warn)">ya pasó</span>
+                                <span style="@pasoChip">ya pasó</span>
                             }
                         </td>
                         <td>@c.Excursion</td>
@@ -117,9 +125,58 @@
     }
 </div>
 
-<!-- Falta pagar -->
+<!-- Falta pagar: gastos del operativo -->
 <div class="card" style="margin-top:12px">
-    <h2 style="margin-top:0">Falta pagar (proveedores ya reservados)</h2>
+    <h2 style="margin-top:0">Falta pagar · gastos del operativo</h2>
+    <p class="subtitle">
+        Nafta, entradas, comidas, viáticos y demás de cada salida: todo lo que todavía no está
+        tildado como pagado. El detalle ítem por ítem está en el operativo de cada salida.
+    </p>
+
+    @if (Model.Gastos.Count == 0)
+    {
+        <p style="color:var(--ink-soft)">No queda ningún gasto del operativo sin pagar.</p>
+    }
+    else
+    {
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Sale</th><th>Excursión</th>
+                    <th style="text-align:right">Ítems</th>
+                    <th style="text-align:right">Falta pagar</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var g in Model.Gastos)
+                {
+                    <tr>
+                        <td>
+                            @Dia(g.Fecha)
+                            @if (g.YaPaso)
+                            {
+                                <span style="@pasoChip">ya pasó</span>
+                            }
+                        </td>
+                        <td>@g.Excursion</td>
+                        <td style="text-align:right">@g.Items</td>
+                        <td style="text-align:right"><strong>@Money(g.Falta)</strong></td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" style="text-align:right"><strong>Total en gastos</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.PorPagarGastos)</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+</div>
+
+<!-- Falta pagar: proveedores -->
+<div class="card" style="margin-top:12px">
+    <h2 style="margin-top:0">Falta pagar · proveedores</h2>
     <p class="subtitle">Guías, hospedajes, restaurantes y autos que ya tienen lugar tomado y todavía deben saldo.</p>
 
     @if (Model.Pagos.Count == 0)
@@ -145,12 +202,18 @@
                             @Dia(p.Fecha)
                             @if (p.YaPaso)
                             {
-                                <span style="display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;color:#fff;background:var(--warn)">ya pasó</span>
+                                <span style="@pasoChip">ya pasó</span>
                             }
                         </td>
                         <td>@p.Excursion</td>
                         <td>@p.Tipo</td>
-                        <td>@p.Proveedor</td>
+                        <td>
+                            @p.Proveedor
+                            @if (!string.IsNullOrWhiteSpace(p.Lugar))
+                            {
+                                <span class="hint">(@p.Lugar)</span>
+                            }
+                        </td>
                         <td style="text-align:right">@Money(p.Total)</td>
                         <td style="text-align:right">@Money(p.Pagado)</td>
                         <td style="text-align:right"><strong>@Money(p.Falta)</strong></td>
@@ -159,8 +222,8 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="6" style="text-align:right"><strong>Total a pagar</strong></td>
-                    <td style="text-align:right"><strong>@Money(Model.PorPagar)</strong></td>
+                    <td colspan="6" style="text-align:right"><strong>Total a proveedores</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.PorPagarProveedores)</strong></td>
                 </tr>
             </tfoot>
         </table>

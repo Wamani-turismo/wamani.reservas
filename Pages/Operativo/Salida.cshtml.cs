@@ -25,6 +25,27 @@ public class ProvRowVm
     public List<Reserva> Reservas { get; set; } = new();   // reservas de la salida (para elegir de quién es el servicio)
 }
 
+// Una NOCHE de una travesía dentro del operativo: todo el grupo durmiendo en un lugar.
+// Es una sola fila (personas × precio) en vez de una fila por pasajero.
+public class EtapaRowVm
+{
+    public int Noche { get; set; }
+    public string Lugar { get; set; } = "";
+    public string? Incluye { get; set; }
+    public OperativoProveedor? Asig { get; set; }     // lo ya cargado para ese lugar (si existe)
+    public List<Proveedor> Cat { get; set; } = new();
+    public string Key { get; set; } = "";
+    public int ProveedorSugerido { get; set; }         // refugio habitual de la plantilla
+    public decimal PrecioSugerido { get; set; }        // precio por persona de la plantilla
+    public int PersonasSalida { get; set; }            // cuánta gente va en la salida
+
+    // Lo que se muestra: si ya hay algo cargado se respeta; si no, la sugerencia de la plantilla.
+    public int ProveedorId => Asig?.ProveedorId ?? ProveedorSugerido;
+    public decimal PrecioPorPersona => Asig?.PrecioPorPersona ?? PrecioSugerido;
+    public int Personas => Asig?.Personas ?? PersonasSalida;
+    public decimal Total => Asig?.Total ?? (PrecioPorPersona * Personas);
+}
+
 public class SalidaModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -52,6 +73,11 @@ public class SalidaModel : PageModel
     public Dictionary<string, List<Proveedor>> CatalogoPorTipo { get; set; } = new();
     public Dictionary<string, List<OperativoProveedor>> ProvPorTipo { get; set; } = new();
 
+    // Si la excursión tiene etapas cargadas es una TRAVESÍA: el hospedaje se muestra
+    // como una fila por lugar (todo el grupo junto) en vez de una fila por pasajero.
+    public List<EtapaRowVm> Etapas { get; set; } = new();
+    public bool EsTravesia => Etapas.Count > 0;
+
     // Enviados desde el form al guardar
     [BindProperty] public List<int> Ids { get; set; } = new();
     [BindProperty] public List<string> Keys { get; set; } = new();    // clave para asociar el comprobante a la fila (id real, o temporal si es nueva)
@@ -73,6 +99,11 @@ public class SalidaModel : PageModel
     [BindProperty] public List<string> ProvSaldos { get; set; } = new();
     [BindProperty] public List<string?> ProvParaQuien { get; set; } = new();
     [BindProperty] public List<int> ProvReservaIds { get; set; } = new();   // a qué reserva pertenece (hospedaje/restaurante)
+
+    // Travesías: lugar de la ruta + el grupo que duerme ahí (personas × precio por persona)
+    [BindProperty] public List<string?> ProvLugares { get; set; } = new();
+    [BindProperty] public List<string> ProvPersonas { get; set; } = new();
+    [BindProperty] public List<string> ProvPreciosPorPersona { get; set; } = new();
 
     private async Task CargarAsync()
     {
@@ -105,6 +136,41 @@ public class SalidaModel : PageModel
             .Where(o => o.ExcursionId == ExcursionId && o.Fecha.Date == Fecha.Date)
             .OrderBy(o => o.Id)
             .ToListAsync();
+
+        // ---- Travesía: una fila de hospedaje por LUGAR de la ruta ----
+        // Si la excursión tiene etapas, el hospedaje sale de ahí. Lo que ya se cargó para
+        // cada lugar se busca por el nombre del lugar; lo que falta se muestra con la
+        // sugerencia de la plantilla (refugio habitual + precio), SIN guardar nada todavía.
+        var etapasPlantilla = await _db.EtapasExcursion
+            .Where(e => e.ExcursionId == ExcursionId)
+            .OrderBy(e => e.Orden)
+            .ToListAsync();
+
+        if (etapasPlantilla.Count > 0)
+        {
+            var catHosp = CatalogoPorTipo.GetValueOrDefault("Hospedaje") ?? new();
+            var hospAsignados = asignados.Where(o => o.Tipo == "Hospedaje").ToList();
+
+            static string Clave(string? s) => (s ?? "").Trim().ToLowerInvariant();
+
+            Etapas = etapasPlantilla.Select(e => new EtapaRowVm
+            {
+                Noche = e.Orden,
+                Lugar = e.Lugar,
+                Incluye = e.Incluye,
+                Asig = hospAsignados.FirstOrDefault(o => Clave(o.Lugar) == Clave(e.Lugar)),
+                Cat = catHosp,
+                Key = "etapa-" + e.Orden,
+                ProveedorSugerido = e.ProveedorId ?? 0,
+                PrecioSugerido = e.PrecioPorPersona,
+                PersonasSalida = PasajerosSalida
+            }).ToList();
+
+            // Las filas de hospedaje que YA tienen fila propia por etapa no se repiten abajo.
+            var deEtapa = Etapas.Where(x => x.Asig is not null).Select(x => x.Asig!.Id).ToHashSet();
+            asignados = asignados.Where(o => o.Tipo != "Hospedaje" || !deEtapa.Contains(o.Id)).ToList();
+        }
+
         ProvPorTipo = asignados.GroupBy(o => o.Tipo).ToDictionary(g => g.Key, g => g.ToList());
     }
 
@@ -321,6 +387,14 @@ public class SalidaModel : PageModel
             var saldo = ParsePrecio(i < ProvSaldos.Count ? ProvSaldos[i] : "0");
             var paraQuien = (i < ProvParaQuien.Count ? ProvParaQuien[i] : null)?.Trim();
 
+            // Travesía: la fila representa a TODO el grupo en un lugar de la ruta.
+            var lugar = (i < ProvLugares.Count ? ProvLugares[i] : null)?.Trim();
+            int.TryParse(i < ProvPersonas.Count ? ProvPersonas[i] : "", out var personas);
+            var precioPP = ParsePrecio(i < ProvPreciosPorPersona.Count ? ProvPreciosPorPersona[i] : "0");
+
+            // Si no se escribió un total a mano, sale solo: personas × precio por persona.
+            if (total == 0 && personas > 0 && precioPP > 0) total = personas * precioPP;
+
             var vacia = provId == 0 && total == 0 && sena == 0 && saldo == 0 && string.IsNullOrWhiteSpace(paraQuien);
 
             OperativoProveedor? row;
@@ -344,6 +418,9 @@ public class SalidaModel : PageModel
             row.ReservaId = resId == 0 ? null : resId;
             row.ProveedorId = provId == 0 ? null : provId;
             row.ProveedorNombre = provId != 0 && catalogo.TryGetValue(provId, out var n) ? n : "";
+            row.Lugar = string.IsNullOrWhiteSpace(lugar) ? null : lugar;
+            row.Personas = string.IsNullOrWhiteSpace(lugar) ? null : personas;
+            row.PrecioPorPersona = string.IsNullOrWhiteSpace(lugar) ? null : precioPP;
             row.Total = total;
             row.Sena = sena;
             row.Saldo = saldo;

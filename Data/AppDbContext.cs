@@ -11,6 +11,7 @@ namespace Wamani.Reservas.Data
         public DbSet<Reserva> Reservas => Set<Reserva>();
         public DbSet<Excursion> Excursiones => Set<Excursion>();
         public DbSet<GastoExcursion> GastosExcursion => Set<GastoExcursion>();
+        public DbSet<EtapaExcursion> EtapasExcursion => Set<EtapaExcursion>();
         public DbSet<OperativoGasto> OperativoGastos => Set<OperativoGasto>();
         public DbSet<OperativoSalida> OperativoSalidas => Set<OperativoSalida>();
         public DbSet<Proveedor> Proveedores => Set<Proveedor>();

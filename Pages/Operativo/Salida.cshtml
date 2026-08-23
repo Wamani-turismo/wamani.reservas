@@ -57,11 +57,53 @@
             @* Guía y Auto: una sola fila (uno por salida) *@
             @foreach (var vm in RowsDe("Guía", false)) { <partial name="_ProvRow" model="vm" /> }
 
-            @* Hospedaje: uno o varios (por pasajero) *@
-            <div class="prov-group" data-tipo="Hospedaje">
-                @foreach (var vm in RowsDe("Hospedaje", true)) { <partial name="_ProvRow" model="vm" /> }
-            </div>
-            <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Hospedaje')">+ Agregar hospedaje (otra persona)</button>
+            @if (Model.EsTravesia)
+            {
+                @* Travesía: una fila por LUGAR de la ruta, con todo el grupo junto *@
+                <p class="hint" style="margin:6px 0 10px">
+                    Es una travesía, así que el hospedaje va <strong>una fila por lugar</strong> con todo el grupo junto.
+                    El total sale solo (personas × precio por persona) y lo podés pisar a mano si el refugio cobró otra cosa.
+                    Los lugares y los refugios habituales se editan en
+                    <a asp-page="/Excursiones/Cargar" asp-route-id="@Model.ExcursionId" target="_blank">la travesía</a>.
+                </p>
+                <div class="prov-group" data-tipo="Hospedaje">
+                    @foreach (var et in Model.Etapas) { <partial name="_EtapaRow" model="et" /> }
+                </div>
+
+                @* Hospedajes cargados antes de tener etapas, o que no coinciden con ningún lugar *@
+                @{ var sueltos = Model.ProvPorTipo.GetValueOrDefault("Hospedaje") ?? new(); }
+                @if (sueltos.Count > 0)
+                {
+                    <p class="hint" style="margin:14px 0 8px">
+                        <strong>Hospedajes sueltos:</strong> estos se cargaron sin lugar de la ruta (son de antes,
+                        o el lugar no coincide con ninguna noche). Pasá la plata a la fila del lugar que corresponda
+                        y borrá estos, o dejalos si son un extra aparte.
+                    </p>
+                    <div class="prov-group" data-tipo="HospedajeSuelto">
+                        @foreach (var a in sueltos)
+                        {
+                            var vmSuelto = new Wamani.Reservas.Pages.Operativo.ProvRowVm
+                            {
+                                Tipo = "Hospedaje",
+                                Asig = a,
+                                Cat = Model.CatalogoPorTipo.GetValueOrDefault("Hospedaje") ?? new(),
+                                ConPasajero = true,
+                                Key = a.Id.ToString(),
+                                Reservas = Model.Reservas
+                            };
+                            <partial name="_ProvRow" model="vmSuelto" />
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                @* Excursión de un día: uno o varios hospedajes (por pasajero), como siempre *@
+                <div class="prov-group" data-tipo="Hospedaje">
+                    @foreach (var vm in RowsDe("Hospedaje", true)) { <partial name="_ProvRow" model="vm" /> }
+                </div>
+                <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Hospedaje')">+ Agregar hospedaje (otra persona)</button>
+            }
 
             @* Restaurante: uno o varios (por pasajero) *@
             <div class="prov-group" data-tipo="Restaurante">
@@ -277,19 +319,43 @@
         }
         function quitarProv(btn) { btn.closest('.prov-row').remove(); recalcularProv(); }
 
-        // Al elegir un proveedor, el Total se completa solo con "lo que cobra" y queda bloqueado
+        // Al elegir un proveedor, el Total se completa solo con "lo que cobra" y queda bloqueado.
+        // En una travesía (fila por lugar) lo que se completa es el PRECIO POR PERSONA, y el
+        // total sale de multiplicarlo por la cantidad de gente.
         document.addEventListener('change', function (e) {
             if (!e.target.classList.contains('prov-select')) return;
+            var fila = e.target.closest('.prov-row');
             var opt = e.target.options[e.target.selectedIndex];
             var precio = parseFloat(opt.getAttribute('data-precio')) || 0;
-            var tot = e.target.closest('.prov-row').querySelector('.prov-total');
-            if (precio > 0) { tot.value = precio; tot.readOnly = true; }
+            if (fila.classList.contains('etapa-bloque')) {
+                if (precio > 0) fila.querySelector('.etapa-precio').value = precio;
+                recalcularEtapa(fila);
+            } else {
+                var tot = fila.querySelector('.prov-total');
+                if (precio > 0) { tot.value = precio; tot.readOnly = true; }
+            }
             recalcularProv();
         });
-        // Botón "a mano": desbloquea el total para cambiarlo
+
+        // Travesía: total = personas × precio por persona (salvo que se haya puesto a mano)
+        function recalcularEtapa(fila) {
+            var tot = fila.querySelector('.prov-total');
+            if (!tot || tot.dataset.manual === '1') return;
+            var pers = parseFloat(fila.querySelector('.etapa-personas').value) || 0;
+            var pp = parseFloat(fila.querySelector('.etapa-precio').value) || 0;
+            tot.value = (pers > 0 && pp > 0) ? (pers * pp) : '';
+        }
+        document.addEventListener('input', function (e) {
+            if (!e.target.classList.contains('etapa-personas') && !e.target.classList.contains('etapa-precio')) return;
+            recalcularEtapa(e.target.closest('.prov-row'));
+            recalcularProv();
+        });
+
+        // Botón "a mano": desbloquea el total para cambiarlo y deja de recalcularse solo
         function editarTotal(btn) {
             var tot = btn.closest('.field').querySelector('.prov-total');
             tot.readOnly = false;
+            tot.dataset.manual = '1';
             tot.focus();
             tot.select();
         }

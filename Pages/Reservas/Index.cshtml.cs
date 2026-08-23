@@ -209,7 +209,13 @@ public class IndexModel : PageModel
             var gastosComp = (gastosPorSalida.GetValueOrDefault(clave) ?? new()).Where(o => o.ReservaId == null && o.Precio > 0).ToList();
             ServiciosTotal[clave] = provsComp.Count + gastosComp.Count;
             ServiciosFaltantes[clave] = provsComp.Where(p => p.Pendiente() > 0)
-                    .Select(p => string.IsNullOrWhiteSpace(p.ProveedorNombre) ? p.Tipo : $"{p.Tipo}: {p.ProveedorNombre}")
+                    // En travesías el hospedaje va por lugar de la ruta: mostrarlo ayuda a
+                    // distinguir cuál de los refugios es el que falta pagar.
+                    .Select(p =>
+                    {
+                        var quien = string.IsNullOrWhiteSpace(p.ProveedorNombre) ? p.Tipo : $"{p.Tipo}: {p.ProveedorNombre}";
+                        return string.IsNullOrWhiteSpace(p.Lugar) ? quien : $"{quien} ({p.Lugar})";
+                    })
                 .Concat(gastosComp.Where(o => !o.Comprado).Select(o => o.Nombre))
                 .ToList();
         }

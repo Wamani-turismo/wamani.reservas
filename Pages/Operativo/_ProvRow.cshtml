@@ -9,6 +9,11 @@
     <input type="hidden" name="ProvIds" value="@id" />
     <input type="hidden" name="ProvKeys" value="@Model.Key" />
     <input type="hidden" name="ProvTipos" value="@Model.Tipo" />
+    @* Estas tres van vacías: son de las travesías (fila por lugar). Tienen que estar igual
+       para que todas las listas del form queden alineadas por posición al guardar. *@
+    <input type="hidden" name="ProvLugares" value="" />
+    <input type="hidden" name="ProvPersonas" value="" />
+    <input type="hidden" name="ProvPreciosPorPersona" value="" />
     <div class="prov-head">
         <span class="prov-tipo">@Ico(Model.Tipo) @Model.Tipo</span>
         <select name="ProvProveedorIds" class="prov-select">

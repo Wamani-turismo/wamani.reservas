@@ -23,6 +23,17 @@ namespace Wamani.Reservas.Models
         // Para qué pasajero es (hospedaje/restaurante pueden ir por persona; ej: "Guada")
         public string? ParaQuien { get; set; }
 
+        // En una TRAVESÍA: en qué lugar de la ruta es este hospedaje (ej. "YUTO PAMPA").
+        // Sale de las etapas de la excursión. Permite ver una sola fila por lugar
+        // (personas × precio) en vez de una fila por pasajero en cada refugio.
+        // En las excursiones de un día queda en null y no cambia nada.
+        public string? Lugar { get; set; }
+
+        // Cuánta gente y a qué precio, cuando la fila representa a TODO el grupo en un
+        // lugar de la travesía. El Total se calcula solo: personas × precio por persona.
+        public int? Personas { get; set; }
+        public decimal? PrecioPorPersona { get; set; }
+
         public decimal Total { get; set; }   // costo total del proveedor
         public decimal Sena { get; set; }    // monto de la seña
         public decimal Saldo { get; set; }   // monto del saldo

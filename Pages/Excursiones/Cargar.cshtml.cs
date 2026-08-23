@@ -27,13 +27,25 @@ public class CargarModel : PageModel
     [BindProperty]
     public List<string> GastoEsProveedor { get; set; } = new();   // "1" si el costo es un proveedor
 
+    // Etapas de la travesía (dónde se duerme cada noche), enviadas como arrays desde el form
+    [BindProperty] public List<string> EtapaLugares { get; set; } = new();
+    [BindProperty] public List<int> EtapaProveedorIds { get; set; } = new();
+    [BindProperty] public List<string> EtapaPrecios { get; set; } = new();
+    [BindProperty] public List<string> EtapaIncluye { get; set; } = new();
+
     // Para mostrar los gastos ya cargados al abrir la página
     public List<GastoExcursion> Gastos { get; set; } = new();
+
+    // Etapas ya cargadas + catálogo de hospedajes para elegir el refugio de cada lugar
+    public List<EtapaExcursion> Etapas { get; set; } = new();
+    public List<Proveedor> Hospedajes { get; set; } = new();
 
     public bool EsNueva => Excursion.Id == 0;
 
     public async Task<IActionResult> OnGetAsync(int? id)
     {
+        await CargarHospedajesAsync();
+
         if (id is null)
         {
             Excursion = new Excursion { MinimoPersonas = 2, Activa = true };
@@ -49,8 +61,19 @@ public class CargarModel : PageModel
             .OrderBy(g => g.Id)
             .ToListAsync();
 
+        Etapas = await _db.EtapasExcursion
+            .Where(e => e.ExcursionId == id)
+            .OrderBy(e => e.Orden)
+            .ToListAsync();
+
         return Page();
     }
+
+    private async Task CargarHospedajesAsync()
+        => Hospedajes = await _db.Proveedores
+            .Where(p => p.Activo && p.Tipo == "Hospedaje")
+            .OrderBy(p => p.Nombre)
+            .ToListAsync();
 
     public async Task<IActionResult> OnPostAsync()
     {
@@ -107,6 +130,32 @@ public class CargarModel : PageModel
             });
         }
 
+        // Reescribir las etapas (las noches de la travesía). El orden es el de la pantalla:
+        // la primera fila es la noche 1, la segunda la noche 2, y así.
+        var etapasViejas = await _db.EtapasExcursion.Where(e => e.ExcursionId == excursionId).ToListAsync();
+        _db.EtapasExcursion.RemoveRange(etapasViejas);
+
+        int noche = 0;
+        for (int i = 0; i < EtapaLugares.Count; i++)
+        {
+            var lugar = (EtapaLugares[i] ?? "").Trim();
+            if (string.IsNullOrWhiteSpace(lugar)) continue;   // fila vacía → se ignora
+
+            noche++;
+            var provId = i < EtapaProveedorIds.Count ? EtapaProveedorIds[i] : 0;
+            var incluye = (i < EtapaIncluye.Count ? EtapaIncluye[i] : null)?.Trim();
+
+            _db.EtapasExcursion.Add(new EtapaExcursion
+            {
+                ExcursionId = excursionId,
+                Orden = noche,
+                Lugar = lugar,
+                ProveedorId = provId == 0 ? null : provId,
+                PrecioPorPersona = ParsePrecio(i < EtapaPrecios.Count ? EtapaPrecios[i] : "0"),
+                Incluye = string.IsNullOrWhiteSpace(incluye) ? null : incluye
+            });
+        }
+
         await _db.SaveChangesAsync();
         return RedirectToPage("/Excursiones/Index", new { Aviso = "Excursión guardada ✔" });
     }
@@ -127,6 +176,8 @@ public class CargarModel : PageModel
 
             var gastos = await _db.GastosExcursion.Where(g => g.ExcursionId == id).ToListAsync();
             _db.GastosExcursion.RemoveRange(gastos);
+            var etapas = await _db.EtapasExcursion.Where(e => e.ExcursionId == id).ToListAsync();
+            _db.EtapasExcursion.RemoveRange(etapas);
             _db.Excursiones.Remove(e);
             await _db.SaveChangesAsync();
         }
@@ -143,10 +194,17 @@ public class CargarModel : PageModel
 
     private async Task RecargarGastosAsync()
     {
+        await CargarHospedajesAsync();
         if (Excursion.Id != 0)
+        {
             Gastos = await _db.GastosExcursion
                 .Where(g => g.ExcursionId == Excursion.Id)
                 .OrderBy(g => g.Id)
                 .ToListAsync();
+            Etapas = await _db.EtapasExcursion
+                .Where(e => e.ExcursionId == Excursion.Id)
+                .OrderBy(e => e.Orden)
+                .ToListAsync();
+        }
     }
 }

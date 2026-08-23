@@ -100,6 +100,58 @@
         <button type="button" class="btn btn-ghost" style="margin-top:12px" onclick="agregarGasto()">+ Agregar costo</button>
     </div>
 
+    <!-- ---------- Etapas de la travesía (dónde se duerme cada noche) ---------- -->
+    <div class="card">
+        <h2>Etapas de la travesía</h2>
+        <p class="hint" style="margin:-8px 0 14px">
+            Sólo para travesías de varios días. Cargá una fila por cada NOCHE, en orden: el lugar
+            donde se duerme, el refugio que se usa habitualmente ahí y cuánto cobra por persona.
+            <br />
+            Después, en el operativo de cada salida, el hospedaje aparece como <strong>una sola fila
+            por lugar</strong> (personas × precio) en vez de una fila por cada pasajero en cada refugio.
+            El refugio y el precio se pueden cambiar en cada salida sin tocar esto.
+            <br />
+            Si es una excursión de un día, dejá esta parte vacía.
+        </p>
+
+        <table class="tabla" id="tablaEtapas">
+            <thead>
+                <tr>
+                    <th style="width:70px">Noche</th>
+                    <th>Lugar</th>
+                    <th style="width:220px">Refugio / hospedaje habitual</th>
+                    <th class="num" style="width:150px">Precio por persona</th>
+                    <th>Comidas incluidas</th>
+                    <th style="width:60px"></th>
+                </tr>
+            </thead>
+            <tbody id="etapasBody">
+                @for (int i = 0; i < Model.Etapas.Count; i++)
+                {
+                    var et = Model.Etapas[i];
+                    <tr class="etapa-row">
+                        <td data-label="Noche" class="etapa-nro">@(i + 1)</td>
+                        <td data-label="Lugar"><input name="EtapaLugares" value="@et.Lugar" placeholder="Ej: YUTO PAMPA" /></td>
+                        <td data-label="Refugio">
+                            <select name="EtapaProveedorIds">
+                                <option value="0">— sin asignar —</option>
+                                @foreach (var h in Model.Hospedajes)
+                                {
+                                    <option value="@h.Id" selected="@(et.ProveedorId == h.Id)">@h.Nombre</option>
+                                }
+                            </select>
+                        </td>
+                        <td class="num" data-label="Precio por persona"><input name="EtapaPrecios" type="number" step="0.01" min="0" value="@Num(et.PrecioPorPersona)" /></td>
+                        <td data-label="Incluye"><input name="EtapaIncluye" value="@et.Incluye" placeholder="Ej: merienda + cena + desayuno" /></td>
+                        <td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarEtapa(this)">Quitar</button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <button type="button" class="btn btn-ghost" style="margin-top:12px" onclick="agregarEtapa()">+ Agregar noche</button>
+    </div>
+
     <!-- ---------- Contenido para la Guía (PDF) ---------- -->
     <div class="card">
         <h2>Contenido para la Guía (PDF)</h2>
@@ -139,6 +191,17 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    @{
+        // Opciones del desplegable de refugios, para las filas de noche que se agregan
+        // desde el botón. Se arma acá para no meter C# adentro del JavaScript.
+        var sbHosp = new System.Text.StringBuilder("<option value=\"0\">— sin asignar —</option>");
+        foreach (var h in Model.Hospedajes)
+        {
+            sbHosp.Append("<option value=\"").Append(h.Id).Append("\">")
+                  .Append(System.Net.WebUtility.HtmlEncode(h.Nombre)).Append("</option>");
+        }
+        var opcionesHospedaje = sbHosp.ToString();
+    }
     <script>
         function agregarGasto(nombre, precio) {
             var tr = document.createElement('tr');
@@ -158,6 +221,35 @@
         }
         function quitarGasto(btn) {
             btn.closest('tr').remove();
+        }
+
+        // ---- Etapas de la travesía (una fila por noche) ----
+        var OPCIONES_HOSPEDAJE = '@Html.Raw(opcionesHospedaje)';
+
+        function agregarEtapa() {
+            var tr = document.createElement('tr');
+            tr.className = 'etapa-row';
+            tr.innerHTML =
+                '<td data-label="Noche" class="etapa-nro"></td>' +
+                '<td data-label="Lugar"><input name="EtapaLugares" placeholder="Ej: YUTO PAMPA" /></td>' +
+                '<td data-label="Refugio"><select name="EtapaProveedorIds">' + OPCIONES_HOSPEDAJE + '</select></td>' +
+                '<td class="num" data-label="Precio por persona"><input name="EtapaPrecios" type="number" step="0.01" min="0" /></td>' +
+                '<td data-label="Incluye"><input name="EtapaIncluye" placeholder="Ej: merienda + cena + desayuno" /></td>' +
+                '<td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarEtapa(this)">Quitar</button></td>';
+            document.getElementById('etapasBody').appendChild(tr);
+            renumerarEtapas();
+            tr.querySelector('input').focus();
+        }
+        function quitarEtapa(btn) {
+            btn.closest('tr').remove();
+            renumerarEtapas();
+        }
+        // La noche es la posición en la tabla: si se borra una del medio, se renumeran solas.
+        function renumerarEtapas() {
+            var filas = document.querySelectorAll('#etapasBody .etapa-row');
+            for (var i = 0; i < filas.length; i++) {
+                filas[i].querySelector('.etapa-nro').textContent = (i + 1);
+            }
         }
     </script>
 }

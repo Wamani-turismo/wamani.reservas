@@ -1,0 +1,64 @@
+@model Wamani.Reservas.Pages.Operativo.EtapaRowVm
+@{
+    var a = Model.Asig;
+    var id = a?.Id ?? 0;
+    string Num(decimal m) => m.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+}
+<div class="prov-row prov-bloque etapa-bloque">
+    <input type="hidden" name="ProvIds" value="@id" />
+    <input type="hidden" name="ProvKeys" value="@Model.Key" />
+    <input type="hidden" name="ProvTipos" value="Hospedaje" />
+    <input type="hidden" name="ProvLugares" value="@Model.Lugar" />
+    <input type="hidden" name="ProvReservaIds" value="0" />
+    <input type="hidden" name="ProvParaQuien" value="" />
+
+    <div class="prov-head">
+        <span class="prov-tipo">🏨 Noche @Model.Noche · @Model.Lugar</span>
+        <select name="ProvProveedorIds" class="prov-select">
+            <option value="0" data-precio="0">— sin asignar —</option>
+            @foreach (var p in Model.Cat)
+            {
+                <option value="@p.Id" data-precio="@Num(p.Precio)" selected="@(Model.ProveedorId == p.Id)">@p.Nombre</option>
+            }
+        </select>
+        <span class="prov-falta-wrap">Falta: <strong class="prov-pend"></strong></span>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Incluye))
+    {
+        <p class="hint" style="margin:2px 0 8px">Incluye: @Model.Incluye</p>
+    }
+
+    <div class="prov-grid">
+        <div class="field">
+            <label>Personas</label>
+            <input name="ProvPersonas" type="number" step="1" min="0" value="@Model.Personas" class="etapa-personas" />
+        </div>
+        <div class="field">
+            <label>Precio por persona</label>
+            <input name="ProvPreciosPorPersona" type="number" step="0.01" min="0" value="@Num(Model.PrecioPorPersona)" class="etapa-precio" />
+        </div>
+        <div class="field">
+            <label>Total <button type="button" class="prov-edit-total" onclick="editarTotal(this)" title="Cambiar el total a mano">✏️ a mano</button></label>
+            <input name="ProvTotales" type="number" step="0.01" min="0" value="@Num(Model.Total)" class="prov-total" />
+        </div>
+        <div class="field">
+            <label>Seña ($)</label>
+            <input name="ProvSenas" type="number" step="0.01" min="0" value="@Num(a?.Sena ?? 0)" class="prov-sena" />
+        </div>
+        <div class="field">
+            <label>Comprobante seña</label>
+            <input type="file" name="provcompsena_@Model.Key" accept="image/*,.pdf" multiple />
+            <partial name="_Adjuntos" model="@(a?.ComprobanteSena ?? "")" />
+        </div>
+        <div class="field">
+            <label>Saldo ($)</label>
+            <input name="ProvSaldos" type="number" step="0.01" min="0" value="@Num(a?.Saldo ?? 0)" class="prov-saldo" />
+        </div>
+        <div class="field">
+            <label>Comprobante saldo</label>
+            <input type="file" name="provcompsaldo_@Model.Key" accept="image/*,.pdf" multiple />
+            <partial name="_Adjuntos" model="@(a?.ComprobanteSaldo ?? "")" />
+        </div>
+    </div>
+</div>

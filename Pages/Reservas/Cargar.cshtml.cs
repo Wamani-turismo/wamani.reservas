@@ -44,9 +44,12 @@ public class CargarModel : PageModel
 
     private async Task CargarExcursionesAsync()
     {
+        // La "a medida" va primera: es la que se elige cuando el cliente pide algo que no
+        // está en el catálogo, así no hay que buscarla entre todas.
         Excursiones = await _db.Excursiones
             .Where(e => e.Activa || Reserva.ExcursionId == e.Id)
-            .OrderBy(e => e.Nombre)
+            .OrderByDescending(e => e.EsAMedida)
+            .ThenBy(e => e.Nombre)
             .ToListAsync();
     }
 
@@ -95,6 +98,10 @@ public class CargarModel : PageModel
         Reserva.Excursion = exc!.Nombre;
         Reserva.MinimoPersonas = exc.MinimoPersonas;
         Reserva.EsTravesia = exc.EsTravesia;
+
+        // La "a medida" no tiene precio de catálogo: siempre se escribe a mano.
+        if (exc.EsAMedida) Reserva.PrecioManual = true;
+
         // Si NO es precio manual, se toma el del catálogo. Si es manual, se respeta el escrito.
         if (!Reserva.PrecioManual)
             Reserva.PrecioPorPersona = exc.PrecioPorPersona;

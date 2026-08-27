@@ -36,6 +36,15 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Es travesía (el saldo se cobra 7 días antes en vez de 4)")]
         public bool EsTravesia { get; set; } = false;
 
+        // Salida armada a pedido del cliente: no tiene precio de catálogo ni itinerario fijo.
+        // Al elegirla en una reserva, el precio por persona se escribe siempre a mano.
+        // Sirve para llevar gente a lugares donde no hacemos excursiones regulares.
+        [Display(Name = "Excursión a medida (el precio se carga a mano en cada reserva)")]
+        public bool EsAMedida { get; set; } = false;
+
+        // Nombre de la excursión a medida que se crea sola la primera vez.
+        public const string NombreAMedida = "Excursión a medida";
+
         // Si se desactiva, no aparece para cargar reservas nuevas (pero no se pierde el historial)
         [Display(Name = "Activa")]
         public bool Activa { get; set; } = true;

@@ -113,6 +113,7 @@ using (var scope = app.Services.CreateScope())
     EnsureSqliteColumn(db, "OperativoProveedores", "FechaSena", "TEXT NULL");
     EnsureSqliteColumn(db, "OperativoProveedores", "FechaSaldo", "TEXT NULL");
     EnsureSqliteColumn(db, "OperativoProveedores", "ReservaId", "INTEGER NULL");
+    EnsureSqliteColumn(db, "Excursiones", "EsAMedida", "INTEGER NOT NULL DEFAULT 0");
     // Travesías: en qué lugar de la ruta es el hospedaje, y el grupo que duerme ahí
     EnsureSqliteColumn(db, "OperativoProveedores", "Lugar", "TEXT NULL");
     EnsureSqliteColumn(db, "OperativoProveedores", "Personas", "INTEGER NULL");
@@ -287,6 +288,7 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Reservas"" ADD COLUMN IF NOT EXISTS ""CantidadMenores"" integer NOT NULL DEFAULT 0;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoProveedores"" ADD COLUMN IF NOT EXISTS ""ReservaId"" integer;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""ReservaId"" integer;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Excursiones"" ADD COLUMN IF NOT EXISTS ""EsAMedida"" boolean NOT NULL DEFAULT false;");
         // Travesías: en qué lugar de la ruta es el hospedaje, y el grupo que duerme ahí
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoProveedores"" ADD COLUMN IF NOT EXISTS ""Lugar"" text;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoProveedores"" ADD COLUMN IF NOT EXISTS ""Personas"" integer;");
@@ -423,6 +425,24 @@ using (var scope = app.Services.CreateScope())
             new Wamani.Reservas.Models.Excursion { Nombre = "Travesía Laguna de los Pozuelos", PrecioPorPersona = 120000, MinimoPersonas = 4, EsTravesia = true },
             new Wamani.Reservas.Models.Excursion { Nombre = "Travesía Puna completa (varios días)", PrecioPorPersona = 320000, MinimoPersonas = 6, EsTravesia = true }
         );
+        db.SaveChanges();
+    }
+
+    // "Excursión a medida": salidas armadas a pedido del cliente, sin precio de catálogo ni
+    // itinerario fijo (por ejemplo llevar gente a una zona donde no hacemos salidas regulares).
+    // Se crea sola una vez; después se le puede cambiar el nombre o desactivar como a cualquier
+    // otra. Al elegirla en una reserva, el precio por persona se escribe siempre a mano.
+    if (!db.Excursiones.Any(e => e.EsAMedida))
+    {
+        db.Excursiones.Add(new Wamani.Reservas.Models.Excursion
+        {
+            Nombre = Wamani.Reservas.Models.Excursion.NombreAMedida,
+            PrecioPorPersona = 0,
+            MinimoPersonas = 1,
+            MaximoPersonas = 30,
+            EsAMedida = true,
+            Activa = true
+        });
         db.SaveChanges();
     }
 

@@ -20,7 +20,11 @@
             {
                 <option value="@p.Id" data-precio="@Num(p.Precio)" selected="@(Model.ProveedorId == p.Id)">@p.Nombre</option>
             }
+            @* Por si esta vez se para en un refugio que todavía no está cargado *@
+            <option value="-1" data-precio="0">➕ Otro (escribir el nombre)</option>
         </select>
+        <input name="ProvNombresNuevos" class="prov-nuevo" type="text" value=""
+               placeholder="Nombre del hospedaje nuevo" style="display:none" />
         <span class="prov-falta-wrap">Falta: <strong class="prov-pend"></strong></span>
     </div>
 

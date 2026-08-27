@@ -104,6 +104,9 @@ public class SalidaModel : PageModel
     [BindProperty] public List<string?> ProvParaQuien { get; set; } = new();
     [BindProperty] public List<int> ProvReservaIds { get; set; } = new();   // a qué reserva pertenece (hospedaje/restaurante)
 
+    // Nombre escrito a mano cuando se elige "Otro" en vez de un proveedor del catálogo
+    [BindProperty] public List<string?> ProvNombresNuevos { get; set; } = new();
+
     // Travesías: lugar de la ruta + el grupo que duerme ahí (personas × precio por persona)
     [BindProperty] public List<string?> ProvLugares { get; set; } = new();
     [BindProperty] public List<string> ProvPersonas { get; set; } = new();
@@ -387,6 +390,36 @@ public class SalidaModel : PageModel
             var tipo = ProvTipos[i];
             var rowId = i < ProvIds.Count ? ProvIds[i] : 0;
             var provId = i < ProvProveedorIds.Count ? ProvProveedorIds[i] : 0;
+
+            // "Otro": se escribió un proveedor que no está en el catálogo (ej. un hospedaje de
+            // una zona donde no hacemos salidas regulares). Se da de alta acá mismo, así queda
+            // disponible para la próxima. Si ya existe uno con ese nombre y tipo, se reusa.
+            if (provId == -1)
+            {
+                var nombreNuevo = (i < ProvNombresNuevos.Count ? ProvNombresNuevos[i] : null)?.Trim();
+                if (string.IsNullOrWhiteSpace(nombreNuevo))
+                {
+                    provId = 0;   // eligió "Otro" pero no escribió el nombre
+                }
+                else
+                {
+                    var yaExiste = await _db.Proveedores
+                        .FirstOrDefaultAsync(p => p.Tipo == tipo && p.Nombre.ToLower() == nombreNuevo.ToLower());
+                    if (yaExiste is not null)
+                    {
+                        provId = yaExiste.Id;
+                    }
+                    else
+                    {
+                        var nuevoProv = new Proveedor { Tipo = tipo, Nombre = nombreNuevo, Activo = true };
+                        _db.Proveedores.Add(nuevoProv);
+                        await _db.SaveChangesAsync();
+                        provId = nuevoProv.Id;
+                    }
+                    catalogo[provId] = nombreNuevo;   // para que la fila guarde bien el nombre
+                }
+            }
+
             var total = ParsePrecio(i < ProvTotales.Count ? ProvTotales[i] : "0");
             var sena = ParsePrecio(i < ProvSenas.Count ? ProvSenas[i] : "0");
             var saldo = ParsePrecio(i < ProvSaldos.Count ? ProvSaldos[i] : "0");

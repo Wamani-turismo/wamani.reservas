@@ -2,6 +2,7 @@
 @model Wamani.Reservas.Pages.Reservas.CargarModel
 @{
     ViewData["Title"] = Model.EsNueva ? "Nueva reserva" : "Editar reserva";
+    var ciExc = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
 }
 
 <h1>@(Model.EsNueva ? "Nueva reserva" : "Editar reserva")</h1>
@@ -22,11 +23,13 @@
                     <option value="">— Elegí una excursión —</option>
                     @foreach (var e in Model.Excursiones)
                     {
+                        var etiquetaExc = e.EsAMedida
+                            ? $"✏️ {e.Nombre} (precio a convenir con el cliente)"
+                            : $"{e.Nombre} ({e.PrecioPorPersona.ToString("N0", ciExc)}/pers · mín {e.MinimoPersonas})";
                         <option value="@e.Id"
                                 data-precio="@e.PrecioPorPersona"
-                                data-min="@e.MinimoPersonas">
-                            @e.Nombre (@e.PrecioPorPersona.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("es-AR"))/pers · mín @e.MinimoPersonas)
-                        </option>
+                                data-min="@e.MinimoPersonas"
+                                data-medida="@(e.EsAMedida ? "1" : "0")">@etiquetaExc</option>
                     }
                 </select>
                 <span asp-validation-for="Reserva.ExcursionId" class="text-danger"></span>
@@ -50,6 +53,10 @@
                     Precio manual (ej: 1 sola persona con tarifa especial)
                 </label>
                 <div class="hint">Si lo tildás, escribís el precio por persona a mano. Si no, se usa el precio del catálogo de la excursión.</div>
+                <div class="hint" id="avisoMedida" style="display:none">
+                    <strong>Excursión a medida:</strong> el precio siempre se carga a mano, así que
+                    la casilla queda tildada. El resto de la reserva se completa igual que siempre.
+                </div>
             </div>
             <div class="field">
                 <label asp-for="Reserva.PrecioPorPersona">Precio por persona</label>
@@ -270,8 +277,17 @@
             const min    = opt ? parseInt(opt.getAttribute("data-min")) || 0 : 0;
             const pers   = parseInt(document.getElementById("inPers").value) || 0;
 
+            // La "a medida" no tiene precio de catálogo: el precio se escribe siempre a mano,
+            // así que la casilla queda tildada y bloqueada para que no se pueda destildar.
+            const aMedida = opt ? opt.getAttribute("data-medida") === "1" : false;
+            const chkManual = document.getElementById("chkManual");
+            if (aMedida && !chkManual.checked) chkManual.checked = true;
+            chkManual.disabled = aMedida;
+            const avisoMedida = document.getElementById("avisoMedida");
+            if (avisoMedida) avisoMedida.style.display = aMedida ? "" : "none";
+
             // Precio manual vs precio del catálogo
-            const manual = document.getElementById("chkManual").checked;
+            const manual = chkManual.checked;
             const inPrecio = document.getElementById("inPrecio");
             inPrecio.readOnly = !manual;
             if (!manual) inPrecio.value = precioExc;   // muestra el precio del catálogo (referencia)

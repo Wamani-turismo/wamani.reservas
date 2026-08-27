@@ -307,6 +307,7 @@
             clone.querySelector('input[name=ProvIds]').value = '0';
             var pk = clone.querySelector('input[name=ProvKeys]'); if (pk) pk.value = key;
             var sel = clone.querySelector('select[name=ProvProveedorIds]'); if (sel) sel.value = '0';
+            var nue = clone.querySelector('.prov-nuevo'); if (nue) { nue.value = ''; nue.style.display = 'none'; }
             clone.querySelectorAll('.prov-total,.prov-sena,.prov-saldo').forEach(function (i) { i.value = ''; i.readOnly = false; i.style.background = ''; });
             var pq = clone.querySelector('.prov-para'); if (pq) pq.value = '0';   // desplegable de reserva
             // renombrar los campos de comprobante con la clave nueva y limpiarlos
@@ -327,6 +328,16 @@
             var fila = e.target.closest('.prov-row');
             var opt = e.target.options[e.target.selectedIndex];
             var precio = parseFloat(opt.getAttribute('data-precio')) || 0;
+
+            // "Otro": aparece el campo para escribir un proveedor que no está en el catálogo.
+            // Se da de alta solo al guardar, así queda disponible para la próxima vez.
+            var nuevo = fila.querySelector('.prov-nuevo');
+            if (nuevo) {
+                var esOtro = e.target.value === '-1';
+                nuevo.style.display = esOtro ? '' : 'none';
+                if (esOtro) { nuevo.focus(); } else { nuevo.value = ''; }
+            }
+
             if (fila.classList.contains('etapa-bloque')) {
                 if (precio > 0) fila.querySelector('.etapa-precio').value = precio;
                 recalcularEtapa(fila);

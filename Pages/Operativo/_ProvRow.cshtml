@@ -22,7 +22,11 @@
             {
                 <option value="@p.Id" data-precio="@Num(p.Precio)" selected="@(a?.ProveedorId == p.Id)">@p.Nombre</option>
             }
+            @* Para cuando el cliente pide algo fuera de lo habitual y el proveedor no está cargado *@
+            <option value="-1" data-precio="0">➕ Otro (escribir el nombre)</option>
         </select>
+        <input name="ProvNombresNuevos" class="prov-nuevo" type="text" value=""
+               placeholder="Nombre del proveedor nuevo" style="display:none" />
         @if (Model.ConPasajero)
         {
             <select name="ProvReservaIds" class="prov-para" title="¿De qué reserva es este servicio?">

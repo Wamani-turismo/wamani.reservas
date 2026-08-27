@@ -36,6 +36,18 @@
                 <div class="hint">¿Falta una excursión o querés cambiar un precio? <a asp-page="/Excursiones/Index" target="_blank">Administrar excursiones</a></div>
             </div>
 
+            @* Sólo para salidas a medida: cómo se va a llamar ESTA salida *@
+            <div class="field full" id="campoNombreMedida" style="display:none">
+                <label for="NombreAMedida">Nombre de esta salida a medida</label>
+                <input asp-for="NombreAMedida" id="NombreAMedida"
+                       placeholder="Ej: Termas de Reyes + Yala (a medida)" />
+                <div class="hint">
+                    Con este nombre va a figurar en el listado de reservas, en el comprobante
+                    del cliente y en Compromisos. Poné algo que después reconozcas.
+                </div>
+                <span asp-validation-for="NombreAMedida" class="text-danger"></span>
+            </div>
+
             <div class="field">
                 <label asp-for="Reserva.NombreCliente"></label>
                 <input asp-for="Reserva.NombreCliente" />
@@ -285,6 +297,8 @@
             chkManual.disabled = aMedida;
             const avisoMedida = document.getElementById("avisoMedida");
             if (avisoMedida) avisoMedida.style.display = aMedida ? "" : "none";
+            const campoNombre = document.getElementById("campoNombreMedida");
+            if (campoNombre) campoNombre.style.display = aMedida ? "" : "none";
 
             // Precio manual vs precio del catálogo
             const manual = chkManual.checked;

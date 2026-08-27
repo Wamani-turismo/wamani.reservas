@@ -27,6 +27,11 @@ public class CargarModel : PageModel
     [BindProperty]
     public List<IFormFile> SaldoArchivo { get; set; } = new();
 
+    // Nombre que se le pone a una salida "a medida" (ej: "Termas de Reyes + Yala para Ana").
+    // Se guarda en Reserva.Excursion, que es el nombre congelado de la salida, así aparece
+    // en el listado, en el PDF y en Compromisos en vez del genérico "Excursión a medida".
+    [BindProperty] public string? NombreAMedida { get; set; }
+
     // Lista de excursiones para el desplegable (con precio y mínimo en data-attributes)
     public List<Excursion> Excursiones { get; set; } = new();
 
@@ -72,6 +77,12 @@ public class CargarModel : PageModel
         }
 
         await CargarExcursionesAsync();
+
+        // Si la reserva es de una salida a medida, el campo del nombre arranca con el que
+        // ya tenía guardado (no con el genérico del catálogo).
+        var excSel = Excursiones.FirstOrDefault(e => e.Id == Reserva.ExcursionId);
+        if (excSel is not null && excSel.EsAMedida) NombreAMedida = Reserva.Excursion;
+
         return Page();
     }
 
@@ -88,6 +99,11 @@ public class CargarModel : PageModel
         if (Reserva.FechaHasta < Reserva.FechaDesde)
             ModelState.AddModelError("Reserva.FechaHasta", "La fecha 'hasta' no puede ser anterior a la fecha 'desde'.");
 
+        // Una salida a medida necesita nombre propio: si no, todas se llaman igual y no se
+        // distinguen en el listado ni en el comprobante del cliente.
+        if (exc is not null && exc.EsAMedida && string.IsNullOrWhiteSpace(NombreAMedida))
+            ModelState.AddModelError("NombreAMedida", "Poné un nombre para esta salida a medida.");
+
         if (!ModelState.IsValid)
         {
             await CargarExcursionesAsync();
@@ -99,8 +115,13 @@ public class CargarModel : PageModel
         Reserva.MinimoPersonas = exc.MinimoPersonas;
         Reserva.EsTravesia = exc.EsTravesia;
 
-        // La "a medida" no tiene precio de catálogo: siempre se escribe a mano.
-        if (exc.EsAMedida) Reserva.PrecioManual = true;
+        // La "a medida" no tiene precio de catálogo: siempre se escribe a mano, y lleva el
+        // nombre que se le puso en la reserva en vez del genérico del catálogo.
+        if (exc.EsAMedida)
+        {
+            Reserva.PrecioManual = true;
+            Reserva.Excursion = NombreAMedida!.Trim();
+        }
 
         // Si NO es precio manual, se toma el del catálogo. Si es manual, se respeta el escrito.
         if (!Reserva.PrecioManual)

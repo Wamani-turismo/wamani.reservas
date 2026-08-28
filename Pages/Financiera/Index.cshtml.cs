@@ -58,6 +58,9 @@ public class IndexModel : PageModel
     // Fondo del 10%: lo que se aparta de la ganancia y se acumula mes a mes
     public Wamani.Reservas.Services.FondoReserva.Mes Fondo { get; set; } = new();
 
+    // Cuenta de cada socio: cuánto ganó en total, cuánto ya retiró y cuánto le queda
+    public Wamani.Reservas.Services.CuentaSocios.Resultado Cuentas { get; set; } = new();
+
     // Los gastos pagados CON EL FONDO no restan de la ganancia del mes: esa plata ya se
     // había apartado de meses anteriores. Restan del saldo del fondo (y de la Caja).
     public decimal GastosEmpresaDelFondo { get; set; }
@@ -177,6 +180,7 @@ public class IndexModel : PageModel
 
         // ---- Fondo del 10% acumulado hasta este mes ----
         Fondo = await Wamani.Reservas.Services.FondoReserva.CalcularAsync(_db, MesActual);
+        Cuentas = await Wamani.Reservas.Services.CuentaSocios.CalcularAsync(_db, Duenos, MesActual);
 
         // ---- Egresos por tipo (lo pagado este mes), con detalle por excursión ----
         var porGastos = ops

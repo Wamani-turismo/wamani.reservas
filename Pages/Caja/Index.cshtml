@@ -18,6 +18,15 @@
     <div class="aviso-ok">@Model.Aviso</div>
 }
 
+@* Sugerencias para "Quién": si el nombre coincide con un socio, el retiro o el aporte
+   se le descuenta en la "Cuenta de cada socio" de Finanzas. *@
+<datalist id="listaSocios">
+    @foreach (var d in Wamani.Reservas.Pages.Financiera.IndexModel.Duenos)
+    {
+        <option value="@d"></option>
+    }
+</datalist>
+
 <!-- Resumen -->
 <div class="fin-cards">
     <div class="fin-card">
@@ -54,7 +63,7 @@
     <form method="post" enctype="multipart/form-data" asp-page-handler="AgregarAporte">
         <div class="form-grid">
             <div class="field"><label>Fecha</label><input asp-for="ApFecha" type="date" /></div>
-            <div class="field"><label>Quién aportó</label><input asp-for="ApQuien" placeholder="Ej: Facundo" /></div>
+            <div class="field"><label>Quién aportó</label><input asp-for="ApQuien" list="listaSocios" placeholder="Ej: Facundo" /></div>
             <div class="field full"><label>En qué / nota</label><input asp-for="ApDescripcion" placeholder="Ej: Indumentaria, auto, publicidad…" /></div>
             <div class="field"><label>Monto</label><input asp-for="ApMonto" type="number" step="0.01" min="0" /></div>
             <div class="field"><label>Comprobante (opcional)</label><input asp-for="ApComprobante" type="file" accept="image/*,.pdf" multiple /></div>
@@ -109,7 +118,7 @@
     <form method="post" enctype="multipart/form-data" asp-page-handler="AgregarRetiro">
         <div class="form-grid">
             <div class="field"><label>Fecha</label><input asp-for="RetFecha" type="date" /></div>
-            <div class="field"><label>Quién retiró</label><input asp-for="RetQuien" placeholder="Ej: Lautaro" /></div>
+            <div class="field"><label>Quién retiró</label><input asp-for="RetQuien" list="listaSocios" placeholder="Ej: Lautaro" /></div>
             <div class="field full"><label>Motivo / nota (opcional)</label><input asp-for="RetDescripcion" placeholder="Ej: Retiro de ganancias" /></div>
             <div class="field"><label>Monto</label><input asp-for="RetMonto" type="number" step="0.01" min="0" /></div>
             <div class="field"><label>Comprobante (opcional)</label><input asp-for="RetComprobante" type="file" accept="image/*,.pdf" multiple /></div>

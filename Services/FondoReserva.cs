@@ -31,13 +31,64 @@ public static class FondoReserva
         public decimal Saldo => VieneDeAntes + AportadoDelMes - GastadoDelMes;
     }
 
+    // Totales acumulados hasta un mes (inclusive): sirve para saber cuánto se ganó en
+    // total, cuánto se apartó al fondo y cuánto quedó para repartir entre los socios.
+    public class Acumulado
+    {
+        public decimal Ganancia { get; set; }        // suma de las ganancias de todos los meses
+        public decimal AlFondo { get; set; }         // 10% apartado en los meses con ganancia
+        public decimal GastadoDelFondo { get; set; } // lo que se sacó del fondo
+        public decimal SaldoFondo => AlFondo - GastadoDelFondo;
+        public decimal ARepartir => Ganancia - AlFondo;   // lo que les corresponde a los socios
+    }
+
+    public static async Task<Acumulado> AcumuladoAsync(AppDbContext db, DateTime hastaMes)
+    {
+        var (porMes, gastadoPorMes) = await MovimientosPorMesAsync(db);
+        var tope = new DateTime(hastaMes.Year, hastaMes.Month, 1);
+
+        var acu = new Acumulado();
+        foreach (var m in porMes.Keys.Concat(gastadoPorMes.Keys).Distinct().Where(m => m <= tope))
+        {
+            var ganancia = porMes.GetValueOrDefault(m);
+            acu.Ganancia += ganancia;
+            acu.AlFondo += Math.Round(Math.Max(0, ganancia) * Porcentaje, 2);
+            acu.GastadoDelFondo += gastadoPorMes.GetValueOrDefault(m);
+        }
+        return acu;
+    }
+
     // Calcula el fondo hasta el mes indicado (inclusive), recorriendo todos los meses
     // anteriores desde el primer movimiento que exista.
     public static async Task<Mes> CalcularAsync(AppDbContext db, DateTime mes)
     {
         var hasta = new DateTime(mes.Year, mes.Month, 1);
+        var (porMes, gastadoPorMes) = await MovimientosPorMesAsync(db);
 
-        // ---- Todos los movimientos de plata, agrupados por mes ----
+        var resultado = new Mes
+        {
+            MesActual = hasta,
+            GananciaDelMes = porMes.GetValueOrDefault(hasta),
+            AportadoDelMes = Math.Round(Math.Max(0, porMes.GetValueOrDefault(hasta)) * Porcentaje, 2),
+            GastadoDelMes = gastadoPorMes.GetValueOrDefault(hasta)
+        };
+
+        decimal acumulado = 0;
+        var meses = porMes.Keys.Concat(gastadoPorMes.Keys).Distinct().Where(m => m < hasta).OrderBy(m => m);
+        foreach (var m in meses)
+        {
+            acumulado += Math.Round(Math.Max(0, porMes.GetValueOrDefault(m)) * Porcentaje, 2);
+            acumulado -= gastadoPorMes.GetValueOrDefault(m);
+        }
+        resultado.VieneDeAntes = acumulado;
+
+        return resultado;
+    }
+
+    // Ganancia de cada mes (misma cuenta que la Financiera) y lo gastado del fondo cada mes.
+    private static async Task<(Dictionary<DateTime, decimal> PorMes, Dictionary<DateTime, decimal> Gastado)>
+        MovimientosPorMesAsync(AppDbContext db)
+    {
         var porMes = new Dictionary<DateTime, decimal>();
         void Sumar(DateTime? f, decimal monto)
         {
@@ -74,25 +125,7 @@ public static class FondoReserva
             .GroupBy(g => new DateTime(g.Fecha.Year, g.Fecha.Month, 1))
             .ToDictionary(g => g.Key, g => g.Sum(x => x.Monto));
 
-        // ---- Acumular mes a mes hasta el mes pedido ----
-        var resultado = new Mes
-        {
-            MesActual = hasta,
-            GananciaDelMes = porMes.GetValueOrDefault(hasta),
-            AportadoDelMes = Math.Round(Math.Max(0, porMes.GetValueOrDefault(hasta)) * Porcentaje, 2),
-            GastadoDelMes = gastadoPorMes.GetValueOrDefault(hasta)
-        };
-
-        decimal acumulado = 0;
-        var meses = porMes.Keys.Concat(gastadoPorMes.Keys).Distinct().Where(m => m < hasta).OrderBy(m => m);
-        foreach (var m in meses)
-        {
-            acumulado += Math.Round(Math.Max(0, porMes.GetValueOrDefault(m)) * Porcentaje, 2);
-            acumulado -= gastadoPorMes.GetValueOrDefault(m);
-        }
-        resultado.VieneDeAntes = acumulado;
-
-        return resultado;
+        return (porMes, gastadoPorMes);
     }
 
     // Saldo del fondo a día de hoy (contando todos los meses hasta el actual).

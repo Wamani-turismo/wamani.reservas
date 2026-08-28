@@ -99,6 +99,74 @@
     </div>
 </div>
 
+<!-- Cuenta de cada socio (acumulado) -->
+<div class="card">
+    <h2>Cuenta de cada socio</h2>
+    <p class="subtitle">
+        Acumulado de toda la operación hasta @Model.MesTexto, no sólo de este mes.
+        Lo <strong>retirado</strong> sale de los retiros cargados en
+        <a asp-page="/Caja/Index">Caja</a>; lo <strong>aportado</strong>, de los aportes.
+        El <strong>saldo</strong> es lo que la empresa todavía le debe a cada uno.
+    </p>
+
+    <table class="tabla">
+        <thead>
+            <tr>
+                <th>Socio</th>
+                <th class="num">Ganado (acumulado)</th>
+                <th class="num">Ya retiró</th>
+                <th class="num">Aportó</th>
+                <th class="num">Saldo a favor</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model.Cuentas.Socios)
+            {
+                var colorSaldo = s.Saldo < 0m ? "color:var(--warn)" : "color:var(--accent)";
+                <tr>
+                    <td data-label="Socio"><strong>@s.Nombre</strong></td>
+                    <td class="num" data-label="Ganado">@Money(s.Ganado)</td>
+                    <td class="num" data-label="Ya retiró" style="color:var(--warn)">@Money(s.Retirado)</td>
+                    <td class="num" data-label="Aportó">@Money(s.Aportado)</td>
+                    <td class="num" data-label="Saldo"><strong style="@colorSaldo">@Money(s.Saldo)</strong></td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td><strong>Total</strong></td>
+                <td class="num"><strong>@Money(Model.Cuentas.ARepartir)</strong></td>
+                <td class="num"><strong>@Money(Model.Cuentas.RetiradoTotal)</strong></td>
+                <td class="num"><strong>@Money(Model.Cuentas.AportadoTotal)</strong></td>
+                <td class="num"><strong>@Money(Model.Cuentas.Socios.Sum(x => x.Saldo))</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <p class="hint" style="margin-top:12px">
+        Ganancia acumulada de toda la operación @Money(Model.Cuentas.GananciaAcumulada)
+        − @Money(Model.Cuentas.AlFondo) apartados al fondo del 10%
+        = @Money(Model.Cuentas.ARepartir) a repartir, o sea @Money(Model.Cuentas.PorSocio) para cada uno.
+    </p>
+
+    @if (Model.Cuentas.HaySinAsignar)
+    {
+        <div class="aviso-ok" style="background:var(--warn-bg,#fff4e5);border-color:var(--warn);margin-top:10px">
+            <strong>Ojo:</strong> hay
+            @if (Model.Cuentas.RetirosSinAsignar != 0)
+            {
+                <text>@Money(Model.Cuentas.RetirosSinAsignar) en retiros</text>
+            }
+            @if (Model.Cuentas.AportesSinAsignar != 0)
+            {
+                <text> @Money(Model.Cuentas.AportesSinAsignar) en aportes</text>
+            }
+            cargados con un nombre que no coincide con ningún socio, así que no se le
+            descontaron a nadie. Revisá el campo “Quién” en <a asp-page="/Caja/Index">Caja</a>.
+        </div>
+    }
+</div>
+
 <!-- Fondo del 10% -->
 <div class="card">
     <h2>Fondo del 10%</h2>

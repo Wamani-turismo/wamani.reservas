@@ -54,11 +54,12 @@ public class ProvRowVm
     }
 }
 
-// Una NOCHE de una travesía dentro del operativo: todo el grupo durmiendo en un lugar.
-// Es una sola fila (personas × precio) en vez de una fila por pasajero.
+// Una fila del operativo que se contrata para el GRUPO ENTERO: una noche de hospedaje,
+// un traslado, los pasajes del micro, los arrieros o los caballos. Una sola fila
+// (cantidad × precio × veces) en vez de una fila por pasajero.
 public class EtapaRowVm
 {
-    // "Hospedaje" | "Traslado" | "Arriero" | "Caballo"
+    // "Hospedaje" | "Traslado" | "Pasaje" | "Arriero" | "Caballo"
     public string Tipo { get; set; } = EtapaExcursion.Hospedaje;
     public bool EsHospedaje => Tipo == EtapaExcursion.Hospedaje;
 
@@ -76,7 +77,6 @@ public class EtapaRowVm
     public int ProveedorSugerido { get; set; }         // refugio habitual de la plantilla
     public decimal PrecioSugerido { get; set; }        // precio por persona de la plantilla
     public decimal PrecioCatalogo { get; set; }        // lo que cobra ese refugio según Proveedores
-    public int PersonasSalida { get; set; }            // cuánta gente va en la salida
     public int NochesPlantilla { get; set; } = 1;      // cuántas noches se para en este lugar
 
     // Lo que se muestra: si ya hay algo cargado se respeta; si no, la sugerencia de la
@@ -139,7 +139,8 @@ public class SalidaModel : PageModel
 
     // Si los traslados ya están cargados arriba (como tramos), la sección suelta de "Auto"
     // se esconde: repetirla sería cargar dos veces la misma plata.
-    public bool TieneTraslados => Etapas.Any(e => e.Tipo == EtapaExcursion.Traslado);
+    public bool TieneTraslados =>
+        Etapas.Any(e => e.Tipo == EtapaExcursion.Traslado || e.Tipo == EtapaExcursion.Pasaje);
 
     // Enviados desde el form al guardar
     [BindProperty] public List<int> Ids { get; set; } = new();
@@ -253,6 +254,8 @@ public class SalidaModel : PageModel
                 var sugerida = tipo switch
                 {
                     EtapaExcursion.Traslado => autosSugeridos,
+                    // El micro se paga por boleto: uno por cada cabeza que viaja, guías incluidos
+                    EtapaExcursion.Pasaje   => PasajerosSalida <= 0 ? 0 : PasajerosSalida + guias,
                     EtapaExcursion.Arriero  => 0,
                     EtapaExcursion.Caballo  => 0,
                     _                        => PasajerosSalida,

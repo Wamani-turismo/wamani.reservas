@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -55,6 +56,27 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
+
+// ---- Que la sesión NO se cierre en cada actualización ----
+//
+// La cookie de "estás logueado" va firmada con una llave. Por defecto esa llave vive en la
+// memoria del servidor, así que cada vez que se sube un cambio la app se reinicia, la llave
+// se pierde y todas las cookies dejan de valer: hay que volver a entrar con usuario y clave.
+//
+// Guardándola en el disco de Render (el mismo que ya se usa para los comprobantes), la
+// llave sobrevive al reinicio y la sesión sigue abierta.
+//
+// El nombre de la aplicación tiene que quedar FIJO: es parte de la firma, y si cambia, las
+// cookies viejas también dejan de valer.
+var carpetaLlaves = Environment.GetEnvironmentVariable("UPLOADS_DIR");
+if (!string.IsNullOrWhiteSpace(carpetaLlaves))
+{
+    var dirLlaves = Path.Combine(carpetaLlaves, "llaves-sesion");
+    Directory.CreateDirectory(dirLlaves);
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(dirLlaves))
+        .SetApplicationName("wamani-reservas");
+}
 
 // Base de datos:
 //  - En internet (Render): PostgreSQL (los datos NO se borran al actualizar).

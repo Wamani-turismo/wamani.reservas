@@ -151,6 +151,8 @@
                     Si dormís 2 noches seguidas en el mismo lado, poné 2 en “Veces”: una sola fila.</li>
                 <li>🚐 <strong>Traslado</strong> — autos × precio por auto. Entran 4 por auto
                     <em>contando a los guías</em>, así que el operativo te sugiere cuántos hacen falta.</li>
+                <li>🎟️ <strong>Pasajes</strong> — para el micro, donde se saca un boleto por cabeza:
+                    pasajes × precio del boleto. También cuenta a los guías.</li>
                 <li>🧑‍🌾 <strong>Arriero</strong> y 🐴 <strong>Caballo</strong> — cuántos × precio por día
                     × <em>días</em>. Cuántos van lo decidís en cada salida, no sale de ninguna fórmula.</li>
             </ul>
@@ -218,7 +220,8 @@
 
         <div class="acciones-fila" style="margin-top:12px">
             <button type="button" class="btn btn-ghost" onclick="agregarEtapa('Hospedaje')">🏨 + Noche</button>
-            <button type="button" class="btn btn-ghost" onclick="agregarEtapa('Traslado')">🚐 + Traslado</button>
+            <button type="button" class="btn btn-ghost" onclick="agregarEtapa('Traslado')">🚐 + Traslado (por auto)</button>
+            <button type="button" class="btn btn-ghost" onclick="agregarEtapa('Pasaje')">🎟️ + Pasajes (por persona)</button>
             <button type="button" class="btn btn-ghost" onclick="agregarEtapa('Arriero')">🧑‍🌾 + Arrieros</button>
             <button type="button" class="btn btn-ghost" onclick="agregarEtapa('Caballo')">🐴 + Caballos</button>
         </div>
@@ -386,7 +389,7 @@
             var fila = e.target.closest('tr');
             var veces = fila.querySelector('.in-noches');
             if (veces) {
-                if (e.target.value === 'Traslado') veces.value = '1';
+                if (e.target.value === 'Traslado' || e.target.value === 'Pasaje') veces.value = '1';
                 else if (e.target.value === 'Arriero' || e.target.value === 'Caballo') veces.value = '4';
             }
             renumerarEtapas();

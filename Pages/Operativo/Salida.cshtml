@@ -75,12 +75,16 @@
         }
 
         <div class="prov-lista">
-            @* Guía: cuántos van y lo que cobra cada uno. En las travesías, según la gente
-               que se anota se suman guías, así que se puede agregar más de una fila. *@
-            <div class="prov-group" data-tipo="Guía">
-                @foreach (var vm in RowsDe("Guía", false, true)) { <partial name="_ProvRow" model="vm" /> }
-            </div>
-            <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Guía')">+ Agregar guía</button>
+            @* Guía suelto: sólo cuando la excursión NO dice cuánto cobra el guía por día.
+               Si lo dice, la fila sale abajo con el precio de la salida (no el del catálogo,
+               que es siempre el mismo y por eso daba mal). *@
+            @if (!Model.TieneGuias)
+            {
+                <div class="prov-group" data-tipo="Guía">
+                    @foreach (var vm in RowsDe("Guía", false, true)) { <partial name="_ProvRow" model="vm" /> }
+                </div>
+                <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Guía')">+ Agregar guía</button>
+            }
 
             @if (Model.EsTravesia)
             {

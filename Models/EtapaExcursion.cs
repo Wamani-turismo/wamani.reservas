@@ -25,11 +25,17 @@ namespace Wamani.Reservas.Models
         //   Hospedaje → personas × precio por persona × NOCHES
         //   Traslado  → autos    × precio por auto    × 1        (1 auto cada 4, guías incluidos)
         //   Pasaje    → pasajes  × precio del boleto  × 1        (micro: uno por cabeza, guías incluidos)
+        //   Guía      → guías    × precio por día     × DÍAS
         //   Arriero   → arrieros × precio por día     × DÍAS     (nos acompañan toda la travesía)
         //   Caballo   → caballos × precio por día     × DÍAS
         //
         // Traslado y Pasaje son los dos modos de moverse: el auto se paga por vehículo y el
         // micro por boleto. En los dos casos los guías cuentan, porque también viajan.
+        //
+        // El GUÍA va acá y no en el catálogo de Proveedores porque lo que cobra depende de
+        // la salida, no de la persona: el mismo guía cobra $60.000 por día en una excursión
+        // de un día y $100.000 en una travesía. En Proveedores va sólo QUIÉN es; cuánto
+        // cobra lo dice la excursión.
         //
         // Arrieros y caballos NO salen de una fórmula: se contratan según la gente que se
         // anota, y una travesía puede salir con menos del mínimo. Por eso van acá y no
@@ -41,10 +47,15 @@ namespace Wamani.Reservas.Models
         public const string Hospedaje = "Hospedaje";
         public const string Traslado  = "Traslado";
         public const string Pasaje    = "Pasaje";
+        public const string Guia      = "Guía";
         public const string Arriero   = "Arriero";
         public const string Caballo   = "Caballo";
 
-        public static readonly string[] Tipos = { Hospedaje, Traslado, Pasaje, Arriero, Caballo };
+        public static readonly string[] Tipos = { Hospedaje, Traslado, Pasaje, Guia, Arriero, Caballo };
+
+        // Los que se contratan POR DÍA: el precio que se carga es el de un día y el sistema
+        // lo multiplica por los días que va.
+        public static bool EsPorDia(string tipo) => tipo == Guia || tipo == Arriero || tipo == Caballo;
 
         // De qué lista de Proveedores se elige el que presta este servicio.
         // Los caballos se le contratan a los mismos arrieros, así que comparten catálogo.
@@ -52,6 +63,7 @@ namespace Wamani.Reservas.Models
         {
             Traslado => "Auto",
             Pasaje   => "Auto",
+            Guia     => "Guía",
             Arriero  => "Arriero",
             Caballo  => "Arriero",
             _        => "Hospedaje",
@@ -62,6 +74,7 @@ namespace Wamani.Reservas.Models
         {
             Traslado => "Autos",
             Pasaje   => "Pasajes",
+            Guia     => "Guías",
             Arriero  => "Arrieros",
             Caballo  => "Caballos",
             _        => "Personas",
@@ -71,6 +84,7 @@ namespace Wamani.Reservas.Models
         {
             Traslado => "Precio por auto",
             Pasaje   => "Precio del boleto",
+            Guia     => "Precio por día",
             Arriero  => "Precio por día",
             Caballo  => "Precio por día",
             _        => "Precio por persona",
@@ -78,6 +92,7 @@ namespace Wamani.Reservas.Models
 
         public static string EtiquetaVeces(string tipo) => tipo switch
         {
+            Guia    => "Días",
             Arriero => "Días",
             Caballo => "Días",
             _       => "Noches",
@@ -87,6 +102,7 @@ namespace Wamani.Reservas.Models
         {
             Traslado => "🚐",
             Pasaje   => "🎟️",
+            Guia     => "🧑‍🏫",
             Arriero  => "🧑‍🌾",
             Caballo  => "🐴",
             _        => "🏨",
@@ -97,6 +113,7 @@ namespace Wamani.Reservas.Models
         {
             Traslado => "Traslados",
             Pasaje   => "Pasajes",
+            Guia     => "Guías",
             Arriero  => "Arrieros",
             Caballo  => "Caballos",
             _        => "Hospedaje",

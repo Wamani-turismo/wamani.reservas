@@ -142,6 +142,11 @@ public class SalidaModel : PageModel
     public bool TieneTraslados =>
         Etapas.Any(e => e.Tipo == EtapaExcursion.Traslado || e.Tipo == EtapaExcursion.Pasaje);
 
+    // Igual con los guías: si la excursión ya dice cuánto cobra el guía POR DÍA, la sección
+    // suelta de arriba sobra. Ahí el precio salía del catálogo de Proveedores, que es el
+    // error que se viene a corregir: el mismo guía cobra distinto según la salida.
+    public bool TieneGuias => Etapas.Any(e => e.Tipo == EtapaExcursion.Guia);
+
     // Enviados desde el form al guardar
     [BindProperty] public List<int> Ids { get; set; } = new();
     [BindProperty] public List<string> Keys { get; set; } = new();    // clave para asociar el comprobante a la fila (id real, o temporal si es nueva)
@@ -256,6 +261,8 @@ public class SalidaModel : PageModel
                     EtapaExcursion.Traslado => autosSugeridos,
                     // El micro se paga por boleto: uno por cada cabeza que viaja, guías incluidos
                     EtapaExcursion.Pasaje   => PasajerosSalida <= 0 ? 0 : PasajerosSalida + guias,
+                    // Siempre va al menos un guía; si hacen falta más se suman a mano
+                    EtapaExcursion.Guia     => 1,
                     EtapaExcursion.Arriero  => 0,
                     EtapaExcursion.Caballo  => 0,
                     _                        => PasajerosSalida,

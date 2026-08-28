@@ -13,10 +13,22 @@
     // En los de tipo "Cantidad" el multiplicador es la cantidad cargada, no la gente.
     var mult = esCantidad ? g.CantidadReal() : Model.Mult;
     string Num(decimal m) => m.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+
+    // El día en que se pagó de verdad. Si el gasto ya está tildado y no tiene fecha
+    // (los que se cargaron antes de que esto existiera), se propone la de hoy.
+    var fechaPago = g.FechaPago?.ToString("yyyy-MM-dd")
+        ?? (g.Comprado ? Wamani.Reservas.Services.Reloj.HoyJujuy().ToString("yyyy-MM-dd") : "");
+    var estiloFecha = g.Comprado ? "" : "display:none";
 }
 <tr class="gasto-row" data-tipo="@tipo" data-mult="@mult" data-uni="@uni">
     <td data-label="Listo">
         <input type="checkbox" name="Comprados" value="@g.Id" class="chk-listo" style="width:20px;height:20px" @(g.Comprado ? "checked" : "") />
+        @* El día del pago. Va SIEMPRE en el formulario (aunque esté escondido) para que
+           todas las filas aporten un valor a la lista y no se desacomoden al guardar. *@
+        <div class="fecha-pago-wrap" style="@estiloFecha">
+            <input type="date" name="FechasPago" value="@fechaPago" class="in-fecha-pago"
+                   title="El día en que se pagó de verdad" />
+        </div>
     </td>
     <td data-label="Ítem">
         <input type="hidden" name="Ids" value="@g.Id" />

@@ -156,6 +156,7 @@ public class SalidaModel : PageModel
     [BindProperty] public List<string> Cantidades { get; set; } = new();  // unidades de los ítems tipo "Cantidad"
     [BindProperty] public List<int> GastoReservaIds { get; set; } = new();  // a qué reserva pertenece el gasto (0 = compartido)
     [BindProperty] public List<int> Comprados { get; set; } = new();  // ids tildados
+    [BindProperty] public List<string?> FechasPago { get; set; } = new();  // el día en que se pagó cada gasto
     [BindProperty] public bool ServiciosPagados { get; set; }
     [BindProperty] public IFormFile? ComprobanteArchivo { get; set; }
 
@@ -167,6 +168,9 @@ public class SalidaModel : PageModel
     [BindProperty] public List<string> ProvTotales { get; set; } = new();
     [BindProperty] public List<string> ProvSenas { get; set; } = new();
     [BindProperty] public List<string> ProvSaldos { get; set; } = new();
+    // Los días en que se pagaron de verdad la seña y el saldo
+    [BindProperty] public List<string?> ProvFechasSena { get; set; } = new();
+    [BindProperty] public List<string?> ProvFechasSaldo { get; set; } = new();
     [BindProperty] public List<string?> ProvParaQuien { get; set; } = new();
     [BindProperty] public List<int> ProvReservaIds { get; set; } = new();   // a qué reserva pertenece (hospedaje/restaurante)
 
@@ -439,6 +443,9 @@ public class SalidaModel : PageModel
 
             var resGasto = i < GastoReservaIds.Count ? GastoReservaIds[i] : 0;
 
+            // El día en que se pagó, tal como quedó escrito en la pantalla.
+            var fechaEscrita = ParseFecha(i < FechasPago.Count ? FechasPago[i] : null);
+
             if (id == 0)
             {
                 // Fila nueva agregada a mano en el operativo → el monto es el total directo.
@@ -455,7 +462,7 @@ public class SalidaModel : PageModel
                     // tildado y con fecha de pago. (La regla es siempre: tilde = pagado.)
                     Comprado = valor > 0
                 };
-                if (valor > 0) nuevo.FechaPago = DateTime.Today;
+                if (valor > 0) nuevo.FechaPago = fechaEscrita ?? Wamani.Reservas.Services.Reloj.HoyJujuy();
                 nuevo.Comprobante = await GuardarArchivosAsync($"comp_{clave}", null);
                 _db.OperativoGastos.Add(nuevo);
             }
@@ -487,12 +494,19 @@ public class SalidaModel : PageModel
                         g.Precio = valor * MultDe(g);
                     }
 
-                    // La fecha de pago se toma sola el día que se TILDA el gasto como listo.
-                    // Antes se ponía con sólo tener precio: como la plantilla de la excursión
-                    // se copia con los precios ya cargados, alcanzaba con guardar una vez para
-                    // que TODA la estimación (guía, viáticos, traslados…) contara como plata
-                    // pagada ese día. Ahora el tilde "LISTO" es el único que confirma el pago.
-                    if (comprado && g.Precio > 0 && g.FechaPago is null) g.FechaPago = DateTime.Today;
+                    // La fecha de pago aparece cuando se TILDA el gasto como listo. Antes se
+                    // ponía con sólo tener precio: como la plantilla de la excursión se copia
+                    // con los precios ya cargados, alcanzaba con guardar una vez para que TODA
+                    // la estimación (guía, viáticos, traslados…) contara como plata pagada ese
+                    // día. El tilde "LISTO" sigue siendo el único que confirma el pago.
+                    //
+                    // Lo que cambia es CUÁL fecha: manda la que se escribió en la pantalla, que
+                    // es el día en que se pagó de verdad. Si no escribieron ninguna se respeta
+                    // la que ya tenía, y sólo si no había ninguna se usa la de hoy. Sin esto,
+                    // un pago hecho el 12 y cargado el 28 quedaba fechado el 28 y el día por
+                    // día de Finanzas no cerraba nunca contra el banco.
+                    if (comprado && g.Precio > 0)
+                        g.FechaPago = fechaEscrita ?? g.FechaPago ?? Wamani.Reservas.Services.Reloj.HoyJujuy();
                     if (!comprado || g.Precio == 0) g.FechaPago = null;
 
                     g.Comprobante = await GuardarArchivosAsync($"comp_{clave}", g.Comprobante);
@@ -614,10 +628,15 @@ public class SalidaModel : PageModel
             row.Saldo = saldo;
             row.ParaQuien = string.IsNullOrWhiteSpace(paraQuien) ? null : paraQuien;
 
-            // Las fechas de pago se toman solas el día que se carga cada monto
-            if (sena > 0 && row.FechaSena is null) row.FechaSena = DateTime.Today;
+            // El día en que se pagó la seña y el saldo: manda lo que se escribió en la
+            // pantalla. Si no escribieron nada se respeta lo que ya había, y recién si no
+            // había nada se usa la de hoy. Si el monto se borra, la fecha se va con él.
+            var fSenaEscrita = ParseFecha(i < ProvFechasSena.Count ? ProvFechasSena[i] : null);
+            var fSaldoEscrita = ParseFecha(i < ProvFechasSaldo.Count ? ProvFechasSaldo[i] : null);
+
+            if (sena > 0) row.FechaSena = fSenaEscrita ?? row.FechaSena ?? Wamani.Reservas.Services.Reloj.HoyJujuy();
             if (sena == 0) row.FechaSena = null;
-            if (saldo > 0 && row.FechaSaldo is null) row.FechaSaldo = DateTime.Today;
+            if (saldo > 0) row.FechaSaldo = fSaldoEscrita ?? row.FechaSaldo ?? Wamani.Reservas.Services.Reloj.HoyJujuy();
             if (saldo == 0) row.FechaSaldo = null;
 
             // Comprobantes por clave de fila (funciona también en filas nuevas y admite varios)
@@ -677,6 +696,15 @@ public class SalidaModel : PageModel
 
     [BindProperty(SupportsGet = true)]
     public bool Guardado { get; set; }
+
+    // Una fecha escrita en la pantalla ("2026-08-28"). Si viene vacía o mal, devuelve null
+    // y el que llama decide con qué reemplazarla.
+    private static DateTime? ParseFecha(string? txt)
+    {
+        if (string.IsNullOrWhiteSpace(txt)) return null;
+        return DateTime.TryParse(txt.Trim(), System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None, out var f) ? f.Date : null;
+    }
 
     private static decimal ParsePrecio(string? txt)
     {

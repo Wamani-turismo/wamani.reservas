@@ -4,6 +4,12 @@
     var id = a?.Id ?? 0;
     string Num(decimal m) => m.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
     string Ico(string t) => t switch { "Guía" => "🧑‍🏫", "Hospedaje" => "🏨", "Restaurante" => "🍽️", "Auto" => "🚐", _ => "•" };
+
+    // Los días en que se pagó de verdad la seña y el saldo. Si ya hay plata cargada y no
+    // tienen fecha (lo de antes), se propone la de hoy.
+    var hoy = Wamani.Reservas.Services.Reloj.HoyJujuy().ToString("yyyy-MM-dd");
+    var fechaSena = a?.FechaSena?.ToString("yyyy-MM-dd") ?? ((a?.Sena ?? 0) > 0 ? hoy : "");
+    var fechaSaldo = a?.FechaSaldo?.ToString("yyyy-MM-dd") ?? ((a?.Saldo ?? 0) > 0 ? hoy : "");
 }
 <div class="prov-row prov-bloque">
     <input type="hidden" name="ProvIds" value="@id" />
@@ -73,6 +79,10 @@
         <div class="field">
             <label>Seña ($)</label>
             <input name="ProvSenas" type="number" step="0.01" min="0" value="@Num(a?.Sena ?? 0)" class="prov-sena" />
+            @* El día del pago. Va siempre, aunque esté escondido: cada fila tiene que
+               aportar un valor a la lista o se mezclan los datos al guardar. *@
+            <input type="date" name="ProvFechasSena" value="@fechaSena" class="prov-fecha in-fecha-sena"
+                   title="El día en que se pagó la seña" />
         </div>
         <div class="field">
             <label>Comprobante seña</label>
@@ -82,6 +92,8 @@
         <div class="field">
             <label>Saldo ($)</label>
             <input name="ProvSaldos" type="number" step="0.01" min="0" value="@Num(a?.Saldo ?? 0)" class="prov-saldo" />
+            <input type="date" name="ProvFechasSaldo" value="@fechaSaldo" class="prov-fecha in-fecha-saldo"
+                   title="El día en que se pagó el saldo" />
         </div>
         <div class="field">
             <label>Comprobante saldo</label>

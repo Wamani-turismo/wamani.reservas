@@ -312,6 +312,26 @@
             document.getElementById('outTotal').textContent = money(total + totalProveedores());
             document.getElementById('outListos').textContent = listos + " / " + filas.length;
         }
+        // Qué día es hoy en Jujuy (lo dice el servidor: si lo calculara el navegador y
+        // alguien abre el sistema de viaje, podría poner otro día).
+        var HOY = '@Wamani.Reservas.Services.Reloj.HoyJujuy().ToString("yyyy-MM-dd")';
+
+        // El día del pago sólo tiene sentido si el gasto está tildado como listo: se
+        // muestra al tildarlo y se esconde al destildarlo. El campo NO se saca del
+        // formulario, sólo se oculta, así la fila sigue aportando su valor a la lista.
+        function pintarFechaPago(chk) {
+            var fila = chk.closest('.gasto-row');
+            var caja = fila.querySelector('.fecha-pago-wrap');
+            if (!caja) return;
+            var campo = caja.querySelector('.in-fecha-pago');
+            if (chk.checked) {
+                if (campo && !campo.value) campo.value = HOY;
+                caja.style.display = '';
+            } else {
+                caja.style.display = 'none';
+            }
+        }
+
         var nuevoGastoSeq = 1;
         function agregarGasto(resId, mult) {
             // Clave temporal para poder subir el comprobante de una fila nueva en el mismo guardado
@@ -320,7 +340,10 @@
             tr.className = 'gasto-row';
             tr.dataset.tipo = 'Manual'; tr.dataset.mult = (mult || 1); tr.dataset.uni = '';
             tr.innerHTML =
-                '<td data-label="Listo"><span class="cliente-sub">guardá primero</span></td>' +
+                // Un gasto agregado a mano es plata que ya se gastó: nace con la fecha de
+                // hoy puesta y se puede cambiar por el día en que se pagó de verdad.
+                '<td data-label="Listo"><span class="cliente-sub">guardá primero</span>' +
+                '<div class="fecha-pago-wrap"><input type="date" name="FechasPago" value="' + HOY + '" class="in-fecha-pago" title="El día en que se pagó de verdad" /></div></td>' +
                 '<td data-label="Ítem"><input type="hidden" name="Ids" value="0" /><input type="hidden" name="Keys" value="' + key + '" /><input type="hidden" name="GastoReservaIds" value="' + (resId || 0) + '" /><input name="Nombres" placeholder="Ej: Peaje" /></td>' +
                 // El campo de cantidad va vacío pero TIENE que estar: al guardar, las listas
                 // del formulario se emparejan por posición, así que cada fila debe aportar
@@ -374,7 +397,17 @@
         }
         document.addEventListener('input', function (e) {
             if (e.target.classList.contains('in-precio')) { pintarFila(e.target.closest('.gasto-row')); recalcular(); }
-            else if (e.target.classList.contains('chk-listo')) recalcular();
+            else if (e.target.classList.contains('chk-listo')) { pintarFechaPago(e.target); recalcular(); }
+            // Al cargar una seña o un saldo, si no hay día puesto se propone el de hoy.
+            // Si el monto se borra, la fecha se va con él.
+            if (e.target.classList.contains('prov-sena') || e.target.classList.contains('prov-saldo')) {
+                var esSena = e.target.classList.contains('prov-sena');
+                var campoF = e.target.closest('.field').querySelector(esSena ? '.in-fecha-sena' : '.in-fecha-saldo');
+                if (campoF) {
+                    if ((parseFloat(e.target.value) || 0) > 0) { if (!campoF.value) campoF.value = HOY; }
+                    else campoF.value = '';
+                }
+            }
             if (e.target.classList.contains('prov-total') || e.target.classList.contains('prov-sena') || e.target.classList.contains('prov-saldo')) recalcularProv();
         });
         // Pintar los totales de todas las filas al abrir
@@ -393,6 +426,8 @@
             var sel = clone.querySelector('select[name=ProvProveedorIds]'); if (sel) sel.value = '0';
             var nue = clone.querySelector('.prov-nuevo'); if (nue) { nue.value = ''; nue.style.display = 'none'; }
             clone.querySelectorAll('.prov-total,.prov-sena,.prov-saldo').forEach(function (i) { i.value = ''; i.readOnly = false; i.style.background = ''; i.dataset.manual = ''; });
+            // Las fechas de pago heredadas no valen para la fila nueva: se vacían.
+            clone.querySelectorAll('.prov-fecha').forEach(function (i) { i.value = ''; });
             // Filas con cantidad (guía / vehículo): la nueva arranca en 1 y sin precio,
             // para que se complete sola al elegir el proveedor.
             var cPers = clone.querySelector('.etapa-personas'); if (cPers) cPers.value = '1';

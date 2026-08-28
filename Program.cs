@@ -68,14 +68,37 @@ builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 //
 // El nombre de la aplicación tiene que quedar FIJO: es parte de la firma, y si cambia, las
 // cookies viejas también dejan de valer.
+// Antes esto se hacía SÓLO si existía la variable UPLOADS_DIR: si por lo que fuera no
+// estaba, no se avisaba en ningún lado y la sesión volvía a cerrarse en cada actualización
+// sin que se entendiera por qué. Ahora siempre se guardan en algún lado, y en el arranque
+// queda escrito en los registros de Render en qué carpeta, para poder mirarlo.
 var carpetaLlaves = Environment.GetEnvironmentVariable("UPLOADS_DIR");
-if (!string.IsNullOrWhiteSpace(carpetaLlaves))
+if (string.IsNullOrWhiteSpace(carpetaLlaves) && Directory.Exists("/var/data"))
 {
-    var dirLlaves = Path.Combine(carpetaLlaves, "llaves-sesion");
+    // El disco persistente de Render, por si la variable se borró de la configuración
+    carpetaLlaves = "/var/data";
+}
+if (string.IsNullOrWhiteSpace(carpetaLlaves))
+{
+    // Último recurso (la compu de casa): al lado del proyecto
+    carpetaLlaves = builder.Environment.ContentRootPath;
+}
+
+var dirLlaves = Path.Combine(carpetaLlaves, "llaves-sesion");
+try
+{
     Directory.CreateDirectory(dirLlaves);
     builder.Services.AddDataProtection()
         .PersistKeysToFileSystem(new DirectoryInfo(dirLlaves))
         .SetApplicationName("wamani-reservas");
+    Console.WriteLine($"[sesion] Las llaves se guardan en: {dirLlaves}");
+}
+catch (Exception ex)
+{
+    // Si la carpeta no se puede crear, la app tiene que arrancar igual: lo único que pasa
+    // es que hay que volver a entrar con usuario y clave después de cada actualización.
+    Console.WriteLine($"[sesion] NO se pudieron guardar las llaves en {dirLlaves}: {ex.Message}");
+    Console.WriteLine("[sesion] La sesion se va a cerrar en cada actualizacion hasta que se resuelva.");
 }
 
 // Base de datos:

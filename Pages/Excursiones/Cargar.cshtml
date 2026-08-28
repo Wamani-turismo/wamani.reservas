@@ -78,6 +78,7 @@
                     <th style="width:190px">Cómo se cuenta</th>
                     <th class="num" style="width:80px">Cantidad</th>
                     <th style="width:110px">¿Proveedor?</th>
+                    <th style="width:60px">Nota</th>
                     <th style="width:60px"></th>
                 </tr>
             </thead>
@@ -112,6 +113,12 @@
                                 <input type="checkbox" onchange="this.nextElementSibling.value = this.checked ? '1' : '0'" @(gp ? "checked" : "") />
                                 <input type="hidden" name="GastoEsProveedor" value="@(gp ? "1" : "0")" />
                             </label>
+                        </td>
+                        @* La nota de este costo: el texto viaja escondido y se escribe en
+                           la ventanita que abre el botón 📋. *@
+                        <td data-label="Nota">
+                            <input type="hidden" name="GastoComentarios" value="@Model.Gastos[i].Comentario" />
+                            <button type="button" class="btn-mini btn-mini-ghost btn-nota" onclick="abrirNota(this)">📋</button>
                         </td>
                         <td><button type="button" class="btn-mini btn-mini-danger" title="Borrar" onclick="quitarGasto(this)">🗑</button></td>
                     </tr>
@@ -283,6 +290,23 @@
     </div>
 </form>
 
+@* Ventanita para escribir la nota de un costo. Va FUERA del formulario a propósito: así
+   el textarea no se manda como un campo más y no desacomoda las listas de la tabla. *@
+<div id="modalNota" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(35,51,46,.55);z-index:999;align-items:center;justify-content:center;padding:16px">
+    <div style="background:var(--surface);color:var(--ink);width:100%;max-width:520px;padding:22px;border-radius:14px;box-shadow:0 14px 44px rgba(0,0,0,.25)">
+        <h2 id="notaTitulo" style="margin:0 0 4px">Nota del costo</h2>
+        <p class="hint" style="margin:0 0 14px">
+            Anotá lo que haga falta acordarse de este costo: qué incluye, con quién se
+            arregló, por qué ese precio. No entra en ninguna cuenta.
+        </p>
+        <textarea id="notaTexto" rows="7" style="width:100%" placeholder="Ej: el precio es por los 3 almuerzos de marcha juntos, arreglado con Doña Rosa."></textarea>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+            <button type="button" class="btn btn-ghost" onclick="cerrarNota()">Cancelar</button>
+            <button type="button" class="btn btn-primary" onclick="guardarNota()">💾 Guardar</button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     @{
@@ -327,10 +351,50 @@
                 '</select></td>' +
                 '<td class="num" data-label="Cantidad"><input name="GastoCantidades" type="number" step="1" min="0" class="in-cant-plantilla" value="" style="display:none" /></td>' +
                 '<td data-label="¿Proveedor?"><label class="check-linea"><input type="checkbox" onchange="this.nextElementSibling.value = this.checked ? \'1\' : \'0\'" /><input type="hidden" name="GastoEsProveedor" value="0" /></label></td>' +
+                '<td data-label="Nota"><input type="hidden" name="GastoComentarios" value="" /><button type="button" class="btn-mini btn-mini-ghost btn-nota" onclick="abrirNota(this)">📋</button></td>' +
                 '<td><button type="button" class="btn-mini btn-mini-danger" title="Borrar" onclick="quitarGasto(this)">🗑</button></td>';
             document.getElementById('gastosBody').appendChild(tr);
+            pintarNota(tr.querySelector('.btn-nota'));
             tr.querySelector('input').focus();
         }
+
+        // ---- La nota de cada costo (el botón 📋) ----
+        // El texto vive en un campo escondido de la fila; la ventanita lo lee y lo escribe.
+        // Al tocar "Guardar" se guarda la excursión entera, así queda en la base al toque.
+        var filaNota = null;
+
+        function pintarNota(btn) {
+            if (!btn) return;
+            var esc = btn.closest('tr').querySelector('input[name=GastoComentarios]');
+            var hay = esc && esc.value.trim() !== '';
+            btn.style.opacity = hay ? '1' : '0.4';
+            btn.title = hay ? esc.value : 'Escribir una nota sobre este costo';
+        }
+
+        function abrirNota(btn) {
+            filaNota = btn.closest('tr');
+            var nombre = (filaNota.querySelector('input[name=GastoNombres]').value || '').trim();
+            document.getElementById('notaTitulo').textContent = nombre ? ('Nota · ' + nombre) : 'Nota del costo';
+            var texto = document.getElementById('notaTexto');
+            texto.value = filaNota.querySelector('input[name=GastoComentarios]').value;
+            document.getElementById('modalNota').style.display = 'flex';
+            texto.focus();
+        }
+
+        function cerrarNota() {
+            document.getElementById('modalNota').style.display = 'none';
+            filaNota = null;
+        }
+
+        function guardarNota() {
+            if (!filaNota) return;
+            filaNota.querySelector('input[name=GastoComentarios]').value = document.getElementById('notaTexto').value;
+            pintarNota(filaNota.querySelector('.btn-nota'));
+            cerrarNota();
+            document.querySelector('form').submit();
+        }
+
+        document.querySelectorAll('.btn-nota').forEach(pintarNota);
         function quitarGasto(btn) {
             if (!confirm('¿Realmente lo querés borrar?')) return;
             btn.closest('tr').remove();

@@ -316,6 +316,8 @@ using (var scope = app.Services.CreateScope())
     EnsureSqliteColumn(db, "OperativoProveedores", "Noches", "INTEGER NULL");
     EnsureSqliteColumn(db, "GastosExcursion", "Cantidad", "INTEGER NULL");
     EnsureSqliteColumn(db, "OperativoGastos", "Cantidad", "INTEGER NULL");
+    // Nota escrita a mano al lado de cada costo de la excursión (el botón 📋)
+    EnsureSqliteColumn(db, "GastosExcursion", "Comentario", "TEXT NULL");
     } // fin del bloque específico de SQLite
 
     // En Postgres: corrige las tablas que se hayan creado antes con fechas "con zona
@@ -381,6 +383,10 @@ using (var scope = app.Services.CreateScope())
         // salen de una fórmula, se suben y se bajan a mano en cada salida.
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""GastosExcursion"" ADD COLUMN IF NOT EXISTS ""Cantidad"" integer;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""Cantidad"" integer;");
+
+        // Nota escrita a mano al lado de cada costo de la excursión (el botón 📋)
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""GastosExcursion"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
+
         // Tabla de gastos generales de la empresa (nueva; EnsureCreated no la agrega a una base ya creada)
         db.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS ""GastosEmpresa"" (

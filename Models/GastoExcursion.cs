@@ -35,6 +35,14 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Cantidad")]
         public int? Cantidad { get; set; }
 
+        // Nota escrita a mano sobre ESTE costo: qué incluye, con quién se arregló, por qué
+        // ese precio, lo que haga falta acordarse. No entra en ninguna cuenta: es para que
+        // el que abra la excursión el mes que viene sepa de dónde salió el número.
+        // Se carga con el botón 📋 al lado del costo.
+        [MaxLength(2000)]
+        [Display(Name = "Nota")]
+        public string? Comentario { get; set; }
+
         // Si es true, este costo es un SERVICIO de proveedor (guía, auto, hospedaje,
         // restaurante). Se sigue contando en la Rentabilidad, pero NO aparece en la lista
         // de gastos del operativo (se maneja en la sección Proveedores con seña + saldo).

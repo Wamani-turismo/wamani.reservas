@@ -31,6 +31,11 @@ public class CargarModel : PageModel
     [BindProperty]
     public List<string> GastoCantidades { get; set; } = new();
 
+    // La nota que se escribe con el botón 📋 al lado de cada costo. Viaja en un campo
+    // escondido por fila, así que siempre manda un valor y no desalinea las listas.
+    [BindProperty]
+    public List<string?> GastoComentarios { get; set; } = new();
+
     // Etapas de la travesía (dónde se duerme cada noche), enviadas como arrays desde el form
     [BindProperty] public List<string> EtapaLugares { get; set; } = new();
     [BindProperty] public List<int> EtapaProveedorIds { get; set; } = new();
@@ -140,6 +145,10 @@ public class CargarModel : PageModel
                 cantidad = int.TryParse(cantTxt, out var c) && c >= 0 ? c : 1;
             }
 
+            // La nota del botón 📋. Si quedó vacía se guarda en null, no un texto vacío.
+            var nota = (i < GastoComentarios.Count ? GastoComentarios[i] : null)?.Trim();
+            if (nota is { Length: > 2000 }) nota = nota.Substring(0, 2000);
+
             _db.GastosExcursion.Add(new GastoExcursion
             {
                 ExcursionId = excursionId,
@@ -147,7 +156,8 @@ public class CargarModel : PageModel
                 Precio = precio,
                 TipoCalculo = tipo,
                 Cantidad = cantidad,
-                EsProveedor = esProv
+                EsProveedor = esProv,
+                Comentario = string.IsNullOrWhiteSpace(nota) ? null : nota
             });
         }
 

@@ -29,6 +29,11 @@ public class IndexModel : PageModel
     public List<Aporte> Aportes { get; set; } = new();
     public List<Retiro> Retiros { get; set; } = new();
 
+    // En qué está repartido el patrimonio: lo que se les debe a los socios + el fondo del 10%.
+    // Sirve para controlar: los dos números tienen que sumar exactamente el patrimonio.
+    public decimal SaldoFondo { get; set; }
+    public decimal DeudaSocios { get; set; }
+
     // Form aportes
     [BindProperty] public DateTime ApFecha { get; set; } = DateTime.Today;
     [BindProperty] public string? ApQuien { get; set; }
@@ -69,6 +74,14 @@ public class IndexModel : PageModel
 
         Retiros = await _db.Retiros.OrderByDescending(r => r.Fecha).ToListAsync();
         RetirosTotal = Retiros.Sum(r => r.Monto);
+
+        // Desglose del patrimonio: cuánto es de los socios y cuánto está apartado en el fondo
+        var hoy = DateTime.Today;
+        var cuentas = await Wamani.Reservas.Services.CuentaSocios.CalcularAsync(
+            _db, Pages.Financiera.IndexModel.Duenos, new DateTime(hoy.Year, hoy.Month, 1));
+        SaldoFondo = (await Wamani.Reservas.Services.FondoReserva.CalcularAsync(
+            _db, new DateTime(hoy.Year, hoy.Month, 1))).Saldo;
+        DeudaSocios = cuentas.Socios.Sum(s => s.Saldo);
     }
 
     // Guarda uno o varios comprobantes conservando el nombre original

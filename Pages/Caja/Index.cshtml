@@ -50,6 +50,14 @@
 
 <div class="card" style="margin-top:4px">
     <p style="margin:0;color:var(--ink-soft)">
+        <strong>De dónde sale el patrimonio:</strong>
+        @Money(Model.DeudaSocios) que la empresa les debe a los socios
+        + @Money(Model.SaldoFondo) apartados en el fondo del 10%
+        = <strong>@Money(Model.DeudaSocios + Model.SaldoFondo)</strong>.
+        Este número tiene que coincidir con el patrimonio de arriba. Si no coincide,
+        hay algo cargado a medias.
+    </p>
+    <p style="margin:10px 0 0;color:var(--ink-soft)">
         <strong>Patrimonio</strong> = lo que tiene la empresa hoy = Caja @Money(Model.Caja)
         + Aportes @Money(Model.AportesTotal) − Retiros @Money(Model.RetirosTotal) =
         <strong style="color:var(--accent)">@Money(Model.Patrimonio)</strong>.

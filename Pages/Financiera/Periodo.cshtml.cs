@@ -27,10 +27,13 @@ public class PeriodoModel : PageModel
     // Un movimiento de plata suelto (sirve para ingresos y para egresos)
     public class Movimiento
     {
-        public DateTime Fecha { get; set; }
+        public DateTime Fecha { get; set; }          // día en que entró o salió la plata
         public string Concepto { get; set; } = "";
         public string Detalle { get; set; } = "";
         public decimal Monto { get; set; }
+        // De qué SALIDA es el egreso (excursión + día de salida). Sin esto no se distingue
+        // un pago adelantado de una salida futura de uno de la salida de ese mismo día.
+        public DateTime? Salida { get; set; }
     }
 
     // Resumen de un día del período
@@ -140,6 +143,7 @@ public class PeriodoModel : PageModel
                     Fecha = o.FechaPago!.Value.Date,
                     Concepto = o.Nombre,
                     Detalle = NombreExc(o.ExcursionId),
+                    Salida = o.Fecha.Date,
                     Monto = o.Precio
                 });
         }
@@ -153,6 +157,7 @@ public class PeriodoModel : PageModel
                     Fecha = p.FechaSena!.Value.Date,
                     Concepto = $"{quien} (seña)",
                     Detalle = NombreExc(p.ExcursionId),
+                    Salida = p.Fecha.Date,
                     Monto = p.Sena
                 });
             if (EnRango(p.FechaSaldo) && p.Saldo != 0)
@@ -161,6 +166,7 @@ public class PeriodoModel : PageModel
                     Fecha = p.FechaSaldo!.Value.Date,
                     Concepto = $"{quien} (saldo)",
                     Detalle = NombreExc(p.ExcursionId),
+                    Salida = p.Fecha.Date,
                     Monto = p.Saldo
                 });
         }

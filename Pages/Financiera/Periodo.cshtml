@@ -267,7 +267,11 @@
     {
         <table class="tabla">
             <thead>
-                <tr><th>Día</th><th>Concepto</th><th>Excursión</th><th style="text-align:right">Monto</th></tr>
+                <tr>
+                    <th>Día de pago</th><th>Concepto</th><th>Excursión</th>
+                    <th>Sale el</th>
+                    <th style="text-align:right">Monto</th>
+                </tr>
             </thead>
             <tbody>
                 @foreach (var m in Model.Egresos)
@@ -276,13 +280,14 @@
                         <td>@Dia(m.Fecha)</td>
                         <td>@m.Concepto</td>
                         <td>@m.Detalle</td>
+                        <td>@(m.Salida is DateTime s ? Dia(s) : "—")</td>
                         <td style="text-align:right"><strong>@Money(m.Monto)</strong></td>
                     </tr>
                 }
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="3" style="text-align:right"><strong>Total pagado</strong></td>
+                    <td colspan="4" style="text-align:right"><strong>Total pagado</strong></td>
                     <td style="text-align:right"><strong>@Money(Model.TotalEgresos)</strong></td>
                 </tr>
             </tfoot>

@@ -3,6 +3,16 @@
 @{
     ViewData["Title"] = Model.EsNueva ? "Nueva excursión" : "Editar excursión";
     string Num(decimal m) => m.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+
+    // La sección "dónde se duerme cada noche" NO es sólo de las travesías: cualquier
+    // excursión que duerma fuera la necesita. "Conociendo las Yungas" son 3 días y 2
+    // noches y no es una travesía; antes, para poder cargar sus noches había que tildarla
+    // como travesía, y eso cambia el negocio (el saldo se pasa a cobrar 7 días antes en
+    // vez de 4). Ahora se muestra sola si la excursión es travesía o si ya tiene noches
+    // cargadas, y si no, aparece un botón para abrirla. Las de un día siguen sin verla.
+    var hayNoches = Model.Excursion.EsTravesia || Model.Etapas.Count > 0;
+    var estiloCardNoches = hayNoches ? "" : "display:none";
+    var estiloBotonNoches = hayNoches ? "display:none" : "";
 }
 
 <h1>@(Model.EsNueva ? "Nueva excursión" : "Editar excursión")</h1>
@@ -111,14 +121,22 @@
         <button type="button" class="btn btn-ghost" style="margin-top:12px" onclick="agregarGasto()">+ Agregar costo</button>
     </div>
 
-    <!-- ---------- Etapas de la travesía (dónde se duerme cada noche) ---------- -->
-    @* Sólo tiene sentido en travesías de varios días: se muestra/esconde con la casilla
-       "Es travesía" de arriba (ver el script al final). *@
-    <div class="card" id="cardEtapas" style="@(Model.Excursion.EsTravesia ? "" : "display:none")">
+    <!-- ---------- Dónde se duerme cada noche ---------- -->
+    @* Sirve para cualquier salida que duerma fuera, sea travesía o no: en las travesías
+       se abre sola, en el resto con el botón de acá abajo (ver el script al final). *@
+    <button type="button" class="btn btn-ghost" id="btnVerNoches" style="@estiloBotonNoches">
+        🏨 Esta salida duerme fuera — cargar dónde se duerme cada noche
+    </button>
+
+    <div class="card" id="cardEtapas" style="@estiloCardNoches">
         <h2>Dónde se duerme cada noche</h2>
         <p class="hint" style="margin:-8px 0 14px">
-            Cargá una fila por cada NOCHE de la travesía, en orden. Elegí el refugio y listo:
-            el resto se completa solo.
+            Cargá una fila por cada parada donde se duerme, en orden. Elegí el refugio y
+            listo: el resto se completa solo.
+            <br />
+            No hace falta que sea una travesía: sirve para cualquier salida que duerma
+            fuera. <strong>“Conociendo las Yungas”</strong> son 3 días y 2 noches y se carga
+            acá igual, con una sola fila de 2 noches.
             <br />
             <strong>¿Para qué sirve, si el refugio ya está en Proveedores?</strong>
             En Proveedores está <em>quién es y cuánto cobra</em>. Acá se dice <em>en qué noche de
@@ -313,13 +331,30 @@
         });
         renumerarEtapas();
 
-        // Las noches sólo aplican a travesías: la sección aparece al tildar "Es travesía".
+        // La sección de noches se abre sola en las travesías, y en cualquier otra excursión
+        // con el botón. Nunca se esconde si ya hay noches cargadas: se perderían de vista.
         (function () {
             var chk = document.getElementById('Excursion_EsTravesia');
             var card = document.getElementById('cardEtapas');
-            if (!chk || !card) return;
-            chk.addEventListener('change', function () {
-                card.style.display = chk.checked ? '' : 'none';
+            var btn = document.getElementById('btnVerNoches');
+            if (!card) return;
+
+            function abrir() {
+                card.style.display = '';
+                if (btn) btn.style.display = 'none';
+                card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            function hayEtapasCargadas() {
+                return document.querySelectorAll('#etapasBody .etapa-row').length > 0;
+            }
+
+            if (btn) btn.addEventListener('click', abrir);
+            if (chk) chk.addEventListener('change', function () {
+                if (chk.checked) { abrir(); return; }
+                // Destildar "es travesía" no borra las noches ya cargadas
+                if (hayEtapasCargadas()) return;
+                card.style.display = 'none';
+                if (btn) btn.style.display = '';
             });
         })();
     </script>

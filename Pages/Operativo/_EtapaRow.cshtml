@@ -3,6 +3,9 @@
     var a = Model.Asig;
     var id = a?.Id ?? 0;
     string Num(decimal m) => m.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+    // En el hospedaje la nota son las comidas incluidas; en un traslado o en los arrieros
+    // es cualquier apunte (por ejemplo el equivalente por persona).
+    var etiquetaNota = Model.EsHospedaje ? "Incluye:" : "Nota:";
 }
 <div class="prov-row prov-bloque etapa-bloque">
     <input type="hidden" name="ProvIds" value="@id" />
@@ -30,7 +33,7 @@
 
     @if (!string.IsNullOrWhiteSpace(Model.Incluye))
     {
-        <p class="hint" style="margin:2px 0 8px">Incluye: @Model.Incluye</p>
+        <p class="hint" style="margin:2px 0 8px">@etiquetaNota @Model.Incluye</p>
     }
 
     <div class="prov-grid">

@@ -419,7 +419,12 @@
             // se completa el total directo, como siempre.
             var inPrec = fila.querySelector('.etapa-precio');
             if (inPrec) {
-                if (precio > 0) inPrec.value = precio;
+                // El precio del catálogo SÓLO completa el campo si está vacío. Si ya hay un
+                // precio cargado (el del tramo, que sale de la travesía) no se toca: elegir
+                // quién maneja no cambia lo que sale el viaje, y pisarlo borraba el número
+                // que habían puesto a mano.
+                var yaTienePrecio = (parseFloat(inPrec.value) || 0) > 0;
+                if (precio > 0 && !yaTienePrecio) inPrec.value = precio;
                 recalcularEtapa(fila);
             } else {
                 var tot = fila.querySelector('.prov-total');

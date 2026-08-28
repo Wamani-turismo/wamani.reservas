@@ -523,6 +523,11 @@ input[type=file]::file-selector-button {
 /* Operativo: línea de cálculo del gasto (× N = total) */
 .calc-linea { font-size: .8rem; color: var(--ink-soft); margin-top: 5px; text-align: left; }
 .calc-linea b { color: var(--ink); }
+
+/* Debajo del precio unitario de cada fila de la travesía: lo que realmente se paga
+   por una unidad (un arriero los 4 días, una persona las 2 noches, un auto...). */
+.etapa-calc { font-size: .76rem; color: var(--warn); margin-top: 5px; text-align: left; line-height: 1.3; }
+.etapa-calc b { font-weight: 700; }
 .link-mini { background: none; border: none; color: var(--accent); font-family: inherit; font-size: .78rem; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline; }
 .link-mini:hover { opacity: .8; }
 

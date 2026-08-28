@@ -210,7 +210,7 @@
                             </select>
                         </td>
                         <td class="num" data-label="Veces"><input name="EtapaNoches" type="number" step="1" min="1" value="@etNoches" class="in-noches" /></td>
-                        <td class="num" data-label="Precio unitario"><input name="EtapaPrecios" type="number" step="0.01" min="0" value="@Num(et.PrecioPorPersona)" /></td>
+                        <td class="num" data-label="Precio unitario"><input name="EtapaPrecios" type="number" step="0.01" min="0" value="@Num(et.PrecioPorPersona)" class="in-precio-etapa" /><div class="etapa-calc"></div></td>
                         <td data-label="Incluye"><input name="EtapaIncluye" value="@et.Incluye" placeholder="Ej: merienda + cena + desayuno" /></td>
                         <td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarEtapa(this)">Quitar</button></td>
                     </tr>
@@ -342,7 +342,7 @@
                 '<td data-label="Lugar / tramo"><input name="EtapaLugares" placeholder="(igual que el proveedor)" /></td>' +
                 '<td data-label="Proveedor habitual"><select name="EtapaProveedorIds">' + OPCIONES_HOSPEDAJE + '</select></td>' +
                 '<td class="num" data-label="Veces"><input name="EtapaNoches" type="number" step="1" min="1" value="1" class="in-noches" /></td>' +
-                '<td class="num" data-label="Precio unitario"><input name="EtapaPrecios" type="number" step="0.01" min="0" /></td>' +
+                '<td class="num" data-label="Precio unitario"><input name="EtapaPrecios" type="number" step="0.01" min="0" class="in-precio-etapa" /><div class="etapa-calc"></div></td>' +
                 '<td data-label="Incluye"><input name="EtapaIncluye" placeholder="Ej: merienda + cena + desayuno" /></td>' +
                 '<td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarEtapa(this)">Quitar</button></td>';
             document.getElementById('etapasBody').appendChild(tr);
@@ -354,7 +354,8 @@
                 if (veces && (tipo === 'Arriero' || tipo === 'Caballo')) veces.value = '4';
             }
             renumerarEtapas();
-            tr.querySelector('input[name=EtapaLugares]').focus();
+            pintarCalculoEtapa(tr);
+            tr.querySelector("input[name=EtapaLugares]").focus();
         }
         function quitarEtapa(btn) {
             btn.closest('tr').remove();
@@ -378,9 +379,48 @@
                 n += cuantas;
             }
         }
+        // Debajo del precio unitario: lo que REALMENTE se termina pagando por una unidad.
+        // Acá todavía no se sabe cuánta gente va (eso es de cada salida), así que se muestra
+        // el total de UNO: un arriero los 4 días, una persona las 2 noches, un auto.
+        function plata(n) { return "$ " + (isNaN(n) ? 0 : Math.round(n)).toLocaleString("es-AR"); }
+
+        function pintarCalculoEtapa(fila) {
+            var caja = fila.querySelector('.etapa-calc');
+            if (!caja) return;
+            var sel = fila.querySelector('.sel-etapa-tipo');
+            var tipo = sel ? sel.value : 'Hospedaje';
+            var precio = parseFloat(fila.querySelector('.in-precio-etapa').value) || 0;
+            var vecesInp = fila.querySelector('.in-noches');
+            var veces = vecesInp ? (parseInt(vecesInp.value) || 1) : 1;
+            if (veces < 1) veces = 1;
+
+            if (precio <= 0) {
+                caja.innerHTML = '<span style="color:var(--muted)">sale del precio del proveedor</span>';
+                return;
+            }
+
+            var total = precio * veces;
+            var unidad = tipo === 'Traslado' ? 'por cada auto'
+                       : tipo === 'Pasaje'   ? 'por cada boleto'
+                       : tipo === 'Arriero'  ? 'por cada arriero'
+                       : tipo === 'Caballo'  ? 'por cada caballo'
+                       :                       'por cada persona';
+            var cuenta = veces > 1
+                ? (plata(precio) + ' × ' + veces + ' ' + (tipo === 'Arriero' || tipo === 'Caballo' ? 'días' : 'noches') + ' = ')
+                : '';
+            caja.innerHTML = cuenta + '<b>' + plata(total) + '</b> ' + unidad;
+        }
+
+        function pintarTodosLosCalculos() {
+            document.querySelectorAll('#etapasBody .etapa-row').forEach(pintarCalculoEtapa);
+        }
+
         // Al cambiar las noches o el tipo de una fila se recorren las de abajo
         document.addEventListener('input', function (e) {
             if (e.target.classList.contains('in-noches')) renumerarEtapas();
+            if (e.target.classList.contains('in-noches') || e.target.classList.contains('in-precio-etapa')) {
+                pintarCalculoEtapa(e.target.closest('.etapa-row'));
+            }
         });
         document.addEventListener('change', function (e) {
             if (!e.target.classList.contains('sel-etapa-tipo')) return;
@@ -392,9 +432,11 @@
                 if (e.target.value === 'Traslado' || e.target.value === 'Pasaje') veces.value = '1';
                 else if (e.target.value === 'Arriero' || e.target.value === 'Caballo') veces.value = '4';
             }
+            pintarCalculoEtapa(fila);
             renumerarEtapas();
         });
         renumerarEtapas();
+        pintarTodosLosCalculos();
 
         // La sección de noches se abre sola en las travesías, y en cualquier otra excursión
         // con el botón. Nunca se esconde si ya hay noches cargadas: se perderían de vista.

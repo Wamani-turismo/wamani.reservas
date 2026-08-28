@@ -31,7 +31,9 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Activo")]
         public bool Activo { get; set; } = true;
 
-        // Los tipos disponibles (para menús y validación)
-        public static readonly string[] Tipos = { "Guía", "Hospedaje", "Restaurante", "Auto" };
+        // Los tipos disponibles (para menús y validación).
+        // "Arriero" son los arrieros de las travesías; los caballos se le contratan a la
+        // misma gente, así que salen de esta misma lista.
+        public static readonly string[] Tipos = { "Guía", "Hospedaje", "Restaurante", "Auto", "Arriero" };
     }
 }

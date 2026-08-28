@@ -17,6 +17,11 @@
     <div class="aviso-ok">Operativo guardado ✔</div>
 }
 
+@if (Model.Rehechos is int cuantosRehechos)
+{
+    <div class="aviso-ok">Se limpiaron @cuantosRehechos gasto(s) sin usar y se volvieron a copiar de la excursión ✔</div>
+}
+
 <div class="toolbar">
     <a asp-page="/Operativo/Index">← Volver al operativo</a>
 </div>
@@ -79,16 +84,21 @@
 
             @if (Model.EsTravesia)
             {
-                @* Travesía: una fila por LUGAR de la ruta, con todo el grupo junto *@
+                @* Todo lo que se contrata para el GRUPO: noches, traslados, arrieros y
+                   caballos. Una fila por parada, con el total ya calculado. *@
                 <p class="hint" style="margin:6px 0 10px">
-                    Es una travesía, así que el hospedaje va <strong>una fila por lugar</strong> con todo el grupo junto.
-                    El total sale solo (personas × precio por persona) y lo podés pisar a mano si el refugio cobró otra cosa.
-                    Los lugares y los refugios habituales se editan en
+                    Esto va <strong>por el grupo entero</strong>, no por pasajero: el total sale solo
+                    (cantidad × precio × veces) y lo podés pisar a mano si esta vez te cobraron otra cosa.
+                    Los lugares, tramos y proveedores habituales se editan en
                     <a asp-page="/Excursiones/Cargar" asp-route-id="@Model.ExcursionId" target="_blank">la travesía</a>.
                 </p>
-                <div class="prov-group" data-tipo="Hospedaje">
-                    @foreach (var et in Model.Etapas) { <partial name="_EtapaRow" model="et" /> }
-                </div>
+                @foreach (var grupoEtapa in Model.Etapas.GroupBy(x => x.Tipo))
+                {
+                    <h3 class="prov-sub">@Wamani.Reservas.Models.EtapaExcursion.Icono(grupoEtapa.Key) @Wamani.Reservas.Models.EtapaExcursion.Seccion(grupoEtapa.Key)</h3>
+                    <div class="prov-group" data-tipo="@grupoEtapa.Key">
+                        @foreach (var et in grupoEtapa) { <partial name="_EtapaRow" model="et" /> }
+                    </div>
+                }
 
                 @* Hospedajes cargados antes de tener etapas, o que no coinciden con ningún lugar *@
                 var sueltos = Model.ProvPorTipo.GetValueOrDefault("Hospedaje") ?? new List<Wamani.Reservas.Models.OperativoProveedor>();
@@ -131,18 +141,32 @@
             </div>
             <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Restaurante')">+ Agregar restaurante (otra persona)</button>
 
-            @* Auto: cuántos vehículos y lo que cobra cada uno (los traslados de las
-               travesías cambian según cuánta gente y cuántos guías van). *@
-            <div class="prov-group" data-tipo="Auto">
-                @foreach (var vm in RowsDe("Auto", false, true)) { <partial name="_ProvRow" model="vm" /> }
-            </div>
-            <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Auto')">+ Agregar vehículo</button>
+            @* Auto suelto: sólo cuando la salida NO tiene los traslados cargados arriba.
+               Si los tiene, repetirlo acá sería cargar dos veces la misma plata. *@
+            @if (!Model.TieneTraslados)
+            {
+                <div class="prov-group" data-tipo="Auto">
+                    @foreach (var vm in RowsDe("Auto", false, true)) { <partial name="_ProvRow" model="vm" /> }
+                </div>
+                <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Auto')">+ Agregar vehículo</button>
+            }
         </div>
     </div>
 
     <!-- ---------- Gastos a preparar / comprar (van abajo) ---------- -->
     <div class="card">
         <h2>Gastos a preparar / comprar</h2>
+
+        @* El operativo sólo agrega los ítems que faltan, nunca borra los que ya no están en
+           la plantilla. Este botón limpia esa basura sin tocar nada que tenga plata. *@
+        <p class="hint" style="margin:-6px 0 12px">
+            ¿Ves ítems repetidos o que ya no van (por ejemplo el guía, que ahora se paga en
+            Proveedores)? Son restos de una plantilla vieja.
+            <button type="submit" class="btn-mini btn-mini-ghost" asp-page-handler="RehacerGastos"
+                    onclick="return confirm('Se borran los gastos que NO estén tildados, sin fecha de pago y sin comprobante, y se vuelven a copiar de la excursión.\n\nLo que ya está pagado no se toca.\n\n¿Seguimos?');">
+                🔄 Rehacer desde la plantilla
+            </button>
+        </p>
 
         @if (Model.Gastos.Count == 0)
         {

@@ -37,13 +37,16 @@ public class CargarModel : PageModel
     [BindProperty] public List<string> EtapaPrecios { get; set; } = new();
     [BindProperty] public List<string> EtapaIncluye { get; set; } = new();
     [BindProperty] public List<string> EtapaNoches { get; set; } = new();   // cuántas noches seguidas en ese lugar
+    [BindProperty] public List<string> EtapaTipos { get; set; } = new();    // hospedaje / traslado / arriero / caballo
 
     // Para mostrar los gastos ya cargados al abrir la página
     public List<GastoExcursion> Gastos { get; set; } = new();
 
-    // Etapas ya cargadas + catálogo de hospedajes para elegir el refugio de cada lugar
+    // Etapas ya cargadas + catálogo de proveedores para elegir quién presta cada servicio.
+    // Van TODOS (no sólo hospedajes) porque una etapa puede ser un traslado, un arriero o
+    // los caballos; en la pantalla se muestran agrupados por tipo.
     public List<EtapaExcursion> Etapas { get; set; } = new();
-    public List<Proveedor> Hospedajes { get; set; } = new();
+    public List<Proveedor> ProveedoresActivos { get; set; } = new();
 
     public bool EsNueva => Excursion.Id == 0;
 
@@ -75,9 +78,10 @@ public class CargarModel : PageModel
     }
 
     private async Task CargarHospedajesAsync()
-        => Hospedajes = await _db.Proveedores
-            .Where(p => p.Activo && p.Tipo == "Hospedaje")
-            .OrderBy(p => p.Nombre)
+        => ProveedoresActivos = await _db.Proveedores
+            .Where(p => p.Activo)
+            .OrderBy(p => p.Tipo)
+            .ThenBy(p => p.Nombre)
             .ToListAsync();
 
     public async Task<IActionResult> OnPostAsync()
@@ -171,15 +175,20 @@ public class CargarModel : PageModel
             noche++;
             var incluye = (i < EtapaIncluye.Count ? EtapaIncluye[i] : null)?.Trim();
 
-            // Cuántas noches seguidas se para en este lugar (mínimo 1). Es lo que permite
-            // cargar "2 noches en el mismo hospedaje" con una sola fila.
+            // Cuántas veces se cuenta: noches en un hospedaje, o días de arriero/caballo.
+            // Mínimo 1. Es lo que permite cargar "2 noches en el mismo hospedaje" o
+            // "un arriero por 4 días" con una sola fila.
             var nochesTxt = i < EtapaNoches.Count ? EtapaNoches[i] : null;
             var noches = int.TryParse(nochesTxt, out var nn) && nn > 0 ? nn : 1;
+
+            var tipoEtapa = i < EtapaTipos.Count && EtapaExcursion.Tipos.Contains(EtapaTipos[i])
+                ? EtapaTipos[i] : EtapaExcursion.Hospedaje;
 
             _db.EtapasExcursion.Add(new EtapaExcursion
             {
                 ExcursionId = excursionId,
                 Orden = noche,
+                Tipo = tipoEtapa,
                 Lugar = lugar,
                 Noches = noches,
                 ProveedorId = provId == 0 ? null : provId,

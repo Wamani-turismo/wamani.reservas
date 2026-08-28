@@ -18,6 +18,79 @@ namespace Wamani.Reservas.Models
 
         public int ExcursionId { get; set; }
 
+        // Qué es esta fila. Todas se cuentan igual —cantidad × precio × veces— pero cada
+        // una se llama distinto en la pantalla:
+        //
+        //   Hospedaje → personas × precio por persona × NOCHES
+        //   Traslado  → autos    × precio por auto    × 1        (1 auto cada 4, guías incluidos)
+        //   Arriero   → arrieros × precio por día     × DÍAS     (nos acompañan toda la travesía)
+        //   Caballo   → caballos × precio por día     × DÍAS
+        //
+        // Arrieros y caballos NO salen de una fórmula: se contratan según la gente que se
+        // anota, y una travesía puede salir con menos del mínimo. Por eso van acá y no
+        // como un costo fijo de la plantilla.
+        [MaxLength(20)]
+        [Display(Name = "Qué es")]
+        public string Tipo { get; set; } = Hospedaje;
+
+        public const string Hospedaje = "Hospedaje";
+        public const string Traslado  = "Traslado";
+        public const string Arriero   = "Arriero";
+        public const string Caballo   = "Caballo";
+
+        public static readonly string[] Tipos = { Hospedaje, Traslado, Arriero, Caballo };
+
+        // De qué lista de Proveedores se elige el que presta este servicio.
+        // Los caballos se le contratan a los mismos arrieros, así que comparten catálogo.
+        public static string CatalogoDe(string tipo) => tipo switch
+        {
+            Traslado => "Auto",
+            Arriero  => "Arriero",
+            Caballo  => "Arriero",
+            _        => "Hospedaje",
+        };
+
+        // Cómo se llama cada columna en la pantalla, según el tipo.
+        public static string EtiquetaCantidad(string tipo) => tipo switch
+        {
+            Traslado => "Autos",
+            Arriero  => "Arrieros",
+            Caballo  => "Caballos",
+            _        => "Personas",
+        };
+
+        public static string EtiquetaPrecio(string tipo) => tipo switch
+        {
+            Traslado => "Precio por auto",
+            Arriero  => "Precio por día",
+            Caballo  => "Precio por día",
+            _        => "Precio por persona",
+        };
+
+        public static string EtiquetaVeces(string tipo) => tipo switch
+        {
+            Arriero => "Días",
+            Caballo => "Días",
+            _       => "Noches",
+        };
+
+        public static string Icono(string tipo) => tipo switch
+        {
+            Traslado => "🚐",
+            Arriero  => "🧑‍🌾",
+            Caballo  => "🐴",
+            _        => "🏨",
+        };
+
+        // Título de la sección en el operativo
+        public static string Seccion(string tipo) => tipo switch
+        {
+            Traslado => "Traslados",
+            Arriero  => "Arrieros",
+            Caballo  => "Caballos",
+            _        => "Hospedaje",
+        };
+
         // Qué noche de la travesía es (1 = la primera). Ordena las etapas.
         [Range(1, 60)]
         [Display(Name = "Noche")]
@@ -25,9 +98,12 @@ namespace Wamani.Reservas.Models
 
         // El lugar donde se duerme (ej. "TILCARA", "YUTO PAMPA", "MOLULO", "SAN LUCAS").
         // Es lo fijo de la travesía: el refugio concreto puede cambiar, el lugar no.
-        [Required(ErrorMessage = "Poné el lugar donde se duerme esa noche")]
+        // Cómo se llama esta fila. Según el tipo es el lugar donde se duerme ("MOLULO"),
+        // el tramo del traslado ("Micro de Humahuaca a Iruya") o simplemente "Arrieros".
+        // Es lo fijo: el proveedor concreto puede cambiar de una salida a otra, esto no.
+        [Required(ErrorMessage = "Poné un nombre para esta fila")]
         [MaxLength(80)]
-        [Display(Name = "Lugar")]
+        [Display(Name = "Lugar / tramo")]
         public string Lugar { get; set; } = "";
 
         // Refugio/hostel que se usa normalmente en ese lugar. Es sólo la sugerencia que

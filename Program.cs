@@ -289,6 +289,7 @@ using (var scope = app.Services.CreateScope())
     // Cantidad: arrieros, caballos, guías y traslados, que se suben y bajan a mano en
     // cada salida porque no salen de ninguna fórmula.
     EnsureSqliteColumn(db, "EtapasExcursion", "Noches", "INTEGER NOT NULL DEFAULT 1");
+    EnsureSqliteColumn(db, "EtapasExcursion", "Tipo", "TEXT NOT NULL DEFAULT 'Hospedaje'");
     EnsureSqliteColumn(db, "OperativoProveedores", "Noches", "INTEGER NULL");
     EnsureSqliteColumn(db, "GastosExcursion", "Cantidad", "INTEGER NULL");
     EnsureSqliteColumn(db, "OperativoGastos", "Cantidad", "INTEGER NULL");
@@ -342,6 +343,11 @@ using (var scope = app.Services.CreateScope())
         // Noches seguidas en un mismo lugar: permite cargar "2 noches en el mismo hospedaje"
         // con una sola fila (Yungas), en vez de escribir a mano el precio de las dos noches.
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""EtapasExcursion"" ADD COLUMN IF NOT EXISTS ""Noches"" integer NOT NULL DEFAULT 1;");
+
+        // Las "etapas" dejan de ser sólo hospedaje: ahora también son los traslados, los
+        // arrieros y los caballos. Todos se cuentan igual (cantidad × precio × veces).
+        // Las filas que ya existían son hospedaje, que es el valor por defecto.
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""EtapasExcursion"" ADD COLUMN IF NOT EXISTS ""Tipo"" text NOT NULL DEFAULT 'Hospedaje';");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoProveedores"" ADD COLUMN IF NOT EXISTS ""Noches"" integer;");
 
         // Costos que se cuentan por CANTIDAD (arrieros, caballos, guías, traslados): no

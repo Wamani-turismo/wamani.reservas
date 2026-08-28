@@ -314,6 +314,12 @@ input[type=file]::file-selector-button {
 .btn-mini-danger { background: #fff; border-color: #eccaba; color: #b06a3c; }
 .btn-mini-danger:hover { background: var(--warn-soft); }
 
+/* Subtítulo de cada bloque del operativo (Hospedaje, Traslados, Arrieros, Caballos) */
+.prov-sub {
+  margin: 18px 0 8px; font-size: .95rem; font-weight: 700;
+  padding-bottom: 6px; border-bottom: 1px solid var(--line);
+}
+
 /* Contador + / − de los costos que se cuentan por cantidad
    (arrieros, caballos, guías, traslados) */
 .cant-wrap { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }

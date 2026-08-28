@@ -7,13 +7,13 @@
 <div class="prov-row prov-bloque etapa-bloque">
     <input type="hidden" name="ProvIds" value="@id" />
     <input type="hidden" name="ProvKeys" value="@Model.Key" />
-    <input type="hidden" name="ProvTipos" value="Hospedaje" />
+    <input type="hidden" name="ProvTipos" value="@Model.Tipo" />
     <input type="hidden" name="ProvLugares" value="@Model.Lugar" />
     <input type="hidden" name="ProvReservaIds" value="0" />
     <input type="hidden" name="ProvParaQuien" value="" />
 
     <div class="prov-head">
-        <span class="prov-tipo">🏨 @Model.TituloNoches() · @Model.Lugar</span>
+        <span class="prov-tipo">@Model.Icono @Model.TituloNoches() · @Model.Lugar</span>
         <select name="ProvProveedorIds" class="prov-select">
             <option value="0" data-precio="0">— sin asignar —</option>
             @foreach (var p in Model.Cat)
@@ -35,17 +35,26 @@
 
     <div class="prov-grid">
         <div class="field">
-            <label>Personas</label>
+            <label>@Model.EtiquetaCantidad</label>
             <input name="ProvPersonas" type="number" step="1" min="0" value="@Model.Personas" class="etapa-personas" />
         </div>
         <div class="field">
-            <label>Precio por persona <span class="hint" style="font-weight:400">(por noche)</span></label>
+            <label>@Model.EtiquetaPrecio</label>
             <input name="ProvPreciosPorPersona" type="number" step="0.01" min="0" value="@Num(Model.PrecioPorPersona)" class="etapa-precio" />
         </div>
-        <div class="field">
-            <label>Noches</label>
-            <input name="ProvNoches" type="number" step="1" min="1" value="@Model.Noches" class="etapa-noches" />
-        </div>
+        @if (Model.Tipo == Wamani.Reservas.Models.EtapaExcursion.Traslado)
+        {
+            @* Un traslado es una sola vez: el campo va escondido para no ensuciar la fila,
+               pero tiene que viajar igual para que las listas del form queden alineadas. *@
+            <input type="hidden" name="ProvNoches" value="1" class="etapa-noches" />
+        }
+        else
+        {
+            <div class="field">
+                <label>@Model.EtiquetaVeces</label>
+                <input name="ProvNoches" type="number" step="1" min="1" value="@Model.Noches" class="etapa-noches" />
+            </div>
+        }
         <div class="field">
             <label>Total <button type="button" class="prov-edit-total" onclick="editarTotal(this)" title="Cambiar el total a mano">✏️ a mano</button></label>
             <input name="ProvTotales" type="number" step="0.01" min="0" value="@Num(Model.Total)" class="prov-total" />

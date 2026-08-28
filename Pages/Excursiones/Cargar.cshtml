@@ -129,45 +129,46 @@
     </button>
 
     <div class="card" id="cardEtapas" style="@estiloCardNoches">
-        <h2>Dónde se duerme cada noche</h2>
+        <h2>Qué lleva esta salida</h2>
         <p class="hint" style="margin:-8px 0 14px">
-            Cargá una fila por cada parada donde se duerme, en orden. Elegí el refugio y
-            listo: el resto se completa solo.
+            Todo lo que se contrata <strong>para el grupo entero</strong>: dónde se duerme,
+            los traslados, los arrieros y los caballos. Se carga una vez acá y en el operativo
+            de cada salida aparece listo, con el total ya calculado.
             <br />
-            No hace falta que sea una travesía: sirve para cualquier salida que duerma
-            fuera. <strong>“Conociendo las Yungas”</strong> son 3 días y 2 noches y se carga
-            acá igual, con una sola fila de 2 noches.
+            <strong>¿Para qué, si el proveedor ya está en Proveedores?</strong> En Proveedores
+            está <em>quién es y cuánto cobra</em>. Acá se dice <em>en qué momento de esta salida
+            se usa</em>. Con eso el operativo sale armado —<strong>una fila por parada, con todo
+            el grupo junto</strong>— en vez de tener que cargar a mano una fila por pasajero.
             <br />
-            <strong>¿Para qué sirve, si el refugio ya está en Proveedores?</strong>
-            En Proveedores está <em>quién es y cuánto cobra</em>. Acá se dice <em>en qué noche de
-            esta travesía se usa</em>. Con eso, en el operativo de cada salida el hospedaje sale
-            listo: <strong>una fila por noche con todo el grupo junto</strong> (personas × precio),
-            en vez de tener que agregar a mano una fila por cada pasajero en cada refugio.
-            <br />
-            El <strong>lugar</strong> es opcional: si lo dejás vacío se usa el nombre del refugio.
-            Conviene escribirlo cuando el lugar y el refugio no se llaman igual (por ejemplo lugar
-            TILCARA con un hostel que tiene otro nombre), así el día que cambies de refugio la
-            noche se sigue llamando igual.
-            <br />
-            El <strong>precio por persona</strong> también es opcional: sale de Proveedores. Se
-            completa acá sólo si en esta travesía te cobran distinto. Es el precio de
-            <strong>una</strong> noche.
-            <br />
-            Si en un mismo lugar dormís <strong>dos o más noches seguidas</strong> (por ejemplo
-            las 2 noches de “Conociendo las Yungas”), no cargues dos filas: poné
-            <strong>2 en “Noches”</strong> y listo. En el operativo sale una sola fila y el
-            total se calcula solo (personas × precio × noches), sin tener que escribirlo a mano.
+            No hace falta que sea travesía: sirve para cualquier salida que duerma fuera.
+            <strong>“Conociendo las Yungas”</strong> son 3 días y 2 noches y se carga acá igual,
+            con una sola fila de 2 noches.
         </p>
+        <div class="hint" style="margin:-6px 0 14px">
+            <strong>Cómo se cuenta cada fila</strong> (siempre cantidad × precio × veces):
+            <ul style="margin:6px 0 0 18px">
+                <li>🏨 <strong>Hospedaje</strong> — personas × precio por persona × <em>noches</em>.
+                    Si dormís 2 noches seguidas en el mismo lado, poné 2 en “Veces”: una sola fila.</li>
+                <li>🚐 <strong>Traslado</strong> — autos × precio por auto. Entran 4 por auto
+                    <em>contando a los guías</em>, así que el operativo te sugiere cuántos hacen falta.</li>
+                <li>🧑‍🌾 <strong>Arriero</strong> y 🐴 <strong>Caballo</strong> — cuántos × precio por día
+                    × <em>días</em>. Cuántos van lo decidís en cada salida, no sale de ninguna fórmula.</li>
+            </ul>
+            El <strong>lugar/tramo</strong> es opcional: si lo dejás vacío se usa el nombre del
+            proveedor. El <strong>precio</strong> también: si lo dejás en cero sale del catálogo de
+            Proveedores, así lo actualizás en un solo lugar.
+        </div>
 
         <table class="tabla" id="tablaEtapas">
             <thead>
                 <tr>
-                    <th style="width:70px">Noche</th>
-                    <th>Lugar <span class="hint" style="font-weight:400">(opcional)</span></th>
-                    <th style="width:220px">Refugio / hospedaje habitual</th>
-                    <th class="num" style="width:90px">Noches</th>
-                    <th class="num" style="width:150px">Precio p/persona <span class="hint" style="font-weight:400">(por noche)</span></th>
-                    <th>Comidas incluidas</th>
+                    <th style="width:70px">Nº</th>
+                    <th style="width:130px">Qué es</th>
+                    <th>Lugar / tramo</th>
+                    <th style="width:200px">Proveedor habitual</th>
+                    <th class="num" style="width:90px">Veces</th>
+                    <th class="num" style="width:150px">Precio unitario</th>
+                    <th>Notas / incluye</th>
                     <th style="width:60px"></th>
                 </tr>
             </thead>
@@ -179,20 +180,35 @@
                     // El número de noche real lo escribe el JS al cargar la página, porque
                     // una fila puede valer por varias noches.
                     var etNoches = et.Noches > 0 ? et.Noches : 1;
-                    <tr class="etapa-row">
-                        <td data-label="Noche" class="etapa-nro">@(i + 1)</td>
-                        <td data-label="Lugar"><input name="EtapaLugares" value="@et.Lugar" placeholder="(igual que el refugio)" /></td>
-                        <td data-label="Refugio">
-                            <select name="EtapaProveedorIds">
-                                <option value="0">— sin asignar —</option>
-                                @foreach (var h in Model.Hospedajes)
+                    <tr class="etapa-row" data-tipo="@et.Tipo">
+                        <td data-label="Nº" class="etapa-nro">@(i + 1)</td>
+                        <td data-label="Qué es">
+                            <select name="EtapaTipos" class="sel-etapa-tipo">
+                                @foreach (var t in Wamani.Reservas.Models.EtapaExcursion.Tipos)
                                 {
-                                    <option value="@h.Id" selected="@(et.ProveedorId == h.Id)">@h.Nombre</option>
+                                    <option value="@t" selected="@(et.Tipo == t)">@Wamani.Reservas.Models.EtapaExcursion.Icono(t) @t</option>
                                 }
                             </select>
                         </td>
-                        <td class="num" data-label="Noches"><input name="EtapaNoches" type="number" step="1" min="1" value="@etNoches" class="in-noches" /></td>
-                        <td class="num" data-label="Precio por persona"><input name="EtapaPrecios" type="number" step="0.01" min="0" value="@Num(et.PrecioPorPersona)" /></td>
+                        <td data-label="Lugar / tramo"><input name="EtapaLugares" value="@et.Lugar" placeholder="(igual que el proveedor)" /></td>
+                        <td data-label="Proveedor habitual">
+                            @* Van todos los proveedores agrupados por tipo: una fila puede
+                               ser un refugio, una agencia de autos o un arriero. *@
+                            <select name="EtapaProveedorIds">
+                                <option value="0">— sin asignar —</option>
+                                @foreach (var grupo in Model.ProveedoresActivos.GroupBy(p => p.Tipo))
+                                {
+                                    <optgroup label="@grupo.Key">
+                                        @foreach (var h in grupo)
+                                        {
+                                            <option value="@h.Id" selected="@(et.ProveedorId == h.Id)">@h.Nombre</option>
+                                        }
+                                    </optgroup>
+                                }
+                            </select>
+                        </td>
+                        <td class="num" data-label="Veces"><input name="EtapaNoches" type="number" step="1" min="1" value="@etNoches" class="in-noches" /></td>
+                        <td class="num" data-label="Precio unitario"><input name="EtapaPrecios" type="number" step="0.01" min="0" value="@Num(et.PrecioPorPersona)" /></td>
                         <td data-label="Incluye"><input name="EtapaIncluye" value="@et.Incluye" placeholder="Ej: merienda + cena + desayuno" /></td>
                         <td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarEtapa(this)">Quitar</button></td>
                     </tr>
@@ -200,7 +216,12 @@
             </tbody>
         </table>
 
-        <button type="button" class="btn btn-ghost" style="margin-top:12px" onclick="agregarEtapa()">+ Agregar noche</button>
+        <div class="acciones-fila" style="margin-top:12px">
+            <button type="button" class="btn btn-ghost" onclick="agregarEtapa('Hospedaje')">🏨 + Noche</button>
+            <button type="button" class="btn btn-ghost" onclick="agregarEtapa('Traslado')">🚐 + Traslado</button>
+            <button type="button" class="btn btn-ghost" onclick="agregarEtapa('Arriero')">🧑‍🌾 + Arrieros</button>
+            <button type="button" class="btn btn-ghost" onclick="agregarEtapa('Caballo')">🐴 + Caballos</button>
+        </div>
     </div>
 
     <!-- ---------- Contenido para la Guía (PDF) ---------- -->
@@ -243,15 +264,31 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     @{
-        // Opciones del desplegable de refugios, para las filas de noche que se agregan
-        // desde el botón. Se arma acá para no meter C# adentro del JavaScript.
+        // Opciones del desplegable de proveedores (agrupadas por tipo) para las filas que
+        // se agregan desde el botón. Se arma acá para no meter C# adentro del JavaScript.
         var sbHosp = new System.Text.StringBuilder("<option value=\"0\">— sin asignar —</option>");
-        foreach (var h in Model.Hospedajes)
+        foreach (var grupo in Model.ProveedoresActivos.GroupBy(p => p.Tipo))
         {
-            sbHosp.Append("<option value=\"").Append(h.Id).Append("\">")
-                  .Append(System.Net.WebUtility.HtmlEncode(h.Nombre)).Append("</option>");
+            sbHosp.Append("<optgroup label=\"")
+                  .Append(System.Net.WebUtility.HtmlEncode(grupo.Key)).Append("\">");
+            foreach (var h in grupo)
+            {
+                sbHosp.Append("<option value=\"").Append(h.Id).Append("\">")
+                      .Append(System.Net.WebUtility.HtmlEncode(h.Nombre)).Append("</option>");
+            }
+            sbHosp.Append("</optgroup>");
         }
         var opcionesHospedaje = sbHosp.ToString();
+
+        // Opciones del desplegable "qué es", para esas mismas filas nuevas
+        var sbTipos = new System.Text.StringBuilder();
+        foreach (var t in Wamani.Reservas.Models.EtapaExcursion.Tipos)
+        {
+            sbTipos.Append("<option value=\"").Append(t).Append("\">")
+                   .Append(Wamani.Reservas.Models.EtapaExcursion.Icono(t)).Append(' ')
+                   .Append(t).Append("</option>");
+        }
+        var opcionesTipoEtapa = sbTipos.ToString();
     }
     <script>
         function agregarGasto(nombre, precio) {
@@ -289,45 +326,70 @@
             else { cant.value = ''; }
         });
 
-        // ---- Etapas de la travesía (una fila por noche) ----
+        // ---- Lo que lleva la salida: noches, traslados, arrieros y caballos ----
         var OPCIONES_HOSPEDAJE = '@Html.Raw(opcionesHospedaje)';
+        var OPCIONES_TIPO_ETAPA = '@Html.Raw(opcionesTipoEtapa)';
 
-        function agregarEtapa() {
+        function agregarEtapa(tipo) {
             var tr = document.createElement('tr');
             tr.className = 'etapa-row';
             tr.innerHTML =
-                '<td data-label="Noche" class="etapa-nro"></td>' +
-                '<td data-label="Lugar"><input name="EtapaLugares" placeholder="(igual que el refugio)" /></td>' +
-                '<td data-label="Refugio"><select name="EtapaProveedorIds">' + OPCIONES_HOSPEDAJE + '</select></td>' +
-                '<td class="num" data-label="Noches"><input name="EtapaNoches" type="number" step="1" min="1" value="1" class="in-noches" /></td>' +
-                '<td class="num" data-label="Precio por persona"><input name="EtapaPrecios" type="number" step="0.01" min="0" /></td>' +
+                '<td data-label="Nº" class="etapa-nro"></td>' +
+                '<td data-label="Qué es"><select name="EtapaTipos" class="sel-etapa-tipo">' + OPCIONES_TIPO_ETAPA + '</select></td>' +
+                '<td data-label="Lugar / tramo"><input name="EtapaLugares" placeholder="(igual que el proveedor)" /></td>' +
+                '<td data-label="Proveedor habitual"><select name="EtapaProveedorIds">' + OPCIONES_HOSPEDAJE + '</select></td>' +
+                '<td class="num" data-label="Veces"><input name="EtapaNoches" type="number" step="1" min="1" value="1" class="in-noches" /></td>' +
+                '<td class="num" data-label="Precio unitario"><input name="EtapaPrecios" type="number" step="0.01" min="0" /></td>' +
                 '<td data-label="Incluye"><input name="EtapaIncluye" placeholder="Ej: merienda + cena + desayuno" /></td>' +
                 '<td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarEtapa(this)">Quitar</button></td>';
             document.getElementById('etapasBody').appendChild(tr);
+            if (tipo) {
+                var sel = tr.querySelector('.sel-etapa-tipo');
+                if (sel) sel.value = tipo;
+                var veces = tr.querySelector('.in-noches');
+                // Arrieros y caballos nos acompañan toda la travesía (4 días); el resto, 1
+                if (veces && (tipo === 'Arriero' || tipo === 'Caballo')) veces.value = '4';
+            }
             renumerarEtapas();
-            tr.querySelector('input').focus();
+            tr.querySelector('input[name=EtapaLugares]').focus();
         }
         function quitarEtapa(btn) {
             btn.closest('tr').remove();
             renumerarEtapas();
         }
-        // Las noches se numeran de corrido: si una fila son 2 noches, la siguiente arranca
-        // dos más adelante. Si se borra una del medio, se renumeran solas.
+        // Sólo las filas de HOSPEDAJE llevan número de noche, y se numeran de corrido: si
+        // una fila son 2 noches, la siguiente arranca dos más adelante. Los traslados, los
+        // arrieros y los caballos no son noches, así que muestran su ícono.
         function renumerarEtapas() {
             var filas = document.querySelectorAll('#etapasBody .etapa-row');
             var n = 1;
             for (var i = 0; i < filas.length; i++) {
+                var sel = filas[i].querySelector('.sel-etapa-tipo');
+                var tipo = sel ? sel.value : 'Hospedaje';
+                var celda = filas[i].querySelector('.etapa-nro');
+                if (tipo !== 'Hospedaje') { celda.textContent = '·'; continue; }
                 var inp = filas[i].querySelector('.in-noches');
                 var cuantas = inp ? (parseInt(inp.value) || 1) : 1;
                 if (cuantas < 1) cuantas = 1;
-                filas[i].querySelector('.etapa-nro').textContent =
-                    cuantas === 1 ? n : (n + ' a ' + (n + cuantas - 1));
+                celda.textContent = cuantas === 1 ? n : (n + ' a ' + (n + cuantas - 1));
                 n += cuantas;
             }
         }
-        // Al cambiar las noches de una fila se recorren las de abajo
+        // Al cambiar las noches o el tipo de una fila se recorren las de abajo
         document.addEventListener('input', function (e) {
             if (e.target.classList.contains('in-noches')) renumerarEtapas();
+        });
+        document.addEventListener('change', function (e) {
+            if (!e.target.classList.contains('sel-etapa-tipo')) return;
+            // Los arrieros y los caballos se contratan por días (4 en estas travesías);
+            // un traslado es una sola vez.
+            var fila = e.target.closest('tr');
+            var veces = fila.querySelector('.in-noches');
+            if (veces) {
+                if (e.target.value === 'Traslado') veces.value = '1';
+                else if (e.target.value === 'Arriero' || e.target.value === 'Caballo') veces.value = '4';
+            }
+            renumerarEtapas();
         });
         renumerarEtapas();
 

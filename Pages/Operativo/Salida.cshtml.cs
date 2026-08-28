@@ -58,6 +58,15 @@ public class ProvRowVm
 // Es una sola fila (personas × precio) en vez de una fila por pasajero.
 public class EtapaRowVm
 {
+    // "Hospedaje" | "Traslado" | "Arriero" | "Caballo"
+    public string Tipo { get; set; } = EtapaExcursion.Hospedaje;
+    public bool EsHospedaje => Tipo == EtapaExcursion.Hospedaje;
+
+    public string EtiquetaCantidad => EtapaExcursion.EtiquetaCantidad(Tipo);
+    public string EtiquetaPrecio => EtapaExcursion.EtiquetaPrecio(Tipo);
+    public string EtiquetaVeces => EtapaExcursion.EtiquetaVeces(Tipo);
+    public string Icono => EtapaExcursion.Icono(Tipo);
+
     public int Noche { get; set; }
     public string Lugar { get; set; } = "";
     public string? Incluye { get; set; }
@@ -76,13 +85,20 @@ public class EtapaRowVm
     public int ProveedorId => Asig?.ProveedorId ?? ProveedorSugerido;
     public decimal PrecioPorPersona =>
         Asig?.PrecioPorPersona ?? (PrecioSugerido > 0 ? PrecioSugerido : PrecioCatalogo);
-    public int Personas => Asig?.Personas ?? PersonasSalida;
+    // Con cuántos arranca la fila. En hospedaje es la gente de la salida; en los traslados,
+    // los autos que hacen falta; en arrieros y caballos NO hay fórmula, arranca en 0 y lo
+    // deciden los chicos (por eso también salen con menos del mínimo de gente).
+    public int CantidadSugerida { get; set; }
+
+    public int Personas => Asig?.Personas ?? CantidadSugerida;
     public int Noches => Asig?.Noches ?? (NochesPlantilla > 0 ? NochesPlantilla : 1);
     public decimal Total => Asig?.Total ?? (PrecioPorPersona * Personas * Noches);
 
-    // "Noche 3" si es una sola, "Noches 3 y 4" si son dos, "Noches 3 a 6" si son más.
+    // El título de la fila. Sólo el hospedaje se numera por noche; el resto se muestra
+    // con su nombre, que ya dice todo ("Micro de Humahuaca a Iruya").
     public string TituloNoches()
     {
+        if (!EsHospedaje) return EtapaExcursion.Seccion(Tipo);
         if (Noches <= 1) return $"Noche {Noche}";
         var hasta = Noche + Noches - 1;
         return Noches == 2 ? $"Noches {Noche} y {hasta}" : $"Noches {Noche} a {hasta}";
@@ -120,6 +136,10 @@ public class SalidaModel : PageModel
     // como una fila por lugar (todo el grupo junto) en vez de una fila por pasajero.
     public List<EtapaRowVm> Etapas { get; set; } = new();
     public bool EsTravesia => Etapas.Count > 0;
+
+    // Si los traslados ya están cargados arriba (como tramos), la sección suelta de "Auto"
+    // se esconde: repetirla sería cargar dos veces la misma plata.
+    public bool TieneTraslados => Etapas.Any(e => e.Tipo == EtapaExcursion.Traslado);
 
     // Enviados desde el form al guardar
     [BindProperty] public List<int> Ids { get; set; } = new();
@@ -198,44 +218,68 @@ public class SalidaModel : PageModel
 
         if (etapasPlantilla.Count > 0)
         {
-            var catHosp = CatalogoPorTipo.GetValueOrDefault("Hospedaje") ?? new();
-            var hospAsignados = asignados.Where(o => o.Tipo == "Hospedaje").ToList();
-
             static string Clave(string? s) => (s ?? "").Trim().ToLowerInvariant();
+
+            // Cuántos guías se cargaron para esta salida (mínimo 1): entran en los autos,
+            // porque el chofer del traslado no hace la travesía pero el guía sí viaja.
+            var guias = asignados.Where(o => o.Tipo == "Guía").Sum(o => o.Personas ?? 1);
+            if (guias <= 0) guias = 1;
+
+            // 1 auto cada 4, contando a los guías. Si van 3 pasajeros y 1 guía, un auto.
+            var autosSugeridos = PasajerosSalida <= 0
+                ? 0
+                : (int)Math.Ceiling((PasajerosSalida + guias) / (double)Wamani.Reservas.Models.Excursion.PersonasPorAuto);
 
             // Cada etapa se queda con UNA fila guardada y la saca del montón. Si dos etapas
             // se llaman igual (una travesía que vuelve a dormir en el mismo pueblo), la
             // segunda toma la siguiente fila y no le pisa la plata a la primera.
-            var libres = new List<OperativoProveedor>(hospAsignados);
+            var libres = new List<OperativoProveedor>(asignados);
             int primeraNoche = 1;
 
             Etapas = new List<EtapaRowVm>();
             foreach (var e in etapasPlantilla)
             {
-                var yaCargada = libres.FirstOrDefault(o => Clave(o.Lugar) == Clave(e.Lugar));
+                var tipo = string.IsNullOrWhiteSpace(e.Tipo) ? EtapaExcursion.Hospedaje : e.Tipo;
+                var cat = CatalogoPorTipo.GetValueOrDefault(EtapaExcursion.CatalogoDe(tipo)) ?? new();
+
+                var yaCargada = libres.FirstOrDefault(
+                    o => o.Tipo == tipo && Clave(o.Lugar) == Clave(e.Lugar));
                 if (yaCargada is not null) libres.Remove(yaCargada);
 
                 var noches = e.Noches > 0 ? e.Noches : 1;
+
+                // Arrieros y caballos arrancan en 0 a propósito: cuántos van lo deciden
+                // ellos en cada salida, no hay fórmula que lo saque de la cantidad de gente.
+                var sugerida = tipo switch
+                {
+                    EtapaExcursion.Traslado => autosSugeridos,
+                    EtapaExcursion.Arriero  => 0,
+                    EtapaExcursion.Caballo  => 0,
+                    _                        => PasajerosSalida,
+                };
+
                 Etapas.Add(new EtapaRowVm
                 {
+                    Tipo = tipo,
                     Noche = primeraNoche,
                     Lugar = e.Lugar,
                     Incluye = e.Incluye,
                     Asig = yaCargada,
-                    Cat = catHosp,
+                    Cat = cat,
                     Key = "etapa-" + e.Orden,
                     ProveedorSugerido = e.ProveedorId ?? 0,
                     PrecioSugerido = e.PrecioPorPersona,
-                    PrecioCatalogo = catHosp.FirstOrDefault(p => p.Id == e.ProveedorId)?.Precio ?? 0,
-                    PersonasSalida = PasajerosSalida,
+                    PrecioCatalogo = cat.FirstOrDefault(p => p.Id == e.ProveedorId)?.Precio ?? 0,
+                    CantidadSugerida = sugerida,
                     NochesPlantilla = noches
                 });
-                primeraNoche += noches;
+
+                if (tipo == EtapaExcursion.Hospedaje) primeraNoche += noches;
             }
 
-            // Las filas de hospedaje que YA tienen fila propia por etapa no se repiten abajo.
+            // Las filas que YA tienen su lugar propio arriba no se repiten abajo.
             var deEtapa = Etapas.Where(x => x.Asig is not null).Select(x => x.Asig!.Id).ToHashSet();
-            asignados = asignados.Where(o => o.Tipo != "Hospedaje" || !deEtapa.Contains(o.Id)).ToList();
+            asignados = asignados.Where(o => !deEtapa.Contains(o.Id)).ToList();
         }
 
         ProvPorTipo = asignados.GroupBy(o => o.Tipo).ToDictionary(g => g.Key, g => g.ToList());
@@ -265,9 +309,22 @@ public class SalidaModel : PageModel
         static string Norm(string? s) => (s ?? "").Trim().ToLowerInvariant();
         bool cambio = false;
 
+        // ¿Esta salida se maneja como grupo? (tiene noches/traslados/arrieros cargados).
+        // Si es así, los gastos "por persona" NO se abren uno por cliente: va UNA fila para
+        // toda la salida, multiplicada por el total de gente. Cuando entra una reserva nueva
+        // el número sube solo, y si hace falta un seguro o unos snacks de más se agrega a
+        // mano. Abrir seguros y snacks cliente por cliente en una travesía era inmanejable.
+        bool porGrupo = await _db.EtapasExcursion.AnyAsync(e => e.ExcursionId == ExcursionId);
+
         // Limpiar gastos "por persona" del modelo viejo que quedaron COMPARTIDOS (sin reserva).
         // Los que se agregaron a mano (PrecioUnitario null) NO se tocan.
-        var viejos = yaCargados
+        //
+        // OJO: en las salidas por grupo esas filas son las BUENAS (así se cargan ahora), así
+        // que ahí no se toca nada. Sin este guard se borraban y se volvían a crear en cada
+        // visita, perdiendo lo tildado y los comprobantes.
+        var viejos = porGrupo
+            ? new List<OperativoGasto>()
+            : yaCargados
             .Where(g => g.ReservaId == null && g.TipoCalculo == "Por persona" && g.PrecioUnitario != null)
             .ToList();
         if (viejos.Count > 0)
@@ -281,7 +338,7 @@ public class SalidaModel : PageModel
         {
             var tipo = string.IsNullOrWhiteSpace(p.TipoCalculo) ? "Por persona" : p.TipoCalculo;
 
-            if (tipo == "Por persona")
+            if (tipo == "Por persona" && !porGrupo)
             {
                 // Un gasto por CADA reserva (× la gente de esa reserva)
                 foreach (var r in reservas)
@@ -568,6 +625,36 @@ public class SalidaModel : PageModel
         return RedirectToPage("/Operativo/Salida",
             new { ExcursionId, Fecha = Fecha.ToString("yyyy-MM-dd"), guardado = true });
     }
+
+    // Borra los gastos de ESTA salida que no tienen nada encima —ni tilde, ni fecha de
+    // pago, ni comprobante— para que se vuelvan a copiar limpios de la plantilla.
+    //
+    // Hace falta porque el operativo sólo AGREGA los ítems que faltan: si en la excursión
+    // se renombra un costo, o se pasa a "proveedor", el ítem viejo queda dando vueltas para
+    // siempre y termina duplicado (el guía apareciendo en Proveedores y en Gastos a la vez).
+    //
+    // Lo que ya está pagado o tiene comprobante NO se toca: eso es plata, no estimación.
+    public async Task<IActionResult> OnPostRehacerGastosAsync()
+    {
+        var borrables = await _db.OperativoGastos
+            .Where(o => o.ExcursionId == ExcursionId && o.Fecha.Date == Fecha.Date
+                     && !o.Comprado && o.FechaPago == null && o.Comprobante == null)
+            .ToListAsync();
+
+        int cuantos = borrables.Count;
+        if (cuantos > 0)
+        {
+            _db.OperativoGastos.RemoveRange(borrables);
+            await _db.SaveChangesAsync();
+        }
+
+        // Al volver por GET, la plantilla se copia de nuevo, ya limpia.
+        return RedirectToPage("/Operativo/Salida",
+            new { ExcursionId, Fecha = Fecha.ToString("yyyy-MM-dd"), rehechos = cuantos });
+    }
+
+    [BindProperty(SupportsGet = true)]
+    public int? Rehechos { get; set; }
 
     // Guarda TODOS los archivos que vinieron en ese campo y los agrega a los que ya había
     // (así una seña puede tener 2 o más comprobantes). Devuelve el valor para la columna.

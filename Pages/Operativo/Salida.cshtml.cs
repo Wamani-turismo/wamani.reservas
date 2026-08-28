@@ -91,6 +91,31 @@ public class EtapaRowVm
     public int CantidadSugerida { get; set; }
 
     public int Personas => Asig?.Personas ?? CantidadSugerida;
+
+    // La gente de la salida, para poder avisar cuando el número cargado se queda corto.
+    public int Pasajeros { get; set; }
+    public int Guias { get; set; }
+
+    // ¿Esta fila tiene una cantidad que se puede calcular sola? Los traslados y los pasajes
+    // sí (salen de la gente que viaja); los arrieros y los caballos no, los deciden ellos.
+    public bool TieneSugerencia =>
+        Tipo == EtapaExcursion.Traslado || Tipo == EtapaExcursion.Pasaje;
+
+    // El aviso para cuando lo cargado no alcanza (o sobra) para la gente que va. En una
+    // travesía el chofer es contratado y va aparte, así que los lugares del auto son para
+    // los pasajeros MÁS los guías: si se suma gente después de guardar, el número queda
+    // viejo y hay que subirlo a mano.
+    public string TextoSugerencia()
+    {
+        var quienes = Pasajeros == 1 ? "1 pasajero" : $"{Pasajeros} pasajeros";
+        quienes += Guias == 1 ? " y 1 guía" : $" y {Guias} guías";
+
+        var cosa = Tipo == EtapaExcursion.Pasaje
+            ? (CantidadSugerida == 1 ? "1 pasaje" : $"{CantidadSugerida} pasajes")
+            : (CantidadSugerida == 1 ? "1 auto" : $"{CantidadSugerida} autos");
+
+        return $"Para {quienes} hacen falta {cosa}.";
+    }
     public int Noches => Asig?.Noches ?? (NochesPlantilla > 0 ? NochesPlantilla : 1);
     public decimal Total => Asig?.Total ?? (PrecioPorPersona * Personas * Noches);
 
@@ -285,7 +310,9 @@ public class SalidaModel : PageModel
                     PrecioSugerido = e.PrecioPorPersona,
                     PrecioCatalogo = cat.FirstOrDefault(p => p.Id == e.ProveedorId)?.Precio ?? 0,
                     CantidadSugerida = sugerida,
-                    NochesPlantilla = noches
+                    NochesPlantilla = noches,
+                    Pasajeros = PasajerosSalida,
+                    Guias = guias
                 });
 
                 if (tipo == EtapaExcursion.Hospedaje) primeraNoche += noches;

@@ -44,7 +44,16 @@
     <div class="prov-grid">
         <div class="field">
             <label>@Model.EtiquetaCantidad</label>
-            <input name="ProvPersonas" type="number" step="1" min="0" value="@Model.Personas" class="etapa-personas" />
+            @* En los traslados y los pasajes la cantidad sale de la gente que viaja (los
+               guías incluidos: el chofer es contratado y va aparte). El número no se pisa
+               solo, para no tocar lo que se ajustó a mano, pero si no coincide con la gente
+               de la salida se avisa acá abajo. *@
+            <input name="ProvPersonas" type="number" step="1" min="0" value="@Model.Personas"
+                   class="etapa-personas" data-sugerida="@(Model.TieneSugerencia ? Model.CantidadSugerida : -1)" />
+            @if (Model.TieneSugerencia)
+            {
+                <div class="aviso-cantidad" data-texto="@Model.TextoSugerencia()"></div>
+            }
         </div>
         <div class="field">
             <label>@Model.EtiquetaPrecio</label>

@@ -378,6 +378,28 @@
             pintarFila(tr); recalcular();
         });
 
+        // Aviso de los traslados y los pasajes: cuando lo cargado no coincide con la gente
+        // que viaja (pasajeros + guías; el chofer va aparte porque es contratado). No se
+        // toca el número: el que decide es el que está cargando la salida.
+        function pintarAvisoCantidad(inp) {
+            var caja = inp.parentElement.querySelector('.aviso-cantidad');
+            if (!caja) return;
+            var sugerida = parseInt(inp.getAttribute('data-sugerida'));
+            var cargada = parseInt(inp.value);
+            if (isNaN(sugerida) || sugerida < 0 || isNaN(cargada) || cargada === sugerida) {
+                caja.textContent = '';
+                caja.style.display = 'none';
+                return;
+            }
+            caja.textContent = (cargada < sugerida ? '⚠️ ' : 'ℹ️ ') + caja.getAttribute('data-texto');
+            caja.style.color = cargada < sugerida ? 'var(--warn)' : 'var(--muted)';
+            caja.style.display = '';
+        }
+        document.querySelectorAll('.etapa-personas[data-sugerida]').forEach(pintarAvisoCantidad);
+        document.addEventListener('input', function (e) {
+            if (e.target.classList.contains('etapa-personas')) pintarAvisoCantidad(e.target);
+        });
+
         // Proveedores: "lo que falta" (total - seña - saldo) por bloque
         function recalcularProv() {
             document.querySelectorAll('.prov-row').forEach(function (tr) {

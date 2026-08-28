@@ -62,7 +62,7 @@ else
         var COSTOS = [
             @foreach (var g in Model.Items)
             {
-                <text>{ nombre: "@g.Nombre.Replace("\"", "")", monto: @Num(g.Precio), tipo: "@g.TipoCalculo" },</text>
+                <text>{ nombre: "@g.Nombre.Replace("\"", "")", monto: @Num(g.Precio), tipo: "@g.TipoCalculo", cant: @(g.Cantidad ?? 0) },</text>
             }
         ];
         var PRECIO = @Num(e.PrecioPorPersona);
@@ -77,6 +77,7 @@ else
             COSTOS.forEach(function(c){
                 if (c.tipo === "Por auto") t += c.monto * a;
                 else if (c.tipo === "Por guía") t += c.monto * a; // guía = auto (chofer-guía)
+                else if (c.tipo === "Cantidad") t += c.monto * c.cant; // arrieros, caballos, traslados
                 else if (c.tipo === "Fijo") t += c.monto;
                 else t += c.monto * p; // Por persona
             });

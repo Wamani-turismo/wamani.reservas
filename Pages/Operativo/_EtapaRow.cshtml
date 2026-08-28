@@ -13,7 +13,7 @@
     <input type="hidden" name="ProvParaQuien" value="" />
 
     <div class="prov-head">
-        <span class="prov-tipo">🏨 Noche @Model.Noche · @Model.Lugar</span>
+        <span class="prov-tipo">🏨 @Model.TituloNoches() · @Model.Lugar</span>
         <select name="ProvProveedorIds" class="prov-select">
             <option value="0" data-precio="0">— sin asignar —</option>
             @foreach (var p in Model.Cat)
@@ -39,8 +39,12 @@
             <input name="ProvPersonas" type="number" step="1" min="0" value="@Model.Personas" class="etapa-personas" />
         </div>
         <div class="field">
-            <label>Precio por persona</label>
+            <label>Precio por persona <span class="hint" style="font-weight:400">(por noche)</span></label>
             <input name="ProvPreciosPorPersona" type="number" step="0.01" min="0" value="@Num(Model.PrecioPorPersona)" class="etapa-precio" />
+        </div>
+        <div class="field">
+            <label>Noches</label>
+            <input name="ProvNoches" type="number" step="1" min="1" value="@Model.Noches" class="etapa-noches" />
         </div>
         <div class="field">
             <label>Total <button type="button" class="prov-edit-total" onclick="editarTotal(this)" title="Cambiar el total a mano">✏️ a mano</button></label>

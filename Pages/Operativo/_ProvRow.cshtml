@@ -9,11 +9,16 @@
     <input type="hidden" name="ProvIds" value="@id" />
     <input type="hidden" name="ProvKeys" value="@Model.Key" />
     <input type="hidden" name="ProvTipos" value="@Model.Tipo" />
-    @* Estas tres van vacías: son de las travesías (fila por lugar). Tienen que estar igual
-       para que todas las listas del form queden alineadas por posición al guardar. *@
+    @* El lugar y las noches son de las travesías (fila por lugar): acá van vacíos. Tienen
+       que estar igual para que todas las listas del form queden alineadas por posición al
+       guardar: cada fila aporta exactamente un valor a cada lista. *@
     <input type="hidden" name="ProvLugares" value="" />
-    <input type="hidden" name="ProvPersonas" value="" />
-    <input type="hidden" name="ProvPreciosPorPersona" value="" />
+    <input type="hidden" name="ProvNoches" value="" />
+    @if (!Model.ConCantidad)
+    {
+        <input type="hidden" name="ProvPersonas" value="" />
+        <input type="hidden" name="ProvPreciosPorPersona" value="" />
+    }
     <div class="prov-head">
         <span class="prov-tipo">@Ico(Model.Tipo) @Model.Tipo</span>
         <select name="ProvProveedorIds" class="prov-select">
@@ -44,12 +49,23 @@
             <input type="hidden" name="ProvParaQuien" value="@a?.ParaQuien" />
         }
         <span class="prov-falta-wrap">Falta: <strong class="prov-pend"></strong></span>
-        @if (Model.ConPasajero)
+        @if (Model.ConPasajero || Model.ConCantidad)
         {
             <button type="button" class="btn-mini btn-mini-danger" onclick="quitarProv(this)">Quitar</button>
         }
     </div>
     <div class="prov-grid">
+        @if (Model.ConCantidad)
+        {
+            <div class="field">
+                <label>Cuántos</label>
+                <input name="ProvPersonas" type="number" step="1" min="0" value="@Model.Cuantos" class="etapa-personas" />
+            </div>
+            <div class="field">
+                <label>Precio de cada uno</label>
+                <input name="ProvPreciosPorPersona" type="number" step="0.01" min="0" value="@Num(Model.PrecioCadaUno)" class="etapa-precio" />
+            </div>
+        }
         <div class="field">
             <label>Total <button type="button" class="prov-edit-total" onclick="editarTotal(this)" title="Cambiar el total a mano">✏️ a mano</button></label>
             <input name="ProvTotales" type="number" step="0.01" min="0" value="@Num(a?.Total ?? 0)" class="prov-total" />

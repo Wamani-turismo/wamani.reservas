@@ -43,19 +43,39 @@
             ¿Falta uno en la lista? <a asp-page="/Proveedores/Cargar" target="_blank">Agregar proveedor</a>.
         </p>
         @{
-            List<Wamani.Reservas.Pages.Operativo.ProvRowVm> RowsDe(string tipo, bool conPasajero)
+            List<Wamani.Reservas.Pages.Operativo.ProvRowVm> RowsDe(string tipo, bool conPasajero, bool conCantidad = false)
             {
                 var cat = Model.CatalogoPorTipo.GetValueOrDefault(tipo) ?? new();
                 var asigs = Model.ProvPorTipo.GetValueOrDefault(tipo) ?? new();
-                var rows = asigs.Select(a => new Wamani.Reservas.Pages.Operativo.ProvRowVm { Tipo = tipo, Asig = a, Cat = cat, ConPasajero = conPasajero, Key = a.Id.ToString(), Reservas = Model.Reservas }).ToList();
-                if (rows.Count == 0) rows.Add(new Wamani.Reservas.Pages.Operativo.ProvRowVm { Tipo = tipo, Asig = null, Cat = cat, ConPasajero = conPasajero, Key = "new-" + tipo, Reservas = Model.Reservas });
+
+                decimal PrecioCat(Wamani.Reservas.Models.OperativoProveedor? a)
+                    => cat.FirstOrDefault(p => p.Id == a?.ProveedorId)?.Precio ?? 0;
+
+                var rows = asigs.Select(a => new Wamani.Reservas.Pages.Operativo.ProvRowVm
+                {
+                    Tipo = tipo, Asig = a, Cat = cat, ConPasajero = conPasajero, ConCantidad = conCantidad,
+                    Key = a.Id.ToString(), Reservas = Model.Reservas, PrecioCatalogo = PrecioCat(a)
+                }).ToList();
+
+                if (rows.Count == 0)
+                {
+                    rows.Add(new Wamani.Reservas.Pages.Operativo.ProvRowVm
+                    {
+                        Tipo = tipo, Asig = null, Cat = cat, ConPasajero = conPasajero, ConCantidad = conCantidad,
+                        Key = "new-" + tipo, Reservas = Model.Reservas
+                    });
+                }
                 return rows;
             }
         }
 
         <div class="prov-lista">
-            @* Guía y Auto: una sola fila (uno por salida) *@
-            @foreach (var vm in RowsDe("Guía", false)) { <partial name="_ProvRow" model="vm" /> }
+            @* Guía: cuántos van y lo que cobra cada uno. En las travesías, según la gente
+               que se anota se suman guías, así que se puede agregar más de una fila. *@
+            <div class="prov-group" data-tipo="Guía">
+                @foreach (var vm in RowsDe("Guía", false, true)) { <partial name="_ProvRow" model="vm" /> }
+            </div>
+            <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Guía')">+ Agregar guía</button>
 
             @if (Model.EsTravesia)
             {
@@ -111,7 +131,12 @@
             </div>
             <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Restaurante')">+ Agregar restaurante (otra persona)</button>
 
-            @foreach (var vm in RowsDe("Auto", false)) { <partial name="_ProvRow" model="vm" /> }
+            @* Auto: cuántos vehículos y lo que cobra cada uno (los traslados de las
+               travesías cambian según cuánta gente y cuántos guías van). *@
+            <div class="prov-group" data-tipo="Auto">
+                @foreach (var vm in RowsDe("Auto", false, true)) { <partial name="_ProvRow" model="vm" /> }
+            </div>
+            <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Auto')">+ Agregar vehículo</button>
         </div>
     </div>
 
@@ -147,8 +172,7 @@
                 <tr class="grupo-head"><td colspan="5">🚐 Compartidos de la salida (nafta, etc.)</td></tr>
                 foreach (var g in gComp)
                 {
-                    var m = Wamani.Reservas.Models.OperativoGasto.Multiplicador(
-                        string.IsNullOrWhiteSpace(g.TipoCalculo) ? "Por persona" : g.TipoCalculo, Model.PasajerosSalida);
+                    var m = g.MultiplicadorPropio(Model.PasajerosSalida);
                     <partial name="_GastoRow" model="new Wamani.Reservas.Pages.Operativo.GastoRowVm { G = g, Mult = m, ReservaId = 0 }" />
                 }
             }
@@ -224,6 +248,8 @@
                     linea.innerHTML = '<span class="cliente-sub">total a mano</span> · <button type="button" class="link-mini" onclick="modoAuto(this)">volver al cálculo</button>';
                 } else if (tipo === 'Fijo') {
                     linea.innerHTML = 'monto fijo = <b>' + money(total) + '</b> · <button type="button" class="link-mini" onclick="modoManual(this)">a mano</button>';
+                } else if (tipo === 'Cantidad') {
+                    linea.innerHTML = '× ' + mult + ' = <b>' + money(total) + '</b> · <button type="button" class="link-mini" onclick="modoManual(this)">a mano</button>';
                 } else {
                     linea.innerHTML = '× ' + mult + ' ' + uni + ' = <b>' + money(total) + '</b> · <button type="button" class="link-mini" onclick="modoManual(this)">a mano</button>';
                 }
@@ -263,13 +289,35 @@
             tr.innerHTML =
                 '<td data-label="Listo"><span class="cliente-sub">guardá primero</span></td>' +
                 '<td data-label="Ítem"><input type="hidden" name="Ids" value="0" /><input type="hidden" name="Keys" value="' + key + '" /><input type="hidden" name="GastoReservaIds" value="' + (resId || 0) + '" /><input name="Nombres" placeholder="Ej: Peaje" /></td>' +
-                '<td class="num" data-label="Precio y total"><input type="hidden" name="EsManual" value="1" class="es-manual" /><input name="Precios" type="number" step="0.01" min="0" value="" class="in-precio" /><div class="calc-linea"><span class="cliente-sub">total a mano</span></div></td>' +
+                // El campo de cantidad va vacío pero TIENE que estar: al guardar, las listas
+                // del formulario se emparejan por posición, así que cada fila debe aportar
+                // exactamente un valor a cada lista.
+                '<td class="num" data-label="Precio y total"><input type="hidden" name="EsManual" value="1" class="es-manual" /><input type="hidden" name="Cantidades" value="" /><input name="Precios" type="number" step="0.01" min="0" value="" class="in-precio" /><div class="calc-linea"><span class="cliente-sub">total a mano</span></div></td>' +
                 '<td data-label="Comprobante"><input type="file" name="comp_' + key + '" accept="image/*,.pdf" class="in-comp" multiple /></td>' +
                 '<td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>';
             document.getElementById('gastosBody').appendChild(tr);
             tr.querySelector('input[name=Nombres]').focus();
         }
         function quitarGasto(btn) { btn.closest('tr').remove(); recalcular(); }
+
+        // Botones + y − de los ítems que se cuentan por cantidad (arrieros, caballos,
+        // guías, traslados). Cambian el multiplicador de la fila y recalculan el total.
+        function cambiarCantidad(btn, paso) {
+            var tr = btn.closest('.gasto-row');
+            var inp = tr.querySelector('.in-cantidad');
+            var n = (parseInt(inp.value) || 0) + paso;
+            if (n < 0) n = 0;
+            inp.value = n;
+            tr.dataset.mult = n;
+            pintarFila(tr); recalcular();
+        }
+        // Si escriben la cantidad a mano en vez de usar los botones
+        document.addEventListener('input', function (e) {
+            if (!e.target.classList.contains('in-cantidad')) return;
+            var tr = e.target.closest('.gasto-row');
+            tr.dataset.mult = parseInt(e.target.value) || 0;
+            pintarFila(tr); recalcular();
+        });
 
         // Proveedores: "lo que falta" (total - seña - saldo) por bloque
         function recalcularProv() {
@@ -308,7 +356,11 @@
             var pk = clone.querySelector('input[name=ProvKeys]'); if (pk) pk.value = key;
             var sel = clone.querySelector('select[name=ProvProveedorIds]'); if (sel) sel.value = '0';
             var nue = clone.querySelector('.prov-nuevo'); if (nue) { nue.value = ''; nue.style.display = 'none'; }
-            clone.querySelectorAll('.prov-total,.prov-sena,.prov-saldo').forEach(function (i) { i.value = ''; i.readOnly = false; i.style.background = ''; });
+            clone.querySelectorAll('.prov-total,.prov-sena,.prov-saldo').forEach(function (i) { i.value = ''; i.readOnly = false; i.style.background = ''; i.dataset.manual = ''; });
+            // Filas con cantidad (guía / vehículo): la nueva arranca en 1 y sin precio,
+            // para que se complete sola al elegir el proveedor.
+            var cPers = clone.querySelector('.etapa-personas'); if (cPers) cPers.value = '1';
+            var cPrec = clone.querySelector('.etapa-precio'); if (cPrec) cPrec.value = '';
             var pq = clone.querySelector('.prov-para'); if (pq) pq.value = '0';   // desplegable de reserva
             // renombrar los campos de comprobante con la clave nueva y limpiarlos
             var fSena = clone.querySelector('input[name^="provcompsena_"]'); if (fSena) { fSena.name = 'provcompsena_' + key; fSena.value = ''; }
@@ -338,8 +390,12 @@
                 if (esOtro) { nuevo.focus(); } else { nuevo.value = ''; }
             }
 
-            if (fila.classList.contains('etapa-bloque')) {
-                if (precio > 0) fila.querySelector('.etapa-precio').value = precio;
+            // Si la fila lleva cantidad (hospedaje de travesía, guía, vehículo), lo que se
+            // completa es el precio de CADA UNO y el total sale de multiplicar. Si no,
+            // se completa el total directo, como siempre.
+            var inPrec = fila.querySelector('.etapa-precio');
+            if (inPrec) {
+                if (precio > 0) inPrec.value = precio;
                 recalcularEtapa(fila);
             } else {
                 var tot = fila.querySelector('.prov-total');
@@ -348,16 +404,27 @@
             recalcularProv();
         });
 
-        // Travesía: total = personas × precio por persona (salvo que se haya puesto a mano)
+        // Total de una fila "de grupo" = cantidad × precio de cada uno × noches.
+        // Sirve igual para el hospedaje de una travesía (personas × precio × noches) y para
+        // guías o vehículos (cuántos × lo que cobra cada uno, con noches = 1).
+        // Si el total se puso a mano, no se toca.
         function recalcularEtapa(fila) {
+            if (!fila) return;
             var tot = fila.querySelector('.prov-total');
-            if (!tot || tot.dataset.manual === '1') return;
-            var pers = parseFloat(fila.querySelector('.etapa-personas').value) || 0;
-            var pp = parseFloat(fila.querySelector('.etapa-precio').value) || 0;
-            tot.value = (pers > 0 && pp > 0) ? (pers * pp) : '';
+            var inPers = fila.querySelector('.etapa-personas');
+            var inPrec = fila.querySelector('.etapa-precio');
+            if (!tot || !inPers || !inPrec || tot.dataset.manual === '1') return;
+            var pers = parseFloat(inPers.value) || 0;
+            var pp = parseFloat(inPrec.value) || 0;
+            var inNoches = fila.querySelector('.etapa-noches');
+            var noches = inNoches ? (parseInt(inNoches.value) || 1) : 1;
+            if (noches < 1) noches = 1;
+            tot.value = (pers > 0 && pp > 0) ? (pers * pp * noches) : '';
         }
         document.addEventListener('input', function (e) {
-            if (!e.target.classList.contains('etapa-personas') && !e.target.classList.contains('etapa-precio')) return;
+            if (!e.target.classList.contains('etapa-personas')
+                && !e.target.classList.contains('etapa-precio')
+                && !e.target.classList.contains('etapa-noches')) return;
             recalcularEtapa(e.target.closest('.prov-row'));
             recalcularProv();
         });

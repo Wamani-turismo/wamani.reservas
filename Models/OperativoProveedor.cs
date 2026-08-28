@@ -30,9 +30,20 @@ namespace Wamani.Reservas.Models
         public string? Lugar { get; set; }
 
         // Cuánta gente y a qué precio, cuando la fila representa a TODO el grupo en un
-        // lugar de la travesía. El Total se calcula solo: personas × precio por persona.
+        // lugar de la travesía. El Total se calcula solo: personas × precio × noches.
+        //
+        // Estos dos campos también se usan en las filas de GUÍA y de AUTO, donde significan
+        // "cuántos" y "cuánto cobra cada uno" (2 guías × $60.000). La cuenta es la misma;
+        // lo único que cambia es cómo se llaman en la pantalla.
         public int? Personas { get; set; }
         public decimal? PrecioPorPersona { get; set; }
+
+        // Cuántas noches cubre esta fila (sale de la etapa). null o 0 se toman como 1,
+        // así las filas viejas siguen valiendo exactamente lo mismo que antes.
+        public int? Noches { get; set; }
+
+        // Las noches que hay que contar de verdad (nunca menos de 1).
+        public int NochesReales() => Noches is int n && n > 0 ? n : 1;
 
         public decimal Total { get; set; }   // costo total del proveedor
         public decimal Sena { get; set; }    // monto de la seña

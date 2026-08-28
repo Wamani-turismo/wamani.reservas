@@ -3,12 +3,18 @@
     var g = Model.G;
     var esManual = g.PrecioUnitario is null;
     var tipo = string.IsNullOrWhiteSpace(g.TipoCalculo) ? "Por persona" : g.TipoCalculo;
-    var uni = tipo == "Por auto" ? "autos" : "personas";
-    var tipoLabel = tipo == "Fijo" ? "Fijo" : tipo == "Por auto" ? "Por auto (chofer-guía)" : "Por persona";
+    var esCantidad = tipo == "Cantidad";
+    var uni = tipo == "Por auto" ? "autos" : esCantidad ? "" : "personas";
+    var tipoLabel = tipo == "Fijo" ? "Fijo"
+        : tipo == "Por auto" ? "Por auto (chofer-guía)"
+        : esCantidad ? "Se ajusta con los botones + y −"
+        : "Por persona";
     var valorInput = esManual ? g.Precio : (g.PrecioUnitario ?? 0);
+    // En los de tipo "Cantidad" el multiplicador es la cantidad cargada, no la gente.
+    var mult = esCantidad ? g.CantidadReal() : Model.Mult;
     string Num(decimal m) => m.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
 }
-<tr class="gasto-row" data-tipo="@tipo" data-mult="@Model.Mult" data-uni="@uni">
+<tr class="gasto-row" data-tipo="@tipo" data-mult="@mult" data-uni="@uni">
     <td data-label="Listo">
         <input type="checkbox" name="Comprados" value="@g.Id" class="chk-listo" style="width:20px;height:20px" @(g.Comprado ? "checked" : "") />
     </td>
@@ -21,6 +27,20 @@
     </td>
     <td class="num" data-label="Precio y total">
         <input type="hidden" name="EsManual" value="@(esManual ? "1" : "0")" class="es-manual" />
+        @if (esCantidad)
+        {
+            @* Arrieros, caballos, guías, traslados: la cantidad la deciden los chicos en
+               cada salida, así que se sube y se baja con estos dos botones. *@
+            <div class="cant-wrap">
+                <button type="button" class="btn-cant" onclick="cambiarCantidad(this,-1)" title="Uno menos">−</button>
+                <input name="Cantidades" type="number" step="1" min="0" value="@g.CantidadReal()" class="in-cantidad" />
+                <button type="button" class="btn-cant" onclick="cambiarCantidad(this,1)" title="Uno más">+</button>
+            </div>
+        }
+        else
+        {
+            <input type="hidden" name="Cantidades" value="" />
+        }
         <input name="Precios" type="number" step="0.01" min="0" value="@Num(valorInput)" class="in-precio" />
         <div class="calc-linea"></div>
     </td>

@@ -281,6 +281,17 @@ using (var scope = app.Services.CreateScope())
             ""Titulo"" TEXT NOT NULL, ""Descripcion"" TEXT NOT NULL, ""Archivo"" TEXT NOT NULL,
             ""Poster"" TEXT NOT NULL, ""Vertical"" INTEGER NOT NULL, ""Orden"" INTEGER NOT NULL, ""Activo"" INTEGER NOT NULL
         );");
+    // Estas van al FINAL, cuando ya se crearon todas las tablas de arriba: si la columna
+    // se pide sobre una tabla que todavía no existe, el ALTER TABLE falla.
+    //
+    // Noches: cuántas noches seguidas se duerme en un mismo lugar (2 noches en el mismo
+    // hospedaje = una sola fila en el operativo, con el total calculado solo).
+    // Cantidad: arrieros, caballos, guías y traslados, que se suben y bajan a mano en
+    // cada salida porque no salen de ninguna fórmula.
+    EnsureSqliteColumn(db, "EtapasExcursion", "Noches", "INTEGER NOT NULL DEFAULT 1");
+    EnsureSqliteColumn(db, "OperativoProveedores", "Noches", "INTEGER NULL");
+    EnsureSqliteColumn(db, "GastosExcursion", "Cantidad", "INTEGER NULL");
+    EnsureSqliteColumn(db, "OperativoGastos", "Cantidad", "INTEGER NULL");
     } // fin del bloque específico de SQLite
 
     // En Postgres: corrige las tablas que se hayan creado antes con fechas "con zona
@@ -327,6 +338,16 @@ using (var scope = app.Services.CreateScope())
                 ""PrecioPorPersona"" numeric NOT NULL DEFAULT 0,
                 ""Incluye"" text NULL
             );");
+
+        // Noches seguidas en un mismo lugar: permite cargar "2 noches en el mismo hospedaje"
+        // con una sola fila (Yungas), en vez de escribir a mano el precio de las dos noches.
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""EtapasExcursion"" ADD COLUMN IF NOT EXISTS ""Noches"" integer NOT NULL DEFAULT 1;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoProveedores"" ADD COLUMN IF NOT EXISTS ""Noches"" integer;");
+
+        // Costos que se cuentan por CANTIDAD (arrieros, caballos, guías, traslados): no
+        // salen de una fórmula, se suben y se bajan a mano en cada salida.
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""GastosExcursion"" ADD COLUMN IF NOT EXISTS ""Cantidad"" integer;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""Cantidad"" integer;");
         // Tabla de gastos generales de la empresa (nueva; EnsureCreated no la agrega a una base ya creada)
         db.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS ""GastosEmpresa"" (

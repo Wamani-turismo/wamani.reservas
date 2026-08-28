@@ -27,11 +27,16 @@ public class CargarModel : PageModel
     [BindProperty]
     public List<string> GastoEsProveedor { get; set; } = new();   // "1" si el costo es un proveedor
 
+    // Sólo para los costos de tipo "Cantidad": con cuántos arranca cada salida
+    [BindProperty]
+    public List<string> GastoCantidades { get; set; } = new();
+
     // Etapas de la travesía (dónde se duerme cada noche), enviadas como arrays desde el form
     [BindProperty] public List<string> EtapaLugares { get; set; } = new();
     [BindProperty] public List<int> EtapaProveedorIds { get; set; } = new();
     [BindProperty] public List<string> EtapaPrecios { get; set; } = new();
     [BindProperty] public List<string> EtapaIncluye { get; set; } = new();
+    [BindProperty] public List<string> EtapaNoches { get; set; } = new();   // cuántas noches seguidas en ese lugar
 
     // Para mostrar los gastos ya cargados al abrir la página
     public List<GastoExcursion> Gastos { get; set; } = new();
@@ -120,12 +125,23 @@ public class CargarModel : PageModel
             var tipo = i < GastoTipos.Count && GastoExcursion.Tipos.Contains(GastoTipos[i])
                 ? GastoTipos[i] : "Por persona";
             var esProv = i < GastoEsProveedor.Count && GastoEsProveedor[i] == "1";
+
+            // La cantidad sólo se guarda en los costos de tipo "Cantidad" (arrieros,
+            // caballos, guías, traslados). En los demás queda en null.
+            int? cantidad = null;
+            if (tipo == "Cantidad")
+            {
+                var cantTxt = i < GastoCantidades.Count ? GastoCantidades[i] : null;
+                cantidad = int.TryParse(cantTxt, out var c) && c >= 0 ? c : 1;
+            }
+
             _db.GastosExcursion.Add(new GastoExcursion
             {
                 ExcursionId = excursionId,
                 Nombre = nombre,
                 Precio = precio,
                 TipoCalculo = tipo,
+                Cantidad = cantidad,
                 EsProveedor = esProv
             });
         }
@@ -155,11 +171,17 @@ public class CargarModel : PageModel
             noche++;
             var incluye = (i < EtapaIncluye.Count ? EtapaIncluye[i] : null)?.Trim();
 
+            // Cuántas noches seguidas se para en este lugar (mínimo 1). Es lo que permite
+            // cargar "2 noches en el mismo hospedaje" con una sola fila.
+            var nochesTxt = i < EtapaNoches.Count ? EtapaNoches[i] : null;
+            var noches = int.TryParse(nochesTxt, out var nn) && nn > 0 ? nn : 1;
+
             _db.EtapasExcursion.Add(new EtapaExcursion
             {
                 ExcursionId = excursionId,
                 Orden = noche,
                 Lugar = lugar,
+                Noches = noches,
                 ProveedorId = provId == 0 ? null : provId,
                 PrecioPorPersona = ParsePrecio(i < EtapaPrecios.Count ? EtapaPrecios[i] : "0"),
                 Incluye = string.IsNullOrWhiteSpace(incluye) ? null : incluye

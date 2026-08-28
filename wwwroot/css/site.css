@@ -314,6 +314,18 @@ input[type=file]::file-selector-button {
 .btn-mini-danger { background: #fff; border-color: #eccaba; color: #b06a3c; }
 .btn-mini-danger:hover { background: var(--warn-soft); }
 
+/* Contador + / − de los costos que se cuentan por cantidad
+   (arrieros, caballos, guías, traslados) */
+.cant-wrap { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.cant-wrap .in-cantidad { width: 100%; min-width: 0; text-align: center; font-weight: 700; }
+.btn-cant {
+  flex: 0 0 auto; width: 34px; height: 34px; border-radius: 999px;
+  border: 1px solid var(--line); background: #fff; color: var(--ink);
+  font-size: 1.15rem; font-weight: 700; line-height: 1; cursor: pointer;
+  font-family: inherit; padding: 0;
+}
+.btn-cant:hover { background: #faf9f5; }
+
 /* ---------- Formulario ---------- */
 .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .form-grid .full { grid-column: 1 / -1; }

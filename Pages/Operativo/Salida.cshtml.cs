@@ -23,6 +23,35 @@ public class ProvRowVm
     public bool ConPasajero { get; set; }   // hospedaje/restaurante: se pueden agregar varios (por persona)
     public string Key { get; set; } = "";   // clave para asociar el comprobante a la fila (id real o temporal si es nueva)
     public List<Reserva> Reservas { get; set; } = new();   // reservas de la salida (para elegir de quién es el servicio)
+
+    // Guía y Auto: en vez de escribir el total, se pone CUÁNTOS van y lo que cobra cada uno,
+    // y el total sale solo. Sirve para las travesías, donde según la gente que se anota se
+    // suman guías o vehículos, y no hay una fórmula fija: lo deciden los chicos.
+    public bool ConCantidad { get; set; }
+
+    public decimal PrecioCatalogo { get; set; }
+
+    // Cuántos van. Las filas cargadas ANTES de que existiera este campo no lo tienen: se
+    // muestran como 1, que es lo que no cambia el total que ya tenían.
+    public int Cuantos => Asig?.Personas is int n && n > 0 ? n : 1;
+
+    // Lo que cobra cada uno, en este orden:
+    //   1) lo que ya se había cargado en esta fila;
+    //   2) si la fila es vieja (tiene un total escrito a mano pero no tiene el desglose),
+    //      el total entero: así "1 × total = total" y el número NO se mueve al abrir;
+    //   3) si la fila es nueva, lo que cobra ese proveedor según el catálogo.
+    //
+    // El paso 2 es importante: sin él, abrir una salida ya cargada y tocar cualquier cosa
+    // recalculaba el total con el precio del catálogo y borraba lo que estaba puesto.
+    public decimal PrecioCadaUno
+    {
+        get
+        {
+            if (Asig?.PrecioPorPersona is decimal p && p > 0) return p;
+            if (Asig is not null && Asig.Total > 0) return Asig.Total;
+            return PrecioCatalogo;
+        }
+    }
 }
 
 // Una NOCHE de una travesía dentro del operativo: todo el grupo durmiendo en un lugar.
@@ -39,6 +68,7 @@ public class EtapaRowVm
     public decimal PrecioSugerido { get; set; }        // precio por persona de la plantilla
     public decimal PrecioCatalogo { get; set; }        // lo que cobra ese refugio según Proveedores
     public int PersonasSalida { get; set; }            // cuánta gente va en la salida
+    public int NochesPlantilla { get; set; } = 1;      // cuántas noches se para en este lugar
 
     // Lo que se muestra: si ya hay algo cargado se respeta; si no, la sugerencia de la
     // plantilla; y si la plantilla no tiene precio, lo que cobra el refugio en Proveedores
@@ -47,7 +77,16 @@ public class EtapaRowVm
     public decimal PrecioPorPersona =>
         Asig?.PrecioPorPersona ?? (PrecioSugerido > 0 ? PrecioSugerido : PrecioCatalogo);
     public int Personas => Asig?.Personas ?? PersonasSalida;
-    public decimal Total => Asig?.Total ?? (PrecioPorPersona * Personas);
+    public int Noches => Asig?.Noches ?? (NochesPlantilla > 0 ? NochesPlantilla : 1);
+    public decimal Total => Asig?.Total ?? (PrecioPorPersona * Personas * Noches);
+
+    // "Noche 3" si es una sola, "Noches 3 y 4" si son dos, "Noches 3 a 6" si son más.
+    public string TituloNoches()
+    {
+        if (Noches <= 1) return $"Noche {Noche}";
+        var hasta = Noche + Noches - 1;
+        return Noches == 2 ? $"Noches {Noche} y {hasta}" : $"Noches {Noche} a {hasta}";
+    }
 }
 
 public class SalidaModel : PageModel
@@ -88,6 +127,7 @@ public class SalidaModel : PageModel
     [BindProperty] public List<string> Nombres { get; set; } = new();
     [BindProperty] public List<string> Precios { get; set; } = new();   // unitario (auto) o total (a mano) según el modo
     [BindProperty] public List<string> EsManual { get; set; } = new();  // "1" si el monto se cargó a mano
+    [BindProperty] public List<string> Cantidades { get; set; } = new();  // unidades de los ítems tipo "Cantidad"
     [BindProperty] public List<int> GastoReservaIds { get; set; } = new();  // a qué reserva pertenece el gasto (0 = compartido)
     [BindProperty] public List<int> Comprados { get; set; } = new();  // ids tildados
     [BindProperty] public bool ServiciosPagados { get; set; }
@@ -107,10 +147,13 @@ public class SalidaModel : PageModel
     // Nombre escrito a mano cuando se elige "Otro" en vez de un proveedor del catálogo
     [BindProperty] public List<string?> ProvNombresNuevos { get; set; } = new();
 
-    // Travesías: lugar de la ruta + el grupo que duerme ahí (personas × precio por persona)
+    // Travesías: lugar de la ruta + el grupo que duerme ahí (personas × precio × noches).
+    // En las filas de Guía y Auto, "Personas" son cuántos van y "PrecioPorPersona" lo que
+    // cobra cada uno; la cuenta es la misma.
     [BindProperty] public List<string?> ProvLugares { get; set; } = new();
     [BindProperty] public List<string> ProvPersonas { get; set; } = new();
     [BindProperty] public List<string> ProvPreciosPorPersona { get; set; } = new();
+    [BindProperty] public List<string> ProvNoches { get; set; } = new();
 
     private async Task CargarAsync()
     {
@@ -160,19 +203,35 @@ public class SalidaModel : PageModel
 
             static string Clave(string? s) => (s ?? "").Trim().ToLowerInvariant();
 
-            Etapas = etapasPlantilla.Select(e => new EtapaRowVm
+            // Cada etapa se queda con UNA fila guardada y la saca del montón. Si dos etapas
+            // se llaman igual (una travesía que vuelve a dormir en el mismo pueblo), la
+            // segunda toma la siguiente fila y no le pisa la plata a la primera.
+            var libres = new List<OperativoProveedor>(hospAsignados);
+            int primeraNoche = 1;
+
+            Etapas = new List<EtapaRowVm>();
+            foreach (var e in etapasPlantilla)
             {
-                Noche = e.Orden,
-                Lugar = e.Lugar,
-                Incluye = e.Incluye,
-                Asig = hospAsignados.FirstOrDefault(o => Clave(o.Lugar) == Clave(e.Lugar)),
-                Cat = catHosp,
-                Key = "etapa-" + e.Orden,
-                ProveedorSugerido = e.ProveedorId ?? 0,
-                PrecioSugerido = e.PrecioPorPersona,
-                PrecioCatalogo = catHosp.FirstOrDefault(p => p.Id == e.ProveedorId)?.Precio ?? 0,
-                PersonasSalida = PasajerosSalida
-            }).ToList();
+                var yaCargada = libres.FirstOrDefault(o => Clave(o.Lugar) == Clave(e.Lugar));
+                if (yaCargada is not null) libres.Remove(yaCargada);
+
+                var noches = e.Noches > 0 ? e.Noches : 1;
+                Etapas.Add(new EtapaRowVm
+                {
+                    Noche = primeraNoche,
+                    Lugar = e.Lugar,
+                    Incluye = e.Incluye,
+                    Asig = yaCargada,
+                    Cat = catHosp,
+                    Key = "etapa-" + e.Orden,
+                    ProveedorSugerido = e.ProveedorId ?? 0,
+                    PrecioSugerido = e.PrecioPorPersona,
+                    PrecioCatalogo = catHosp.FirstOrDefault(p => p.Id == e.ProveedorId)?.Precio ?? 0,
+                    PersonasSalida = PasajerosSalida,
+                    NochesPlantilla = noches
+                });
+                primeraNoche += noches;
+            }
 
             // Las filas de hospedaje que YA tienen fila propia por etapa no se repiten abajo.
             var deEtapa = Etapas.Where(x => x.Asig is not null).Select(x => x.Asig!.Id).ToHashSet();
@@ -241,14 +300,18 @@ public class SalidaModel : PageModel
             }
             else
             {
-                // Compartido (por auto / fijo): una sola vez para la salida
+                // Compartido (por auto / cantidad / fijo): una sola vez para la salida
                 if (yaCargados.Any(o => o.ReservaId == null && Norm(o.Nombre) == Norm(p.Nombre))) continue;
+                // "Cantidad" (arrieros, caballos, guías, traslados) arranca con la cantidad
+                // de referencia de la excursión; después se sube o se baja en la salida.
+                var cant = tipo == "Cantidad" ? (p.Cantidad ?? 0) : (int?)null;
                 _db.OperativoGastos.Add(new OperativoGasto
                 {
                     ExcursionId = ExcursionId, Fecha = Fecha.Date, ReservaId = null,
                     Nombre = p.Nombre ?? "", TipoCalculo = tipo,
                     PrecioUnitario = p.Precio,
-                    Precio = p.Precio * OperativoGasto.Multiplicador(tipo, pasajeros),
+                    Cantidad = cant,
+                    Precio = p.Precio * OperativoGasto.Multiplicador(tipo, pasajeros, cant),
                     Comprado = false
                 });
                 cambio = true;
@@ -262,7 +325,7 @@ public class SalidaModel : PageModel
             if (g.PrecioUnitario is not decimal u) continue;
             int mult = g.ReservaId is int rid
                 ? (paxPorReserva.TryGetValue(rid, out var px) ? px : 0)          // por persona de esa reserva
-                : OperativoGasto.Multiplicador(g.TipoCalculo, pasajeros);          // compartido
+                : g.MultiplicadorPropio(pasajeros);                                // compartido
             var nuevoTotal = u * mult;
             if (g.Precio != nuevoTotal) { g.Precio = nuevoTotal; cambio = true; }
         }
@@ -284,10 +347,11 @@ public class SalidaModel : PageModel
         int pasajeros = reservasSalida.Sum(r => r.CantidadPersonas);
         var paxPorReserva = reservasSalida.ToDictionary(r => r.Id, r => r.CantidadPersonas);
 
-        // Total de un gasto automático: unitario × gente (de su reserva, o de la salida si es compartido)
+        // Total de un gasto automático: unitario × gente (de su reserva, o de la salida si es
+        // compartido). En los de tipo "Cantidad" manda la cantidad que cargaron a mano.
         int MultDe(OperativoGasto g) => g.ReservaId is int rid
             ? (paxPorReserva.TryGetValue(rid, out var px) ? px : 0)
-            : OperativoGasto.Multiplicador(g.TipoCalculo, pasajeros);
+            : g.MultiplicadorPropio(pasajeros);
 
         var idsEnviados = new HashSet<int>();
 
@@ -336,6 +400,15 @@ public class SalidaModel : PageModel
                     g.Nombre = nombre;
                     g.Comprado = comprado;
 
+                    // Ítems de tipo "Cantidad" (arrieros, caballos, guías, traslados): la
+                    // cantidad la deciden los chicos con los botones + y −, así que se toma
+                    // tal cual viene de la pantalla ANTES de recalcular el total.
+                    if (g.TipoCalculo == "Cantidad")
+                    {
+                        var cantTxt = i < Cantidades.Count ? Cantidades[i] : null;
+                        if (int.TryParse(cantTxt, out var cant) && cant >= 0) g.Cantidad = cant;
+                    }
+
                     if (esManual)
                     {
                         g.PrecioUnitario = null;
@@ -343,7 +416,7 @@ public class SalidaModel : PageModel
                     }
                     else
                     {
-                        g.PrecioUnitario = valor;   // precio unitario (por persona / por auto)
+                        g.PrecioUnitario = valor;   // precio unitario (por persona / por auto / por unidad)
                         g.Precio = valor * MultDe(g);
                     }
 
@@ -425,13 +498,22 @@ public class SalidaModel : PageModel
             var saldo = ParsePrecio(i < ProvSaldos.Count ? ProvSaldos[i] : "0");
             var paraQuien = (i < ProvParaQuien.Count ? ProvParaQuien[i] : null)?.Trim();
 
-            // Travesía: la fila representa a TODO el grupo en un lugar de la ruta.
+            // Fila "de grupo": todo el grupo en un lugar de la ruta (hospedaje de travesía),
+            // o cuántos guías / autos van y cuánto cobra cada uno.
             var lugar = (i < ProvLugares.Count ? ProvLugares[i] : null)?.Trim();
             int.TryParse(i < ProvPersonas.Count ? ProvPersonas[i] : "", out var personas);
             var precioPP = ParsePrecio(i < ProvPreciosPorPersona.Count ? ProvPreciosPorPersona[i] : "0");
+            int.TryParse(i < ProvNoches.Count ? ProvNoches[i] : "", out var noches);
+            if (noches < 1) noches = 1;
 
-            // Si no se escribió un total a mano, sale solo: personas × precio por persona.
-            if (total == 0 && personas > 0 && precioPP > 0) total = personas * precioPP;
+            // Si no se escribió un total a mano, sale solo: cantidad × precio × noches.
+            // (En hospedaje son personas × precio por persona × noches; en guía y auto son
+            // cuántos × lo que cobra cada uno, con noches = 1.)
+            if (total == 0 && personas > 0 && precioPP > 0) total = personas * precioPP * noches;
+
+            // ¿Esta fila usa la cuenta por cantidad? Si sí, se guardan los tres campos para
+            // poder rearmarla la próxima vez. Las filas por pasajero no los usan y van en null.
+            var esDeGrupo = personas > 0 || precioPP > 0 || !string.IsNullOrWhiteSpace(lugar);
 
             var vacia = provId == 0 && total == 0 && sena == 0 && saldo == 0 && string.IsNullOrWhiteSpace(paraQuien);
 
@@ -457,8 +539,9 @@ public class SalidaModel : PageModel
             row.ProveedorId = provId == 0 ? null : provId;
             row.ProveedorNombre = provId != 0 && catalogo.TryGetValue(provId, out var n) ? n : "";
             row.Lugar = string.IsNullOrWhiteSpace(lugar) ? null : lugar;
-            row.Personas = string.IsNullOrWhiteSpace(lugar) ? null : personas;
-            row.PrecioPorPersona = string.IsNullOrWhiteSpace(lugar) ? null : precioPP;
+            row.Personas = esDeGrupo ? personas : null;
+            row.PrecioPorPersona = esDeGrupo ? precioPP : null;
+            row.Noches = string.IsNullOrWhiteSpace(lugar) ? null : noches;
             row.Total = total;
             row.Sena = sena;
             row.Saldo = saldo;

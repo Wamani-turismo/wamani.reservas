@@ -35,7 +35,16 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Refugio / hospedaje habitual")]
         public int? ProveedorId { get; set; }
 
-        // Lo que cobra por persona esa noche. También es sugerencia: en la salida se ajusta.
+        // Cuántas NOCHES seguidas se duerme en este mismo lugar. Casi siempre es 1, pero
+        // hay salidas que paran dos o tres noches en el mismo lado (ej. "Conociendo las
+        // Yungas": 2 noches en el mismo hospedaje). Poniendo 2 acá, en el operativo sale
+        // UNA sola fila y el total se calcula solo: personas × precio × noches. Antes había
+        // que escribir a mano el precio de las dos noches en el lugar del precio de una.
+        [Range(1, 60)]
+        [Display(Name = "Noches")]
+        public int Noches { get; set; } = 1;
+
+        // Lo que cobra por persona Y POR NOCHE. También es sugerencia: en la salida se ajusta.
         [Range(0, 999999999)]
         [Display(Name = "Precio por persona")]
         public decimal PrecioPorPersona { get; set; }

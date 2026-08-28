@@ -93,6 +93,7 @@ public class CompararModel : PageModel
         {
             "Por auto" => g.Precio * Autos,
             "Por guía" => g.Precio * Autos,
+            "Cantidad" => g.Precio * (g.Cantidad ?? 0),
             "Fijo"     => g.Precio,
             _           => g.Precio * Pax,   // Por persona
         };

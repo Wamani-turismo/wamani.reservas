@@ -22,6 +22,10 @@ public static class RentabilidadCalc
             {
                 "Por auto"  => g.Precio * autos,
                 "Por guía"  => g.Precio * autos,  // el chofer es el guía → cuenta como auto
+                // Arrieros, caballos, guías, traslados: la cantidad se decide en cada
+                // salida. Para la rentabilidad TEÓRICA se usa la cantidad de referencia
+                // que se cargó en la excursión.
+                "Cantidad"  => g.Precio * (g.Cantidad ?? 0),
                 "Fijo"      => g.Precio,
                 _            => g.Precio * pax,   // Por persona
             };

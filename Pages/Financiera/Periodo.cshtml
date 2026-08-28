@@ -84,8 +84,14 @@
     </div>
     <div class="fin-card">
         <div class="fin-label">Gastos de empresa</div>
-        <div class="fin-val" style="color:var(--warn)">@Money(Model.TotalGastosEmpresa)</div>
-        <div class="fin-label" style="margin-top:4px">@Model.GastosEmpresaLista.Count gasto(s)</div>
+        <div class="fin-val" style="color:var(--warn)">@Money(Model.TotalGastosPropios)</div>
+        <div class="fin-label" style="margin-top:4px">
+            @Model.GastosEmpresaLista.Count gasto(s)
+            @if (Model.TotalDelFondo > 0)
+            {
+                <text>· aparte salieron @Money(Model.TotalDelFondo) del fondo del 10%</text>
+            }
+        </div>
     </div>
     <div class="fin-card fin-card-net">
         <div class="fin-label">Neto del período</div>
@@ -100,7 +106,7 @@
     <p style="margin:0;color:var(--ink-soft)">
         <strong>Neto</strong> = ingresos @Money(Model.TotalIngresos)
         − egresos de salidas @Money(Model.TotalEgresos)
-        − gastos de empresa @Money(Model.TotalGastosEmpresa)
+        − gastos de empresa @Money(Model.TotalGastosPropios)
         = <strong>@Money(Model.Neto)</strong>.
     </p>
 </div>
@@ -158,7 +164,7 @@
                     <td style="text-align:right"><strong>@Model.CantidadReservas</strong></td>
                     <td style="text-align:right"><strong>@Money(Model.TotalIngresos)</strong></td>
                     <td style="text-align:right"><strong>@Money(Model.TotalEgresos)</strong></td>
-                    <td style="text-align:right"><strong>@Money(Model.TotalGastosEmpresa)</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.TotalGastosPropios)</strong></td>
                     <td style="text-align:right"><strong>@Money(Model.Neto)</strong></td>
                 </tr>
             </tfoot>
@@ -302,10 +308,13 @@
             <tbody>
                 @foreach (var g in Model.GastosEmpresaLista)
                 {
+                    var chipFondo = g.DelFondo
+                        ? "display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;color:#fff;background:var(--accent)"
+                        : "display:none";
                     <tr>
                         <td>@Dia(g.Fecha)</td>
                         <td>@g.Tipo</td>
-                        <td>@g.Descripcion</td>
+                        <td>@g.Descripcion<span style="@chipFondo">del fondo 10%</span></td>
                         <td style="text-align:right"><strong>@Money(g.Monto)</strong></td>
                     </tr>
                 }

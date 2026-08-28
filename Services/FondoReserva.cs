@@ -10,8 +10,10 @@ namespace Wamani.Reservas.Services;
 //                   − lo que se gastó del fondo este mes.
 //
 // Un gasto sale del fondo cuando se tilda "Sale del fondo del 10%" en Gastos.
-// Ese gasto sigue restando de la ganancia como cualquier otro: lo único que agrega el
-// tilde es que además se descuenta del saldo del fondo.
+// Ese gasto NO resta de la ganancia del mes: esa plata ya se había apartado de las
+// ganancias de meses anteriores, así que descontarla otra vez sería cobrársela dos veces
+// a los socios. Sale del saldo del fondo y nada más. (En la Caja sí resta, porque ahí se
+// mide la plata que efectivamente salió.)
 //
 // Los meses con pérdida no aportan al fondo (no se aparta el 10% de un número negativo)
 // pero tampoco lo achican: el fondo sólo baja cuando se gasta.
@@ -62,7 +64,8 @@ public static class FondoReserva
         }
 
         var gastosEmpresa = await db.GastosEmpresa.ToListAsync();
-        foreach (var g in gastosEmpresa)
+        // Los pagados con el fondo NO restan de la ganancia: se descuentan del fondo abajo.
+        foreach (var g in gastosEmpresa.Where(g => !g.DelFondo))
             Sumar(g.Fecha, -g.Monto);
 
         // ---- Lo gastado del fondo, por mes ----

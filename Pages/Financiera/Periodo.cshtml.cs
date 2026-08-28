@@ -66,7 +66,14 @@ public class PeriodoModel : PageModel
     public decimal TotalIngresos => Ingresos.Sum(m => m.Monto);
     public decimal TotalEgresos => Egresos.Sum(m => m.Monto);
     public decimal TotalGastosEmpresa => GastosEmpresaLista.Sum(g => g.Monto);
-    public decimal Neto => TotalIngresos - TotalEgresos - TotalGastosEmpresa;
+
+    // Los gastos pagados con el FONDO del 10% se muestran aparte y no restan de la
+    // ganancia: esa plata ya se había apartado de meses anteriores (misma regla que
+    // la Financiera mensual, para que los dos números coincidan).
+    public decimal TotalDelFondo => GastosEmpresaLista.Where(g => g.DelFondo).Sum(g => g.Monto);
+    public decimal TotalGastosPropios => TotalGastosEmpresa - TotalDelFondo;
+
+    public decimal Neto => TotalIngresos - TotalEgresos - TotalGastosPropios;
 
     public int CantidadReservas => Reservas.Count;
     public int CantidadPersonas => Reservas.Sum(r => r.Personas);
@@ -187,7 +194,8 @@ public class PeriodoModel : PageModel
         // corto (hasta 31 días) se muestran todos, para ver también los días en cero.
         var ingXDia = Ingresos.GroupBy(m => m.Fecha).ToDictionary(g => g.Key, g => g.Sum(x => x.Monto));
         var egrXDia = Egresos.GroupBy(m => m.Fecha).ToDictionary(g => g.Key, g => g.Sum(x => x.Monto));
-        var gasXDia = GastosEmpresaLista.GroupBy(g => g.Fecha.Date).ToDictionary(g => g.Key, g => g.Sum(x => x.Monto));
+        var gasXDia = GastosEmpresaLista.Where(g => !g.DelFondo)
+            .GroupBy(g => g.Fecha.Date).ToDictionary(g => g.Key, g => g.Sum(x => x.Monto));
         var resXDia = Reservas.GroupBy(r => r.Cargada).ToDictionary(g => g.Key, g => g.Count());
 
         var todos = new List<Dia>();

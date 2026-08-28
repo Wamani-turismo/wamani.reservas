@@ -58,11 +58,24 @@ public class IndexModel : PageModel
     // Fondo del 10%: lo que se aparta de la ganancia y se acumula mes a mes
     public Wamani.Reservas.Services.FondoReserva.Mes Fondo { get; set; } = new();
 
-    public decimal Neta => IngresoTotal - Gastos - GastosEmpresaTotal;
-    public decimal PorDueno => Math.Round(Neta / Duenos.Length, 2);
+    // Los gastos pagados CON EL FONDO no restan de la ganancia del mes: esa plata ya se
+    // había apartado de meses anteriores. Restan del saldo del fondo (y de la Caja).
+    public decimal GastosEmpresaDelFondo { get; set; }
+    public decimal GastosEmpresaPropios => GastosEmpresaTotal - GastosEmpresaDelFondo;
+
+    // Ganancia del mes, antes de apartar el 10%
+    public decimal Neta => IngresoTotal - Gastos - GastosEmpresaPropios;
+
+    // El 10% que se aparta para el fondo (sólo si el mes dio ganancia)
+    public decimal ParteFondo => Math.Round(Math.Max(0, Neta) * Wamani.Reservas.Services.FondoReserva.Porcentaje, 2);
+
+    // Lo que queda para los socios, ya apartado el 10%
+    public decimal GananciaARepartir => Neta - ParteFondo;
+    public decimal PorDueno => Math.Round(GananciaARepartir / Duenos.Length, 2);
+
     // % de ganancia sobre TODO el costo (egresos de excursiones + gastos de empresa)
-    public decimal MargenPct => (Gastos + GastosEmpresaTotal) > 0
-        ? Math.Round(Neta / (Gastos + GastosEmpresaTotal) * 100, 0) : 0;
+    public decimal MargenPct => (Gastos + GastosEmpresaPropios) > 0
+        ? Math.Round(Neta / (Gastos + GastosEmpresaPropios) * 100, 0) : 0;
     public int TotalReservas { get; set; }
     public int TotalPersonas { get; set; }
     public int HistoricasDelMes { get; set; }   // reservas viejas (sin plata) que salieron este mes
@@ -153,6 +166,7 @@ public class IndexModel : PageModel
             .OrderByDescending(g => g.Fecha)
             .ToListAsync();
         GastosEmpresaTotal = GastosEmpresaLista.Sum(g => g.Monto);
+        GastosEmpresaDelFondo = GastosEmpresaLista.Where(g => g.DelFondo).Sum(g => g.Monto);
 
         // ---- Ingresos extra del mes (comisiones, alquileres, etc.) ----
         ExtrasLista = await _db.IngresosExtra

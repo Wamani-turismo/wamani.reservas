@@ -45,27 +45,30 @@
         <div class="fin-label">Egresos (pagado este mes)</div>
         <div class="fin-val" style="color:var(--warn)">@Money(Model.Gastos)</div>
     </div>
-    <div class="fin-card fin-card-net">
+    <div class="fin-card">
         <div class="fin-label">Ganancia neta</div>
-        <div class="fin-val" style="color:var(--accent)">@Money(Model.Neta)</div>
-        @if (Model.GastosEmpresaTotal > 0)
+        <div class="fin-val">@Money(Model.Neta)</div>
+        @if (Model.GastosEmpresaPropios > 0)
         {
-            <div class="fin-label" style="margin-top:4px">ya descontados @Money(Model.GastosEmpresaTotal) de gastos de empresa</div>
+            <div class="fin-label" style="margin-top:4px">ya descontados @Money(Model.GastosEmpresaPropios) de gastos de empresa</div>
         }
-        @if ((Model.Gastos + Model.GastosEmpresaTotal) > 0)
+        @if ((Model.Gastos + Model.GastosEmpresaPropios) > 0)
         {
             <div class="fin-label" style="margin-top:2px">@Model.MargenPct.ToString("0")% de ganancia (sobre el costo)</div>
         }
     </div>
     <div class="fin-card">
-        <div class="fin-label">Fondo del 10% (acumulado)</div>
-        <div class="fin-val" style="color:var(--ok)">@Money(Model.Fondo.Saldo)</div>
+        <div class="fin-label">− Fondo del 10% de este mes</div>
+        <div class="fin-val" style="color:var(--ok)">@Money(Model.ParteFondo)</div>
         <div class="fin-label" style="margin-top:4px">
-            @Money(Model.Fondo.VieneDeAntes) de antes + @Money(Model.Fondo.AportadoDelMes) de este mes
-            @if (Model.Fondo.GastadoDelMes > 0)
-            {
-                <text>− @Money(Model.Fondo.GastadoDelMes) gastado</text>
-            }
+            saldo acumulado del fondo: <strong>@Money(Model.Fondo.Saldo)</strong>
+        </div>
+    </div>
+    <div class="fin-card fin-card-net">
+        <div class="fin-label">Ganancia a repartir</div>
+        <div class="fin-val" style="color:var(--accent)">@Money(Model.GananciaARepartir)</div>
+        <div class="fin-label" style="margin-top:4px">
+            @Money(Model.Neta) de ganancia − @Money(Model.ParteFondo) del fondo
         </div>
     </div>
     <div class="fin-card">
@@ -81,6 +84,10 @@
 <!-- Dueños -->
 <div class="card">
     <h2>Ganancia por dueño</h2>
+    <p class="subtitle">
+        Ganancia del mes @Money(Model.Neta) − @Money(Model.ParteFondo) que va al fondo del 10%
+        = <strong>@Money(Model.GananciaARepartir)</strong> a repartir entre los @Wamani.Reservas.Pages.Financiera.IndexModel.Duenos.Length.
+    </p>
     <div class="duenos-grid">
         @foreach (var d in Wamani.Reservas.Pages.Financiera.IndexModel.Duenos)
         {
@@ -96,10 +103,12 @@
 <div class="card">
     <h2>Fondo del 10%</h2>
     <p class="subtitle">
-        De la ganancia de cada mes se aparta un 10% y se va acumulando. Lo que no se gasta
-        queda para el mes siguiente. Para usarlo, cargá el gasto en
+        De la ganancia de cada mes se aparta un 10% <strong>antes</strong> de repartir entre los
+        socios, y se va acumulando: lo que no se gasta queda para el mes siguiente. Para usarlo,
+        cargá el gasto en
         <a asp-page="/Gastos/Index" asp-route-mes="@Model.MesActual.ToString("yyyy-MM")">Gastos</a>
-        y tildá <em>“Sale del fondo del 10%”</em>.
+        y tildá <em>“Sale del fondo del 10%”</em>. Ese gasto <strong>no</strong> vuelve a
+        descontarse de la ganancia del mes: esa plata ya se había apartado antes.
     </p>
     <table class="tabla">
         <tbody>

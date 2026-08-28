@@ -38,6 +38,7 @@ public class CargarModel : PageModel
     [BindProperty] public List<string> EtapaIncluye { get; set; } = new();
     [BindProperty] public List<string> EtapaNoches { get; set; } = new();   // cuántas noches seguidas en ese lugar
     [BindProperty] public List<string> EtapaTipos { get; set; } = new();    // hospedaje / traslado / arriero / caballo
+    [BindProperty] public List<string> EtapaCantidades { get; set; } = new();  // cuántos guías / arrieros / caballos
 
     // Para mostrar los gastos ya cargados al abrir la página
     public List<GastoExcursion> Gastos { get; set; } = new();
@@ -184,6 +185,15 @@ public class CargarModel : PageModel
             var tipoEtapa = i < EtapaTipos.Count && EtapaExcursion.Tipos.Contains(EtapaTipos[i])
                 ? EtapaTipos[i] : EtapaExcursion.Hospedaje;
 
+            // Cuántos van: sólo tiene sentido en guías, arrieros y caballos. En el resto la
+            // cantidad sale de la gente de la salida, así que queda en null.
+            int? cuantosEtapa = null;
+            if (EtapaExcursion.EsPorDia(tipoEtapa))
+            {
+                var cTxt = i < EtapaCantidades.Count ? EtapaCantidades[i] : null;
+                if (int.TryParse(cTxt, out var cc) && cc >= 0) cuantosEtapa = cc;
+            }
+
             _db.EtapasExcursion.Add(new EtapaExcursion
             {
                 ExcursionId = excursionId,
@@ -191,6 +201,7 @@ public class CargarModel : PageModel
                 Tipo = tipoEtapa,
                 Lugar = lugar,
                 Noches = noches,
+                Cantidad = cuantosEtapa,
                 ProveedorId = provId == 0 ? null : provId,
                 PrecioPorPersona = ParsePrecio(i < EtapaPrecios.Count ? EtapaPrecios[i] : "0"),
                 Incluye = string.IsNullOrWhiteSpace(incluye) ? null : incluye

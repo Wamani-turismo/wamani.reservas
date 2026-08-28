@@ -312,6 +312,7 @@ using (var scope = app.Services.CreateScope())
     // cada salida porque no salen de ninguna fórmula.
     EnsureSqliteColumn(db, "EtapasExcursion", "Noches", "INTEGER NOT NULL DEFAULT 1");
     EnsureSqliteColumn(db, "EtapasExcursion", "Tipo", "TEXT NOT NULL DEFAULT 'Hospedaje'");
+    EnsureSqliteColumn(db, "EtapasExcursion", "Cantidad", "INTEGER NULL");
     EnsureSqliteColumn(db, "OperativoProveedores", "Noches", "INTEGER NULL");
     EnsureSqliteColumn(db, "GastosExcursion", "Cantidad", "INTEGER NULL");
     EnsureSqliteColumn(db, "OperativoGastos", "Cantidad", "INTEGER NULL");
@@ -370,6 +371,10 @@ using (var scope = app.Services.CreateScope())
         // arrieros y los caballos. Todos se cuentan igual (cantidad × precio × veces).
         // Las filas que ya existían son hospedaje, que es el valor por defecto.
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""EtapasExcursion"" ADD COLUMN IF NOT EXISTS ""Tipo"" text NOT NULL DEFAULT 'Hospedaje';");
+
+        // Cuántos guías, arrieros o caballos van normalmente: los únicos que no salen de
+        // una fórmula. Sirve de referencia en cada salida y para el cálculo del costo.
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""EtapasExcursion"" ADD COLUMN IF NOT EXISTS ""Cantidad"" integer;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoProveedores"" ADD COLUMN IF NOT EXISTS ""Noches"" integer;");
 
         // Costos que se cuentan por CANTIDAD (arrieros, caballos, guías, traslados): no

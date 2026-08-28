@@ -139,11 +139,16 @@
                 <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Hospedaje')">+ Agregar hospedaje (otra persona)</button>
             }
 
-            @* Restaurante: uno o varios (por pasajero) *@
-            <div class="prov-group" data-tipo="Restaurante">
-                @foreach (var vm in RowsDe("Restaurante", true)) { <partial name="_ProvRow" model="vm" /> }
-            </div>
-            <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Restaurante')">+ Agregar restaurante (otra persona)</button>
+            @* Restaurante: uno o varios (por pasajero). En las travesías no va: se come en
+               el refugio (ya viene en el precio de la noche) o la comida la ponemos nosotros
+               como un gasto más, así que la sección sólo confundía. *@
+            @if (!Model.EsTravesia)
+            {
+                <div class="prov-group" data-tipo="Restaurante">
+                    @foreach (var vm in RowsDe("Restaurante", true)) { <partial name="_ProvRow" model="vm" /> }
+                </div>
+                <button type="button" class="btn btn-ghost prov-add-btn" onclick="agregarProv('Restaurante')">+ Agregar restaurante (otra persona)</button>
+            }
 
             @* Auto suelto: sólo cuando la salida NO tiene los traslados cargados arriba.
                Si los tiene, repetirlo acá sería cargar dos veces la misma plata. *@

@@ -151,6 +151,21 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Precio por persona")]
         public decimal PrecioPorPersona { get; set; }
 
+        // CUÁNTOS van normalmente, sólo para los que NO salen de una fórmula: guías,
+        // arrieros y caballos. En el hospedaje son los pasajeros, en los traslados los
+        // autos que hagan falta, así que ahí no se usa.
+        //
+        // Es una referencia, no una regla: en cada salida se sube o se baja. Sirve para dos
+        // cosas: que la salida arranque con un número razonable en vez de cero, y que el
+        // cálculo de "cuánto nos sale" de abajo pueda contarlos.
+        [Range(0, 999)]
+        [Display(Name = "Cuántos")]
+        public int? Cantidad { get; set; }
+
+        // Los que van de verdad si nadie toca nada: la referencia, o 1 para el guía (siempre
+        // va al menos uno) y 0 para arrieros y caballos, que se deciden salida por salida.
+        public int CantidadReferencia() => Cantidad ?? (Tipo == Guia ? 1 : 0);
+
         // Qué comidas vienen incluidas en el precio de esa noche (ej. "merienda + cena +
         // desayuno"). No se desglosa como gasto aparte: es sólo para saber qué le toca a
         // la gente cada día y no volver a comprarlo por las dudas.

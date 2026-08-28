@@ -547,6 +547,11 @@ input[type=file]::file-selector-button {
   #tablaEtapas input[name="EtapaIncluye"] { min-width: 125px; }
   #tablaGastos input[name="GastoNombres"] { min-width: 165px; }
   #tablaEtapas select { min-width: 105px; }
+
+  /* El desplegable de proveedor se estiraba a 300px con los nombres largos y le
+     robaba el lugar a las demás columnas. */
+  #tablaEtapas select[name="EtapaProveedorIds"] { max-width: 195px; }
+  #tablaEtapas .in-noches { min-width: 58px; }
 }
 .link-mini { background: none; border: none; color: var(--accent); font-family: inherit; font-size: .78rem; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline; }
 .link-mini:hover { opacity: .8; }

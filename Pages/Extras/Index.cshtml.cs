@@ -4,10 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Wamani.Reservas.Data;
 using Wamani.Reservas.Models;
 
-namespace Wamani.Reservas.Pages.Gastos;
+namespace Wamani.Reservas.Pages.Extras;
 
-// Gastos generales de la empresa (publicidad, botiquín, etc.): se cargan acá y se
-// descuentan del neto del mes en Finanzas.
+// Ingresos EXTRA: plata que entra por fuera de las reservas (comisiones por alquilar un
+// auto o conseguir un hospedaje, servicios sueltos, etc.). Se cargan acá y suman como
+// ingreso en Finanzas y en la Caja, por su fecha.
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -23,19 +24,16 @@ public class IndexModel : PageModel
 
     public DateTime MesActual { get; set; }
     public string MesTexto { get; set; } = "";
-    public List<GastoEmpresa> Lista { get; set; } = new();
+    public List<IngresoExtra> Lista { get; set; } = new();
     public decimal Total { get; set; }
+    public decimal TotalHistorico { get; set; }
 
     [BindProperty] public DateTime NuevoFecha { get; set; } = DateTime.Today;
-    [BindProperty] public string NuevoTipo { get; set; } = "Fijo";
+    [BindProperty] public string NuevoMotivo { get; set; } = "Comisión";
     [BindProperty] public string? NuevoDescripcion { get; set; }
+    [BindProperty] public string? NuevoDeQuien { get; set; }
     [BindProperty] public decimal NuevoMonto { get; set; }
-    [BindProperty] public bool NuevoDelFondo { get; set; }
     [BindProperty] public List<IFormFile> NuevoComprobante { get; set; } = new();
-
-    // Fondo del 10% acumulado, para saber cuánto hay disponible antes de gastarlo
-    public Wamani.Reservas.Services.FondoReserva.Mes Fondo { get; set; } = new();
-    public decimal TotalDelFondo { get; set; }   // lo gastado del fondo este mes
 
     [TempData] public string? Aviso { get; set; }
 
@@ -51,47 +49,46 @@ public class IndexModel : PageModel
         var fin = MesActual.AddMonths(1);
         MesTexto = MesActual.ToString("MMMM yyyy", new System.Globalization.CultureInfo("es-AR"));
 
-        Lista = await _db.GastosEmpresa
-            .Where(g => g.Fecha >= MesActual && g.Fecha < fin)
-            .OrderByDescending(g => g.Fecha)
+        Lista = await _db.IngresosExtra
+            .Where(e => e.Fecha >= MesActual && e.Fecha < fin)
+            .OrderByDescending(e => e.Fecha)
             .ToListAsync();
-        Total = Lista.Sum(g => g.Monto);
-        TotalDelFondo = Lista.Where(g => g.DelFondo).Sum(g => g.Monto);
+        Total = Lista.Sum(e => e.Monto);
 
-        Fondo = await Wamani.Reservas.Services.FondoReserva.CalcularAsync(_db, MesActual);
+        TotalHistorico = (await _db.IngresosExtra.ToListAsync()).Sum(e => e.Monto);
     }
 
     public async Task<IActionResult> OnPostAgregarAsync()
     {
         if (!string.IsNullOrWhiteSpace(NuevoDescripcion) && NuevoMonto > 0)
         {
-            var g = new GastoEmpresa
+            var e = new IngresoExtra
             {
                 Fecha = NuevoFecha.Date,
-                Tipo = GastoEmpresa.Tipos.Contains(NuevoTipo) ? NuevoTipo : "Fijo",
+                Motivo = IngresoExtra.Motivos.Contains(NuevoMotivo) ? NuevoMotivo : "Otro",
                 Descripcion = NuevoDescripcion.Trim(),
-                Monto = NuevoMonto,
-                DelFondo = NuevoDelFondo
+                DeQuien = string.IsNullOrWhiteSpace(NuevoDeQuien) ? null : NuevoDeQuien.Trim(),
+                Monto = NuevoMonto
             };
 
-            g.Comprobante = await Wamani.Reservas.Services.Adjuntos.AgregarAsync(
+            e.Comprobante = await Wamani.Reservas.Services.Adjuntos.AgregarAsync(
                 NuevoComprobante, Wamani.Reservas.Services.Comprobantes.Carpeta(_env), null);
 
-            _db.GastosEmpresa.Add(g);
+            _db.IngresosExtra.Add(e);
             await _db.SaveChangesAsync();
-            Aviso = "Gasto agregado.";
+            Aviso = "Ingreso extra agregado.";
         }
         return RedirectToPage(new { Mes = NuevoFecha.ToString("yyyy-MM") });
     }
 
     public async Task<IActionResult> OnPostEliminarAsync(int id)
     {
-        var g = await _db.GastosEmpresa.FindAsync(id);
-        if (g is not null)
+        var e = await _db.IngresosExtra.FindAsync(id);
+        if (e is not null)
         {
-            _db.GastosEmpresa.Remove(g);
+            _db.IngresosExtra.Remove(e);
             await _db.SaveChangesAsync();
-            Aviso = "Gasto borrado.";
+            Aviso = "Ingreso extra borrado.";
         }
         return RedirectToPage(new { Mes });
     }

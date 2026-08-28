@@ -28,6 +28,12 @@ namespace Wamani.Reservas.Models
 
         public string? Comprobante { get; set; }
 
+        // Si se tilda, este gasto se pagó con el FONDO (el 10% que se aparta de la ganancia
+        // de cada mes). Sigue siendo un gasto normal de la empresa: lo único que cambia es
+        // que además se descuenta del saldo del fondo, para saber cuánto queda ahí.
+        [Display(Name = "Sale del fondo del 10%")]
+        public bool DelFondo { get; set; } = false;
+
         public static readonly string[] Tipos = { "Fijo", "Variable" };
     }
 }

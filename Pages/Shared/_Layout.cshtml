@@ -41,6 +41,7 @@
         <symbol id="ic-usuarios" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.7"/><path d="M5 20a7 7 0 0 1 14 0"/></symbol>
         <symbol id="ic-gastos" viewBox="0 0 24 24"><path d="M6 3h12v18l-2.2-1.5-2 1.5-2-1.5-2 1.5-2-1.5L6 21z"/><path d="M9 8.5h6M9 12.5h6"/></symbol>
         <symbol id="ic-caja" viewBox="0 0 24 24"><rect x="3.5" y="7" width="17" height="12.5" rx="2"/><path d="M8 7V4.8h8V7"/><circle cx="12" cy="13.2" r="2.4"/></symbol>
+        <symbol id="ic-extra" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/></symbol>
         <symbol id="ic-compromisos" viewBox="0 0 24 24"><path d="M3 8h13"/><path d="M12.5 4.5 16 8l-3.5 3.5"/><path d="M21 16H8"/><path d="M11.5 12.5 8 16l3.5 3.5"/></symbol>
     </svg>
     <div class="app-shell">
@@ -70,6 +71,9 @@
                 </a>
                 <a class="sb-item @Activo("/gastos")" asp-page="/Gastos/Index" title="Gastos">
                     <span class="sb-ico"><svg class="ic"><use href="#ic-gastos"/></svg></span> <span>Gastos</span>
+                </a>
+                <a class="sb-item @Activo("/extras")" asp-page="/Extras/Index" title="Ingresos extra">
+                    <span class="sb-ico"><svg class="ic"><use href="#ic-extra"/></svg></span> <span>Extra</span>
                 </a>
                 <a class="sb-item @Activo("/caja")" asp-page="/Caja/Index" title="Caja">
                     <span class="sb-ico"><svg class="ic"><use href="#ic-caja"/></svg></span> <span>Caja</span>

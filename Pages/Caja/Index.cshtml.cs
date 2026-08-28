@@ -48,7 +48,9 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         var reservas = await _db.Reservas.ToListAsync();
-        Ingresos = reservas.Sum(r => (r.SenaMonto ?? 0) + (r.SaldoMonto ?? 0));
+        // Lo cobrado por reservas + los ingresos extra (comisiones, alquileres, etc.)
+        Ingresos = reservas.Sum(r => (r.SenaMonto ?? 0) + (r.SaldoMonto ?? 0))
+                 + (await _db.IngresosExtra.ToListAsync()).Sum(e => e.Monto);
 
         // OJO: acá sólo cuenta la plata que REALMENTE salió. Un gasto del operativo sin
         // FechaPago es una estimación copiada de la plantilla de la excursión (todavía no

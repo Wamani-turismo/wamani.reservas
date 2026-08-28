@@ -20,6 +20,7 @@ namespace Wamani.Reservas.Data
         public DbSet<Interesado> Interesados => Set<Interesado>();
         public DbSet<Usuario> Usuarios => Set<Usuario>();
         public DbSet<GastoEmpresa> GastosEmpresa => Set<GastoEmpresa>();
+        public DbSet<IngresoExtra> IngresosExtra => Set<IngresoExtra>();
         public DbSet<Retiro> Retiros => Set<Retiro>();
         public DbSet<Aporte> Aportes => Set<Aporte>();
 

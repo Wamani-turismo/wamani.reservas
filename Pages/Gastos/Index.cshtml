@@ -30,8 +30,28 @@
     </form>
 </div>
 
+<!-- Fondo del 10% disponible -->
+<div class="fin-cards">
+    <div class="fin-card fin-card-net">
+        <div class="fin-label">Fondo del 10% disponible</div>
+        <div class="fin-val" style="color:var(--accent)">@Money(Model.Fondo.Saldo)</div>
+        <div class="fin-label" style="margin-top:4px">
+            @Money(Model.Fondo.VieneDeAntes) de antes + @Money(Model.Fondo.AportadoDelMes) de este mes
+            @if (Model.Fondo.GastadoDelMes > 0)
+            {
+                <text>− @Money(Model.Fondo.GastadoDelMes) ya gastado</text>
+            }
+        </div>
+    </div>
+    <div class="fin-card">
+        <div class="fin-label">Gastado del fondo este mes</div>
+        <div class="fin-val" style="color:var(--warn)">@Money(Model.TotalDelFondo)</div>
+        <div class="fin-label" style="margin-top:4px">de @Money(Model.Total) en gastos del mes</div>
+    </div>
+</div>
+
 <!-- Cargar un gasto -->
-<div class="card">
+<div class="card" style="margin-top:12px">
     <h2>Agregar un gasto</h2>
     <form method="post" enctype="multipart/form-data" asp-page-handler="Agregar">
         <div class="form-grid">
@@ -45,6 +65,17 @@
             <div class="field full"><label>Descripción</label><input asp-for="NuevoDescripcion" placeholder="Ej: Publicidad en Instagram" /></div>
             <div class="field"><label>Monto</label><input asp-for="NuevoMonto" type="number" step="0.01" min="0" /></div>
             <div class="field"><label>Comprobante (opcional)</label><input asp-for="NuevoComprobante" type="file" accept="image/*,.pdf" multiple /></div>
+            <div class="field full">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                    <input asp-for="NuevoDelFondo" type="checkbox" style="width:auto" />
+                    Sale del fondo del 10%
+                </label>
+                <div class="hint">
+                    Tildalo si esta plata se saca del fondo acumulado. El gasto se descuenta
+                    igual de la ganancia del mes; lo que agrega el tilde es que además baja
+                    el saldo del fondo, para saber cuánto queda ahí.
+                </div>
+            </div>
         </div>
         <div class="acciones-form" style="margin-top:12px">
             <button type="submit" class="btn btn-primary">+ Agregar gasto</button>
@@ -68,7 +99,13 @@
             <tr>
                 <td data-label="Fecha">@g.Fecha.ToString("dd/MM/yy")</td>
                 <td data-label="Tipo">@g.Tipo</td>
-                <td data-label="Descripción">@g.Descripcion</td>
+                <td data-label="Descripción">
+                    @g.Descripcion
+                    @if (g.DelFondo)
+                    {
+                        <span style="display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;color:#fff;background:var(--accent)">del fondo 10%</span>
+                    }
+                </td>
                 <td class="num" data-label="Monto" style="color:var(--warn)">@Money(g.Monto)</td>
                 <td data-label="Comprobante">
                     @if (!string.IsNullOrEmpty(g.Comprobante))

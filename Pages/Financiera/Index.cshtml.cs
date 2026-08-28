@@ -44,11 +44,21 @@ public class IndexModel : PageModel
     public List<LineaExcursion> Lineas { get; set; } = new();
     public List<GastoTipo> GastosPorTipo { get; set; } = new();
 
-    public decimal Ingreso { get; set; }
+    public decimal Ingreso { get; set; }                         // cobrado por reservas
     public decimal Gastos { get; set; }                          // egresos de las excursiones
     public decimal GastosEmpresaTotal { get; set; }              // gastos generales de la empresa (publicidad, etc.)
     public List<GastoEmpresa> GastosEmpresaLista { get; set; } = new();
-    public decimal Neta => Ingreso - Gastos - GastosEmpresaTotal;
+
+    // Ingresos EXTRA del mes (comisiones, alquileres, servicios sueltos): no son de
+    // ninguna excursión, así que van aparte de la tabla por excursión pero suman al neto.
+    public List<IngresoExtra> ExtrasLista { get; set; } = new();
+    public decimal ExtrasTotal { get; set; }
+    public decimal IngresoTotal => Ingreso + ExtrasTotal;
+
+    // Fondo del 10%: lo que se aparta de la ganancia y se acumula mes a mes
+    public Wamani.Reservas.Services.FondoReserva.Mes Fondo { get; set; } = new();
+
+    public decimal Neta => IngresoTotal - Gastos - GastosEmpresaTotal;
     public decimal PorDueno => Math.Round(Neta / Duenos.Length, 2);
     // % de ganancia sobre TODO el costo (egresos de excursiones + gastos de empresa)
     public decimal MargenPct => (Gastos + GastosEmpresaTotal) > 0
@@ -143,6 +153,16 @@ public class IndexModel : PageModel
             .OrderByDescending(g => g.Fecha)
             .ToListAsync();
         GastosEmpresaTotal = GastosEmpresaLista.Sum(g => g.Monto);
+
+        // ---- Ingresos extra del mes (comisiones, alquileres, etc.) ----
+        ExtrasLista = await _db.IngresosExtra
+            .Where(e => e.Fecha >= MesActual && e.Fecha < fin)
+            .OrderByDescending(e => e.Fecha)
+            .ToListAsync();
+        ExtrasTotal = ExtrasLista.Sum(e => e.Monto);
+
+        // ---- Fondo del 10% acumulado hasta este mes ----
+        Fondo = await Wamani.Reservas.Services.FondoReserva.CalcularAsync(_db, MesActual);
 
         // ---- Egresos por tipo (lo pagado este mes), con detalle por excursión ----
         var porGastos = ops

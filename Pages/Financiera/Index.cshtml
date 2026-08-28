@@ -33,7 +33,13 @@
 <div class="fin-cards">
     <div class="fin-card">
         <div class="fin-label">Ingresos (cobrado este mes)</div>
-        <div class="fin-val">@Money(Model.Ingreso)</div>
+        <div class="fin-val">@Money(Model.IngresoTotal)</div>
+        @if (Model.ExtrasTotal > 0)
+        {
+            <div class="fin-label" style="margin-top:4px">
+                incluye @Money(Model.ExtrasTotal) de <a asp-page="/Extras/Index" asp-route-mes="@Model.MesActual.ToString("yyyy-MM")">ingresos extra</a>
+            </div>
+        }
     </div>
     <div class="fin-card">
         <div class="fin-label">Egresos (pagado este mes)</div>
@@ -50,6 +56,17 @@
         {
             <div class="fin-label" style="margin-top:2px">@Model.MargenPct.ToString("0")% de ganancia (sobre el costo)</div>
         }
+    </div>
+    <div class="fin-card">
+        <div class="fin-label">Fondo del 10% (acumulado)</div>
+        <div class="fin-val" style="color:var(--ok)">@Money(Model.Fondo.Saldo)</div>
+        <div class="fin-label" style="margin-top:4px">
+            @Money(Model.Fondo.VieneDeAntes) de antes + @Money(Model.Fondo.AportadoDelMes) de este mes
+            @if (Model.Fondo.GastadoDelMes > 0)
+            {
+                <text>− @Money(Model.Fondo.GastadoDelMes) gastado</text>
+            }
+        </div>
     </div>
     <div class="fin-card">
         <div class="fin-label">Reservas del mes</div>
@@ -74,6 +91,81 @@
         }
     </div>
 </div>
+
+<!-- Fondo del 10% -->
+<div class="card">
+    <h2>Fondo del 10%</h2>
+    <p class="subtitle">
+        De la ganancia de cada mes se aparta un 10% y se va acumulando. Lo que no se gasta
+        queda para el mes siguiente. Para usarlo, cargá el gasto en
+        <a asp-page="/Gastos/Index" asp-route-mes="@Model.MesActual.ToString("yyyy-MM")">Gastos</a>
+        y tildá <em>“Sale del fondo del 10%”</em>.
+    </p>
+    <table class="tabla">
+        <tbody>
+            <tr>
+                <td>Saldo que venía de los meses anteriores</td>
+                <td class="num">@Money(Model.Fondo.VieneDeAntes)</td>
+            </tr>
+            <tr>
+                <td>10% de la ganancia de @Model.MesTexto (@Money(Model.Fondo.GananciaDelMes))</td>
+                <td class="num" style="color:var(--ok)">+ @Money(Model.Fondo.AportadoDelMes)</td>
+            </tr>
+            <tr>
+                <td>Gastado del fondo este mes</td>
+                <td class="num" style="color:var(--warn)">− @Money(Model.Fondo.GastadoDelMes)</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td><strong>Saldo disponible del fondo</strong></td>
+                <td class="num"><strong style="color:var(--accent)">@Money(Model.Fondo.Saldo)</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+    @if (Model.Fondo.GananciaDelMes < 0)
+    {
+        <p class="hint" style="margin-top:10px">
+            Este mes dio pérdida, así que no se aparta nada. El fondo no se achica por eso:
+            sólo baja cuando se gasta.
+        </p>
+    }
+</div>
+
+<!-- Ingresos extra del mes -->
+@if (Model.ExtrasLista.Count > 0)
+{
+    <div class="card">
+        <h2>Ingresos extra del mes</h2>
+        <p class="subtitle">
+            Plata que entró por fuera de las reservas. Se carga en
+            <a asp-page="/Extras/Index" asp-route-mes="@Model.MesActual.ToString("yyyy-MM")">Extra</a>.
+        </p>
+        <table class="tabla">
+            <thead>
+                <tr><th>Fecha</th><th>Motivo</th><th>Descripción</th><th>De quién</th><th class="num">Monto</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Model.ExtrasLista)
+                {
+                    <tr>
+                        <td>@e.Fecha.ToString("dd/MM/yy")</td>
+                        <td>@e.Motivo</td>
+                        <td>@e.Descripcion</td>
+                        <td>@(string.IsNullOrWhiteSpace(e.DeQuien) ? "—" : e.DeQuien)</td>
+                        <td class="num" style="color:var(--ok)">@Money(e.Monto)</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4"><strong>Total extra del mes</strong></td>
+                    <td class="num"><strong style="color:var(--ok)">@Money(Model.ExtrasTotal)</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+}
 
 <!-- Por excursión -->
 <div class="table-wrap" style="margin-top:18px">

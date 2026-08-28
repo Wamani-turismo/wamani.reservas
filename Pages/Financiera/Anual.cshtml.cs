@@ -67,6 +67,7 @@ public class AnualModel : PageModel
         var ops = await _db.OperativoGastos.ToListAsync();
         var provs = await _db.OperativoProveedores.ToListAsync();
         var gastosEmp = await _db.GastosEmpresa.ToListAsync();
+        var extras = await _db.IngresosExtra.ToListAsync();
         var excNombres = await _db.Excursiones.ToDictionaryAsync(e => e.Id, e => e.Nombre);
 
         // Gastos generales de la empresa (publicidad, botiquín, etc.) por fecha
@@ -78,8 +79,10 @@ public class AnualModel : PageModel
         decimal IngresoDe(int anio, int? mes = null)
         {
             bool Ok(DateTime? f) => f is DateTime d && d.Year == anio && (mes == null || d.Month == mes);
+            // Lo cobrado por reservas + los ingresos extra (comisiones, alquileres, etc.)
             return reservas.Sum(r => (Ok(r.SenaFecha) ? (r.SenaMonto ?? 0) : 0)
-                                   + (Ok(r.SaldoFecha) ? (r.SaldoMonto ?? 0) : 0));
+                                   + (Ok(r.SaldoFecha) ? (r.SaldoMonto ?? 0) : 0))
+                 + extras.Sum(e => Ok(e.Fecha) ? e.Monto : 0);
         }
         decimal GastoDe(int anio, int? mes = null)
         {

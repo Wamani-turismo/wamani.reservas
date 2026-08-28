@@ -82,7 +82,8 @@ public class IndexModel : PageModel
 
         // ---- Caja de hoy: misma cuenta que la pantalla Caja (sólo plata que ya se movió) ----
         var reservas = await _db.Reservas.ToListAsync();
-        var ingresos = reservas.Sum(r => (r.SenaMonto ?? 0) + (r.SaldoMonto ?? 0));
+        var ingresos = reservas.Sum(r => (r.SenaMonto ?? 0) + (r.SaldoMonto ?? 0))
+                     + (await _db.IngresosExtra.ToListAsync()).Sum(e => e.Monto);
 
         var todosGastos = await _db.OperativoGastos.ToListAsync();
         var egGastos = todosGastos.Where(o => o.FechaPago != null).Sum(o => o.Precio);

@@ -109,6 +109,19 @@ public class PeriodoModel : PageModel
                     Monto = r.SaldoMonto!.Value
                 });
         }
+        // Ingresos extra (comisiones, alquileres, servicios sueltos)
+        foreach (var e in await _db.IngresosExtra.ToListAsync())
+        {
+            if (e.Fecha.Date >= DesdeReal && e.Fecha.Date < fin && e.Monto != 0)
+                Ingresos.Add(new Movimiento
+                {
+                    Fecha = e.Fecha.Date,
+                    Concepto = "Extra · " + e.Motivo,
+                    Detalle = string.IsNullOrWhiteSpace(e.DeQuien) ? e.Descripcion : $"{e.Descripcion} · {e.DeQuien}",
+                    Monto = e.Monto
+                });
+        }
+
         Ingresos = Ingresos.OrderBy(m => m.Fecha).ThenBy(m => m.Detalle).ToList();
 
         // ---- EGRESOS: gastos del operativo pagados + pagos a proveedores ----

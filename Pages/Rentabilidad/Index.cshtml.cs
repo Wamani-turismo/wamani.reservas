@@ -33,11 +33,18 @@ public class IndexModel : PageModel
             .GroupBy(g => g.ExcursionId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
+        // Las etapas (noches, traslados, pasajes, guía, arrieros, caballos) también son
+        // costo: en una travesía son casi toda la plata. Sin esto la ganancia sale inflada.
+        var etapas = (await _db.EtapasExcursion.ToListAsync())
+            .GroupBy(e => e.ExcursionId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
         foreach (var e in excs)
         {
             var items = gastos.GetValueOrDefault(e.Id) ?? new();
-            var alMin = RentabilidadCalc.Calcular(e, items, e.MinimoPersonas);
-            var alMax = RentabilidadCalc.Calcular(e, items, e.MaximoPersonas);
+            var etps = etapas.GetValueOrDefault(e.Id) ?? new();
+            var alMin = RentabilidadCalc.Calcular(e, items, etps, e.MinimoPersonas);
+            var alMax = RentabilidadCalc.Calcular(e, items, etps, e.MaximoPersonas);
             Filas.Add(new Fila
             {
                 Id = e.Id,
@@ -48,7 +55,7 @@ public class IndexModel : PageModel
                 GananciaMin = alMin.Ganancia,
                 GananciaMax = alMax.Ganancia,
                 MargenMax = alMax.MargenPct,
-                SinCostos = items.Count == 0
+                SinCostos = items.Count == 0 && etps.Count == 0
             });
         }
     }

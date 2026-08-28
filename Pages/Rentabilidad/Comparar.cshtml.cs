@@ -134,8 +134,26 @@ public class CompararModel : PageModel
         RealGastos = realGastos.Values.Sum(v => v.Monto);
 
         // ---------- PROVEEDORES / SERVICIOS (listas lado a lado, se comparan los subtotales) ----------
+        // Lo que se contrata para el GRUPO (noches, traslados, pasajes, guía, arrieros,
+        // caballos) también es costo teórico: en el operativo cae en Proveedores, así que
+        // va de este lado para que los subtotales se comparen contra lo mismo. Sin esto,
+        // en una travesía TODO el hospedaje aparecía como "está en el operativo pero no
+        // estaba previsto" y la diferencia daba un número enorme que no era real.
+        var etapasPlantilla = await _db.EtapasExcursion
+            .Where(x => x.ExcursionId == ExcursionId).OrderBy(x => x.Orden).ToListAsync();
+        var guias = Wamani.Reservas.Services.RentabilidadCalc.GuiasDe(etapasPlantilla);
+
+        var teoricaEtapas = etapasPlantilla
+            .Select(x => new ItemMonto
+            {
+                Nombre = Models.EtapaExcursion.Icono(x.Tipo) + " " +
+                         (string.IsNullOrWhiteSpace(x.Lugar) ? Models.EtapaExcursion.Seccion(x.Tipo) : x.Lugar.Trim()),
+                Monto = Wamani.Reservas.Services.RentabilidadCalc.CostoEtapa(x, Pax, guias)
+            });
+
         ProvTeorica = plantilla.Where(g => g.EsProveedor)
             .Select(g => new ItemMonto { Nombre = g.Nombre.Trim(), Monto = CostoItem(g) })
+            .Concat(teoricaEtapas)
             .Where(i => i.Monto > 0)
             .OrderByDescending(i => i.Monto).ToList();
         TeoricaProv = ProvTeorica.Sum(i => i.Monto);

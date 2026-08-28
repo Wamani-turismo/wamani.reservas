@@ -482,8 +482,10 @@
                 var veces = parseInt(f.querySelector('.in-noches').value) || 1;
                 if (veces < 1) veces = 1;
 
-                if (tipo === 'Traslado')      total += precio * Math.ceil((min + guias) / PERSONAS_POR_AUTO);
-                else if (tipo === 'Pasaje')   total += precio * (min + guias);
+                // "Veces" cuenta en todos: un traslado que se hace dos veces (ida y vuelta)
+                // se paga dos veces. El operativo ya lo contaba así; acá faltaba.
+                if (tipo === 'Traslado')      total += precio * Math.ceil((min + guias) / PERSONAS_POR_AUTO) * veces;
+                else if (tipo === 'Pasaje')   total += precio * (min + guias) * veces;
                 else if (esPorDia(tipo))      total += precio * (parseInt(f.querySelector('.in-cuantos').value) || 0) * veces;
                 else                          total += precio * min * veces;   // Hospedaje
             });

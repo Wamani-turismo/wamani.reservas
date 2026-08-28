@@ -4,6 +4,8 @@
     ViewData["Title"] = "Rentabilidad · " + Model.Excursion.Nombre;
     string Num(decimal m) => m.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
     var e = Model.Excursion;
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
 }
 
 <div class="toolbar">
@@ -17,7 +19,7 @@
     </div>
 </div>
 
-@if (Model.Items.Count == 0)
+@if (Model.SinCostos)
 {
     <div class="card">
         <p>Esta excursión todavía no tiene costos cargados. <a asp-page="/Excursiones/Cargar" asp-route-id="@e.Id">Cargalos acá</a> para ver la rentabilidad.</p>
@@ -49,6 +51,64 @@ else
         </div>
     </div>
 
+    <!-- De dónde sale el costo: los costos sueltos + todo lo que se contrata para el grupo -->
+    <div class="card">
+        <h2>De dónde sale el costo</h2>
+        <p class="hint" style="margin-top:0">
+            Con <strong id="outPaxDetalle">@e.MinimoPersonas</strong> pasajeros
+            y <strong>@Model.Guias</strong> guía(s).
+            Lo que está en cero no se cuenta.
+        </p>
+        <div class="table-wrap">
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>Concepto</th>
+                        <th>Cómo se cuenta</th>
+                        <th class="num">Precio</th>
+                        <th class="num">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @for (int i = 0; i < Model.Items.Count; i++)
+                {
+                    <tr>
+                        <td data-label="Concepto">@Model.Items[i].Nombre</td>
+                        <td data-label="Cómo se cuenta"><span class="cliente-sub">@Model.ComoSeCuenta(Model.Items[i])</span></td>
+                        <td class="num" data-label="Precio">@Money(Model.Items[i].Precio)</td>
+                        <td class="num" data-label="Total" data-costo="@i">$ 0</td>
+                    </tr>
+                }
+                @for (int i = 0; i < Model.Etapas.Count; i++)
+                {
+                    <tr>
+                        <td data-label="Concepto">@Model.TituloEtapa(Model.Etapas[i])</td>
+                        <td data-label="Cómo se cuenta"><span class="cliente-sub">@Model.ComoSeCuentaEtapa(Model.Etapas[i])</span></td>
+                        <td class="num" data-label="Precio">@Money(Model.Etapas[i].PrecioPorPersona)</td>
+                        <td class="num" data-label="Total" data-etapa="@i">$ 0</td>
+                    </tr>
+                }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th>Total</th>
+                        <th></th>
+                        <th></th>
+                        <th class="num" id="outCostoDetalle">$ 0</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        @if (Model.FaltanPrecios)
+        {
+            <p class="hint" style="color:var(--warn)">⚠️ Hay filas del grupo sin precio cargado: no se cuentan y el costo sale más bajo de lo que es.</p>
+        }
+        @if (Model.FaltanCantidades)
+        {
+            <p class="hint" style="color:var(--warn)">⚠️ Hay guías, arrieros o caballos con "Cuántos" en cero: cargá el número en la excursión para que el costo salga completo.</p>
+        }
+    </div>
+
     <!-- Gráfico de ganancia por cantidad de pasajeros -->
     <div class="card">
         <h2>Ganancia por cantidad de pasajeros</h2>
@@ -65,23 +125,63 @@ else
                 <text>{ nombre: "@g.Nombre.Replace("\"", "")", monto: @Num(g.Precio), tipo: "@g.TipoCalculo", cant: @(g.Cantidad ?? 0) },</text>
             }
         ];
+        // Lo que se contrata para el GRUPO: noches, traslados, pasajes, guía, arrieros,
+        // caballos. La cuenta es la misma que hace el operativo al armar la salida.
+        var ETAPAS = [
+            @foreach (var et in Model.Etapas)
+            {
+                <text>{ modo: "@Model.ModoJs(et)", monto: @Num(et.PrecioPorPersona), cant: @et.CantidadReferencia(), veces: @Model.Veces(et) },</text>
+            }
+        ];
         var PRECIO = @Num(e.PrecioPorPersona);
         var PXAUTO = @Model.PersonasPorAuto;
+        var GUIAS = @Model.Guias;
         var MIN = @e.MinimoPersonas, MAX = @e.MaximoPersonas;
         var pax = MIN;
 
         function money(n){ return "$ " + Math.round(n).toLocaleString("es-AR"); }
         function autos(p){ return p <= 0 ? 0 : Math.ceil(p / PXAUTO); }
+        // En los traslados el guía ocupa asiento, así que también cuenta para los autos.
+        function autosConGuias(p){ return p <= 0 ? 0 : Math.ceil((p + GUIAS) / PXAUTO); }
+
+        // Lo que sale un costo suelto con esa cantidad de gente
+        function montoCosto(c, p){
+            if (c.tipo === "Por auto" || c.tipo === "Por guía") return c.monto * autos(p);
+            if (c.tipo === "Cantidad") return c.monto * c.cant;
+            if (c.tipo === "Fijo") return c.monto;
+            return c.monto * p;   // Por persona
+        }
+
+        // Lo que sale una fila del grupo. Sin precio cargado no se cuenta.
+        function montoEtapa(et, p){
+            if (et.monto <= 0) return 0;
+            if (et.modo === "traslado") return et.monto * autosConGuias(p) * et.veces;
+            if (et.modo === "pasaje")   return et.monto * (p <= 0 ? 0 : p + GUIAS) * et.veces;
+            if (et.modo === "pordia")   return et.monto * et.cant * et.veces;
+            return et.monto * p * et.veces;   // Hospedaje
+        }
+
         function costo(p){
-            var a = autos(p), t = 0;
-            COSTOS.forEach(function(c){
-                if (c.tipo === "Por auto") t += c.monto * a;
-                else if (c.tipo === "Por guía") t += c.monto * a; // guía = auto (chofer-guía)
-                else if (c.tipo === "Cantidad") t += c.monto * c.cant; // arrieros, caballos, traslados
-                else if (c.tipo === "Fijo") t += c.monto;
-                else t += c.monto * p; // Por persona
-            });
+            var t = 0;
+            COSTOS.forEach(function(c){ t += montoCosto(c, p); });
+            ETAPAS.forEach(function(et){ t += montoEtapa(et, p); });
             return t;
+        }
+
+        // Actualiza la tabla "De dónde sale el costo"
+        function pintarDetalle(p){
+            var lbl = document.getElementById("outPaxDetalle");
+            if (lbl) lbl.textContent = p;
+            document.querySelectorAll("[data-costo]").forEach(function(td){
+                var c = COSTOS[parseInt(td.getAttribute("data-costo"))];
+                if (c) td.textContent = money(montoCosto(c, p));
+            });
+            document.querySelectorAll("[data-etapa]").forEach(function(td){
+                var et = ETAPAS[parseInt(td.getAttribute("data-etapa"))];
+                if (et) td.textContent = money(montoEtapa(et, p));
+            });
+            var tot = document.getElementById("outCostoDetalle");
+            if (tot) tot.textContent = money(costo(p));
         }
         function ganancia(p){ return PRECIO * p - costo(p); }
 
@@ -94,6 +194,7 @@ else
             document.getElementById("outCosto").textContent = money(cos);
             document.getElementById("outGanancia").textContent = money(gan);
             document.getElementById("outMargen").textContent = mar + "%";
+            pintarDetalle(pax);
             marcarBarra();
         }
         function cambiarPax(d){

@@ -121,7 +121,8 @@
                     <form method="post" asp-page-handler="Eliminar" asp-route-id="@g.Id" style="display:inline"
                           onsubmit="return confirm('¿Borrar este gasto?');">
                         <input type="hidden" asp-for="Mes" />
-                        <button type="submit" class="btn-mini btn-mini-danger">Quitar</button>
+                        <button type="submit" class="btn-mini btn-mini-danger" title="Borrar"
+                                onclick="return confirm('¿Realmente lo querés borrar?');">🗑</button>
                     </form>
                 </td>
             </tr>

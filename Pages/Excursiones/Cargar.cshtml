@@ -73,9 +73,9 @@
             <thead>
                 <tr>
                     <th>Ítem / costo</th>
-                    <th class="num" style="width:150px">Monto</th>
+                    <th class="num" style="width:120px">Monto</th>
                     <th style="width:190px">Cómo se cuenta</th>
-                    <th class="num" style="width:90px">Cantidad</th>
+                    <th class="num" style="width:80px">Cantidad</th>
                     <th style="width:110px">¿Proveedor?</th>
                     <th style="width:60px"></th>
                 </tr>
@@ -112,7 +112,7 @@
                                 <input type="hidden" name="GastoEsProveedor" value="@(gp ? "1" : "0")" />
                             </label>
                         </td>
-                        <td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>
+                        <td><button type="button" class="btn-mini btn-mini-danger" title="Borrar" onclick="quitarGasto(this)">🗑</button></td>
                     </tr>
                 }
             </tbody>
@@ -168,8 +168,8 @@
                     <th style="width:130px">Qué es</th>
                     <th>Lugar / tramo</th>
                     <th style="width:200px">Proveedor habitual</th>
-                    <th class="num" style="width:90px">Veces</th>
-                    <th class="num" style="width:150px">Precio unitario</th>
+                    <th class="num" style="width:80px">Veces</th>
+                    <th class="num" style="width:130px">Precio unitario</th>
                     <th>Notas / incluye</th>
                     <th style="width:60px"></th>
                 </tr>
@@ -212,7 +212,7 @@
                         <td class="num" data-label="Veces"><input name="EtapaNoches" type="number" step="1" min="1" value="@etNoches" class="in-noches" /></td>
                         <td class="num" data-label="Precio unitario"><input name="EtapaPrecios" type="number" step="0.01" min="0" value="@Num(et.PrecioPorPersona)" class="in-precio-etapa" /><div class="etapa-calc"></div></td>
                         <td data-label="Incluye"><input name="EtapaIncluye" value="@et.Incluye" placeholder="Ej: merienda + cena + desayuno" /></td>
-                        <td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarEtapa(this)">Quitar</button></td>
+                        <td><button type="button" class="btn-mini btn-mini-danger" title="Borrar" onclick="quitarEtapa(this)">🗑</button></td>
                     </tr>
                 }
             </tbody>
@@ -308,11 +308,12 @@
                 '</select></td>' +
                 '<td class="num" data-label="Cantidad"><input name="GastoCantidades" type="number" step="1" min="0" class="in-cant-plantilla" value="" style="display:none" /></td>' +
                 '<td data-label="¿Proveedor?"><label class="check-linea"><input type="checkbox" onchange="this.nextElementSibling.value = this.checked ? \'1\' : \'0\'" /><input type="hidden" name="GastoEsProveedor" value="0" /></label></td>' +
-                '<td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>';
+                '<td><button type="button" class="btn-mini btn-mini-danger" title="Borrar" onclick="quitarGasto(this)">🗑</button></td>';
             document.getElementById('gastosBody').appendChild(tr);
             tr.querySelector('input').focus();
         }
         function quitarGasto(btn) {
+            if (!confirm('¿Realmente lo querés borrar?')) return;
             btn.closest('tr').remove();
         }
 
@@ -344,7 +345,7 @@
                 '<td class="num" data-label="Veces"><input name="EtapaNoches" type="number" step="1" min="1" value="1" class="in-noches" /></td>' +
                 '<td class="num" data-label="Precio unitario"><input name="EtapaPrecios" type="number" step="0.01" min="0" class="in-precio-etapa" /><div class="etapa-calc"></div></td>' +
                 '<td data-label="Incluye"><input name="EtapaIncluye" placeholder="Ej: merienda + cena + desayuno" /></td>' +
-                '<td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarEtapa(this)">Quitar</button></td>';
+                '<td><button type="button" class="btn-mini btn-mini-danger" title="Borrar" onclick="quitarEtapa(this)">🗑</button></td>';
             document.getElementById('etapasBody').appendChild(tr);
             if (tipo) {
                 var sel = tr.querySelector('.sel-etapa-tipo');
@@ -358,6 +359,7 @@
             tr.querySelector("input[name=EtapaLugares]").focus();
         }
         function quitarEtapa(btn) {
+            if (!confirm('¿Realmente lo querés borrar?')) return;
             btn.closest('tr').remove();
             renumerarEtapas();
         }
@@ -399,16 +401,18 @@
                 return;
             }
 
-            var total = precio * veces;
-            var unidad = tipo === 'Traslado' ? 'por cada auto'
-                       : tipo === 'Pasaje'   ? 'por cada boleto'
-                       : tipo === 'Arriero'  ? 'por cada arriero'
-                       : tipo === 'Caballo'  ? 'por cada caballo'
-                       :                       'por cada persona';
-            var cuenta = veces > 1
-                ? (plata(precio) + ' × ' + veces + ' ' + (tipo === 'Arriero' || tipo === 'Caballo' ? 'días' : 'noches') + ' = ')
-                : '';
-            caja.innerHTML = cuenta + '<b>' + plata(total) + '</b> ' + unidad;
+            var unidad = tipo === 'Traslado' ? 'por auto'
+                       : tipo === 'Pasaje'   ? 'por boleto'
+                       : tipo === 'Arriero'  ? 'por arriero'
+                       : tipo === 'Caballo'  ? 'por caballo'
+                       :                       'por persona';
+
+            // Si no hay nada que multiplicar (una sola vez), el total es el mismo precio que
+            // ya está arriba: repetirlo no aporta y ocupa lugar. Sólo se aclara la unidad.
+            if (veces <= 1) { caja.textContent = unidad; return; }
+
+            var palabra = (tipo === 'Arriero' || tipo === 'Caballo') ? 'días' : 'noches';
+            caja.innerHTML = '× ' + veces + ' ' + palabra + ' = <b>' + plata(precio * veces) + '</b> ' + unidad;
         }
 
         function pintarTodosLosCalculos() {

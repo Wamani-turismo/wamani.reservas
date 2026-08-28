@@ -528,6 +528,14 @@ input[type=file]::file-selector-button {
    por una unidad (un arriero los 4 días, una persona las 2 noches, un auto...). */
 .etapa-calc { font-size: .76rem; color: var(--warn); margin-top: 5px; text-align: left; line-height: 1.3; }
 .etapa-calc b { font-weight: 700; }
+
+/* Las tablas de la excursión se apretaban mucho porque los campos de monto y de
+   cantidad ocupaban todo el ancho de la columna. Con lugar para 8 cifras alcanza
+   ($ 99.999.999) y queda aire para el resto. */
+#tablaGastos input[type=number],
+#tablaEtapas input[type=number] { max-width: 108px; }
+#tablaEtapas .in-noches,
+#tablaGastos .in-cant-plantilla { max-width: 68px; }
 .link-mini { background: none; border: none; color: var(--accent); font-family: inherit; font-size: .78rem; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline; }
 .link-mini:hover { opacity: .8; }
 

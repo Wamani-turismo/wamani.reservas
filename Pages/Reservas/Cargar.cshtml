@@ -239,7 +239,7 @@
                         </div>
                         <div class="field pas-quitar">
                             <label>&nbsp;</label>
-                            <button type="button" class="btn-mini btn-mini-danger" onclick="quitarPasajero(this)">Quitar</button>
+                            <button type="button" class="btn-mini btn-mini-danger" title="Borrar" onclick="quitarPasajero(this)">🗑</button>
                         </div>
                     </div>
                 </div>
@@ -356,6 +356,7 @@
             clone.querySelector('input[name=PasNombres]').focus();
         }
         function quitarPasajero(btn) {
+            if (!confirm('¿Realmente lo querés borrar?')) return;
             var body = document.getElementById('pasBody');
             var fila = btn.closest('.pas-row');
             if (body.querySelectorAll('.pas-row').length > 1) { fila.remove(); }

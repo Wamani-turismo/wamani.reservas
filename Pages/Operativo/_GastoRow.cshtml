@@ -48,5 +48,5 @@
         <input type="file" name="comp_@g.Id" accept="image/*,.pdf" class="in-comp" multiple />
         <partial name="_Adjuntos" model="@(g.Comprobante ?? "")" />
     </td>
-    <td><button type="button" class="btn-mini btn-mini-danger" onclick="quitarGasto(this)">Quitar</button></td>
+    <td><button type="button" class="btn-mini btn-mini-danger" title="Borrar" onclick="quitarGasto(this)">🗑</button></td>
 </tr>

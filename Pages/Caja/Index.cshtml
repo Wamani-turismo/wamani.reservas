@@ -104,7 +104,8 @@
                 <td>
                     <form method="post" asp-page-handler="EliminarAporte" asp-route-id="@a.Id" style="display:inline"
                           onsubmit="return confirm('¿Borrar este aporte?');">
-                        <button type="submit" class="btn-mini btn-mini-danger">Quitar</button>
+                        <button type="submit" class="btn-mini btn-mini-danger" title="Borrar"
+                                onclick="return confirm('¿Realmente lo querés borrar?');">🗑</button>
                     </form>
                 </td>
             </tr>
@@ -159,7 +160,8 @@
                 <td>
                     <form method="post" asp-page-handler="EliminarRetiro" asp-route-id="@r.Id" style="display:inline"
                           onsubmit="return confirm('¿Borrar este retiro?');">
-                        <button type="submit" class="btn-mini btn-mini-danger">Quitar</button>
+                        <button type="submit" class="btn-mini btn-mini-danger" title="Borrar"
+                                onclick="return confirm('¿Realmente lo querés borrar?');">🗑</button>
                     </form>
                 </td>
             </tr>

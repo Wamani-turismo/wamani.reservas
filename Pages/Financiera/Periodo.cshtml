@@ -1,0 +1,321 @@
+@page
+@model Wamani.Reservas.Pages.Financiera.PeriodoModel
+@{
+    ViewData["Title"] = "Movimiento por período";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+    string Dia(DateTime d) => d.ToString("dd/MM/yy", ci);
+    string DiaLargo(DateTime d) => d.ToString("ddd dd/MM", ci);
+    string Iso(DateTime d) => d.ToString("yyyy-MM-dd");
+
+    var hoy = DateTime.Today;
+    // Atajos: (texto, desde, hasta)
+    var atajos = new (string Texto, DateTime D, DateTime H)[]
+    {
+        ("Hoy", hoy, hoy),
+        ("Ayer", hoy.AddDays(-1), hoy.AddDays(-1)),
+        ("Últimos 7 días", hoy.AddDays(-6), hoy),
+        ("Últimos 15 días", hoy.AddDays(-14), hoy),
+        ("Últimos 30 días", hoy.AddDays(-29), hoy),
+        ("Este mes", new DateTime(hoy.Year, hoy.Month, 1), hoy),
+        ("Mes pasado", new DateTime(hoy.Year, hoy.Month, 1).AddMonths(-1),
+                       new DateTime(hoy.Year, hoy.Month, 1).AddDays(-1)),
+    };
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Movimiento por período</h1>
+        <p class="subtitle" style="margin:0">
+            Elegí entre qué fechas querés ver el movimiento: un día, una semana o lo que necesites.
+            La plata se cuenta por la fecha en que entró o salió, igual que en la Financiera mensual.
+        </p>
+    </div>
+    <a class="btn btn-ghost" asp-page="/Financiera/Index">← Volver al mes</a>
+</div>
+
+<!-- Filtro de fechas -->
+<div class="card">
+    <form method="get" class="form-grid" style="align-items:end">
+        <div class="field">
+            <label for="Desde">Desde</label>
+            <input type="date" id="Desde" name="Desde" value="@Iso(Model.DesdeReal)" />
+        </div>
+        <div class="field">
+            <label for="Hasta">Hasta</label>
+            <input type="date" id="Hasta" name="Hasta" value="@Iso(Model.HastaReal)" />
+        </div>
+        <div class="field">
+            <button type="submit" class="btn btn-primary">Ver período</button>
+        </div>
+    </form>
+
+    <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px">
+        @foreach (var a in atajos)
+        {
+            var activo = Model.DesdeReal == a.D.Date && Model.HastaReal == a.H.Date;
+            var estiloAtajo = activo ? "background:var(--accent);color:#fff;border-color:var(--accent)" : "";
+            <a class="btn-mini btn-mini-ghost"
+               style="@estiloAtajo"
+               asp-page="/Financiera/Periodo"
+               asp-route-desde="@Iso(a.D)" asp-route-hasta="@Iso(a.H)">@a.Texto</a>
+        }
+    </div>
+</div>
+
+<!-- Resumen -->
+<div class="fin-cards" style="margin-top:12px">
+    <div class="fin-card">
+        <div class="fin-label">Reservas cargadas</div>
+        <div class="fin-val">@Model.CantidadReservas</div>
+        <div class="fin-label" style="margin-top:4px">
+            @Model.CantidadPersonas persona(s) · @Money(Model.TotalVendido) vendido
+        </div>
+    </div>
+    <div class="fin-card">
+        <div class="fin-label">Ingresos (cobrado)</div>
+        <div class="fin-val" style="color:var(--ok)">@Money(Model.TotalIngresos)</div>
+        <div class="fin-label" style="margin-top:4px">@Model.Ingresos.Count cobro(s)</div>
+    </div>
+    <div class="fin-card">
+        <div class="fin-label">Egresos (pagado)</div>
+        <div class="fin-val" style="color:var(--warn)">@Money(Model.TotalEgresos)</div>
+        <div class="fin-label" style="margin-top:4px">@Model.Egresos.Count pago(s) de salidas</div>
+    </div>
+    <div class="fin-card">
+        <div class="fin-label">Gastos de empresa</div>
+        <div class="fin-val" style="color:var(--warn)">@Money(Model.TotalGastosEmpresa)</div>
+        <div class="fin-label" style="margin-top:4px">@Model.GastosEmpresaLista.Count gasto(s)</div>
+    </div>
+    <div class="fin-card fin-card-net">
+        <div class="fin-label">Neto del período</div>
+        <div class="fin-val" style="color:var(--accent)">@Money(Model.Neto)</div>
+        <div class="fin-label" style="margin-top:4px">
+            @Dia(Model.DesdeReal) al @Dia(Model.HastaReal) · @Model.CantidadDias día(s)
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top:4px">
+    <p style="margin:0;color:var(--ink-soft)">
+        <strong>Neto</strong> = ingresos @Money(Model.TotalIngresos)
+        − egresos de salidas @Money(Model.TotalEgresos)
+        − gastos de empresa @Money(Model.TotalGastosEmpresa)
+        = <strong>@Money(Model.Neto)</strong>.
+    </p>
+</div>
+
+<!-- Día por día -->
+<div class="card" style="margin-top:12px">
+    <h2 style="margin-top:0">Día por día</h2>
+    <p class="subtitle">
+        @if (Model.CantidadDias <= 31)
+        {
+            <text>Todos los días del período, incluidos los que no tuvieron movimiento.</text>
+        }
+        else
+        {
+            <text>Como el período es largo, se listan sólo los días que tuvieron movimiento.</text>
+        }
+    </p>
+
+    @if (Model.Dias.Count == 0)
+    {
+        <p style="color:var(--ink-soft)">No hubo movimiento en estas fechas.</p>
+    }
+    else
+    {
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Día</th>
+                    <th style="text-align:right">Reservas</th>
+                    <th style="text-align:right">Ingresos</th>
+                    <th style="text-align:right">Egresos</th>
+                    <th style="text-align:right">Gastos empresa</th>
+                    <th style="text-align:right">Neto</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var d in Model.Dias)
+                {
+                    var estiloFila = d.TuvoMovimiento ? "" : "opacity:.5";
+                    var colorNeto = d.Neto < 0m ? "color:var(--warn)" : "";
+                    var textoNeto = d.TuvoMovimiento ? Money(d.Neto) : "—";
+                    <tr style="@estiloFila">
+                        <td>@DiaLargo(d.Fecha)</td>
+                        <td style="text-align:right">@(d.ReservasNuevas == 0 ? "—" : d.ReservasNuevas.ToString())</td>
+                        <td style="text-align:right">@(d.Ingresos == 0 ? "—" : Money(d.Ingresos))</td>
+                        <td style="text-align:right">@(d.Egresos == 0 ? "—" : Money(d.Egresos))</td>
+                        <td style="text-align:right">@(d.GastosEmpresa == 0 ? "—" : Money(d.GastosEmpresa))</td>
+                        <td style="text-align:right"><strong style="@colorNeto">@textoNeto</strong></td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td><strong>Total</strong></td>
+                    <td style="text-align:right"><strong>@Model.CantidadReservas</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.TotalIngresos)</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.TotalEgresos)</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.TotalGastosEmpresa)</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.Neto)</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+</div>
+
+<!-- Reservas cargadas en el período -->
+<div class="card" style="margin-top:12px">
+    <h2 style="margin-top:0">Reservas cargadas en el período</h2>
+    <p class="subtitle">Por el día en que se cargó la reserva, sin importar cuándo sale la excursión.</p>
+
+    @if (Model.Reservas.Count == 0)
+    {
+        <p style="color:var(--ink-soft)">No se cargó ninguna reserva en estas fechas.</p>
+    }
+    else
+    {
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Cargada</th><th>Pasajero</th><th>Excursión</th><th>Sale</th>
+                    <th style="text-align:right">Pers.</th>
+                    <th style="text-align:right">Total</th>
+                    <th style="text-align:right">Cobrado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model.Reservas)
+                {
+                    <tr>
+                        <td>@Dia(r.Cargada)</td>
+                        <td>@r.Cliente</td>
+                        <td>@r.Excursion</td>
+                        <td>@Dia(r.Sale)</td>
+                        <td style="text-align:right">@r.Personas</td>
+                        <td style="text-align:right">@Money(r.Total)</td>
+                        <td style="text-align:right">@Money(r.Cobrado)</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" style="text-align:right"><strong>Total</strong></td>
+                    <td style="text-align:right"><strong>@Model.CantidadPersonas</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.TotalVendido)</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.Reservas.Sum(x => x.Cobrado))</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+</div>
+
+<!-- Detalle de ingresos -->
+<div class="card" style="margin-top:12px">
+    <h2 style="margin-top:0">Ingresos del período</h2>
+    <p class="subtitle">Cada seña y cada saldo cobrado, por su día de cobro.</p>
+
+    @if (Model.Ingresos.Count == 0)
+    {
+        <p style="color:var(--ink-soft)">No entró plata en estas fechas.</p>
+    }
+    else
+    {
+        <table class="tabla">
+            <thead>
+                <tr><th>Día</th><th>Concepto</th><th>De quién</th><th style="text-align:right">Monto</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var m in Model.Ingresos)
+                {
+                    <tr>
+                        <td>@Dia(m.Fecha)</td>
+                        <td>@m.Concepto</td>
+                        <td>@m.Detalle</td>
+                        <td style="text-align:right"><strong>@Money(m.Monto)</strong></td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" style="text-align:right"><strong>Total cobrado</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.TotalIngresos)</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+</div>
+
+<!-- Detalle de egresos -->
+<div class="card" style="margin-top:12px">
+    <h2 style="margin-top:0">Egresos del período</h2>
+    <p class="subtitle">Gastos del operativo tildados como pagados y pagos a proveedores, por su día de pago.</p>
+
+    @if (Model.Egresos.Count == 0)
+    {
+        <p style="color:var(--ink-soft)">No salió plata de salidas en estas fechas.</p>
+    }
+    else
+    {
+        <table class="tabla">
+            <thead>
+                <tr><th>Día</th><th>Concepto</th><th>Excursión</th><th style="text-align:right">Monto</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var m in Model.Egresos)
+                {
+                    <tr>
+                        <td>@Dia(m.Fecha)</td>
+                        <td>@m.Concepto</td>
+                        <td>@m.Detalle</td>
+                        <td style="text-align:right"><strong>@Money(m.Monto)</strong></td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" style="text-align:right"><strong>Total pagado</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.TotalEgresos)</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+</div>
+
+<!-- Gastos de empresa -->
+<div class="card" style="margin-top:12px">
+    <h2 style="margin-top:0">Gastos de la empresa en el período</h2>
+    <p class="subtitle">Publicidad, herramientas y demás gastos generales que no son de una salida puntual.</p>
+
+    @if (Model.GastosEmpresaLista.Count == 0)
+    {
+        <p style="color:var(--ink-soft)">No hubo gastos de empresa en estas fechas.</p>
+    }
+    else
+    {
+        <table class="tabla">
+            <thead>
+                <tr><th>Día</th><th>Tipo</th><th>Descripción</th><th style="text-align:right">Monto</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var g in Model.GastosEmpresaLista)
+                {
+                    <tr>
+                        <td>@Dia(g.Fecha)</td>
+                        <td>@g.Tipo</td>
+                        <td>@g.Descripcion</td>
+                        <td style="text-align:right"><strong>@Money(g.Monto)</strong></td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" style="text-align:right"><strong>Total gastos de empresa</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.TotalGastosEmpresa)</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+</div>

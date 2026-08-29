@@ -258,6 +258,23 @@
     </div>
 </form>
 
+@* Ventanita para escribir la nota de un gasto o de un proveedor. Va FUERA del formulario a
+   propósito: así el textarea no se manda como un campo más y no desacomoda las listas. *@
+<div id="modalNota" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(35,51,46,.55);z-index:999;align-items:center;justify-content:center;padding:16px">
+    <div style="background:var(--surface);color:var(--ink);width:100%;max-width:520px;padding:22px;border-radius:14px;box-shadow:0 14px 44px rgba(0,0,0,.25)">
+        <h2 id="notaTitulo" style="margin:0 0 4px">Nota</h2>
+        <p class="hint" style="margin:0 0 14px">
+            Lo que haga falta acordarse de esto <strong>en esta salida</strong>: con quién se
+            arregló, qué incluye, por qué salió distinto. No entra en ninguna cuenta.
+        </p>
+        <textarea id="notaTexto" rows="7" style="width:100%" placeholder="Ej: se pagó en efectivo a Don Ramón, incluye la cena de los dos guías."></textarea>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+            <button type="button" class="btn btn-ghost" onclick="cerrarNota()">Cancelar</button>
+            <button type="button" class="btn btn-primary" onclick="guardarNota()">💾 Guardar</button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         function money(n) { return "$ " + (isNaN(n) ? 0 : Math.round(n)).toLocaleString("es-AR"); }
@@ -352,8 +369,11 @@
                 // exactamente un valor a cada lista.
                 '<td class="num" data-label="Precio y total"><input type="hidden" name="EsManual" value="1" class="es-manual" /><input type="hidden" name="Cantidades" value="" /><input name="Precios" type="number" step="0.01" min="0" value="" class="in-precio" /><div class="calc-linea"><span class="cliente-sub">total a mano</span></div></td>' +
                 '<td data-label="Comprobante"><input type="file" name="comp_' + key + '" accept="image/*,.pdf" class="in-comp" multiple /></td>' +
-                '<td><button type="button" class="btn-mini btn-mini-danger" title="Borrar" onclick="quitarGasto(this)">🗑</button></td>';
+                '<td><input type="hidden" name="Comentarios" value="" />' +
+                '<button type="button" class="btn-mini btn-mini-ghost btn-nota" onclick="abrirNota(this)">📋</button>' +
+                '<button type="button" class="btn-mini btn-mini-danger" title="Borrar" onclick="quitarGasto(this)">🗑</button></td>';
             document.getElementById('gastosBody').appendChild(tr);
+            pintarNota(tr.querySelector('.btn-nota'));
             tr.querySelector('input[name=Nombres]').focus();
         }
         function quitarGasto(btn) {
@@ -379,6 +399,62 @@
             tr.dataset.mult = parseInt(e.target.value) || 0;
             pintarFila(tr); recalcular();
         });
+
+        // ---- La nota de cada gasto y de cada proveedor (el botón 📋) ----
+        // Funciona igual que en la excursión: el texto vive en un campo escondido de la
+        // fila y la ventanita lo lee y lo escribe. Al tocar "Guardar" se guarda el
+        // operativo entero, así queda en la base al toque.
+        var filaNota = null;
+
+        // Qué campo escondido usa esta fila: los gastos y los proveedores tienen el suyo.
+        function campoNota(fila) {
+            return fila.querySelector('input[name=Comentarios]') ||
+                   fila.querySelector('input[name=ProvComentarios]');
+        }
+
+        // De qué es la nota, para ponerlo de título.
+        function tituloNota(fila) {
+            var g = fila.querySelector('input[name=Nombres]');
+            if (g) return (g.value || '').trim();
+            var p = fila.querySelector('.prov-tipo');
+            return p ? p.textContent.trim().replace(/\s+/g, ' ') : '';
+        }
+
+        function pintarNota(btn) {
+            if (!btn) return;
+            var esc = campoNota(btn.closest('.gasto-row, .prov-row'));
+            var hay = esc && esc.value.trim() !== '';
+            btn.style.opacity = hay ? '1' : '0.4';
+            btn.title = hay ? esc.value : 'Escribir una nota sobre esto';
+        }
+
+        function abrirNota(btn) {
+            filaNota = btn.closest('.gasto-row, .prov-row');
+            var nombre = tituloNota(filaNota);
+            document.getElementById('notaTitulo').textContent = nombre ? ('Nota · ' + nombre) : 'Nota';
+            var texto = document.getElementById('notaTexto');
+            texto.value = campoNota(filaNota).value;
+            document.getElementById('modalNota').style.display = 'flex';
+            texto.focus();
+        }
+
+        function cerrarNota() {
+            document.getElementById('modalNota').style.display = 'none';
+            filaNota = null;
+        }
+
+        function guardarNota() {
+            if (!filaNota) return;
+            campoNota(filaNota).value = document.getElementById('notaTexto').value;
+            pintarNota(filaNota.querySelector('.btn-nota'));
+            // El formulario DE LA FILA, no el primero de la página: el menú de arriba tiene
+            // el suyo (el botón "Salir") y mandar ése cerraría la sesión sin guardar nada.
+            var form = filaNota.closest('form');
+            cerrarNota();
+            if (form) form.submit();
+        }
+
+        document.querySelectorAll('.btn-nota').forEach(pintarNota);
 
         // Aviso de los traslados y los pasajes: cuando lo cargado no coincide con la gente
         // que viaja (pasajeros + guías; el chofer va aparte porque es contratado). No se
@@ -452,6 +528,10 @@
             clone.querySelectorAll('.prov-total,.prov-sena,.prov-saldo').forEach(function (i) { i.value = ''; i.readOnly = false; i.style.background = ''; i.dataset.manual = ''; });
             // Las fechas de pago heredadas no valen para la fila nueva: se vacían.
             clone.querySelectorAll('.prov-fecha').forEach(function (i) { i.value = ''; });
+            // La nota tampoco se hereda: es de la fila de la que se copió, no de la nueva.
+            var notaClon = clone.querySelector('input[name=ProvComentarios]');
+            if (notaClon) notaClon.value = '';
+            pintarNota(clone.querySelector('.btn-nota'));
             // Filas con cantidad (guía / vehículo): la nueva arranca en 1 y sin precio,
             // para que se complete sola al elegir el proveedor.
             var cPers = clone.querySelector('.etapa-personas'); if (cPers) cPers.value = '1';

@@ -60,5 +60,11 @@
         <input type="file" name="comp_@g.Id" accept="image/*,.pdf" class="in-comp" multiple />
         <partial name="_Adjuntos" model="@(g.Comprobante ?? "")" />
     </td>
-    <td><button type="button" class="btn-mini btn-mini-danger" title="Borrar" onclick="quitarGasto(this)">🗑</button></td>
+    <td>
+        @* La nota de este gasto en esta salida. El texto viaja escondido y se escribe en
+           la ventanita del botón 📋; va SIEMPRE, para no desacomodar las listas del form. *@
+        <input type="hidden" name="Comentarios" value="@g.Comentario" />
+        <button type="button" class="btn-mini btn-mini-ghost btn-nota" onclick="abrirNota(this)">📋</button>
+        <button type="button" class="btn-mini btn-mini-danger" title="Borrar" onclick="quitarGasto(this)">🗑</button>
+    </td>
 </tr>

@@ -34,6 +34,10 @@
         <input name="ProvNombresNuevos" class="prov-nuevo" type="text" value=""
                placeholder="Nombre del hospedaje nuevo" style="display:none" />
         <span class="prov-falta-wrap">Falta: <strong class="prov-pend"></strong></span>
+        @* La nota de esta parada en esta salida (botón 📋). Igual que en _ProvRow: el campo
+           va siempre para que las listas del formulario queden alineadas. *@
+        <input type="hidden" name="ProvComentarios" value="@a?.Comentario" />
+        <button type="button" class="btn-mini btn-mini-ghost btn-nota" onclick="abrirNota(this)">📋</button>
     </div>
 
     @if (!string.IsNullOrWhiteSpace(Model.Incluye))

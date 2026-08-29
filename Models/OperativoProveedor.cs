@@ -45,6 +45,11 @@ namespace Wamani.Reservas.Models
         // Las noches que hay que contar de verdad (nunca menos de 1).
         public int NochesReales() => Noches is int n && n > 0 ? n : 1;
 
+        // Nota escrita a mano sobre este servicio EN ESTA SALIDA: con quién se habló, qué
+        // incluye, por qué cobró distinto. No entra en ninguna cuenta. Botón 📋.
+        [System.ComponentModel.DataAnnotations.MaxLength(2000)]
+        public string? Comentario { get; set; }
+
         public decimal Total { get; set; }   // costo total del proveedor
         public decimal Sena { get; set; }    // monto de la seña
         public decimal Saldo { get; set; }   // monto del saldo

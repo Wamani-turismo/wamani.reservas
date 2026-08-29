@@ -194,6 +194,7 @@ public class SalidaModel : PageModel
     [BindProperty] public List<int> GastoReservaIds { get; set; } = new();  // a qué reserva pertenece el gasto (0 = compartido)
     [BindProperty] public List<int> Comprados { get; set; } = new();  // ids tildados
     [BindProperty] public List<string?> FechasPago { get; set; } = new();  // el día en que se pagó cada gasto
+    [BindProperty] public List<string?> Comentarios { get; set; } = new();  // la nota de cada gasto (botón 📋)
     [BindProperty] public bool ServiciosPagados { get; set; }
     [BindProperty] public IFormFile? ComprobanteArchivo { get; set; }
 
@@ -208,6 +209,8 @@ public class SalidaModel : PageModel
     // Los días en que se pagaron de verdad la seña y el saldo
     [BindProperty] public List<string?> ProvFechasSena { get; set; } = new();
     [BindProperty] public List<string?> ProvFechasSaldo { get; set; } = new();
+    // La nota de cada proveedor (botón 📋)
+    [BindProperty] public List<string?> ProvComentarios { get; set; } = new();
     [BindProperty] public List<string?> ProvParaQuien { get; set; } = new();
     [BindProperty] public List<int> ProvReservaIds { get; set; } = new();   // a qué reserva pertenece (hospedaje/restaurante)
 
@@ -492,6 +495,9 @@ public class SalidaModel : PageModel
             // El día en que se pagó, tal como quedó escrito en la pantalla.
             var fechaEscrita = ParseFecha(i < FechasPago.Count ? FechasPago[i] : null);
 
+            // La nota del botón 📋. Vacía se guarda como null, no como texto en blanco.
+            var notaGasto = Recortar(i < Comentarios.Count ? Comentarios[i] : null);
+
             if (id == 0)
             {
                 // Fila nueva agregada a mano en el operativo → el monto es el total directo.
@@ -506,7 +512,8 @@ public class SalidaModel : PageModel
                     Precio = valor,
                     // Un gasto agregado a mano es plata que ya se gastó de verdad: nace
                     // tildado y con fecha de pago. (La regla es siempre: tilde = pagado.)
-                    Comprado = valor > 0
+                    Comprado = valor > 0,
+                    Comentario = notaGasto
                 };
                 if (valor > 0) nuevo.FechaPago = fechaEscrita ?? Wamani.Reservas.Services.Reloj.HoyJujuy();
                 nuevo.Comprobante = await GuardarArchivosAsync($"comp_{clave}", null);
@@ -519,6 +526,7 @@ public class SalidaModel : PageModel
                 {
                     g.Nombre = nombre;
                     g.Comprado = comprado;
+                    g.Comentario = notaGasto;
 
                     // Ítems de tipo "Cantidad" (arrieros, caballos, guías, traslados): la
                     // cantidad la deciden los chicos con los botones + y −, así que se toma
@@ -624,6 +632,7 @@ public class SalidaModel : PageModel
             var sena = ParsePrecio(i < ProvSenas.Count ? ProvSenas[i] : "0");
             var saldo = ParsePrecio(i < ProvSaldos.Count ? ProvSaldos[i] : "0");
             var paraQuien = (i < ProvParaQuien.Count ? ProvParaQuien[i] : null)?.Trim();
+            var notaProv = Recortar(i < ProvComentarios.Count ? ProvComentarios[i] : null);
 
             // Fila "de grupo": todo el grupo en un lugar de la ruta (hospedaje de travesía),
             // o cuántos guías / autos van y cuánto cobra cada uno.
@@ -642,7 +651,11 @@ public class SalidaModel : PageModel
             // poder rearmarla la próxima vez. Las filas por pasajero no los usan y van en null.
             var esDeGrupo = personas > 0 || precioPP > 0 || !string.IsNullOrWhiteSpace(lugar);
 
-            var vacia = provId == 0 && total == 0 && sena == 0 && saldo == 0 && string.IsNullOrWhiteSpace(paraQuien);
+            // Una fila está vacía cuando no tiene NADA: ni proveedor, ni plata, ni para
+            // quién… ni una nota escrita. Si alguien anotó algo, la fila se guarda aunque
+            // todavía no tenga montos; si no, se perdería lo que acaba de escribir.
+            var vacia = provId == 0 && total == 0 && sena == 0 && saldo == 0
+                     && string.IsNullOrWhiteSpace(paraQuien) && notaProv is null;
 
             OperativoProveedor? row;
             if (rowId == 0)
@@ -672,6 +685,7 @@ public class SalidaModel : PageModel
             row.Total = total;
             row.Sena = sena;
             row.Saldo = saldo;
+            row.Comentario = notaProv;
             row.ParaQuien = string.IsNullOrWhiteSpace(paraQuien) ? null : paraQuien;
 
             // El día en que se pagó la seña y el saldo: manda lo que se escribió en la
@@ -711,9 +725,12 @@ public class SalidaModel : PageModel
     // Lo que ya está pagado o tiene comprobante NO se toca: eso es plata, no estimación.
     public async Task<IActionResult> OnPostRehacerGastosAsync()
     {
+        // Tampoco se toca lo que tenga una NOTA escrita a mano: si alguien se tomó el
+        // trabajo de anotar algo ahí, es información suya, igual que un comprobante.
         var borrables = await _db.OperativoGastos
             .Where(o => o.ExcursionId == ExcursionId && o.Fecha.Date == Fecha.Date
-                     && !o.Comprado && o.FechaPago == null && o.Comprobante == null)
+                     && !o.Comprado && o.FechaPago == null && o.Comprobante == null
+                     && o.Comentario == null)
             .ToListAsync();
 
         int cuantos = borrables.Count;
@@ -742,6 +759,15 @@ public class SalidaModel : PageModel
 
     [BindProperty(SupportsGet = true)]
     public bool Guardado { get; set; }
+
+    // Una nota escrita a mano: sin espacios de más, tope de 2000 letras (lo que entra en la
+    // columna) y vacía se guarda como null.
+    private static string? Recortar(string? txt)
+    {
+        var t = txt?.Trim();
+        if (string.IsNullOrWhiteSpace(t)) return null;
+        return t.Length > 2000 ? t.Substring(0, 2000) : t;
+    }
 
     // Una fecha escrita en la pantalla ("2026-08-28"). Si viene vacía o mal, devuelve null
     // y el que llama decide con qué reemplazarla.

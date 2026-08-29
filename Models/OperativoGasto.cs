@@ -64,6 +64,14 @@ namespace Wamani.Reservas.Models
         public decimal TotalPara(int pasajeros)
             => PrecioUnitario is decimal u ? u * MultiplicadorPropio(pasajeros) : Precio;
 
+        // Nota escrita a mano sobre este gasto EN ESTA SALIDA: con quién se arregló, por qué
+        // salió distinto, qué se compró. No entra en ninguna cuenta. Se carga con el botón 📋.
+        // Es aparte de la nota de la excursión: aquella vale para todas las salidas, ésta
+        // sólo para ésta.
+        [MaxLength(2000)]
+        [Display(Name = "Nota")]
+        public string? Comentario { get; set; }
+
         public bool Comprado { get; set; }
 
         // Comprobante de pago de ESTE gasto (foto o PDF)

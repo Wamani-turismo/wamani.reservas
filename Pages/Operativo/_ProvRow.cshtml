@@ -55,6 +55,10 @@
             <input type="hidden" name="ProvParaQuien" value="@a?.ParaQuien" />
         }
         <span class="prov-falta-wrap">Falta: <strong class="prov-pend"></strong></span>
+        @* La nota de este servicio en esta salida (botón 📋). El campo va siempre, aunque
+           no se use, para que todas las filas aporten un valor a la misma lista. *@
+        <input type="hidden" name="ProvComentarios" value="@a?.Comentario" />
+        <button type="button" class="btn-mini btn-mini-ghost btn-nota" onclick="abrirNota(this)">📋</button>
         @if (Model.ConPasajero || Model.ConCantidad)
         {
             <button type="button" class="btn-mini btn-mini-danger" title="Borrar" onclick="quitarProv(this)">🗑</button>

@@ -390,8 +390,12 @@
             if (!filaNota) return;
             filaNota.querySelector('input[name=GastoComentarios]').value = document.getElementById('notaTexto').value;
             pintarNota(filaNota.querySelector('.btn-nota'));
+            // OJO: tiene que ser el formulario DE LA FILA, no el primero de la página.
+            // El menú de arriba tiene un formulario propio (el botón "Salir"), así que
+            // buscar "el primer form" cerraba la sesión en vez de guardar la excursión.
+            var form = filaNota.closest('form');
             cerrarNota();
-            document.querySelector('form').submit();
+            if (form) form.submit();
         }
 
         document.querySelectorAll('.btn-nota').forEach(pintarNota);

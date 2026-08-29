@@ -172,6 +172,18 @@ public class SalidaModel : PageModel
     // error que se viene a corregir: el mismo guía cobra distinto según la salida.
     public bool TieneGuias => Etapas.Any(e => e.Tipo == EtapaExcursion.Guia);
 
+    // ¿Esta salida duerme fuera? En una excursión de un día no hay hospedaje que cargar y
+    // la sección sólo ensucia la pantalla.
+    //
+    // No hay una lista de nombres: se decide sola, y alcanza con que se cumpla UNA de estas:
+    //   · alguna reserva termina un día distinto del que empieza (una de 3 días va del 6 al 8);
+    //   · la excursión es travesía o tiene noches cargadas;
+    //   · ya hay un hospedaje cargado en esta salida.
+    //
+    // Lo último es lo que la vuelve segura: la sección NUNCA se esconde si adentro hay algo
+    // cargado. Si se escondiera, al guardar esas filas no volverían y se borrarían.
+    public bool DuermeFuera { get; set; }
+
     // Enviados desde el form al guardar
     [BindProperty] public List<int> Ids { get; set; } = new();
     [BindProperty] public List<string> Keys { get; set; } = new();    // clave para asociar el comprobante a la fila (id real, o temporal si es nueva)
@@ -250,6 +262,13 @@ public class SalidaModel : PageModel
             .Where(e => e.ExcursionId == ExcursionId)
             .OrderBy(e => e.Orden)
             .ToListAsync();
+
+        // ¿Duerme fuera? (ver el comentario de la propiedad). Se calcula con la lista
+        // COMPLETA de lo asignado, antes de que más abajo se le saquen las filas de etapa.
+        DuermeFuera = exc?.EsTravesia == true
+                   || etapasPlantilla.Any(e => e.Tipo == EtapaExcursion.Hospedaje)
+                   || Reservas.Any(r => r.FechaHasta.Date > r.FechaDesde.Date)
+                   || asignados.Any(o => o.Tipo == "Hospedaje");
 
         if (etapasPlantilla.Count > 0)
         {

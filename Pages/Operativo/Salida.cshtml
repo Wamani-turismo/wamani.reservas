@@ -130,9 +130,11 @@
                     </div>
                 }
             }
-            else
+            else if (Model.DuermeFuera)
             {
-                @* Excursión de un día: uno o varios hospedajes (por pasajero), como siempre *@
+                @* Duerme fuera pero sin noches cargadas (ej. "Conociendo las Yungas"): uno
+                   o varios hospedajes por pasajero, como siempre. En las salidas de un día
+                   esta sección no aparece: no hay nada que dormir. *@
                 <div class="prov-group" data-tipo="Hospedaje">
                     @foreach (var vm in RowsDe("Hospedaje", true)) { <partial name="_ProvRow" model="vm" /> }
                 </div>

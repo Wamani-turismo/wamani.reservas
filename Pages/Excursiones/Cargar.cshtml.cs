@@ -36,6 +36,15 @@ public class CargarModel : PageModel
     [BindProperty]
     public List<string?> GastoComentarios { get; set; } = new();
 
+    // "1" cuando se guardó desde la ventanita de una nota: en ese caso hay que volver a
+    // esta misma excursión y no al listado.
+    [BindProperty]
+    public bool SeguirAca { get; set; }
+
+    // Para mostrar el cartel de "guardado" al volver
+    [BindProperty(SupportsGet = true)]
+    public bool Guardado { get; set; }
+
     // Etapas de la travesía (dónde se duerme cada noche), enviadas como arrays desde el form
     [BindProperty] public List<string> EtapaLugares { get; set; } = new();
     [BindProperty] public List<int> EtapaProveedorIds { get; set; } = new();
@@ -219,6 +228,14 @@ public class CargarModel : PageModel
         }
 
         await _db.SaveChangesAsync();
+
+        // Si se guardó desde la ventanita de una nota, se vuelve A ESTA MISMA excursión:
+        // el que está anotando algo sigue trabajando acá, mandarlo al listado lo obliga a
+        // volver a entrar. El botón grande "Guardar excursión" sí lleva al listado, que es
+        // el final del trabajo.
+        if (SeguirAca && excursionId != 0)
+            return RedirectToPage("/Excursiones/Cargar", new { id = excursionId, guardado = true });
+
         return RedirectToPage("/Excursiones/Index", new { Aviso = "Excursión guardada ✔" });
     }
 

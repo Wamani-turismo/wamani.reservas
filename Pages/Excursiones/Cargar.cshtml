@@ -18,8 +18,16 @@
 <h1>@(Model.EsNueva ? "Nueva excursión" : "Editar excursión")</h1>
 <p class="subtitle">Precio en pesos argentinos ($), por persona.</p>
 
+@if (Model.Guardado)
+{
+    <div class="aviso-ok">Guardado ✔</div>
+}
+
 <form method="post">
     <input type="hidden" asp-for="Excursion.Id" />
+    @* Se pone en "true" cuando se guarda desde la ventanita de una nota, para volver acá
+       mismo en vez de irse al listado de excursiones. *@
+    <input type="hidden" name="SeguirAca" id="seguirAca" value="false" />
 
     <div class="card">
         <div class="form-grid">
@@ -394,6 +402,10 @@
             // El menú de arriba tiene un formulario propio (el botón "Salir"), así que
             // buscar "el primer form" cerraba la sesión en vez de guardar la excursión.
             var form = filaNota.closest('form');
+            // Guardando desde acá se vuelve a esta misma excursión, no al listado: el que
+            // está anotando sigue trabajando en esta pantalla.
+            var volver = document.getElementById('seguirAca');
+            if (volver) volver.value = 'true';
             cerrarNota();
             if (form) form.submit();
         }

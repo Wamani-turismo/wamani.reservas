@@ -89,6 +89,10 @@ else
                            asp-route-excursionId="@s.ExcursionId" asp-route-fecha="@s.Fecha.ToString("yyyy-MM-dd")">
                             🎒 Preparar
                         </a>
+                        <a class="btn-mini btn-mini-ghost" asp-page="/Operativo/Pagar"
+                           asp-route-excursionId="@s.ExcursionId" asp-route-fecha="@s.Fecha.ToString("yyyy-MM-dd")">
+                            💸 Detalle a pagar
+                        </a>
                         <a class="btn-mini btn-mini-ghost" asp-page="/Rentabilidad/Comparar"
                            asp-route-excursionId="@s.ExcursionId" asp-route-fecha="@s.Fecha.ToString("yyyy-MM-dd")">
                             📊 Teórica vs real

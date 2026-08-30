@@ -459,6 +459,18 @@ public class SalidaModel : PageModel
             {
                 // Compartido (por auto / cantidad / fijo): una sola vez para la salida
                 if (yaCargados.Any(o => o.ReservaId == null && Norm(o.Nombre) == Norm(p.Nombre))) continue;
+
+                // Si el ítem YA está cargado por pasajero, no se agrega además la fila del
+                // grupo: sería la misma plata dos veces.
+                //
+                // Pasa en las salidas que se abrieron cuando la excursión todavía no tenía
+                // noches: ahí cada pasajero tenía su propia fila, y al pasar a manejarse por
+                // grupo el sistema le sumaba la fila del grupo encima. Borrar la del grupo no
+                // servía porque volvía a aparecer sola en la visita siguiente. Las dos formas
+                // dan el mismo total; lo que no puede es haber una de cada una.
+                if (porGrupo && tipo == "Por persona"
+                    && yaCargados.Any(o => o.ReservaId != null && Norm(o.Nombre) == Norm(p.Nombre)))
+                    continue;
                 // "Cantidad" (arrieros, caballos, guías, traslados) arranca con la cantidad
                 // de referencia de la excursión; después se sube o se baja en la salida.
                 var cant = tipo == "Cantidad" ? (p.Cantidad ?? 0) : (int?)null;

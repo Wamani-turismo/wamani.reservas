@@ -877,6 +877,11 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
       <label class="campo-form">Mensaje *
         <textarea name="mensaje" required rows="5" maxlength="4000" placeholder="Qué excursión te interesa, fechas, cuántos son…"></textarea>
       </label>
+      <label class="campo-form">Adjuntar un archivo
+        <input type="file" name="archivo" id="archivo"
+               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.webp,.txt,.csv,.zip">
+        <small class="ayuda-form">Opcional. Hasta 10 MB.</small>
+      </label>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
         <button type="button" class="btn btn-borde" onclick="cerrarFormulario()">Cancelar</button>
         <button type="submit" class="btn btn-coral" id="btn-enviar">Enviar consulta</button>
@@ -894,6 +899,13 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
   font-family:inherit;font-size:1rem;
 }
 .campo-form input:focus,.campo-form textarea:focus{outline:none;border-color:var(--dorado)}
+.campo-form .ayuda-form{display:block;margin-top:6px;font-size:.8rem;opacity:.7}
+.campo-form input[type=file]{padding:9px 11px;font-size:.9rem;cursor:pointer}
+.campo-form input[type=file]::file-selector-button{
+  margin-right:10px;padding:7px 12px;border-radius:9px;cursor:pointer;
+  border:1px solid var(--linea);background:rgba(255,255,255,.06);color:inherit;
+  font-family:inherit;font-size:.85rem;
+}
 </style>
 
 <a class="wsp-flotante wsp" data-msg="¡Hola! Vi la página de Wamani Turismo y quisiera recibir información sobre las excursiones." aria-label="Escribinos por WhatsApp">
@@ -1224,6 +1236,17 @@ document.getElementById("form-consulta").addEventListener("submit", async functi
   ev.preventDefault();
   const boton = document.getElementById("btn-enviar");
   const aviso = document.getElementById("aviso-form");
+
+  // Si el archivo es muy grande, avisar acá y no hacerle esperar la subida al pedo
+  const arch = document.getElementById("archivo").files[0];
+  if (arch && arch.size > 10 * 1024 * 1024) {
+    aviso.style.display = "block";
+    aviso.style.color = "var(--coral,#d2673a)";
+    aviso.innerHTML = "El archivo pesa " + (arch.size / 1024 / 1024).toFixed(1) +
+      " MB y el tope son 10 MB. Probá con uno más liviano.";
+    return;
+  }
+
   boton.disabled = true; boton.textContent = "Enviando…";
   try {
     const r = await fetch("/web/consulta", { method: "POST", body: new FormData(this) });

@@ -355,6 +355,9 @@ using (var scope = app.Services.CreateScope())
             ""Tipo"" TEXT NOT NULL, ""Mensaje"" TEXT NOT NULL, ""Origen"" TEXT NULL,
             ""CreadaEl"" TEXT NOT NULL, ""Atendida"" INTEGER NOT NULL DEFAULT 0
         );");
+    // El archivo que se puede adjuntar a una consulta (va en las dos bases, ver abajo)
+    EnsureSqliteColumn(db, "ConsultasWeb", "ArchivoNombre", "TEXT NULL");
+    EnsureSqliteColumn(db, "ConsultasWeb", "ArchivoGuardado", "TEXT NULL");
     } // fin del bloque específico de SQLite
 
     // En Postgres: corrige las tablas que se hayan creado antes con fechas "con zona
@@ -438,6 +441,9 @@ using (var scope = app.Services.CreateScope())
                 ""CreadaEl"" timestamp without time zone NOT NULL,
                 ""Atendida"" boolean NOT NULL DEFAULT false
             );");
+        // El archivo que se puede adjuntar a una consulta
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""ConsultasWeb"" ADD COLUMN IF NOT EXISTS ""ArchivoNombre"" text;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""ConsultasWeb"" ADD COLUMN IF NOT EXISTS ""ArchivoGuardado"" text;");
 
         // Tabla de gastos generales de la empresa (nueva; EnsureCreated no la agrega a una base ya creada)
         db.Database.ExecuteSqlRaw(@"
@@ -843,7 +849,7 @@ app.MapGet("/web/contenido.js", (AppDbContext db) =>
 //  manda un aviso por mail. Si el mail falla —o todavía no se configuró— la consulta
 //  queda igual: nunca se pierde por un problema de correo.
 // ═══════════════════════════════════════════════════════════════════════
-app.MapPost("/web/consulta", async (HttpRequest req, AppDbContext db) =>
+app.MapPost("/web/consulta", async (HttpRequest req, AppDbContext db, IWebHostEnvironment env) =>
 {
   try
   {
@@ -899,8 +905,9 @@ app.MapPost("/web/consulta", async (HttpRequest req, AppDbContext db) =>
         "Mensaje:\n" + consulta.Mensaje + "\n\n" +
         "— Se puede responder directamente a este mail.";
 
-    // Si la persona subió un archivo (por ejemplo, una agencia con su propuesta en PDF),
-    // va pegado al mail. NO se guarda en el sistema: viaja sólo por correo.
+    // Si la persona subió un archivo (por ejemplo, una agencia con su propuesta en PDF):
+    // queda GUARDADO en el sistema —se baja después desde la pantalla de Consultas— y
+    // además va pegado al mail de aviso, para tenerlo a mano sin entrar al panel.
     (string, byte[], string?)? adjunto = null;
     var archivo = f.Files["archivo"];
     if (archivo is not null && archivo.Length > 0)
@@ -913,16 +920,37 @@ app.MapPost("/web/consulta", async (HttpRequest req, AppDbContext db) =>
 
         if (archivo.Length > TOPE)
             cuerpo += "\n\n⚠️ Adjuntó un archivo de " + (archivo.Length / 1024 / 1024) +
-                      " MB y no entró en el mail (el tope son 10 MB). Conviene pedírselo.";
+                      " MB y no entró (el tope son 10 MB). Conviene pedírselo.";
         else if (!permitidas.Contains(ext))
             cuerpo += "\n\n⚠️ Intentó adjuntar un archivo \"" + ext + "\", que no se acepta.";
         else
         {
             using var ms = new MemoryStream();
             await archivo.CopyToAsync(ms);
+            var datos = ms.ToArray();
             var limpio = System.IO.Path.GetFileName(archivo.FileName ?? "adjunto");
-            adjunto = (limpio, ms.ToArray(), archivo.ContentType);
-            cuerpo += "\n\n📎 Adjuntó el archivo: " + limpio;
+            adjunto = (limpio, datos, archivo.ContentType);
+
+            // Guardarlo en el disco. El nombre lo pone el sistema (el Id de la consulta
+            // más la extensión): así dos archivos que se llamen igual no se pisan y el
+            // nombre que escribió la persona nunca toca el disco.
+            // Si esto falla, la consulta y el mail salen igual: no se pierde nada.
+            try
+            {
+                var guardado = consulta.Id + ext;
+                await System.IO.File.WriteAllBytesAsync(
+                    System.IO.Path.Combine(Wamani.Reservas.Services.AdjuntosConsulta.Carpeta(env), guardado), datos);
+                consulta.ArchivoNombre = limpio.Length > 260 ? limpio.Substring(0, 260) : limpio;
+                consulta.ArchivoGuardado = guardado;
+                await db.SaveChangesAsync();
+                cuerpo += "\n\n📎 Adjuntó el archivo: " + limpio + " (también queda guardado en el sistema).";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[consulta] no se pudo guardar el adjunto: " + ex.GetBaseException().Message);
+                cuerpo += "\n\n📎 Adjuntó el archivo: " + limpio +
+                          " (no se pudo guardar en el sistema, así que está SÓLO en este mail).";
+            }
         }
     }
 

@@ -41,6 +41,22 @@ namespace Wamani.Reservas.Models
         // Se tilda cuando ya se le contestó
         public bool Atendida { get; set; }
 
+        // El archivo que adjuntó la persona (por ejemplo, una agencia con su propuesta).
+        // Se guardan DOS nombres a propósito:
+        //  - ArchivoNombre: como se llamaba el archivo en la computadora de quien lo subió.
+        //    Es el que se muestra y con el que se lo descarga.
+        //  - ArchivoGuardado: el nombre con el que quedó en el disco, inventado por el
+        //    sistema (el Id más la extensión). Así dos personas pueden subir dos archivos
+        //    que se llamen igual sin pisarse, y un nombre raro no puede tocar otra carpeta.
+        [MaxLength(260)]
+        public string? ArchivoNombre { get; set; }
+
+        [MaxLength(120)]
+        public string? ArchivoGuardado { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public bool TieneArchivo => !string.IsNullOrWhiteSpace(ArchivoGuardado);
+
         // Sólo para mostrar en pantalla: no es una columna de la tabla.
         [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public bool EsAgencia => Tipo == "Agencia";

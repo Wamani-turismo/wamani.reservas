@@ -10,7 +10,8 @@ namespace Wamani.Reservas.Pages.Consultas;
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
-    public IndexModel(AppDbContext db) => _db = db;
+    private readonly IWebHostEnvironment _env;
+    public IndexModel(AppDbContext db, IWebHostEnvironment env) { _db = db; _env = env; }
 
     public List<ConsultaWeb> Lista { get; set; } = new();
     public int SinAtender { get; set; }
@@ -41,11 +42,33 @@ public class IndexModel : PageModel
         return RedirectToPage();
     }
 
+    // Bajar el archivo que adjuntó la persona. Va por acá y no como archivo suelto en una
+    // dirección pública, porque estos los sube cualquiera desde la web: así hay que tener
+    // la sesión iniciada para verlos.
+    public async Task<IActionResult> OnGetArchivoAsync(int id)
+    {
+        var c = await _db.ConsultasWeb.FindAsync(id);
+        if (c is null || !c.TieneArchivo) return NotFound();
+
+        var ruta = Wamani.Reservas.Services.AdjuntosConsulta.Ruta(_env, c.ArchivoGuardado);
+        if (ruta is null || !System.IO.File.Exists(ruta)) return NotFound();
+
+        var nombre = string.IsNullOrWhiteSpace(c.ArchivoNombre) ? c.ArchivoGuardado! : c.ArchivoNombre!;
+        return PhysicalFile(ruta, "application/octet-stream", nombre);
+    }
+
     public async Task<IActionResult> OnPostBorrarAsync(int id)
     {
         var c = await _db.ConsultasWeb.FindAsync(id);
         if (c is not null)
         {
+            // Que no queden archivos sueltos ocupando el disco
+            if (c.TieneArchivo)
+            {
+                var ruta = Wamani.Reservas.Services.AdjuntosConsulta.Ruta(_env, c.ArchivoGuardado);
+                try { if (ruta is not null && System.IO.File.Exists(ruta)) System.IO.File.Delete(ruta); }
+                catch { /* si no se puede borrar el archivo, igual se borra la consulta */ }
+            }
             _db.ConsultasWeb.Remove(c);
             await _db.SaveChangesAsync();
         }

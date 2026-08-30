@@ -70,6 +70,15 @@ else
 
             <p style="white-space:pre-wrap;margin:0 0 12px">@c.Mensaje</p>
 
+            @if (c.TieneArchivo)
+            {
+                <div style="margin:0 0 12px">
+                    <a class="btn-mini btn-mini-ghost" asp-page-handler="Archivo" asp-route-id="@c.Id">
+                        📎 @c.ArchivoNombre
+                    </a>
+                </div>
+            }
+
             <div class="contacto-linea" style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:.93rem">
                 @if (!string.IsNullOrWhiteSpace(c.Email))
                 {

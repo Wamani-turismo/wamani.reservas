@@ -15,5 +15,16 @@ public static class Reloj
 {
     public const int HorasDeDiferencia = -3;
 
-    public static DateTime HoyJujuy() => DateTime.UtcNow.AddHours(HorasDeDiferencia).Date;
+    // OJO con esto: Postgres RECHAZA que le escriban una fecha marcada como "hora de
+    // Londres" (UTC) en sus columnas de fecha, y tira un error que tumba el guardado.
+    // Como DateTime.UtcNow viene marcada así, hay que sacarle la marca: la fecha ya está
+    // convertida a la hora de Jujuy, no necesita zona. Todo el resto del sistema usa
+    // DateTime.Today, que tampoco la tiene.
+    private static DateTime SinZona(DateTime f) => DateTime.SpecifyKind(f, DateTimeKind.Unspecified);
+
+    // El día de hoy en Jujuy (sin hora).
+    public static DateTime HoyJujuy() => SinZona(DateTime.UtcNow.AddHours(HorasDeDiferencia).Date);
+
+    // El momento exacto, en hora de Jujuy (con hora y minutos).
+    public static DateTime AhoraJujuy() => SinZona(DateTime.UtcNow.AddHours(HorasDeDiferencia));
 }

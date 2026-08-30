@@ -872,7 +872,7 @@ app.MapPost("/web/consulta", async (HttpRequest req, AppDbContext db) =>
         Tipo = tipo,
         Mensaje = mensaje,
         Origen = Campo("origen", 60) is var o && o.Length > 0 ? o : null,
-        CreadaEl = Wamani.Reservas.Services.Reloj.HoyJujuy().Add(DateTime.UtcNow.AddHours(-3).TimeOfDay)
+        CreadaEl = Wamani.Reservas.Services.Reloj.AhoraJujuy()
     };
 
     try

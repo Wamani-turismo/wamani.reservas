@@ -725,6 +725,10 @@ app.MapRazorPages();
 // web y NO el sistema. Los chicos entran al sistema por /panel (requiere login).
 app.MapGet("/", () => Results.Redirect("/web/")).AllowAnonymous();
 
+// La página del QR de la feria (FIT). Sin la barra final el servidor no encuentra la
+// carpeta, así que se la agregamos: wamaniturismo.com/receptivo funciona igual.
+app.MapGet("/receptivo", () => Results.Redirect("/receptivo/")).AllowAnonymous();
+
 // ═══════════════════════════════════════════════════════════════════════
 //  Las direcciones de la WEB ANTERIOR (la de Webnode)
 //

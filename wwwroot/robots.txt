@@ -1,6 +1,8 @@
-# Le dice a los buscadores qué pueden mirar de wamaniturismo.com.
-# La web pública es toda visitable; el sistema de reservas pide usuario y clave,
-# así que Google no puede entrar aunque quiera.
+# Le dice a los buscadores que pueden mirar de wamaniturismo.com.
+# La web publica es toda visitable; el sistema de reservas pide usuario y clave,
+# asi que Google no puede entrar aunque quiera.
+# (Sin acentos a proposito: este archivo se sirve como texto plano y los
+#  buscadores no siempre lo leen en UTF-8.)
 
 User-agent: *
 Allow: /

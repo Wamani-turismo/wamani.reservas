@@ -703,9 +703,9 @@ var paginasWebAnterior = new[]
 foreach (var pagina in paginasWebAnterior)
 {
     var destino = "/web/#" + pagina;
-    // Google la tiene indexada con la barra final, así que valen las dos formas
+    // Una sola por página: para el servidor, "/pagina" y "/pagina/" son la misma dirección,
+    // así que registrar las dos formas hacía que no supiera cuál usar y tiraba error.
     app.MapGet("/" + pagina, () => Results.Redirect(destino, permanent: true)).AllowAnonymous();
-    app.MapGet("/" + pagina + "/", () => Results.Redirect(destino, permanent: true)).AllowAnonymous();
 }
 
 // ═══════════════════════════════════════════════════════════════════════

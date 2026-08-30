@@ -50,6 +50,10 @@
         @{
             List<Wamani.Reservas.Pages.Operativo.ProvRowVm> RowsDe(string tipo, bool conPasajero, bool conCantidad = false)
             {
+                // Hospedaje y restaurante de una salida de varios días: la fila lleva la
+                // cajita de noches/comidas y el total se multiplica solo. En las de un día
+                // (NochesSalida = 0) no aparece.
+                var conNoches = Model.NochesSalida > 0 && (tipo == "Hospedaje" || tipo == "Restaurante");
                 var cat = Model.CatalogoPorTipo.GetValueOrDefault(tipo) ?? new();
                 var asigs = Model.ProvPorTipo.GetValueOrDefault(tipo) ?? new();
 
@@ -59,6 +63,7 @@
                 var rows = asigs.Select(a => new Wamani.Reservas.Pages.Operativo.ProvRowVm
                 {
                     Tipo = tipo, Asig = a, Cat = cat, ConPasajero = conPasajero, ConCantidad = conCantidad,
+                    ConNoches = conNoches, NochesSugeridas = Model.NochesSalida,
                     Key = a.Id.ToString(), Reservas = Model.Reservas, PrecioCatalogo = PrecioCat(a)
                 }).ToList();
 
@@ -67,6 +72,7 @@
                     rows.Add(new Wamani.Reservas.Pages.Operativo.ProvRowVm
                     {
                         Tipo = tipo, Asig = null, Cat = cat, ConPasajero = conPasajero, ConCantidad = conCantidad,
+                        ConNoches = conNoches, NochesSugeridas = Model.NochesSalida,
                         Key = "new-" + tipo, Reservas = Model.Reservas
                     });
                 }
@@ -600,10 +606,32 @@
                 recalcularEtapa(fila);
             } else {
                 var tot = fila.querySelector('.prov-total');
-                if (precio > 0) { tot.value = precio; tot.readOnly = true; }
+                // En una salida de varios días el precio del proveedor es por noche (o por
+                // comida): se multiplica por las noches y no hay que hacer la cuenta a mano.
+                var n = nochesDe(fila);
+                if (precio > 0) { tot.value = precio * n; tot.readOnly = true; }
             }
             recalcularProv();
         });
+
+        // Cuántas noches/comidas dice la cajita de esta fila (1 si no la tiene).
+        function nochesDe(fila) {
+            var inN = fila ? fila.querySelector('.prov-noches') : null;
+            var n = inN ? (parseInt(inN.value) || 1) : 1;
+            return n < 1 ? 1 : n;
+        }
+
+        // Al cambiar las noches, se rehace el total con el precio del proveedor elegido.
+        // Si el total se puso a mano (✏️), no se toca: manda lo que escribió la persona.
+        function recalcularProvNoches(fila) {
+            if (!fila) return;
+            var tot = fila.querySelector('.prov-total');
+            var sel = fila.querySelector('.prov-select');
+            if (!tot || !sel || tot.dataset.manual === '1') return;
+            var opt = sel.options[sel.selectedIndex];
+            var precio = opt ? (parseFloat(opt.getAttribute('data-precio')) || 0) : 0;
+            if (precio > 0) tot.value = precio * nochesDe(fila);
+        }
 
         // Total de una fila "de grupo" = cantidad × precio de cada uno × noches.
         // Sirve igual para el hospedaje de una travesía (personas × precio × noches) y para
@@ -623,6 +651,12 @@
             tot.value = (pers > 0 && pp > 0) ? (pers * pp * noches) : '';
         }
         document.addEventListener('input', function (e) {
+            // La cajita de noches/comidas del hospedaje y el restaurante
+            if (e.target.classList.contains('prov-noches')) {
+                recalcularProvNoches(e.target.closest('.prov-row'));
+                recalcularProv();
+                return;
+            }
             if (!e.target.classList.contains('etapa-personas')
                 && !e.target.classList.contains('etapa-precio')
                 && !e.target.classList.contains('etapa-noches')) return;

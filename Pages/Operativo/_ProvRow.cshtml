@@ -19,7 +19,10 @@
        que estar igual para que todas las listas del form queden alineadas por posición al
        guardar: cada fila aporta exactamente un valor a cada lista. *@
     <input type="hidden" name="ProvLugares" value="" />
-    <input type="hidden" name="ProvNoches" value="" />
+    @if (!Model.ConNoches)
+    {
+        <input type="hidden" name="ProvNoches" value="" />
+    }
     @if (!Model.ConCantidad)
     {
         <input type="hidden" name="ProvPersonas" value="" />
@@ -74,6 +77,17 @@
             <div class="field">
                 <label>Precio de cada uno</label>
                 <input name="ProvPreciosPorPersona" type="number" step="0.01" min="0" value="@Num(Model.PrecioCadaUno)" class="etapa-precio" />
+            </div>
+        }
+        @* Salidas de varios días: cuántas noches se duerme (o cuántas comidas son) en el
+           mismo lugar. El total se multiplica solo por este número, así no hay que hacer
+           la cuenta a mano. En las salidas de un día esta cajita no aparece. *@
+        @if (Model.ConNoches)
+        {
+            <div class="field">
+                <label>@Model.EtiquetaNoches</label>
+                <input name="ProvNoches" type="number" step="1" min="1" value="@Model.NochesFila" class="prov-noches" />
+                <span class="hint">Esta salida son @Model.NochesSugeridas @(Model.NochesSugeridas == 1 ? "noche" : "noches")</span>
             </div>
         }
         <div class="field">

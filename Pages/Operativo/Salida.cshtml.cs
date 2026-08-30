@@ -29,6 +29,20 @@ public class ProvRowVm
     // suman guías o vehículos, y no hay una fórmula fija: lo deciden los chicos.
     public bool ConCantidad { get; set; }
 
+    // Hospedaje y restaurante de una salida de VARIOS DÍAS: aparece una cajita para decir
+    // cuántas noches (o cuántas comidas) son, y el total se multiplica por eso. En las
+    // salidas de un día no aparece: sería siempre 1 y molestaría.
+    // NochesSugeridas sale de las fechas de las reservas, así que una excursión nueva de
+    // 3 días y 2 noches lo toma sola, sin que haya que cargar nada en el código.
+    public bool ConNoches { get; set; }
+    public int NochesSugeridas { get; set; } = 1;
+
+    // Lo que hay que mostrar en la cajita: lo que ya se guardó en esta fila y, si es una
+    // fila nueva, lo que dura la salida.
+    public int NochesFila => Asig?.Noches is int n && n > 0 ? n : (NochesSugeridas > 0 ? NochesSugeridas : 1);
+
+    public string EtiquetaNoches => Tipo == "Restaurante" ? "Comidas" : "Noches";
+
     public decimal PrecioCatalogo { get; set; }
 
     // Cuántos van. Las filas cargadas ANTES de que existiera este campo no lo tienen: se
@@ -184,6 +198,10 @@ public class SalidaModel : PageModel
     // cargado. Si se escondiera, al guardar esas filas no volverían y se borrarían.
     public bool DuermeFuera { get; set; }
 
+    // Cuántas noches duerme afuera esta salida (0 = es de un día). Se usa para proponer
+    // las noches del hospedaje y las comidas del restaurante.
+    public int NochesSalida { get; set; }
+
     // Gastos que están cargados DOS VECES en esta salida: el mismo ítem como fila del grupo
     // y además por pasajero, o repetido dentro del mismo grupo.
     //
@@ -298,6 +316,15 @@ public class SalidaModel : PageModel
                    || etapasPlantilla.Any(e => e.Tipo == EtapaExcursion.Hospedaje)
                    || Reservas.Any(r => r.FechaHasta.Date > r.FechaDesde.Date)
                    || asignados.Any(o => o.Tipo == "Hospedaje");
+
+        // Cuántas NOCHES dura la salida, sacado de las fechas de las reservas (la que más
+        // días se queda). Es lo que se propone en el hospedaje y el restaurante para no
+        // tener que multiplicar a mano. En una salida de un día da 0 y la cajita no
+        // aparece; en Conociendo las Yungas (06/09 al 08/09) da 2.
+        // Sale de los datos, así que una excursión nueva de 3 días y 2 noches lo toma sola.
+        NochesSalida = Reservas.Count == 0
+            ? 0
+            : Math.Max(0, Reservas.Max(r => (r.FechaHasta.Date - r.FechaDesde.Date).Days));
 
         if (etapasPlantilla.Count > 0)
         {
@@ -713,8 +740,14 @@ public class SalidaModel : PageModel
             var lugar = (i < ProvLugares.Count ? ProvLugares[i] : null)?.Trim();
             int.TryParse(i < ProvPersonas.Count ? ProvPersonas[i] : "", out var personas);
             var precioPP = ParsePrecio(i < ProvPreciosPorPersona.Count ? ProvPreciosPorPersona[i] : "0");
-            int.TryParse(i < ProvNoches.Count ? ProvNoches[i] : "", out var noches);
+            var nochesTexto = (i < ProvNoches.Count ? ProvNoches[i] : "")?.Trim();
+            int.TryParse(nochesTexto, out var noches);
             if (noches < 1) noches = 1;
+            // ¿La fila TRAJO la cajita de noches? Las que no la tienen mandan vacío. Sirve
+            // para saber si hay que guardar el número: en el hospedaje y el restaurante de
+            // una salida de varios días hay que guardarlo aunque no haya lugar de la ruta,
+            // así al volver a abrir la salida la cajita muestra lo que se había puesto.
+            var trajoNoches = !string.IsNullOrWhiteSpace(nochesTexto);
 
             // Si no se escribió un total a mano, sale solo: cantidad × precio × noches.
             // (En hospedaje son personas × precio por persona × noches; en guía y auto son
@@ -755,7 +788,7 @@ public class SalidaModel : PageModel
             row.Lugar = string.IsNullOrWhiteSpace(lugar) ? null : lugar;
             row.Personas = esDeGrupo ? personas : null;
             row.PrecioPorPersona = esDeGrupo ? precioPP : null;
-            row.Noches = string.IsNullOrWhiteSpace(lugar) ? null : noches;
+            row.Noches = (!string.IsNullOrWhiteSpace(lugar) || trajoNoches) ? noches : null;
             row.Total = total;
             row.Sena = sena;
             row.Saldo = saldo;

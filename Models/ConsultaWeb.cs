@@ -41,6 +41,8 @@ namespace Wamani.Reservas.Models
         // Se tilda cuando ya se le contestó
         public bool Atendida { get; set; }
 
+        // Sólo para mostrar en pantalla: no es una columna de la tabla.
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
         public bool EsAgencia => Tipo == "Agencia";
     }
 }

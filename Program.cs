@@ -845,6 +845,8 @@ app.MapGet("/web/contenido.js", (AppDbContext db) =>
 // ═══════════════════════════════════════════════════════════════════════
 app.MapPost("/web/consulta", async (HttpRequest req, AppDbContext db) =>
 {
+  try
+  {
     var f = await req.ReadFormAsync();
     string Campo(string n, int tope) => ((string?)f[n] ?? "").Trim() is var v && v.Length > tope
         ? v.Substring(0, tope) : ((string?)f[n] ?? "").Trim();
@@ -873,8 +875,18 @@ app.MapPost("/web/consulta", async (HttpRequest req, AppDbContext db) =>
         CreadaEl = Wamani.Reservas.Services.Reloj.HoyJujuy().Add(DateTime.UtcNow.AddHours(-3).TimeOfDay)
     };
 
-    db.ConsultasWeb.Add(consulta);
-    await db.SaveChangesAsync();
+    try
+    {
+        db.ConsultasWeb.Add(consulta);
+        await db.SaveChangesAsync();
+    }
+    catch (Exception ex)
+    {
+        // Si no se puede guardar, se deja escrito en los registros de Render y se le avisa
+        // a quien consultó, en vez de mostrarle una pantalla de error.
+        Console.WriteLine("[consulta] NO se pudo guardar: " + ex.GetBaseException().Message);
+        return Results.Json(new { ok = false, error = "No se pudo guardar la consulta." });
+    }
 
     // El aviso por mail va después de guardar, y si falla no se le avisa a quien consultó:
     // su mensaje ya está a salvo.
@@ -892,6 +904,14 @@ app.MapPost("/web/consulta", async (HttpRequest req, AppDbContext db) =>
         cuerpo, consulta.Email);
 
     return Results.Json(new { ok = true });
+  }
+  catch (Exception ex)
+  {
+    // Pase lo que pase, al visitante NUNCA se le muestra una pantalla de error: se le dice
+    // que escriba por WhatsApp. El motivo queda escrito en los registros de Render.
+    Console.WriteLine("[consulta] FALLO: " + ex.GetBaseException().Message);
+    return Results.Json(new { ok = false, error = "No se pudo enviar la consulta." });
+  }
 }).AllowAnonymous().DisableAntiforgery();
 
 app.Run();

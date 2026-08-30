@@ -739,6 +739,22 @@ var carpetaComprobantes = Environment.GetEnvironmentVariable("UPLOADS_DIR");
 if (!string.IsNullOrWhiteSpace(carpetaComprobantes))
 {
     Directory.CreateDirectory(carpetaComprobantes);
+
+    // CANDADO: los archivos que adjunta la gente en el formulario de la web se guardan en
+    // UPLOADS_DIR/consultas, que queda ADENTRO de la carpeta que se publica acá abajo como
+    // /comprobantes. Sin esto, cualquiera podría bajarlos con la dirección
+    // /comprobantes/consultas/7.pdf, sin iniciar sesión.
+    // Esos archivos se bajan SÓLO desde el panel, por la pantalla de Consultas.
+    app.Use(async (ctx, siguiente) =>
+    {
+        if (ctx.Request.Path.StartsWithSegments("/comprobantes/consultas"))
+        {
+            ctx.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+        await siguiente();
+    });
+
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new PhysicalFileProvider(carpetaComprobantes),

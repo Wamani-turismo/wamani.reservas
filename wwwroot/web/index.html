@@ -1145,6 +1145,19 @@ const io = new IntersectionObserver(function(entradas){
 }, {threshold:.12});
 document.querySelectorAll(".rev").forEach(el => io.observe(el));
 
+/* ═══ Abrir una experiencia desde la dirección ═══
+   Si la dirección termina en #conociendo-las-yungas, se abre esa guía sola.
+   Sirve para los links de la web anterior (que tenía una página por excursión) y para
+   pasarle a alguien el link de una experiencia puntual por WhatsApp.
+   Si el nombre no existe, no pasa nada: la página se ve normal. */
+function abrirDesdeLaDireccion(){
+  var id = "";
+  try { id = decodeURIComponent((location.hash || "").replace("#", "")).trim(); } catch (e) { return; }
+  if (id && GUIAS[id]) abrirGuia(id);
+}
+abrirDesdeLaDireccion();
+window.addEventListener("hashchange", abrirDesdeLaDireccion);
+
 /* Año del footer + menú móvil */
 document.getElementById("anio").textContent = new Date().getFullYear();
 function cerrarMenu(){ document.getElementById("check-menu").checked = false; }

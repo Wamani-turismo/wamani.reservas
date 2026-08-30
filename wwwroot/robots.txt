@@ -1,0 +1,9 @@
+# Le dice a los buscadores qué pueden mirar de wamaniturismo.com.
+# La web pública es toda visitable; el sistema de reservas pide usuario y clave,
+# así que Google no puede entrar aunque quiera.
+
+User-agent: *
+Allow: /
+Disallow: /Login
+
+Sitemap: https://wamaniturismo.com/sitemap.xml

@@ -678,6 +678,37 @@ app.MapRazorPages();
 app.MapGet("/", () => Results.Redirect("/web/")).AllowAnonymous();
 
 // ═══════════════════════════════════════════════════════════════════════
+//  Las direcciones de la WEB ANTERIOR (la de Webnode)
+//
+//  Aquella web tenía una página por excursión (wamaniturismo.com/conociendo-las-yungas).
+//  Ese sitio ya no existe: el dominio ahora apunta acá, así que esas direcciones daban
+//  "página no encontrada" — y Google todavía las muestra en los resultados, así que la
+//  gente que hacía clic se llevaba un error.
+//
+//  Con esto, cada una lleva a la web nueva con ESA experiencia abierta. El redirect es
+//  "permanente" (301), que es la forma de decirle a Google "esto se mudó acá": con el
+//  tiempo reemplaza la dirección vieja por la nueva y le pasa lo que tenía ganado.
+//
+//  Se listan una por una a propósito, en vez de atrapar cualquier dirección: así no se
+//  toca ninguna ruta del sistema y lo que no está en la lista sigue dando 404.
+// ═══════════════════════════════════════════════════════════════════════
+var paginasWebAnterior = new[]
+{
+    "conociendo-las-yungas", "yungas-express", "tilcara-calilegua", "iruya-nazareno",
+    "humahuaca-yungas", "termas-de-jordan", "recorriendo-la-quebrada",
+    "ruta-de-lagunas-y-termas", "atardecer-en-las-salinas",
+    "cascada-santuyoc-y-angosto-de-jaire", "especial-ecolodge-de-la-selva",
+};
+
+foreach (var pagina in paginasWebAnterior)
+{
+    var destino = "/web/#" + pagina;
+    // Google la tiene indexada con la barra final, así que valen las dos formas
+    app.MapGet("/" + pagina, () => Results.Redirect(destino, permanent: true)).AllowAnonymous();
+    app.MapGet("/" + pagina + "/", () => Results.Redirect(destino, permanent: true)).AllowAnonymous();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 //  "Puente" que le pasa a la LANDING (web pública) su contenido editable:
 //  teléfono, redes, textos, excursiones, testimonios y equipo.
 //  Se sirve como un archivo JavaScript (define window.CONTENIDO) y es

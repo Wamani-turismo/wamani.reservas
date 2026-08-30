@@ -1140,7 +1140,16 @@ if (D){
   document.querySelectorAll('a[href*="instagram"]').forEach(a => a.href = "https://instagram.com/" + D.instagram);
   document.querySelectorAll('a[href*="facebook"]').forEach(a => a.href = D.facebook);
   document.querySelectorAll('a[href*="linktr"]').forEach(a => a.href = D.linktree);
-  document.querySelectorAll('a[href^="mailto"]').forEach(a => { a.href = "mailto:" + D.email; if (a.textContent.includes("@")) a.textContent = "✉️ " + D.email; });
+  // El mail se abre con el asunto y el saludo ya escritos, así el que consulta sólo tiene
+  // que escribir lo que necesita. Antes abría un mail en blanco y muchos lo cerraban.
+  const asuntoMail = "Consulta desde la web de Wamani";
+  const cuerpoMail = "Hola Wamani,\n\nQuisiera consultar por:\n\n";
+  const linkMail = "mailto:" + D.email +
+      "?subject=" + encodeURIComponent(asuntoMail) + "&body=" + encodeURIComponent(cuerpoMail);
+  document.querySelectorAll('a[href^="mailto"]').forEach(a => {
+    a.href = linkMail;
+    if (a.textContent.includes("@")) a.textContent = "✉️ " + D.email;
+  });
   // Datos de contacto (teléfono y ubicación en texto)
   document.querySelectorAll("#contacto .contacto-datos > *").forEach(function(el){
     if (el.textContent.includes("📱")) el.textContent = "📱 " + fmtTel(D.whatsapp);

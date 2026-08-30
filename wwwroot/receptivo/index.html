@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wamani Turismo · Jujuy — Viajeros y agencias</title>
-<meta name="description" content="Excursiones y travesías en Jujuy: Quebrada, Puna y Yungas. Grupos reducidos y guías locales. Trabajamos con agencias y operadores de todo el mundo.">
+<meta name="description" content="Excursiones y travesías en Jujuy: Yungas, Quebrada, Valles y Puna. Grupos reducidos y guías locales. Trabajamos con agencias y operadores de todo el mundo.">
 
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="192x192" href="/logo/wamani-icono-192.png">
@@ -33,6 +33,9 @@ body{
   font-size:17px; line-height:1.6; -webkit-font-smoothing:antialiased;
 }
 h1,h2,h3{font-family:"Playfair Display",Georgia,serif; font-weight:600; line-height:1.15; margin:0}
+/* El dorado va SIN cursiva: en Playfair la "J" itálica lleva una cola que cruza la letra
+   de al lado y "Jujuy" se leía mal. */
+.resalte{color:var(--dorado)}
 em{font-style:italic; color:var(--dorado)}
 a{color:var(--dorado); text-decoration:none}
 a:hover{text-decoration:underline}
@@ -66,13 +69,15 @@ a:hover{text-decoration:underline}
   padding:30px 26px; cursor:pointer; transition:transform .18s, border-color .18s, box-shadow .18s;
   display:block; width:100%; color:inherit; font:inherit; text-align:left;
 }
-.camino:hover{transform:translateY(-4px); border-color:var(--dorado); box-shadow:var(--sombra)}
-.camino .icono{font-size:2rem; display:block; margin-bottom:12px}
+.camino:hover{transform:translateY(-4px); border-color:var(--dorado); box-shadow:var(--sombra); text-decoration:none}
+.camino .icono{display:block; margin-bottom:16px; color:var(--dorado)}
+.camino .icono svg{width:38px; height:38px; stroke:currentColor; stroke-width:1.4; fill:none;
+                   stroke-linecap:round; stroke-linejoin:round}
 .camino b{display:block; font-family:"Playfair Display",Georgia,serif; font-size:1.5rem; font-weight:600; margin-bottom:8px}
 .camino span.detalle{display:block; color:var(--texto-suave); font-size:.98rem}
 .camino .flecha{display:block; margin-top:18px; color:var(--coral); font-weight:600; font-size:.95rem}
 
-/* ---------- Secciones de cada camino ---------- */
+/* ---------- La hoja de agencias ---------- */
 .hoja{display:none; padding:40px 0 70px}
 .hoja.visible{display:block}
 .encabezado{text-align:center; margin-bottom:34px}
@@ -81,28 +86,13 @@ a:hover{text-decoration:underline}
   color:var(--dorado); margin-bottom:10px;
 }
 .encabezado h2{font-size:clamp(1.7rem,4.4vw,2.5rem)}
-.encabezado p{color:var(--texto-suave); max-width:640px; margin:14px auto 0}
+.encabezado p{color:var(--texto-suave); max-width:660px; margin:14px auto 0}
 
 .regiones{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:0 0 34px}
 .regiones span{
   border:1px solid var(--linea); border-radius:999px; padding:7px 16px;
   font-size:.88rem; color:var(--texto-suave); background:var(--panel);
 }
-
-/* Tarjetas de experiencias */
-.grilla{display:grid; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); gap:18px}
-.tarjeta{
-  background:var(--panel); border:1px solid var(--linea); border-radius:var(--radio);
-  overflow:hidden; display:flex; flex-direction:column;
-}
-.tarjeta .foto{height:170px; background:#0f1613 center/cover no-repeat; display:block}
-.tarjeta .cuerpo{padding:16px 18px 20px; display:flex; flex-direction:column; gap:8px; flex:1}
-.tarjeta .chip{
-  align-self:flex-start; font-size:.72rem; letter-spacing:.08em; text-transform:uppercase;
-  color:var(--dorado); border:1px solid var(--linea); border-radius:999px; padding:3px 10px;
-}
-.tarjeta h3{font-size:1.16rem}
-.tarjeta p{margin:0; color:var(--texto-suave); font-size:.94rem}
 
 /* Bloques de a cuatro */
 .puntos{display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:16px; margin:30px 0}
@@ -113,15 +103,20 @@ a:hover{text-decoration:underline}
 /* Botones */
 .acciones{display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-top:34px}
 .boton{
-  display:inline-flex; align-items:center; gap:9px; border-radius:999px; padding:14px 26px;
+  display:inline-flex; align-items:center; gap:10px; border-radius:999px; padding:14px 26px;
   font-weight:600; font-size:1rem; border:1px solid transparent; cursor:pointer;
-  font-family:inherit; text-decoration:none;
+  font-family:inherit; text-decoration:none; line-height:1.25;
 }
 .boton:hover{text-decoration:none}
-.boton-coral{background:var(--coral); color:#fff}
-.boton-coral:hover{background:var(--coral-oscuro)}
+.boton svg{width:21px; height:21px; flex:none}
+.boton-wpp{background:#25d366; color:#0b2016}
+.boton-wpp:hover{background:#1fbb59}
+.boton-wpp svg{fill:#0b2016}
 .boton-linea{background:transparent; color:var(--texto); border-color:var(--linea)}
 .boton-linea:hover{border-color:var(--dorado)}
+.boton-linea svg{stroke:var(--dorado); stroke-width:1.6; fill:none; stroke-linecap:round; stroke-linejoin:round}
+.boton .dos-lineas{display:flex; flex-direction:column; align-items:flex-start}
+.boton .dos-lineas small{font-weight:500; font-size:.8rem; color:var(--texto-suave)}
 
 /* Catálogo para agencias */
 .catalogo{margin-top:34px}
@@ -146,8 +141,21 @@ a:hover{text-decoration:underline}
 }
 .volver-arriba{display:block; text-align:center; margin-top:38px; color:var(--texto-suave); font-size:.92rem}
 
+/* WhatsApp flotante (igual que en la web) */
+.wsp-flotante{
+  position:fixed; z-index:60; display:none;
+  bottom:calc(1.3rem + env(safe-area-inset-bottom));
+  right:calc(1.3rem + env(safe-area-inset-right));
+  width:58px; height:58px; border-radius:50%; background:#25d366;
+  place-items:center; box-shadow:0 8px 24px rgba(0,0,0,.4); transition:transform .2s ease;
+}
+.wsp-flotante.visible{display:grid}
+.wsp-flotante:hover{transform:scale(1.1)}
+.wsp-flotante svg{width:32px; height:32px; fill:#fff}
+
 footer{border-top:1px solid var(--linea); padding:30px 0 40px; text-align:center; color:var(--texto-suave); font-size:.9rem}
 footer img{height:44px; margin-bottom:14px}
+footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center}
 </style>
 </head>
 <body>
@@ -167,15 +175,21 @@ footer img{height:44px; margin-bottom:14px}
     <p class="pregunta">¿Cómo llegaste hasta nosotros?</p>
 
     <div class="caminos">
-      <button class="camino" onclick="abrir('viajero')">
-        <span class="icono">🎒</span>
+      <!-- El viajero va derecho a las experiencias de la web: ahí puede verlas todas y
+           entrar a la información de cada una. Antes se quedaba acá y se confundía. -->
+      <a class="camino" href="/web/#experiencias">
+        <span class="icono">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18l5.5-9 3.5 5.5L14 12l7 6H3z"/><circle cx="17" cy="6.5" r="2.2"/></svg>
+        </span>
         <b>Soy viajero</b>
         <span class="detalle">Quiero conocer las excursiones y travesías.</span>
-        <span class="flecha">Ver experiencias →</span>
-      </button>
+        <span class="flecha">Ver todas las experiencias →</span>
+      </a>
 
-      <button class="camino" onclick="abrir('agencia')">
-        <span class="icono">🤝</span>
+      <button class="camino" onclick="abrirAgencia()">
+        <span class="icono">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="7" width="19" height="13" rx="2"/><path d="M9 7V5.2A1.2 1.2 0 0 1 10.2 4h3.6A1.2 1.2 0 0 1 15 5.2V7"/><path d="M2.5 12h19"/></svg>
+        </span>
         <b>Soy agencia u operador</b>
         <span class="detalle">Quiero trabajar con Wamani y ofrecer sus servicios.</span>
         <span class="flecha">Ver propuesta comercial →</span>
@@ -184,41 +198,17 @@ footer img{height:44px; margin-bottom:14px}
   </div>
 </section>
 
-<!-- ══════════ Camino del viajero ══════════ -->
-<section class="hoja" id="viajero">
-  <div class="envoltorio">
-    <div class="encabezado">
-      <span class="mini">Para vos que viajás</span>
-      <h2>Nuestras <em>experiencias</em></h2>
-      <p>Recorremos Jujuy de punta a punta, en grupos chicos y con guías de acá. Vos sólo caminás: del resto nos ocupamos nosotros.</p>
-    </div>
-
-    <div class="regiones">
-      <span>Quebrada</span><span>Puna</span><span>Yungas</span><span>Travesías</span>
-    </div>
-
-    <div class="grilla" id="grilla-viajero"></div>
-
-    <div class="acciones">
-      <a class="boton boton-coral" id="wpp-viajero" href="#" target="_blank" rel="noopener">💬 Consultar disponibilidad por WhatsApp</a>
-      <a class="boton boton-linea" href="/web/">Ver la web completa</a>
-    </div>
-
-    <a class="volver-arriba" href="#" onclick="volver(); return false;">← Volver</a>
-  </div>
-</section>
-
 <!-- ══════════ Camino de la agencia ══════════ -->
 <section class="hoja" id="agencia">
   <div class="envoltorio">
     <div class="encabezado">
       <span class="mini">Turismo receptivo</span>
-      <h2>Wamani Turismo — <em>Jujuy, Argentina</em></h2>
+      <h2>Wamani Turismo — <span class="resalte">Jujuy, Argentina</span></h2>
       <p>Agencia especializada en experiencias de naturaleza, trekking y aventura. Operamos en destino: recibimos a tus pasajeros y nos ocupamos de todo mientras están en Jujuy.</p>
     </div>
 
     <div class="regiones">
-      <span>Quebrada</span><span>Puna</span><span>Yungas</span>
+      <span>Yungas</span><span>Quebrada</span><span>Valle</span><span>Puna</span><span>Travesías</span>
     </div>
 
     <div class="puntos">
@@ -229,9 +219,20 @@ footer img{height:44px; margin-bottom:14px}
     </div>
 
     <div class="acciones">
-      <a class="boton boton-coral" id="wpp-agencia" href="#" target="_blank" rel="noopener">💬 Solicitar tarifas para agencias</a>
-      <a class="boton boton-linea" href="#catalogo">📋 Ver catálogo</a>
-      <a class="boton boton-linea" id="mail-agencia" href="#">✉️ Contactar a Wamani</a>
+      <a class="boton boton-wpp" id="wpp-agencia" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C9.4 3 4 8.3 4 14.9c0 2.6.8 5 2.3 7L4.1 28l6.3-2c2 1.1 4.2 1.6 6.4 1.6 6.6 0 12-5.3 12-11.9S22.6 3 16 3zm0 21.8c-2 0-3.9-.5-5.6-1.5l-.4-.2-3.7 1.2 1.2-3.6-.3-.4c-1.3-1.8-2-3.9-2-6.1C5.2 9.3 10 4.7 16 4.7s10.8 4.6 10.8 10.2S22 24.8 16 24.8zm5.9-7.6c-.3-.2-1.9-1-2.2-1.1-.3-.1-.5-.2-.7.2-.2.3-.8 1.1-1 1.3-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.6-1.6-1-.9-1.6-1.9-1.8-2.2-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.6.1-.2.1-.4 0-.6-.1-.2-.7-1.8-1-2.4-.3-.6-.5-.5-.7-.6h-.6c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.7s1.2 3.1 1.3 3.3c.2.2 2.3 3.6 5.6 5 .8.3 1.4.5 1.9.7.8.2 1.5.2 2.1.1.6-.1 1.9-.8 2.2-1.6.3-.8.3-1.4.2-1.6-.1-.1-.3-.2-.6-.4z"/></svg>
+        Solicitar tarifas para agencias
+      </a>
+
+      <a class="boton boton-linea" id="mail-agencia" href="#">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.2"/><path d="M3 6.5l9 6 9-6"/></svg>
+        <span class="dos-lineas">Contactanos por mail<small id="mail-texto">wamaniturismo@gmail.com</small></span>
+      </a>
+
+      <a class="boton boton-linea" href="#catalogo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8"/></svg>
+        Ver catálogo
+      </a>
     </div>
 
     <div class="nota">
@@ -253,10 +254,15 @@ footer img{height:44px; margin-bottom:14px}
   </div>
 </section>
 
+<!-- WhatsApp siempre a mano mientras se recorre la propuesta -->
+<a class="wsp-flotante" id="wsp-flotante" href="#" target="_blank" rel="noopener" aria-label="Escribinos por WhatsApp">
+  <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C9.4 3 4 8.3 4 14.9c0 2.6.8 5 2.3 7L4.1 28l6.3-2c2 1.1 4.2 1.6 6.4 1.6 6.6 0 12-5.3 12-11.9S22.6 3 16 3zm0 21.8c-2 0-3.9-.5-5.6-1.5l-.4-.2-3.7 1.2 1.2-3.6-.3-.4c-1.3-1.8-2-3.9-2-6.1C5.2 9.3 10 4.7 16 4.7s10.8 4.6 10.8 10.2S22 24.8 16 24.8zm5.9-7.6c-.3-.2-1.9-1-2.2-1.1-.3-.1-.5-.2-.7.2-.2.3-.8 1.1-1 1.3-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.6-1.6-1-.9-1.6-1.9-1.8-2.2-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.6.1-.2.1-.4 0-.6-.1-.2-.7-1.8-1-2.4-.3-.6-.5-.5-.7-.6h-.6c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.7s1.2 3.1 1.3 3.3c.2.2 2.3 3.6 5.6 5 .8.3 1.4.5 1.9.7.8.2 1.5.2 2.1.1.6-.1 1.9-.8 2.2-1.6.3-.8.3-1.4.2-1.6-.1-.1-.3-.2-.6-.4z"/></svg>
+</a>
+
 <footer>
   <div class="envoltorio">
     <img src="/logo/wamani-icono-192.png" alt="Wamani">
-    <div id="pie-datos"></div>
+    <div class="datos" id="pie-datos"></div>
     <div style="margin-top:10px">© <span id="anio"></span> Wamani Turismo · San Salvador de Jujuy, Argentina</div>
   </div>
 </footer>
@@ -269,53 +275,40 @@ var WPP = (D.whatsapp || "5491178898516").replace(/\D/g, "");
 var MAIL = D.email || "wamaniturismo@gmail.com";
 var EXC = D.excursiones || [];
 
-/* Mostrar el camino elegido y esconder la portada */
-function abrir(cual){
+function wpp(texto){ return "https://wa.me/" + WPP + "?text=" + encodeURIComponent(texto); }
+
+/* Un mail que llega con el asunto y el cuerpo ya escritos: el que consulta sólo completa */
+function mail(asunto, cuerpo){
+  return "mailto:" + MAIL + "?subject=" + encodeURIComponent(asunto) + "&body=" + encodeURIComponent(cuerpo);
+}
+
+function abrirAgencia(){
   document.getElementById("portada").style.display = "none";
-  document.querySelectorAll(".hoja").forEach(function(h){ h.classList.remove("visible"); });
-  document.getElementById(cual).classList.add("visible");
+  document.getElementById("agencia").classList.add("visible");
+  document.getElementById("wsp-flotante").classList.add("visible");
   window.scrollTo(0, 0);
-  // Queda anotado en la dirección, así el botón "atrás" del celular funciona como se espera
-  history.replaceState(null, "", "#" + cual);
+  history.replaceState(null, "", "#agencia");
 }
 
 function volver(){
-  document.querySelectorAll(".hoja").forEach(function(h){ h.classList.remove("visible"); });
+  document.getElementById("agencia").classList.remove("visible");
+  document.getElementById("wsp-flotante").classList.remove("visible");
   document.getElementById("portada").style.display = "";
   window.scrollTo(0, 0);
   history.replaceState(null, "", location.pathname);
 }
 
-/* Mensajes distintos según quién escribe: así ya sabemos con quién estamos hablando */
-function wpp(texto){
-  return "https://wa.me/" + WPP + "?text=" + encodeURIComponent(texto);
-}
-document.getElementById("wpp-viajero").href =
-  wpp("¡Hola Wamani! Los vi en la FIT. Quiero consultar disponibilidad para una excursión.");
-document.getElementById("wpp-agencia").href =
-  wpp("¡Hola Wamani! Los vi en la FIT. Somos una agencia de viajes y queremos recibir las tarifas y condiciones para trabajar con ustedes.");
-document.getElementById("mail-agencia").href =
-  "mailto:" + MAIL + "?subject=" + encodeURIComponent("Consulta comercial - Agencia de viajes") +
-  "&body=" + encodeURIComponent(
-    "Hola Wamani,\n\nSomos una agencia de viajes interesada en ofrecer sus servicios en Jujuy.\n\n" +
-    "Agencia:\nCiudad / país:\nContacto:\nQué necesitamos:\n\nGracias.");
+/* Mensajes ya escritos: cuando entra la consulta ya se sabe que viene de la feria */
+var MSG_AGENCIA = "¡Hola Wamani! Los vi en la FIT. Somos una agencia de viajes y queremos recibir las tarifas y condiciones para trabajar con ustedes.";
+document.getElementById("wpp-agencia").href = wpp(MSG_AGENCIA);
+document.getElementById("wsp-flotante").href = wpp(MSG_AGENCIA);
+document.getElementById("mail-texto").textContent = MAIL;
+document.getElementById("mail-agencia").href = mail(
+  "Consulta comercial - Agencia de viajes",
+  "Hola Wamani,\n\nSomos una agencia de viajes interesada en ofrecer sus servicios en Jujuy.\n\n" +
+  "Agencia:\nCiudad / país:\nContacto:\nQué necesitamos:\n\nGracias.");
 
-/* Las tarjetas del viajero */
-var grilla = document.getElementById("grilla-viajero");
-EXC.forEach(function(e){
-  var d = document.createElement("div");
-  d.className = "tarjeta";
-  var foto = e.img ? '<span class="foto" style="background-image:url(\'/web/img/' + e.img + '\')"></span>' : "";
-  d.innerHTML = foto +
-    '<div class="cuerpo">' +
-      (e.chip ? '<span class="chip">' + e.chip + "</span>" : "") +
-      "<h3>" + e.n + "</h3>" +
-      "<p>" + (e.resumen || "") + "</p>" +
-    "</div>";
-  grilla.appendChild(d);
-});
-
-/* El catálogo para agencias: lo mismo, pero con lo que incluye cada experiencia */
+/* El catálogo: cada experiencia con lo que incluye */
 var lista = document.getElementById("lista-catalogo");
 EXC.forEach(function(e){
   var d = document.createElement("div");
@@ -334,12 +327,11 @@ EXC.forEach(function(e){
 /* Pie */
 document.getElementById("anio").textContent = new Date().getFullYear();
 document.getElementById("pie-datos").innerHTML =
-  '<a href="' + wpp("¡Hola Wamani!") + '" target="_blank" rel="noopener">WhatsApp</a> · ' +
-  '<a href="mailto:' + MAIL + '">' + MAIL + "</a>";
+  '<a href="' + wpp("¡Hola Wamani! Los vi en la FIT.") + '" target="_blank" rel="noopener">WhatsApp</a>' +
+  '<a href="' + mail("Consulta desde la web de Wamani", "Hola Wamani,\n\n") + '">' + MAIL + "</a>";
 
-/* Si alguien entra directo a /receptivo/#agencia (por ejemplo desde un QR distinto) */
-var inicial = (location.hash || "").replace("#", "");
-if (inicial === "viajero" || inicial === "agencia") abrir(inicial);
+/* Por si alguien entra directo a /receptivo/#agencia */
+if ((location.hash || "").replace("#", "") === "agencia") abrirAgencia();
 </script>
 
 </body>

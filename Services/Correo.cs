@@ -37,7 +37,11 @@ public static class Correo
 
     // Manda un mail. Devuelve null si salió bien, o el motivo del error si falló.
     // NUNCA tira una excepción hacia afuera: que no ande el mail no puede tumbar la web.
-    public static async Task<string?> EnviarAsync(string asunto, string cuerpo, string? responderA = null)
+    //
+    // "adjunto" es opcional: si viene, el archivo va pegado al mail (por ejemplo, la
+    // propuesta en PDF que sube una agencia en la landing de la FIT).
+    public static async Task<string?> EnviarAsync(string asunto, string cuerpo, string? responderA = null,
+        (string Nombre, byte[] Datos, string? Tipo)? adjunto = null)
     {
         if (!Configurado) return "El envío de mails todavía no está configurado.";
 
@@ -56,6 +60,16 @@ public static class Correo
             if (!string.IsNullOrWhiteSpace(responderA))
             {
                 try { mensaje.ReplyToList.Add(new MailAddress(responderA)); } catch { /* mail mal escrito */ }
+            }
+
+            // El archivo que subió la persona, pegado al mail. El MemoryStream tiene que
+            // seguir vivo hasta después de mandarlo, por eso se libera al final del using.
+            using var contenido = adjunto is null ? null : new System.IO.MemoryStream(adjunto.Value.Datos);
+            if (contenido is not null)
+            {
+                var a = new Attachment(contenido, adjunto!.Value.Nombre,
+                    string.IsNullOrWhiteSpace(adjunto.Value.Tipo) ? "application/octet-stream" : adjunto.Value.Tipo);
+                mensaje.Attachments.Add(a);
             }
 
             using var cliente = new SmtpClient(Servidor, Puerto)

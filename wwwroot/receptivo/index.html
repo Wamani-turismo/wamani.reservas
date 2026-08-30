@@ -229,25 +229,16 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
         <span class="dos-lineas">Contactanos por mail<small id="mail-texto">wamaniturismo@gmail.com</small></span>
       </button>
 
-      <a class="boton boton-linea" href="#catalogo">
+      <button class="boton boton-linea" type="button" onclick="abrirCatalogo()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8"/></svg>
         Ver catálogo
-      </a>
+      </button>
     </div>
 
     <div class="nota">
       <b>¿Cómo seguimos?</b> Escribinos y te mandamos las tarifas para agencias, la
       disponibilidad de fechas y las condiciones de trabajo. Armamos programas a medida
       combinando excursiones y travesías según los días que tenga tu pasajero.
-    </div>
-
-    <div class="catalogo" id="catalogo">
-      <div class="encabezado" style="margin-top:56px">
-        <span class="mini">Catálogo</span>
-        <h2>Lo que <em>operamos</em></h2>
-        <p>Todas nuestras experiencias, con lo que incluye cada una.</p>
-      </div>
-      <div id="lista-catalogo"></div>
     </div>
 
     <a class="volver-arriba" href="#" onclick="volver(); return false;">← Volver</a>
@@ -266,6 +257,24 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
     <div style="margin-top:10px">© <span id="anio"></span> Wamani Turismo · San Salvador de Jujuy, Argentina</div>
   </div>
 </footer>
+
+<!-- El catálogo: se abre como ventana, agrupado por región, con el detalle de cada
+     experiencia (itinerario, qué incluye y qué llevar). -->
+<div id="fondo-catalogo" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,16,13,.78);z-index:90;align-items:flex-start;justify-content:center;padding:16px;overflow:auto">
+  <div style="background:var(--panel);border:1px solid var(--linea);border-radius:var(--radio);width:100%;max-width:760px;padding:26px;box-shadow:var(--sombra);margin:auto">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:4px">
+      <div>
+        <h2 style="margin:0 0 6px">Lo que <em>operamos</em></h2>
+        <p style="color:var(--texto-suave);font-size:.95rem;margin:0">Todas nuestras experiencias, con el detalle de cada una.</p>
+      </div>
+      <button type="button" class="boton boton-linea" onclick="cerrarCatalogo()" aria-label="Cerrar">✕</button>
+    </div>
+    <div id="lista-catalogo" style="margin-top:20px"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:22px">
+      <button type="button" class="boton boton-linea" onclick="cerrarCatalogo()">Cerrar</button>
+    </div>
+  </div>
+</div>
 
 <!-- Formulario de contacto: se escribe acá mismo y le llega a Wamani. No hace falta que
      la persona tenga un programa de correo configurado. -->
@@ -291,6 +300,11 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
       <label class="campo">Mensaje *
         <textarea name="mensaje" required rows="5" maxlength="4000" placeholder="Qué necesitás: tarifas, fechas, armar un programa…"></textarea>
       </label>
+      <label class="campo">Adjuntar un archivo
+        <input type="file" name="archivo" id="archivo"
+               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.webp,.txt,.csv,.zip">
+        <small class="ayuda">Opcional: tu propuesta, tarifario o presentación. Hasta 10 MB.</small>
+      </label>
 
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
         <button type="button" class="boton boton-linea" onclick="cerrarFormulario()">Cancelar</button>
@@ -310,6 +324,32 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
   font-family:inherit;font-size:1rem;
 }
 .campo input:focus,.campo textarea:focus{outline:none;border-color:var(--dorado)}
+.campo .ayuda{display:block;margin-top:6px;font-size:.8rem;color:var(--texto-suave)}
+.campo input[type=file]{padding:9px 11px;font-size:.9rem;cursor:pointer}
+.campo input[type=file]::file-selector-button{
+  margin-right:10px;padding:7px 12px;border-radius:9px;cursor:pointer;
+  border:1px solid var(--linea);background:#16241e;color:var(--texto);font-family:inherit;font-size:.85rem;
+}
+
+/* La ventana del catálogo */
+.ficha{border-top:1px solid var(--linea);padding:18px 0}
+.ficha:first-child{border-top:none;padding-top:4px}
+.ficha .arriba{display:flex;flex-wrap:wrap;align-items:baseline;gap:9px;margin-bottom:7px}
+.ficha h3{font-size:1.08rem}
+.ficha .tipo{
+  font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dorado);
+  border:1px solid var(--linea);border-radius:999px;padding:3px 9px;
+}
+.ficha p{margin:0 0 9px;color:var(--texto-suave);font-size:.93rem}
+.ficha .bloque{font-size:.87rem;color:var(--texto-suave);margin-bottom:7px}
+.ficha .bloque b{color:var(--texto)}
+.ficha ol,.ficha ul{margin:5px 0 0;padding-left:19px}
+.ficha li{margin-bottom:3px}
+.region{
+  margin:26px 0 10px;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dorado);border-bottom:1px solid var(--linea);padding-bottom:7px;
+}
+.region:first-child{margin-top:0}
 </style>
 
 <!-- Los datos y las experiencias salen del sistema, igual que en la web principal -->
@@ -348,26 +388,69 @@ var MSG_AGENCIA = "¡Hola Wamani! Los vi en la FIT. Somos una agencia de viajes 
 document.getElementById("wpp-agencia").href = wpp(MSG_AGENCIA);
 document.getElementById("wsp-flotante").href = wpp(MSG_AGENCIA);
 document.getElementById("mail-texto").textContent = MAIL;
-document.getElementById("mail-agencia").href = mail(
-  "Consulta comercial - Agencia de viajes",
-  "Hola Wamani,\n\nSomos una agencia de viajes interesada en ofrecer sus servicios en Jujuy.\n\n" +
-  "Agencia:\nCiudad / país:\nContacto:\nQué necesitamos:\n\nGracias.");
+/* OJO: acá había una línea que le ponía el mailto a un botón "mail-agencia" que YA NO
+   EXISTE (ese botón pasó a abrir el formulario). Al no encontrarlo, el navegador cortaba
+   el script justo en este punto y NADA de lo que sigue llegaba a correr: por eso el
+   catálogo salía vacío, el pie quedaba sin datos y el formulario no enviaba. */
 
-/* El catálogo: cada experiencia con lo que incluye */
-var lista = document.getElementById("lista-catalogo");
-EXC.forEach(function(e){
+/* ---- El catálogo, en una ventana y agrupado por región ----
+   Las regiones no vienen del sistema: se arman acá, por la clave de cada experiencia.
+   Si se carga una experiencia nueva desde el panel, hay que sumarla a la lista de su
+   región; si no, cae igual al final, en "Otras experiencias" (nunca se pierde). */
+var REGIONES = [
+  { titulo: "Yungas",    claves: ["conociendo-las-yungas", "yungas-express", "termas-de-jordan"] },
+  { titulo: "Quebrada",  claves: ["recorriendo-la-quebrada"] },
+  { titulo: "Valle",     claves: ["cascada-santuyoc-y-angosto-de-jaire", "ruta-de-lagunas-y-termas"] },
+  { titulo: "Puna",      claves: ["atardecer-en-las-salinas"] },
+  { titulo: "Travesías", claves: ["tilcara-calilegua", "humahuaca-yungas", "iruya-nazareno"] }
+];
+
+/* Para que un texto cargado desde el panel nunca pueda romper la página */
+function txt(s){ var d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
+
+function ficha(e){
+  var h = '<div class="arriba"><h3>' + txt(e.n) + "</h3>" +
+    '<span class="tipo">' + (e.t ? "Travesía" : "Excursión") + "</span>" +
+    (e.chip ? '<span class="tipo">' + txt(e.chip) + "</span>" : "") + "</div>";
+  if (e.resumen) h += "<p>" + txt(e.resumen) + "</p>";
+  if (e.datos && e.datos.length)
+    h += '<div class="bloque"><b>Datos:</b> ' + e.datos.map(txt).join(" · ") + "</div>";
+  if (e.itinerario && e.itinerario.length)
+    h += '<div class="bloque"><b>Itinerario:</b><ol><li>' + e.itinerario.map(txt).join("</li><li>") + "</li></ol></div>";
+  if (e.incluye && e.incluye.length)
+    h += '<div class="bloque"><b>Incluye:</b><ul><li>' + e.incluye.map(txt).join("</li><li>") + "</li></ul></div>";
+  if (e.llevar) h += '<div class="bloque"><b>Qué llevar:</b> ' + txt(e.llevar) + "</div>";
   var d = document.createElement("div");
-  d.className = "item";
-  var incluye = (e.incluye && e.incluye.length)
-    ? '<div class="incluye"><b>Incluye:</b> ' + e.incluye.join(" · ") + "</div>" : "";
-  d.innerHTML =
-    '<div class="arriba"><h3>' + e.n + "</h3>" +
-      '<span class="tipo">' + (e.t ? "Travesía" : "Excursión") + "</span>" +
-      (e.chip ? '<span class="tipo">' + e.chip + "</span>" : "") +
-    "</div>" +
-    "<p>" + (e.resumen || "") + "</p>" + incluye;
-  lista.appendChild(d);
+  d.className = "ficha";
+  d.innerHTML = h;
+  return d;
+}
+
+var lista = document.getElementById("lista-catalogo");
+var yaPuestas = {};
+REGIONES.forEach(function(r){
+  var deLaRegion = r.claves
+    .map(function(c){ return EXC.find(function(e){ return e.clave === c; }); })
+    .filter(Boolean);
+  if (!deLaRegion.length) return;
+  var t = document.createElement("div");
+  t.className = "region";
+  t.textContent = r.titulo;
+  lista.appendChild(t);
+  deLaRegion.forEach(function(e){ yaPuestas[e.clave] = true; lista.appendChild(ficha(e)); });
 });
+/* Lo que se haya cargado después y todavía no esté en ninguna región */
+var sueltas = EXC.filter(function(e){ return !yaPuestas[e.clave]; });
+if (sueltas.length){
+  var t = document.createElement("div");
+  t.className = "region";
+  t.textContent = "Otras experiencias";
+  lista.appendChild(t);
+  sueltas.forEach(function(e){ lista.appendChild(ficha(e)); });
+}
+
+function abrirCatalogo(){ document.getElementById("fondo-catalogo").style.display = "flex"; }
+function cerrarCatalogo(){ document.getElementById("fondo-catalogo").style.display = "none"; }
 
 /* Pie */
 document.getElementById("anio").textContent = new Date().getFullYear();
@@ -383,6 +466,17 @@ document.getElementById("form-consulta").addEventListener("submit", async functi
   ev.preventDefault();
   var boton = document.getElementById("btn-enviar");
   var aviso = document.getElementById("aviso-form");
+
+  // Si el archivo es muy grande, avisar acá y no hacerle esperar la subida al pedo
+  var arch = document.getElementById("archivo").files[0];
+  if (arch && arch.size > 10 * 1024 * 1024) {
+    aviso.style.display = "block";
+    aviso.style.color = "var(--coral)";
+    aviso.innerHTML = "El archivo pesa " + (arch.size / 1024 / 1024).toFixed(1) +
+      " MB y el tope son 10 MB. Probá con uno más liviano o mandanoslo por mail.";
+    return;
+  }
+
   boton.disabled = true; boton.textContent = "Enviando…";
   try {
     var r = await fetch("/web/consulta", { method: "POST", body: new FormData(this) });

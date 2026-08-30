@@ -899,9 +899,36 @@ app.MapPost("/web/consulta", async (HttpRequest req, AppDbContext db) =>
         "Mensaje:\n" + consulta.Mensaje + "\n\n" +
         "— Se puede responder directamente a este mail.";
 
+    // Si la persona subió un archivo (por ejemplo, una agencia con su propuesta en PDF),
+    // va pegado al mail. NO se guarda en el sistema: viaja sólo por correo.
+    (string, byte[], string?)? adjunto = null;
+    var archivo = f.Files["archivo"];
+    if (archivo is not null && archivo.Length > 0)
+    {
+        const long TOPE = 10 * 1024 * 1024; // 10 MB: Gmail no acepta mucho más
+        var ext = System.IO.Path.GetExtension(archivo.FileName ?? "").ToLowerInvariant();
+        // Lista de lo que SÍ se acepta: nada que se pueda ejecutar
+        var permitidas = new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
+                                 ".jpg", ".jpeg", ".png", ".webp", ".txt", ".csv", ".zip" };
+
+        if (archivo.Length > TOPE)
+            cuerpo += "\n\n⚠️ Adjuntó un archivo de " + (archivo.Length / 1024 / 1024) +
+                      " MB y no entró en el mail (el tope son 10 MB). Conviene pedírselo.";
+        else if (!permitidas.Contains(ext))
+            cuerpo += "\n\n⚠️ Intentó adjuntar un archivo \"" + ext + "\", que no se acepta.";
+        else
+        {
+            using var ms = new MemoryStream();
+            await archivo.CopyToAsync(ms);
+            var limpio = System.IO.Path.GetFileName(archivo.FileName ?? "adjunto");
+            adjunto = (limpio, ms.ToArray(), archivo.ContentType);
+            cuerpo += "\n\n📎 Adjuntó el archivo: " + limpio;
+        }
+    }
+
     await Wamani.Reservas.Services.Correo.EnviarAsync(
         (tipo == "Agencia" ? "🤝 Consulta de agencia — " : "🎒 Consulta web — ") + consulta.Nombre,
-        cuerpo, consulta.Email);
+        cuerpo, consulta.Email, adjunto);
 
     return Results.Json(new { ok = true });
   }

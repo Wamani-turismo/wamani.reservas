@@ -175,7 +175,8 @@ namespace Wamani.Reservas.Models
         // Días antes del inicio en que hay que cobrar el saldo (4 excursión / 7 travesía)
         public int DiasAvisoSaldo() => EsTravesia ? 7 : 4;
 
-        // Fecha a partir de la cual hay que empezar a cobrar el saldo
+        // El ÚLTIMO día para que el cliente pague el saldo (así se lo dice el comprobante),
+        // que es el mismo día en que nosotros empezamos a reclamárselo.
         public DateTime FechaAvisoSaldo() => FechaDesde.Date.AddDays(-DiasAvisoSaldo());
 
         // ¿Hay que cobrarle el saldo AHORA? (queda saldo, la salida no pasó y ya entró

@@ -36,7 +36,7 @@ public static class ReservaPdf
         var sena = r.SenaMonto ?? 0m;
         var saldo = r.Pendiente();
         var dias = r.DiasAvisoSaldo();               // 4 excursión / 7 travesía
-        var fechaLimite = r.FechaAvisoSaldo();       // desde cuándo se cobra el saldo
+        var fechaLimite = r.FechaAvisoSaldo();       // el ÚLTIMO día para pagar el saldo
         var esTravesia = r.EsTravesia;
 
         var doc = Document.Create(container =>
@@ -134,10 +134,10 @@ public static class ReservaPdf
                         {
                             c.Item().PaddingTop(14).Background("#F8E8DF").Padding(12).Text(t =>
                             {
-                                t.Span("El saldo se abona ").FontColor(Tinta);
-                                t.Span($"{dias} días antes").Bold().FontColor(Coral);
+                                t.Span("El saldo se puede abonar ").FontColor(Tinta);
+                                t.Span($"hasta {dias} días antes").Bold().FontColor(Coral);
                                 t.Span(esTravesia ? " del inicio (por ser una travesía de varios días)" : " del día de la salida");
-                                t.Span($", es decir a partir del {fechaLimite:dd/MM/yyyy}.").FontColor(Tinta);
+                                t.Span($", es decir hasta el {fechaLimite:dd/MM/yyyy} inclusive.").FontColor(Tinta);
                             });
                         }
                         else

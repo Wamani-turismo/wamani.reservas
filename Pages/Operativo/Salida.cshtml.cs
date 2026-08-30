@@ -184,6 +184,32 @@ public class SalidaModel : PageModel
     // cargado. Si se escondiera, al guardar esas filas no volverían y se borrarían.
     public bool DuermeFuera { get; set; }
 
+    // Gastos que están cargados DOS VECES en esta salida: el mismo ítem como fila del grupo
+    // y además por pasajero, o repetido dentro del mismo grupo.
+    //
+    // Pasa en las salidas viejas: cuando una excursión pasa a manejarse por grupo (porque se
+    // le cargaron las noches) el sistema crea la fila del grupo, pero las que ya existían
+    // por cada pasajero no se borran solas — podrían tener plata o comprobantes. Quedaban
+    // las dos y el gasto se contaba dos veces sin que nadie lo notara.
+    public List<string> GastosDuplicados { get; set; } = new();
+
+    private void BuscarDuplicados()
+    {
+        GastosDuplicados = Gastos
+            .GroupBy(g => (g.Nombre ?? "").Trim().ToLowerInvariant())
+            .Where(gr => gr.Key.Length > 0)
+            .Where(gr => gr.Count() > 1 && (
+                // una fila del grupo y además una o más por pasajero
+                (gr.Any(x => x.ReservaId == null) && gr.Any(x => x.ReservaId != null))
+                // o el mismo ítem repetido en el grupo
+                || gr.Count(x => x.ReservaId == null) > 1
+                // o repetido dentro de la misma reserva
+                || gr.Where(x => x.ReservaId != null)
+                     .GroupBy(x => x.ReservaId).Any(r => r.Count() > 1)))
+            .Select(gr => gr.First().Nombre.Trim())
+            .ToList();
+    }
+
     // Enviados desde el form al guardar
     [BindProperty] public List<int> Ids { get; set; } = new();
     [BindProperty] public List<string> Keys { get; set; } = new();    // clave para asociar el comprobante a la fila (id real, o temporal si es nueva)
@@ -346,6 +372,8 @@ public class SalidaModel : PageModel
         }
 
         ProvPorTipo = asignados.GroupBy(o => o.Tipo).ToDictionary(g => g.Key, g => g.ToList());
+
+        BuscarDuplicados();
     }
 
     public async Task<IActionResult> OnGetAsync()
@@ -371,6 +399,12 @@ public class SalidaModel : PageModel
 
         static string Norm(string? s) => (s ?? "").Trim().ToLowerInvariant();
         bool cambio = false;
+
+        // Lo que se borró a mano en esta salida NO se vuelve a copiar. Sin esto, borrar un
+        // ítem de la plantilla no servía de nada: volvía a aparecer al entrar de nuevo.
+        var salidaGuardada = await _db.OperativoSalidas
+            .FirstOrDefaultAsync(s => s.ExcursionId == ExcursionId && s.Fecha.Date == Fecha.Date);
+        var borrados = salidaGuardada?.BorradosLista() ?? new List<string>();
 
         // ¿Esta salida se maneja como grupo? (tiene noches/traslados/arrieros cargados).
         // Si es así, los gastos "por persona" NO se abren uno por cliente: va UNA fila para
@@ -399,6 +433,9 @@ public class SalidaModel : PageModel
 
         foreach (var p in plantilla)
         {
+            // Si lo borraron a mano en esta salida, se respeta y no se vuelve a copiar.
+            if (borrados.Contains(Norm(p.Nombre))) continue;
+
             var tipo = string.IsNullOrWhiteSpace(p.TipoCalculo) ? "Por persona" : p.TipoCalculo;
 
             if (tipo == "Por persona" && !porGrupo)
@@ -571,9 +608,9 @@ public class SalidaModel : PageModel
         }
 
         // Borrar los que se quitaron en la pantalla
-        foreach (var g in existentes)
-            if (!idsEnviados.Contains(g.Id))
-                _db.OperativoGastos.Remove(g);
+        var quitados = existentes.Where(g => !idsEnviados.Contains(g.Id)).ToList();
+        foreach (var g in quitados)
+            _db.OperativoGastos.Remove(g);
 
         // Estado de la salida: servicios pagados + comprobante
         var salida = await _db.OperativoSalidas
@@ -584,6 +621,31 @@ public class SalidaModel : PageModel
             _db.OperativoSalidas.Add(salida);
         }
         salida.ServiciosPagados = ServiciosPagados;
+
+        // ---- Que borrar signifique BORRAR ----
+        // El operativo copia de la excursión lo que falta cada vez que se abre, así que un
+        // ítem borrado volvía a aparecer solo. Se anota el nombre de lo que se sacó a mano
+        // para no volver a copiarlo; y si lo vuelven a escribir, se saca de la lista.
+        static string Clave(string? s) => (s ?? "").Trim().ToLowerInvariant();
+
+        var yaBorrados = salida.BorradosLista();
+        var nombresEnPantalla = Nombres
+            .Where(n => !string.IsNullOrWhiteSpace(n))
+            .Select(Clave)
+            .ToHashSet();
+
+        foreach (var g in quitados)
+        {
+            var k = Clave(g.Nombre);
+            // Sólo si NO quedó otra fila con ese mismo nombre: borrar el "Seguro Cliente"
+            // de una reserva no significa que la salida se quede sin seguro.
+            if (!nombresEnPantalla.Contains(k) && !yaBorrados.Contains(k))
+                yaBorrados.Add(k);
+        }
+
+        // Lo que volvió a aparecer en la pantalla deja de estar borrado
+        yaBorrados.RemoveAll(k => nombresEnPantalla.Contains(k));
+        salida.GuardarBorrados(yaBorrados);
 
 
         // ---- Proveedores por tipo ----
@@ -734,11 +796,15 @@ public class SalidaModel : PageModel
             .ToListAsync();
 
         int cuantos = borrables.Count;
-        if (cuantos > 0)
-        {
-            _db.OperativoGastos.RemoveRange(borrables);
-            await _db.SaveChangesAsync();
-        }
+        if (cuantos > 0) _db.OperativoGastos.RemoveRange(borrables);
+
+        // "Rehacer" es empezar de nuevo: también se olvida qué ítems se habían sacado a
+        // mano, así que la plantilla vuelve entera y de ahí se decide otra vez.
+        var salida = await _db.OperativoSalidas
+            .FirstOrDefaultAsync(s => s.ExcursionId == ExcursionId && s.Fecha.Date == Fecha.Date);
+        if (salida is not null) salida.ItemsBorrados = null;
+
+        await _db.SaveChangesAsync();
 
         // Al volver por GET, la plantilla se copia de nuevo, ya limpia.
         return RedirectToPage("/Operativo/Salida",

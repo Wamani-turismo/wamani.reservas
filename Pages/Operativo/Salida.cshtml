@@ -179,6 +179,24 @@
             </button>
         </p>
 
+        @* Alerta: el mismo ítem cargado dos veces (como fila del grupo y además por
+           pasajero). Pasa en las salidas viejas, y el gasto se cuenta doble sin que se note. *@
+        @if (Model.GastosDuplicados.Count > 0)
+        {
+            <div class="aviso-dup">
+                <strong>⚠️ Ojo: hay gastos cargados dos veces.</strong>
+                <div style="margin-top:6px">
+                    @string.Join(" · ", Model.GastosDuplicados)
+                </div>
+                <div style="margin-top:8px">
+                    Cada uno de estos aparece como fila del grupo <em>y además</em> por pasajero,
+                    así que se está contando doble. Dejá una sola: la del grupo con el precio por
+                    persona, y borrá las otras con el 🗑. O tocá <strong>Rehacer desde la
+                    plantilla</strong>, que deja todo como dice la excursión.
+                </div>
+            </div>
+        }
+
         @if (Model.Gastos.Count == 0)
         {
             <p class="hint">Esta excursión todavía no tiene gastos cargados. Podés agregarlos acá, o cargarlos en la excursión para que aparezcan solos en todas sus salidas.</p>

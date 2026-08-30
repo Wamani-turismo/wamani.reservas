@@ -344,6 +344,8 @@ using (var scope = app.Services.CreateScope())
     // La misma nota, pero de UNA salida puntual: en el operativo, por gasto y por proveedor
     EnsureSqliteColumn(db, "OperativoGastos", "Comentario", "TEXT NULL");
     EnsureSqliteColumn(db, "OperativoProveedores", "Comentario", "TEXT NULL");
+    // Los ítems de la plantilla que se borraron a mano en una salida (para no recopiarlos)
+    EnsureSqliteColumn(db, "OperativoSalidas", "ItemsBorrados", "TEXT NULL");
     } // fin del bloque específico de SQLite
 
     // En Postgres: corrige las tablas que se hayan creado antes con fechas "con zona
@@ -415,6 +417,8 @@ using (var scope = app.Services.CreateScope())
         // La misma nota, pero de UNA salida puntual: en el operativo, por gasto y por proveedor
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoProveedores"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
+        // Los ítems de la plantilla que se borraron a mano en una salida (para no recopiarlos)
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoSalidas"" ADD COLUMN IF NOT EXISTS ""ItemsBorrados"" text;");
 
         // Tabla de gastos generales de la empresa (nueva; EnsureCreated no la agrega a una base ya creada)
         db.Database.ExecuteSqlRaw(@"

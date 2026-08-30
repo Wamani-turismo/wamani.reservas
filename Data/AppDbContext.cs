@@ -31,6 +31,9 @@ namespace Wamani.Reservas.Data
         public DbSet<IntegranteWeb> IntegrantesWeb => Set<IntegranteWeb>();
         public DbSet<VideoWeb> VideosWeb => Set<VideoWeb>();
 
+        // Las consultas que deja la gente con el formulario de la web
+        public DbSet<ConsultaWeb> ConsultasWeb => Set<ConsultaWeb>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

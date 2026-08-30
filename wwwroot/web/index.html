@@ -855,6 +855,47 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
 </div>
 
 <!-- ═════════════ BOTÓN FLOTANTE DE WHATSAPP ═════════════ -->
+<!-- Formulario de contacto: se abre al tocar el mail. Se escribe acá mismo y le llega a
+     Wamani, sin depender de que el visitante tenga un programa de correo configurado. -->
+<div id="fondo-form" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,16,13,.75);z-index:80;align-items:center;justify-content:center;padding:16px;overflow:auto">
+  <div style="background:var(--panel,#1c2a24);border:1px solid var(--linea);border-radius:22px;width:100%;max-width:520px;padding:26px;box-shadow:0 14px 40px rgba(0,0,0,.45)">
+    <h3 style="margin:0 0 6px;font-family:'Playfair Display',Georgia,serif;font-size:1.5rem">Escribinos</h3>
+    <p style="opacity:.75;font-size:.95rem;margin:0 0 18px">Contanos qué necesitás y te respondemos a la brevedad.</p>
+    <form id="form-consulta" autocomplete="on">
+      <input type="hidden" name="tipo" value="Viajero">
+      <input type="hidden" name="origen" value="Web">
+      <input type="text" name="apellido2" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+      <label class="campo-form">Nombre *
+        <input name="nombre" required maxlength="160" placeholder="Tu nombre">
+      </label>
+      <label class="campo-form">Mail *
+        <input name="email" type="email" required maxlength="160" placeholder="para poder contestarte">
+      </label>
+      <label class="campo-form">Teléfono / WhatsApp
+        <input name="telefono" maxlength="60" placeholder="opcional">
+      </label>
+      <label class="campo-form">Mensaje *
+        <textarea name="mensaje" required rows="5" maxlength="4000" placeholder="Qué excursión te interesa, fechas, cuántos son…"></textarea>
+      </label>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+        <button type="button" class="btn btn-borde" onclick="cerrarFormulario()">Cancelar</button>
+        <button type="submit" class="btn btn-coral" id="btn-enviar">Enviar consulta</button>
+      </div>
+    </form>
+    <div id="aviso-form" style="display:none;margin-top:6px;font-size:.98rem"></div>
+  </div>
+</div>
+
+<style>
+.campo-form{display:block;margin-bottom:14px;font-size:.9rem;opacity:.85}
+.campo-form input,.campo-form textarea{
+  display:block;width:100%;margin-top:6px;padding:11px 13px;border-radius:12px;
+  border:1px solid var(--linea);background:#101a16;color:var(--texto,#ece5d4);
+  font-family:inherit;font-size:1rem;
+}
+.campo-form input:focus,.campo-form textarea:focus{outline:none;border-color:var(--dorado)}
+</style>
+
 <a class="wsp-flotante wsp" data-msg="¡Hola! Vi la página de Wamani Turismo y quisiera recibir información sobre las excursiones." aria-label="Escribinos por WhatsApp">
   <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3C9.4 3 4 8.3 4 14.9c0 2.6.8 5 2.3 7L4.1 28l6.3-2c2 1.1 4.2 1.6 6.4 1.6 6.6 0 12-5.3 12-11.9S22.6 3 16 3zm0 21.8c-2 0-3.9-.5-5.6-1.5l-.4-.2-3.7 1.2 1.2-3.6-.3-.4c-1.3-1.8-2-3.9-2-6.1C5.2 9.3 10 4.7 16 4.7s10.8 4.6 10.8 10.2S22 24.8 16 24.8zm5.9-7.6c-.3-.2-1.9-1-2.2-1.1-.3-.1-.5-.2-.7.2-.2.3-.8 1.1-1 1.3-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.6-1.6-1-.9-1.6-1.9-1.8-2.2-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.6.1-.2.1-.4 0-.6-.1-.2-.7-1.8-1-2.4-.3-.6-.5-.5-.7-.6h-.6c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.7s1.2 3.1 1.3 3.3c.2.2 2.3 3.6 5.6 5 .8.3 1.4.5 1.9.7.8.2 1.5.2 2.1.1.6-.1 1.9-.8 2.2-1.6.3-.8.3-1.4.2-1.6-.1-.1-.3-.2-.6-.4z"/></svg>
 </a>
@@ -1140,15 +1181,12 @@ if (D){
   document.querySelectorAll('a[href*="instagram"]').forEach(a => a.href = "https://instagram.com/" + D.instagram);
   document.querySelectorAll('a[href*="facebook"]').forEach(a => a.href = D.facebook);
   document.querySelectorAll('a[href*="linktr"]').forEach(a => a.href = D.linktree);
-  // El mail se abre con el asunto y el saludo ya escritos, así el que consulta sólo tiene
-  // que escribir lo que necesita. Antes abría un mail en blanco y muchos lo cerraban.
-  const asuntoMail = "Consulta desde la web de Wamani";
-  const cuerpoMail = "Hola Wamani,\n\nQuisiera consultar por:\n\n";
-  const linkMail = "mailto:" + D.email +
-      "?subject=" + encodeURIComponent(asuntoMail) + "&body=" + encodeURIComponent(cuerpoMail);
+  // Al tocar el mail se abre un formulario acá mismo, en vez de un programa de correo:
+  // así puede escribir cualquiera, tenga o no un mail configurado en su computadora.
   document.querySelectorAll('a[href^="mailto"]').forEach(a => {
-    a.href = linkMail;
     if (a.textContent.includes("@")) a.textContent = "✉️ " + D.email;
+    a.href = "#";
+    a.addEventListener("click", function(ev){ ev.preventDefault(); abrirFormulario(); });
   });
   // Datos de contacto (teléfono y ubicación en texto)
   document.querySelectorAll("#contacto .contacto-datos > *").forEach(function(el){
@@ -1175,6 +1213,33 @@ function abrirDesdeLaDireccion(){
 }
 abrirDesdeLaDireccion();
 window.addEventListener("hashchange", abrirDesdeLaDireccion);
+
+/* ═══ Formulario de contacto ═══
+   Se abre al tocar el mail. La consulta le llega a Wamani y queda guardada en el sistema,
+   así que no depende de que el visitante tenga un programa de correo. */
+function abrirFormulario(){ document.getElementById("fondo-form").style.display = "flex"; }
+function cerrarFormulario(){ document.getElementById("fondo-form").style.display = "none"; }
+
+document.getElementById("form-consulta").addEventListener("submit", async function(ev){
+  ev.preventDefault();
+  const boton = document.getElementById("btn-enviar");
+  const aviso = document.getElementById("aviso-form");
+  boton.disabled = true; boton.textContent = "Enviando…";
+  try {
+    const r = await fetch("/web/consulta", { method: "POST", body: new FormData(this) });
+    const res = await r.json();
+    if (!res.ok) throw new Error(res.error || "No se pudo enviar.");
+    this.style.display = "none";
+    aviso.style.display = "block";
+    aviso.style.color = "#25d366";
+    aviso.innerHTML = "<b>¡Listo! Recibimos tu consulta.</b><br>Te vamos a responder a la brevedad. Gracias.";
+  } catch (e) {
+    aviso.style.display = "block";
+    aviso.style.color = "var(--coral)";
+    aviso.innerHTML = "No se pudo enviar. Escribinos por WhatsApp, por favor.";
+    boton.disabled = false; boton.textContent = "Enviar consulta";
+  }
+});
 
 /* Año del footer + menú móvil */
 document.getElementById("anio").textContent = new Date().getFullYear();

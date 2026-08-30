@@ -224,10 +224,10 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
         Solicitar tarifas para agencias
       </a>
 
-      <a class="boton boton-linea" id="mail-agencia" href="#">
+      <button class="boton boton-linea" type="button" onclick="abrirFormulario()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.2"/><path d="M3 6.5l9 6 9-6"/></svg>
         <span class="dos-lineas">Contactanos por mail<small id="mail-texto">wamaniturismo@gmail.com</small></span>
-      </a>
+      </button>
 
       <a class="boton boton-linea" href="#catalogo">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8"/></svg>
@@ -266,6 +266,51 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
     <div style="margin-top:10px">© <span id="anio"></span> Wamani Turismo · San Salvador de Jujuy, Argentina</div>
   </div>
 </footer>
+
+<!-- Formulario de contacto: se escribe acá mismo y le llega a Wamani. No hace falta que
+     la persona tenga un programa de correo configurado. -->
+<div id="fondo-form" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,16,13,.72);z-index:80;align-items:center;justify-content:center;padding:16px;overflow:auto">
+  <div style="background:var(--panel);border:1px solid var(--linea);border-radius:var(--radio);width:100%;max-width:520px;padding:26px;box-shadow:var(--sombra)">
+    <h2 style="margin:0 0 6px">Escribinos</h2>
+    <p style="color:var(--texto-suave);font-size:.95rem;margin:0 0 18px">Contanos qué necesitás y te respondemos a la brevedad.</p>
+    <form id="form-consulta" autocomplete="on">
+      <input type="hidden" name="tipo" value="Agencia">
+      <input type="hidden" name="origen" value="Receptivo (FIT)">
+      <!-- Campo trampa para robots: una persona no lo ve -->
+      <input type="text" name="apellido2" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+
+      <label class="campo">Nombre y agencia *
+        <input name="nombre" required maxlength="160" placeholder="Ej: María Pérez — Viajes del Sur">
+      </label>
+      <label class="campo">Mail *
+        <input name="email" type="email" required maxlength="160" placeholder="para poder contestarte">
+      </label>
+      <label class="campo">Teléfono / WhatsApp
+        <input name="telefono" maxlength="60" placeholder="opcional">
+      </label>
+      <label class="campo">Mensaje *
+        <textarea name="mensaje" required rows="5" maxlength="4000" placeholder="Qué necesitás: tarifas, fechas, armar un programa…"></textarea>
+      </label>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px">
+        <button type="button" class="boton boton-linea" onclick="cerrarFormulario()">Cancelar</button>
+        <button type="submit" class="boton boton-wpp" id="btn-enviar">Enviar consulta</button>
+      </div>
+    </form>
+    <!-- Va FUERA del formulario: al enviar, el formulario se esconde y este aviso queda -->
+    <div id="aviso-form" style="display:none;margin-top:6px;font-size:.98rem"></div>
+  </div>
+</div>
+
+<style>
+.campo{display:block;margin-bottom:14px;font-size:.9rem;color:var(--texto-suave)}
+.campo input,.campo textarea{
+  display:block;width:100%;margin-top:6px;padding:11px 13px;border-radius:12px;
+  border:1px solid var(--linea);background:#101a16;color:var(--texto);
+  font-family:inherit;font-size:1rem;
+}
+.campo input:focus,.campo textarea:focus{outline:none;border-color:var(--dorado)}
+</style>
 
 <!-- Los datos y las experiencias salen del sistema, igual que en la web principal -->
 <script src="/web/contenido.js"></script>
@@ -329,6 +374,34 @@ document.getElementById("anio").textContent = new Date().getFullYear();
 document.getElementById("pie-datos").innerHTML =
   '<a href="' + wpp("¡Hola Wamani! Los vi en la FIT.") + '" target="_blank" rel="noopener">WhatsApp</a>' +
   '<a href="' + mail("Consulta desde la web de Wamani", "Hola Wamani,\n\n") + '">' + MAIL + "</a>";
+
+/* ---- El formulario de contacto ---- */
+function abrirFormulario(){ document.getElementById("fondo-form").style.display = "flex"; }
+function cerrarFormulario(){ document.getElementById("fondo-form").style.display = "none"; }
+
+document.getElementById("form-consulta").addEventListener("submit", async function(ev){
+  ev.preventDefault();
+  var boton = document.getElementById("btn-enviar");
+  var aviso = document.getElementById("aviso-form");
+  boton.disabled = true; boton.textContent = "Enviando…";
+  try {
+    var r = await fetch("/web/consulta", { method: "POST", body: new FormData(this) });
+    var res = await r.json();
+    if (res.ok) {
+      this.style.display = "none";
+      aviso.style.display = "block";
+      aviso.style.color = "#25d366";
+      aviso.innerHTML = "<b>¡Listo! Recibimos tu consulta.</b><br>Te vamos a responder a la brevedad. Gracias.";
+    } else {
+      throw new Error(res.error || "No se pudo enviar.");
+    }
+  } catch (e) {
+    aviso.style.display = "block";
+    aviso.style.color = "var(--coral)";
+    aviso.innerHTML = "No se pudo enviar. Escribinos por WhatsApp o a <b>" + MAIL + "</b>.";
+    boton.disabled = false; boton.textContent = "Enviar consulta";
+  }
+});
 
 /* Por si alguien entra directo a /receptivo/#agencia */
 if ((location.hash || "").replace("#", "") === "agencia") abrirAgencia();

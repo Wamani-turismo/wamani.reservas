@@ -1,0 +1,85 @@
+@page
+@model Wamani.Reservas.Pages.Consultas.IndexModel
+@{
+    ViewData["Title"] = "Consultas";
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Consultas de la web</h1>
+        <p class="subtitle" style="margin:0">
+            Lo que deja la gente con el formulario de contacto.
+            @if (Model.SinAtender > 0)
+            {
+                <strong>@Model.SinAtender sin contestar.</strong>
+            }
+        </p>
+    </div>
+</div>
+
+@if (!Model.MailConfigurado)
+{
+    <div class="card" style="border-left:4px solid var(--warn)">
+        <p style="margin:0">
+            ⚠️ <strong>El aviso por mail todavía no está configurado.</strong>
+            Las consultas se guardan acá igual —no se pierde ninguna— pero nadie recibe un
+            mail cuando entra una nueva. Para activarlo hay que cargar en Render las variables
+            <code>MAIL_USUARIO</code> y <code>MAIL_CLAVE</code>.
+        </p>
+    </div>
+}
+
+@if (Model.Lista.Count == 0)
+{
+    <div class="card"><p style="margin:0">Todavía no entró ninguna consulta.</p></div>
+}
+else
+{
+    @foreach (var c in Model.Lista)
+    {
+        <div class="card" style="@(c.Atendida ? "opacity:.55" : "")">
+            <div class="toolbar" style="margin-bottom:10px">
+                <div>
+                    <h2 style="margin:0">
+                        @(c.EsAgencia ? "🤝" : "🎒") @c.Nombre
+                        @if (c.EsAgencia)
+                        {
+                            <span class="pill pill-warn" style="margin-left:8px">Agencia</span>
+                        }
+                    </h2>
+                    <p class="subtitle" style="margin:2px 0 0">
+                        @c.CreadaEl.ToString("dd/MM/yy HH:mm")
+                        @if (!string.IsNullOrWhiteSpace(c.Origen))
+                        {
+                            <span> · vino de @c.Origen</span>
+                        }
+                    </p>
+                </div>
+                <div class="salida-pills">
+                    <form method="post" asp-page-handler="Atender" asp-route-id="@c.Id" style="display:inline">
+                        <button type="submit" class="btn-mini btn-mini-ghost">
+                            @(c.Atendida ? "↩️ Marcar sin contestar" : "✔ Ya la contesté")
+                        </button>
+                    </form>
+                    <form method="post" asp-page-handler="Borrar" asp-route-id="@c.Id" style="display:inline"
+                          onsubmit="return confirm('¿Realmente querés borrar esta consulta?');">
+                        <button type="submit" class="btn-mini btn-mini-danger" title="Borrar">🗑</button>
+                    </form>
+                </div>
+            </div>
+
+            <p style="white-space:pre-wrap;margin:0 0 12px">@c.Mensaje</p>
+
+            <div class="contacto-linea" style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:.93rem">
+                @if (!string.IsNullOrWhiteSpace(c.Email))
+                {
+                    <a href="mailto:@c.Email?subject=Re: tu consulta a Wamani Turismo">✉️ @c.Email</a>
+                }
+                @if (!string.IsNullOrWhiteSpace(c.Telefono))
+                {
+                    <a href="https://wa.me/@(new string(c.Telefono.Where(char.IsDigit).ToArray()))" target="_blank" rel="noopener">📱 @c.Telefono</a>
+                }
+            </div>
+        </div>
+    }
+}

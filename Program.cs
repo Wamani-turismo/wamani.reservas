@@ -576,6 +576,54 @@ using (var scope = app.Services.CreateScope())
     // Carga el contenido actual de la landing la primera vez (si está vacío)
     Wamani.Reservas.Services.SeedWeb.Ejecutar(db);
 
+    // ---- Los testimonios de ejemplo pasan a ser reseñas REALES de Google ----
+    //
+    // Cuando se armó la web quedaron tres testimonios inventados, firmados "María —
+    // ejemplo", "Juan — ejemplo" y "Lucía — ejemplo". Se reemplazan por tres reseñas de
+    // verdad, copiadas tal cual de la ficha de Google (las más recientes).
+    //
+    // Sólo se tocan los que tienen "ejemplo" en el nombre: si desde el panel se cargan
+    // otros, o se editan éstos, no se vuelven a pisar nunca.
+    var testimoniosDeEjemplo = db.TestimoniosWeb.Where(t => t.Nombre.Contains("ejemplo")).ToList();
+    if (testimoniosDeEjemplo.Count > 0)
+    {
+        db.TestimoniosWeb.RemoveRange(testimoniosDeEjemplo);
+        db.TestimoniosWeb.AddRange(
+            new Wamani.Reservas.Models.TestimonioWeb
+            {
+                Texto = "Muy buena la travesía de dos días a las yungas!!! Facu, nuestro guía, un crack. " +
+                        "No solo nos coordinó todo el viaje, sino que nos hizo probar la sopa de maní (un manjar) " +
+                        "y alfajores de tomate! La cabaña de San Francisco muy buena y la cena Gourmet también. " +
+                        "Con gusto a poco de lo bien que la pasamos!!",
+                Nombre = "Marcos Garro",
+                Lugar = "Travesía a las Yungas",
+                Orden = 1,
+                Activo = true
+            },
+            new Wamani.Reservas.Models.TestimonioWeb
+            {
+                Texto = "Hermosa travesía realizada por Quebrada - Yungas Jujeñas con Wamani Turismo... " +
+                        "conociendo lugares únicos y mágicos y personas maravillosas, disfrutando de la vida " +
+                        "y de la naturaleza!! Muchas gracias por todo a nuestro guía Facu (genio!!!), que hizo " +
+                        "que conociéramos cada rinconcito y que este viaje sea inolvidable.",
+                Nombre = "Claudia Marcela Abatte",
+                Lugar = "Quebrada y Yungas jujeñas",
+                Orden = 2,
+                Activo = true
+            },
+            new Wamani.Reservas.Models.TestimonioWeb
+            {
+                Texto = "Increíble experiencia! Hice 3 días en las yungas y fue hermoso todo. Muy amigable " +
+                        "para gente que le gusta aventurarse pero con buenos lugares para descansar y comer rico!!! " +
+                        "Volveré a verlos para Tilcara-Calilegua que me queda pendiente 💚🌱",
+                Nombre = "Guadalupe Mallo",
+                Lugar = "3 días en las Yungas",
+                Orden = 3,
+                Activo = true
+            });
+        db.SaveChanges();
+    }
+
     // Corrección (una sola vez): SOLO Tilcara-Calilegua, Humahuaca-Yungas e
     // Iruya-Nazareno son travesías. Las demás son excursiones (aunque duren
     // varios días). Como el guard es EsTravesia==true, una vez corregidas no se

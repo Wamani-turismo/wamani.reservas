@@ -689,7 +689,24 @@ app.UseDefaultFiles();
 // Servir archivos estáticos, agregando el tipo del manifiesto de la app (PWA)
 var tiposArchivo = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
 tiposArchivo.Mappings[".webmanifest"] = "application/manifest+json";
-app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = tiposArchivo });
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = tiposArchivo,
+
+    // Las PÁGINAS (.html) se revisan siempre contra el servidor antes de mostrarse.
+    //
+    // Sin esto el navegador se queda con la copia que bajó la primera vez y no se entera
+    // de los cambios: se subía algo a la web y el que ya la había visitado seguía viendo
+    // la versión vieja. "no-cache" no significa "no la guardes", sino "preguntá si cambió
+    // antes de usarla": si no cambió, el servidor contesta que siga con la que tiene.
+    //
+    // Las fotos, el CSS y el logo se siguen guardando normalmente (son los que pesan).
+    OnPrepareResponse = ctx =>
+    {
+        if (ctx.File.Name.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+            ctx.Context.Response.Headers["Cache-Control"] = "no-cache, must-revalidate";
+    }
+});
 
 // Si hay disco persistente (internet), servir los comprobantes guardados ahí
 // en la misma dirección /comprobantes de siempre (así los links no cambian).

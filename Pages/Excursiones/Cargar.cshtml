@@ -376,6 +376,8 @@
             var esc = btn.closest('tr').querySelector('input[name=GastoComentarios]');
             var hay = esc && esc.value.trim() !== '';
             btn.style.opacity = hay ? '1' : '0.4';
+            // Punto naranja abajo a la derecha: sin esto no se distinguía de una vacía
+            btn.classList.toggle('con-nota', hay);
             btn.title = hay ? esc.value : 'Escribir una nota sobre este costo';
         }
 

@@ -668,3 +668,18 @@ input[type=file]::file-selector-button {
 /* Alerta de gastos cargados dos veces en una salida (operativo) */
 .aviso-dup { background: var(--warn-soft); border-left: 4px solid var(--warn); color: var(--ink);
              padding: 12px 14px; border-radius: 8px; margin: 0 0 14px; font-size: .92rem; line-height: 1.45; }
+
+/* ---------- El botón de nota (📋) ---------- */
+/* Antes la única señal de que un renglón tenía nota era que el botón se veía un poco
+   más oscuro, y no se notaba: parecía vacío. Ahora, cuando hay algo escrito, le sale
+   un punto naranja abajo a la derecha. Vale para los costos de la excursión y para
+   los gastos, proveedores y etapas del operativo. */
+.btn-nota { position: relative; overflow: visible; }
+.btn-nota.con-nota::after {
+  content: "";
+  position: absolute; right: -3px; bottom: -3px;
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--naranja);
+  border: 2px solid var(--surface);   /* recorta el punto contra el fondo de la fila */
+  box-shadow: 0 0 0 1px rgba(35, 51, 46, .12);
+}

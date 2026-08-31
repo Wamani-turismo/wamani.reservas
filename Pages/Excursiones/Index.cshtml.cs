@@ -120,7 +120,9 @@ public class IndexModel : PageModel
 
         await _db.SaveChangesAsync();
 
-        // Se abre directo la excursión nueva, para completar los precios de los días extra
-        return RedirectToPage("/Excursiones/Cargar", new { id = nueva.Id });
+        // Se abre directo la excursión nueva, para completar los precios de los días extra.
+        // Va con aviso: el sistema no cuenta días, así que hay cosas que se suben a mano.
+        return RedirectToPage("/Excursiones/Cargar",
+            new { id = nueva.Id, aMedida = true, dias = dias, @base = origen.Nombre });
     }
 }

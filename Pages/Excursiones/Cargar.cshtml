@@ -18,6 +18,42 @@
 <h1>@(Model.EsNueva ? "Nueva excursión" : "Editar excursión")</h1>
 <p class="subtitle">Precio en pesos argentinos ($), por persona.</p>
 
+@* Cartel al armar un viaje a medida. El sistema NO cuenta días: agregar días sólo crea
+   renglones nuevos y NO alarga lo que la base cobraba por todo el viaje. Sin este aviso
+   es fácil dejar el auto y los seguros con el precio del viaje corto. *@
+@if (Model.AMedida)
+{
+    <div class="card" style="border-left:4px solid var(--naranja); background:var(--accent-soft)">
+        <h2 style="margin-top:0">⚠️ Antes de guardar, revisá esto</h2>
+        <p style="margin:-6px 0 14px">
+            El viaje se copió de <strong>@(Model.Base ?? "la excursión de base")</strong>@(Model.Dias > 0 ? $" y se le agregaron {Model.Dias} día(s)." : ".")
+            <strong>El sistema no cuenta los días:</strong> agregar días crea renglones nuevos, pero
+            <strong>no alarga</strong> lo que la excursión de base cobraba por todo el viaje.
+        </p>
+        <p style="margin:0 0 8px"><strong>Lo que casi siempre hay que subir a mano:</strong></p>
+        <ul style="margin:0 0 14px; padding-left:1.2em">
+            <li><strong>El auto</strong> — está al precio de los días de la excursión original.</li>
+            <li><strong>La nafta</strong> — más días son más kilómetros.</li>
+            <li><strong>Los seguros</strong>, del pasajero y del guía: se cobran por día de cobertura.</li>
+            <li><strong>El chofer y guía</strong> de la base, si venía como un monto por todo el viaje.</li>
+        </ul>
+        @if (Model.Etapas.Count > 0)
+        {
+            <p style="margin:0 0 14px">
+                <strong>Ojo, esta es una travesía con noches cargadas.</strong> Los días del guía, de los
+                arrieros y de los caballos se copiaron como estaban. Subilos ahí abajo
+                <strong>o</strong> cargalos en los renglones del día extra, pero
+                <strong>no en los dos lados</strong>, o se cuenta doble.
+            </p>
+        }
+        <p style="margin:0">
+            Y antes de guardar, <strong>recorré la lista completa de costos</strong>: puede haber
+            renglones de la base que en este viaje no van y conviene borrar, o que cambien de precio.
+            Los días agregados están en $0 y se llaman «Día extra».
+        </p>
+    </div>
+}
+
 @if (Model.Guardado)
 {
     <div class="aviso-ok">Guardado ✔</div>

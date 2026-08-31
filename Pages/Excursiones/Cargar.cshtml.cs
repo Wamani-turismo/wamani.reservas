@@ -45,6 +45,19 @@ public class CargarModel : PageModel
     [BindProperty(SupportsGet = true)]
     public bool Guardado { get; set; }
 
+    // Recién se armó un viaje a medida: se muestra el cartel con lo que hay que revisar.
+    // El sistema NO cuenta días: agregar días sólo crea renglones nuevos, no alarga lo que
+    // la excursión de base cobraba por todo el viaje (el auto, la nafta, los seguros, y en
+    // las travesías los días del guía y de los arrieros). Eso se sube a mano.
+    [BindProperty(SupportsGet = true)]
+    public bool AMedida { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public int Dias { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public string? Base { get; set; }
+
     // Etapas de la travesía (dónde se duerme cada noche), enviadas como arrays desde el form
     [BindProperty] public List<string> EtapaLugares { get; set; } = new();
     [BindProperty] public List<int> EtapaProveedorIds { get; set; } = new();

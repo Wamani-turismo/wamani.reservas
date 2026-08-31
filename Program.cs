@@ -787,6 +787,13 @@ app.MapGet("/", () => Results.Redirect("/web/")).AllowAnonymous();
 // carpeta, así que se la agregamos: wamaniturismo.com/receptivo funciona igual.
 app.MapGet("/receptivo", () => Results.Redirect("/receptivo/")).AllowAnonymous();
 
+// Dirección corta para el QR de los días profesionales de la feria: entra directo a la
+// parte de agencias, sin la pregunta de "¿sos viajero o agencia?". En esos días todo el
+// que escanea es del rubro y ese paso de más sólo estorba.
+// OJO: se registra UNA sola vez, sin la barra final. Poner las dos versiones hace que el
+// servidor no sepa cuál usar y devuelva error 500 (ya pasó, ver el historial).
+app.MapGet("/agencias", () => Results.Redirect("/receptivo/#agencia")).AllowAnonymous();
+
 // ═══════════════════════════════════════════════════════════════════════
 //  Las direcciones de la WEB ANTERIOR (la de Webnode)
 //

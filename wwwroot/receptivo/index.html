@@ -236,9 +236,25 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
     </div>
 
     <div class="nota">
-      <b>¿Cómo seguimos?</b> Escribinos y te mandamos las tarifas para agencias, la
-      disponibilidad de fechas y las condiciones de trabajo. Armamos programas a medida
-      combinando excursiones y travesías según los días que tenga tu pasajero.
+      <b>¿Cómo seguimos?</b> Escribinos y te mandamos el <b>tarifario para agencias</b>, la
+      disponibilidad de fechas y las condiciones de trabajo, junto con los datos formales de
+      la empresa y las pólizas de seguro. Armamos programas a medida combinando excursiones y
+      travesías según los días que tenga tu pasajero.
+    </div>
+
+    <!-- Ficha para el que evalúa proveedores. Sólo datos verificables: lo comercial y lo
+         legal se manda por mail, no se publica. -->
+    <div class="ficha-b2b">
+      <h3>Con quién estás hablando</h3>
+      <dl>
+        <div><dt>Operador</dt><dd>Wamani Turismo Aventura</dd></div>
+        <div><dt>Base de operaciones</dt><dd>San Salvador de Jujuy, Argentina</dd></div>
+        <div><dt>Qué operamos</dt><dd>Excursiones de un día y travesías de 2 a 5 días en Yungas, Quebrada, Valle y Puna</dd></div>
+        <div><dt>Cómo trabajamos</dt><dd>Grupos reducidos, con guías locales propios</dd></div>
+        <div><dt>Referencias</dt><dd><a href="https://www.google.com/maps?cid=3490477195889430940" target="_blank" rel="noopener">5,0 en Google con 13 opiniones</a></dd></div>
+        <div><dt>Sitio</dt><dd><a href="/web/" target="_blank" rel="noopener">wamaniturismo.com</a></dd></div>
+      </dl>
+      <p class="ficha-pie">Razón social, CUIT, legajo y pólizas se envían junto con el tarifario.</p>
     </div>
 
     <a class="volver-arriba" href="#" onclick="volver(); return false;">← Volver</a>
@@ -297,6 +313,18 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
       <label class="campo">Teléfono / WhatsApp
         <input name="telefono" maxlength="60" placeholder="opcional">
       </label>
+      <!-- Estos tres campos son sólo para agencias: no viajan solos al sistema, se suman
+           arriba del mensaje al enviar. Así la consulta llega con lo que hace falta para
+           cotizar sin tener que preguntarlo de nuevo. -->
+      <label class="campo">Ciudad y país
+        <input id="b2b-ciudad" maxlength="80" placeholder="Ej: Córdoba, Argentina">
+      </label>
+      <label class="campo">Pasajeros por año, más o menos
+        <input id="b2b-pax" maxlength="40" placeholder="Ej: entre 20 y 50">
+      </label>
+      <label class="campo">¿Qué experiencias te interesan?
+        <input id="b2b-exp" maxlength="160" placeholder="Ej: travesías de 5 días y salidas de un día">
+      </label>
       <label class="campo">Mensaje *
         <textarea name="mensaje" required rows="5" maxlength="4000" placeholder="Qué necesitás: tarifas, fechas, armar un programa…"></textarea>
       </label>
@@ -325,6 +353,24 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
 }
 .campo input:focus,.campo textarea:focus{outline:none;border-color:var(--dorado)}
 .campo .ayuda{display:block;margin-top:6px;font-size:.8rem;color:var(--texto-suave)}
+
+/* Ficha del operador, para el que evalúa proveedores */
+.ficha-b2b{
+  margin-top:22px; background:var(--panel); border:1px solid var(--linea);
+  border-radius:16px; padding:22px 24px;
+}
+.ficha-b2b h3{
+  font-size:.72rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--dorado); margin:0 0 14px; font-weight:600;
+}
+.ficha-b2b dl{margin:0; display:grid; gap:10px 28px; grid-template-columns:1fr}
+@media (min-width:700px){ .ficha-b2b dl{grid-template-columns:1fr 1fr} }
+.ficha-b2b dl > div{display:flex; flex-direction:column; gap:2px}
+.ficha-b2b dt{font-size:.74rem; letter-spacing:.06em; text-transform:uppercase; color:var(--texto-suave)}
+.ficha-b2b dd{margin:0; font-size:.95rem}
+.ficha-b2b a{color:var(--dorado)}
+.ficha-pie{margin:16px 0 0; padding-top:14px; border-top:1px solid var(--linea);
+  font-size:.85rem; color:var(--texto-suave)}
 .campo input[type=file]{padding:9px 11px;font-size:.9rem;cursor:pointer}
 .campo input[type=file]::file-selector-button{
   margin-right:10px;padding:7px 12px;border-radius:9px;cursor:pointer;
@@ -479,7 +525,15 @@ document.getElementById("form-consulta").addEventListener("submit", async functi
 
   boton.disabled = true; boton.textContent = "Enviando…";
   try {
-    var r = await fetch("/web/consulta", { method: "POST", body: new FormData(this) });
+    var datos = new FormData(this);
+    // Los tres datos de agencia se suman ARRIBA del mensaje. Van en el mismo campo que ya
+    // existe, así el sistema no cambia en nada y la consulta llega completa.
+    var extra = [["Ciudad y país","b2b-ciudad"],["Pasajeros por año","b2b-pax"],["Le interesan","b2b-exp"]]
+      .map(function(p){ var v = (document.getElementById(p[1]).value || "").trim();
+                        return v ? p[0] + ": " + v : ""; })
+      .filter(Boolean).join("\n");
+    if (extra) datos.set("mensaje", extra + "\n\n" + (datos.get("mensaje") || ""));
+    var r = await fetch("/web/consulta", { method: "POST", body: datos });
     var res = await r.json();
     if (res.ok) {
       this.style.display = "none";

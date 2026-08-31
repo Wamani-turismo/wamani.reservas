@@ -49,6 +49,7 @@ public class MantenimientoModel : PageModel
         GastosProveedor = (await _db.GastosExcursion.ToListAsync())
             .Count(g => EsGastoProveedor(g.Nombre) && !g.EsProveedor);
         HistoricasCargadas = await _db.Reservas.CountAsync(r => r.NombreCliente == NOMBRE_HISTORICA);
+        ExcursionesLista = await _db.Excursiones.OrderBy(e => e.Nombre).ToListAsync();
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -94,6 +95,107 @@ public class MantenimientoModel : PageModel
         await _db.SaveChangesAsync();
 
         Aviso = $"Listo. Se marcaron {marcados} costo(s) como proveedor (siguen contando en Rentabilidad) y se sacaron {aBorrarOps.Count} de las salidas ya abiertas.";
+        return RedirectToPage();
+    }
+
+    // ---------- Mover una salida entera a otra excursión ----------
+    //
+    // Una salida no vive en un solo lado: la reserva apunta a la excursión, y los gastos,
+    // los proveedores y la ficha de la salida se buscan por EXCURSIÓN + FECHA. Si se cambia
+    // la excursión de la reserva desde la pantalla de siempre, todo lo cargado en el
+    // operativo queda huérfano: la salida nueva aparece vacía y la plata sigue colgada de la
+    // excursión vieja. Por eso esto mueve las CUATRO cosas juntas.
+    //
+    // No cambia ningún monto: sólo de qué excursión cuelga cada fila.
+    // Para los desplegables de las dos operaciones de abajo
+    public List<Wamani.Reservas.Models.Excursion> ExcursionesLista { get; set; } = new();
+
+    [BindProperty] public int MoverDesde { get; set; }
+    [BindProperty] public int MoverHacia { get; set; }
+    [BindProperty] public DateTime MoverFecha { get; set; }
+
+    public async Task<IActionResult> OnPostMoverSalidaAsync()
+    {
+        var destino = await _db.Excursiones.FirstOrDefaultAsync(e => e.Id == MoverHacia);
+        if (MoverDesde == 0 || destino is null || MoverDesde == MoverHacia)
+        {
+            Aviso = "Para mover una salida hay que elegir la excursión de origen, la de destino (distinta) y la fecha.";
+            return RedirectToPage();
+        }
+
+        var dia = MoverFecha.Date;
+
+        // 1) Las reservas de esa salida. Se actualiza también el nombre congelado, que es
+        //    el que se ve en las pantallas y en el comprobante.
+        var reservas = await _db.Reservas
+            .Where(r => r.ExcursionId == MoverDesde && r.FechaDesde.Date == dia)
+            .ToListAsync();
+        foreach (var r in reservas)
+        {
+            r.ExcursionId = destino.Id;
+            r.Excursion = destino.Nombre;
+            r.EsTravesia = destino.EsTravesia;
+            r.MinimoPersonas = destino.MinimoPersonas;
+        }
+
+        // 2) y 3) Los gastos y los proveedores ya cargados, con sus montos, comprobantes,
+        //          fechas de pago y notas intactos: sólo cambian de excursión.
+        var gastos = await _db.OperativoGastos
+            .Where(o => o.ExcursionId == MoverDesde && o.Fecha.Date == dia).ToListAsync();
+        foreach (var g in gastos) g.ExcursionId = destino.Id;
+
+        var provs = await _db.OperativoProveedores
+            .Where(o => o.ExcursionId == MoverDesde && o.Fecha.Date == dia).ToListAsync();
+        foreach (var p in provs) p.ExcursionId = destino.Id;
+
+        // 4) La ficha de la salida (si ya se pagó todo, el comprobante, lo que se borró a
+        //    mano). Si en el destino ya existiera una, se deja la del destino y se borra la
+        //    vieja, para no terminar con dos fichas de la misma salida.
+        var fichas = await _db.OperativoSalidas
+            .Where(o => o.ExcursionId == MoverDesde && o.Fecha.Date == dia).ToListAsync();
+        var yaHay = await _db.OperativoSalidas
+            .AnyAsync(o => o.ExcursionId == destino.Id && o.Fecha.Date == dia);
+        if (yaHay) _db.OperativoSalidas.RemoveRange(fichas);
+        else foreach (var f in fichas) f.ExcursionId = destino.Id;
+
+        await _db.SaveChangesAsync();
+
+        Aviso = $"Salida del {dia:dd/MM/yyyy} movida a «{destino.Nombre}»: " +
+                $"{reservas.Count} reserva(s), {gastos.Count} gasto(s) y {provs.Count} proveedor(es). No se tocó ningún monto.";
+        return RedirectToPage();
+    }
+
+    // ---------- Limpiar costos repetidos de una plantilla ----------
+    //
+    // Si una excursión tiene el mismo costo cargado dos veces (mismo nombre, mismo precio y
+    // misma forma de contarlo), cuenta doble en la Rentabilidad y en cada salida que se
+    // abra. Esto deja UNA sola copia de cada uno. Sólo borra lo que está repetido exacto:
+    // dos renglones con el mismo nombre pero distinto precio NO se tocan, porque puede ser
+    // a propósito.
+    [BindProperty] public int LimpiarExcursionId { get; set; }
+
+    public async Task<IActionResult> OnPostQuitarRepetidosAsync()
+    {
+        var exc = await _db.Excursiones.FirstOrDefaultAsync(e => e.Id == LimpiarExcursionId);
+        if (exc is null) { Aviso = "No se encontró esa excursión."; return RedirectToPage(); }
+
+        var costos = await _db.GastosExcursion
+            .Where(g => g.ExcursionId == exc.Id).OrderBy(g => g.Id).ToListAsync();
+
+        var vistos = new HashSet<string>();
+        var repetidos = new List<Wamani.Reservas.Models.GastoExcursion>();
+        foreach (var g in costos)
+        {
+            var clave = (g.Nombre ?? "").Trim().ToLowerInvariant() + "|" + g.Precio + "|" + g.TipoCalculo + "|" + g.Cantidad;
+            if (!vistos.Add(clave)) repetidos.Add(g);   // ya había uno igual: éste sobra
+        }
+
+        _db.GastosExcursion.RemoveRange(repetidos);
+        await _db.SaveChangesAsync();
+
+        Aviso = repetidos.Count == 0
+            ? $"«{exc.Nombre}» no tenía costos repetidos."
+            : $"Se quitaron {repetidos.Count} costo(s) repetido(s) de «{exc.Nombre}». Quedaron {costos.Count - repetidos.Count}.";
         return RedirectToPage();
     }
 

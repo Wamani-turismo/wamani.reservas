@@ -109,3 +109,73 @@
         </div>
     </form>
 </div>
+
+<div class="card" style="max-width:640px">
+    <h2>Mover una salida a otra excursión</h2>
+    <p class="hint">
+        Cambia de excursión <strong>todo junto</strong>: las reservas de ese día, los gastos ya
+        cargados, los proveedores con sus comprobantes y la ficha de la salida. <strong>No toca
+        ningún monto.</strong> Sirve cuando una salida se cargó en la excursión genérica y después
+        se le armó su propia plantilla.
+    </p>
+    <form method="post" asp-page-handler="MoverSalida"
+          onsubmit="return confirm('¿Mover esa salida entera a la otra excursión?');">
+        <div class="form-grid">
+            <div class="field">
+                <label for="MoverDesde">Está en</label>
+                <select id="MoverDesde" name="MoverDesde" required>
+                    <option value="">— elegí —</option>
+                    @foreach (var e in Model.ExcursionesLista)
+                    {
+                        <option value="@e.Id">@e.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label for="MoverHacia">Pasarla a</label>
+                <select id="MoverHacia" name="MoverHacia" required>
+                    <option value="">— elegí —</option>
+                    @foreach (var e in Model.ExcursionesLista)
+                    {
+                        <option value="@e.Id">@e.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label for="MoverFecha">Día de la salida</label>
+                <input id="MoverFecha" name="MoverFecha" type="date" required />
+            </div>
+        </div>
+        <div class="acciones-form">
+            <button type="submit" class="btn btn-primary">↔️ Mover la salida</button>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="max-width:640px">
+    <h2>Quitar costos repetidos de una excursión</h2>
+    <p class="hint">
+        Si un costo quedó cargado dos veces igual (mismo nombre, mismo precio y misma forma de
+        contarlo), cuenta doble en la Rentabilidad y en cada salida nueva. Esto deja una sola
+        copia. <strong>Si dos renglones se llaman igual pero tienen distinto precio, no se tocan</strong>,
+        porque puede ser a propósito.
+    </p>
+    <form method="post" asp-page-handler="QuitarRepetidos"
+          onsubmit="return confirm('¿Quitar los costos repetidos de esa excursión?');">
+        <div class="form-grid">
+            <div class="field">
+                <label for="LimpiarExcursionId">Excursión</label>
+                <select id="LimpiarExcursionId" name="LimpiarExcursionId" required>
+                    <option value="">— elegí —</option>
+                    @foreach (var e in Model.ExcursionesLista)
+                    {
+                        <option value="@e.Id">@e.Nombre</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="acciones-form">
+            <button type="submit" class="btn btn-primary">🧹 Quitar repetidos</button>
+        </div>
+    </form>
+</div>

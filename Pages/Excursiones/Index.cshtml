@@ -33,9 +33,21 @@
             <label for="BaseId">Excursión de base</label>
             <select id="BaseId" name="BaseId" required>
                 <option value="">— elegí una —</option>
-                @foreach (var e in Model.Excursiones.Where(x => x.Activa).OrderBy(x => x.Nombre))
+                <optgroup label="Excursiones y travesías">
+                    @foreach (var e in Model.DelCatalogo.Where(x => x.Activa))
+                    {
+                        <option value="@e.Id">@e.Nombre</option>
+                    }
+                </optgroup>
+                @* Repetir un viaje a medida que ya se armó: se elige de base y se copia entero *@
+                @if (Model.AMedida.Any(x => x.Activa))
                 {
-                    <option value="@e.Id">@e.Nombre</option>
+                    <optgroup label="Repetir un viaje a medida">
+                        @foreach (var e in Model.AMedida.Where(x => x.Activa))
+                        {
+                            <option value="@e.Id">@e.Nombre</option>
+                        }
+                    </optgroup>
                 }
             </select>
         </div>
@@ -88,7 +100,7 @@ else
                 </tr>
             </thead>
             <tbody>
-            @foreach (var e in Model.Excursiones)
+            @foreach (var e in Model.DelCatalogo)
             {
                 <tr>
                     <td data-label="Excursión"><strong>@e.Nombre</strong></td>
@@ -112,4 +124,51 @@ else
             </tbody>
         </table>
     </div>
+
+    @* Los viajes a medida, aparte y al final: no son parte del catálogo de siempre. *@
+    @if (Model.AMedida.Count > 0)
+    {
+        <h2 style="margin-top:36px">Viajes a medida</h2>
+        <p class="subtitle" style="margin-top:-6px">
+            Armados para un grupo puntual. Si mañana otro grupo quiere hacer el mismo viaje,
+            no hace falta cargarlo de nuevo: tocá <strong>✨ A medida</strong> y elegí este mismo
+            como base. Se copia entero y sólo cambiás fechas, precio y lo que haga falta.
+        </p>
+        <div class="table-wrap">
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>Viaje a medida</th>
+                        <th class="num">Precio por persona</th>
+                        <th class="num">Mínimo</th>
+                        <th>Estado</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var e in Model.AMedida)
+                {
+                    <tr>
+                        <td data-label="Viaje"><strong>@e.Nombre</strong></td>
+                        <td class="num" data-label="Precio por persona">@Money(e.PrecioPorPersona)</td>
+                        <td class="num" data-label="Mínimo">@e.MinimoPersonas</td>
+                        <td data-label="Estado">
+                            @if (e.Activa)
+                            {
+                                <span class="pill pill-ok">Activa</span>
+                            }
+                            else
+                            {
+                                <span class="pill pill-muted">Oculta</span>
+                            }
+                        </td>
+                        <td class="acciones" data-label="">
+                            <a asp-page="/Excursiones/Cargar" asp-route-id="@e.Id">Editar</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
 }

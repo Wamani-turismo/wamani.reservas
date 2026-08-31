@@ -42,6 +42,15 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Excursión a medida (el precio se carga a mano en cada reserva)")]
         public bool EsAMedida { get; set; } = false;
 
+        // Un viaje armado a medida para un grupo puntual (se creó con el botón "A medida",
+        // copiando otra excursión y sumándole días). Sirve para dos cosas: mostrarlos
+        // aparte, al final de la lista, y poder elegirlos de base si mañana otro grupo
+        // quiere hacer el mismo viaje.
+        //
+        // Es una marca aparte de EsAMedida a propósito: EsAMedida hace que la reserva pida
+        // el precio a mano, y estos SÍ tienen precio propio para que Rentabilidad dé bien.
+        public bool EsPersonalizada { get; set; } = false;
+
         // Nombre de la excursión a medida que se crea sola la primera vez.
         public const string NombreAMedida = "Excursión a medida";
 

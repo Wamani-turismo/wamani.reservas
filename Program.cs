@@ -159,6 +159,7 @@ using (var scope = app.Services.CreateScope())
     EnsureSqliteColumn(db, "OperativoProveedores", "FechaSaldo", "TEXT NULL");
     EnsureSqliteColumn(db, "OperativoProveedores", "ReservaId", "INTEGER NULL");
     EnsureSqliteColumn(db, "Excursiones", "EsAMedida", "INTEGER NOT NULL DEFAULT 0");
+    EnsureSqliteColumn(db, "Excursiones", "EsPersonalizada", "INTEGER NOT NULL DEFAULT 0");
     EnsureSqliteColumn(db, "GastosEmpresa", "DelFondo", "INTEGER NOT NULL DEFAULT 0");
     db.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS ""IngresosExtra"" (
@@ -377,6 +378,7 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoProveedores"" ADD COLUMN IF NOT EXISTS ""ReservaId"" integer;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""ReservaId"" integer;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Excursiones"" ADD COLUMN IF NOT EXISTS ""EsAMedida"" boolean NOT NULL DEFAULT false;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Excursiones"" ADD COLUMN IF NOT EXISTS ""EsPersonalizada"" boolean NOT NULL DEFAULT false;");
         // Fondo del 10%: marca de los gastos que se pagan con ese fondo
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""GastosEmpresa"" ADD COLUMN IF NOT EXISTS ""DelFondo"" boolean NOT NULL DEFAULT false;");
         // Ingresos EXTRA (comisiones, alquileres, servicios sueltos)

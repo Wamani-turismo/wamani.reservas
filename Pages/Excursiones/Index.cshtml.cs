@@ -13,6 +13,13 @@ public class IndexModel : PageModel
 
     public List<Excursion> Excursiones { get; set; } = new();
 
+    // La lista se muestra en dos partes: arriba las de siempre y abajo, aparte, los viajes
+    // armados a medida. Así no se mezcla el catálogo con lo que se hizo para un grupo
+    // puntual. La "Excursión a medida" genérica de toda la vida también va abajo.
+    public bool EsDeAMedida(Excursion e) => e.EsPersonalizada || e.EsAMedida;
+    public List<Excursion> DelCatalogo => Excursiones.Where(e => !EsDeAMedida(e)).ToList();
+    public List<Excursion> AMedida => Excursiones.Where(EsDeAMedida).ToList();
+
     [BindProperty(SupportsGet = true)]
     public string? Aviso { get; set; }
 
@@ -70,6 +77,7 @@ public class IndexModel : PageModel
             CantidadGuias = origen.CantidadGuias,
             EsTravesia = origen.EsTravesia,
             EsAMedida = false,          // se cotiza como cualquier otra: así Rentabilidad da bien
+            EsPersonalizada = true,     // para mostrarla aparte y poder repetirla más adelante
             Activa = true,
             GuiaBreve = origen.GuiaBreve,
             Recomendaciones = origen.Recomendaciones,

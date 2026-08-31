@@ -17,7 +17,52 @@
 <div class="toolbar">
     <a href="/">← Volver a reservas</a>
     <a class="btn-nueva" asp-page="/Excursiones/Cargar">+ Nueva excursión</a>
+    <button type="button" class="btn-nueva" onclick="verMedida()">✨ A medida</button>
 </div>
+
+@* Armar un viaje a medida: se copia una excursión que ya existe y se le suman días. *@
+<div class="card" id="caja-medida" style="display:none">
+    <h2>Armar un viaje a medida</h2>
+    <p class="hint" style="margin:-6px 0 16px">
+        Elegí la excursión que van a hacer de base y cuántos días se agregan. El sistema copia
+        todos sus costos y proveedores a una excursión nueva, y suma los renglones de cada día
+        extra en cero para que sólo les pongas el precio. La excursión de base no se toca.
+    </p>
+    <form method="post" asp-page-handler="AMedida" class="form-grid">
+        <div class="field">
+            <label for="BaseId">Excursión de base</label>
+            <select id="BaseId" name="BaseId" required>
+                <option value="">— elegí una —</option>
+                @foreach (var e in Model.Excursiones.Where(x => x.Activa).OrderBy(x => x.Nombre))
+                {
+                    <option value="@e.Id">@e.Nombre</option>
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label for="NombreMedida">Nombre del viaje</label>
+            <input id="NombreMedida" name="NombreMedida" maxlength="120" required
+                   placeholder="Ej: Yungas + Quebrada — familia Canella" />
+            <div class="hint">Se guarda como «A medida · …» para reconocerlo en la lista.</div>
+        </div>
+        <div class="field">
+            <label for="DiasExtra">Días que se agregan</label>
+            <input id="DiasExtra" name="DiasExtra" type="number" min="0" max="15" value="1" />
+            <div class="hint">Por cada día se agregan 5 renglones: hospedaje, comidas, entradas, chofer y guía, y nafta.</div>
+        </div>
+        <div class="field" style="align-self:end">
+            <button type="submit" class="btn btn-primary">Crear el viaje a medida</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function verMedida() {
+        var c = document.getElementById('caja-medida');
+        c.style.display = c.style.display === 'none' ? '' : 'none';
+        if (c.style.display === '') c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+</script>
 
 @if (Model.Excursiones.Count == 0)
 {

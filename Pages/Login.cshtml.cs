@@ -49,15 +49,16 @@ public class LoginModel : PageModel
         };
         // Si es un colaborador con acceso a una sola excursión, la marca viaja en la
         // sesión: de ahí la lee el candado de Program.cs y el menú.
-        if (u.ExcursionPermitidaId is int excPermitida)
-            claims.Add(new Claim("excursion_permitida", excPermitida.ToString()));
+        if (u.EsLimitado)
+            claims.Add(new Claim(Wamani.Reservas.Services.Permisos.Claim,
+                                 string.Join(",", u.IdsPermitidos())));
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(identity),
             new AuthenticationProperties { IsPersistent = true });
 
         // El colaborador limitado no tiene inicio: va derecho a su operativo
-        if (u.ExcursionPermitidaId is not null) return RedirectToPage("/Operativo/Index");
+        if (u.EsLimitado) return RedirectToPage("/Operativo/Index");
 
         return RedirectToPage("/Index");
     }

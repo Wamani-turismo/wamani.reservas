@@ -23,8 +23,11 @@ public class CargarModel : PageModel
     public bool EsNuevo => Usuario.Id == 0;
     public string? Error { get; set; }
 
-    // Para el desplegable de "acceso limitado a una sola excursión"
+    // Para las casillas de "qué excursiones puede ver"
     public List<Wamani.Reservas.Models.Excursion> Excursiones { get; set; } = new();
+
+    // Las que quedaron tildadas (llegan del formulario y también se usan al dibujarlo)
+    [BindProperty] public List<int> Permitidas { get; set; } = new();
 
     private void CargarExcursiones() =>
         Excursiones = _db.Excursiones.Where(e => e.Activa).OrderBy(e => e.Nombre).ToList();
@@ -36,12 +39,16 @@ public class CargarModel : PageModel
         var u = _db.Usuarios.Find(id);
         if (u is null) return RedirectToPage("/Usuarios/Index");
         Usuario = u;
+        Permitidas = u.IdsPermitidos();
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
         CargarExcursiones();   // por si hay que volver a mostrar el formulario con un error
+
+        // Las excursiones tildadas se guardan como "13,15,16". Ninguna tildada = socio.
+        Usuario.ExcursionesPermitidas = Permitidas.Count == 0 ? null : string.Join(",", Permitidas.Distinct());
 
         Usuario.NombreUsuario = (Usuario.NombreUsuario ?? "").Trim().ToLower().Replace(" ", "");
 
@@ -72,7 +79,7 @@ public class CargarModel : PageModel
             u.Nombre = Usuario.Nombre;
             u.NombreUsuario = Usuario.NombreUsuario;
             u.Activo = Usuario.Activo;
-            u.ExcursionPermitidaId = Usuario.ExcursionPermitidaId;
+            u.ExcursionesPermitidas = Usuario.ExcursionesPermitidas;
             if (!string.IsNullOrWhiteSpace(Password))
                 u.PasswordHash = _hasher.HashPassword(u, Password);   // solo si escribió una nueva
         }

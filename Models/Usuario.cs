@@ -30,9 +30,21 @@ namespace Wamani.Reservas.Models
         // El candado no está en esta marca sino en Program.cs: para estos usuarios el
         // sistema bloquea TODO y habilita nada más que un puñado de pantallas, siempre
         // atadas a esta excursión. Lo que no está en esa lista, no entra.
-        [Display(Name = "Sólo puede ver esta excursión")]
-        public int? ExcursionPermitidaId { get; set; }
+        // Los números de las excursiones que puede ver, separados por coma ("13,15,16").
+        // Vacío = socio de Wamani. Se guarda así y no en una tabla aparte porque son unos
+        // pocos números por usuario y no hace falta más.
+        [MaxLength(200)]
+        [Display(Name = "Excursiones que puede ver")]
+        public string? ExcursionesPermitidas { get; set; }
 
-        public bool EsLimitado => ExcursionPermitidaId is not null;
+        public List<int> IdsPermitidos() =>
+            string.IsNullOrWhiteSpace(ExcursionesPermitidas)
+                ? new List<int>()
+                : ExcursionesPermitidas
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(x => int.TryParse(x, out var n) ? n : 0)
+                    .Where(n => n > 0).Distinct().ToList();
+
+        public bool EsLimitado => IdsPermitidos().Count > 0;
     }
 }

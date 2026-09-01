@@ -35,11 +35,11 @@ public class IndexModel : PageModel
             .Where(r => r.FechaHasta.Date >= hoy)
             .ToListAsync();
 
-        // Colaborador con acceso a una sola excursión: sólo ve las salidas de esa.
+        // Colaborador con acceso limitado: sólo ve las salidas de SUS excursiones.
         // Sin esto vería en la lista los nombres y las salidas de todo Wamani.
-        var soloEsta = User?.FindFirst("excursion_permitida")?.Value;
-        if (int.TryParse(soloEsta, out var excLimitada))
-            reservas = reservas.Where(r => r.ExcursionId == excLimitada).ToList();
+        var permitidas = Wamani.Reservas.Services.Permisos.Excursiones(User);
+        if (permitidas.Count > 0)
+            reservas = reservas.Where(r => r.ExcursionId is int ex && permitidas.Contains(ex)).ToList();
 
         var plantillaPorExc = (await _db.GastosExcursion.ToListAsync())
             .GroupBy(g => g.ExcursionId)

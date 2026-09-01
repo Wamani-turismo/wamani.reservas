@@ -14,14 +14,24 @@
     <div class="aviso-ok">@Model.Aviso</div>
 }
 
+@* Un colaborador con acceso limitado ve sólo sus excursiones y no puede crear ninguna *@
+@{ var soloLoSuyo = Wamani.Reservas.Services.Permisos.EsLimitado(User); }
+
 <div class="toolbar">
-    <a href="/">← Volver a reservas</a>
-    <a class="btn-nueva" asp-page="/Excursiones/Cargar">+ Nueva excursión</a>
-    <button type="button" class="btn-nueva" onclick="verMedida()">✨ A medida</button>
+    @if (!soloLoSuyo)
+    {
+        <a href="/">← Volver a reservas</a>
+        <a class="btn-nueva" asp-page="/Excursiones/Cargar">+ Nueva excursión</a>
+        <button type="button" class="btn-nueva" onclick="verMedida()">✨ A medida</button>
+    }
+    else
+    {
+        <a asp-page="/Operativo/Index">← Volver al operativo</a>
+    }
 </div>
 
 @* Armar un viaje a medida: se copia una excursión que ya existe y se le suman días. *@
-<div class="card" id="caja-medida" style="display:none">
+<div class="card" id="caja-medida" style="display:none" hidden="@soloLoSuyo">
     <h2>Armar un viaje a medida</h2>
     <p class="hint" style="margin:-6px 0 16px">
         Elegí la excursión que van a hacer de base y cuántos días se agregan. El sistema copia

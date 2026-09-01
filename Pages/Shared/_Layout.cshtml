@@ -61,20 +61,19 @@
                operativo y sus reservas. Las demás pantallas, además de no estar acá,
                están bloqueadas del lado del servidor (ver el candado en Program.cs). *@
             @{
-                var excLimitada = User?.FindFirst("excursion_permitida")?.Value;
-                var esLimitado = !string.IsNullOrEmpty(excLimitada);
+                var esLimitado = Wamani.Reservas.Services.Permisos.EsLimitado(User);
             }
             @if (esLimitado)
             {
                 <nav class="sb-nav">
-                    <div class="sb-section">Mi travesía</div>
+                    <div class="sb-section">Mis travesías</div>
                     <a class="sb-item @Activo("/operativo")" asp-page="/Operativo/Index" title="Operativo">
                         <span class="sb-ico"><svg class="ic"><use href="#ic-operativo"/></svg></span> <span>Operativo</span>
                     </a>
-                    <a class="sb-item" href="/Excursiones/Cargar?id=@excLimitada" title="Costos de la travesía">
+                    <a class="sb-item @Activo("/excursiones")" asp-page="/Excursiones/Index" title="Costos de las travesías">
                         <span class="sb-ico"><svg class="ic"><use href="#ic-excursiones"/></svg></span> <span>Costos</span>
                     </a>
-                    <a class="sb-item" href="/Rentabilidad/Detalle?id=@excLimitada" title="Rentabilidad">
+                    <a class="sb-item @Activo("/rentabilidad")" asp-page="/Rentabilidad/Index" title="Rentabilidad">
                         <span class="sb-ico"><svg class="ic"><use href="#ic-rentabilidad"/></svg></span> <span>Rentabilidad</span>
                     </a>
                     <a class="sb-item" href="/Reservas/Cargar" title="Anotar un pasajero">

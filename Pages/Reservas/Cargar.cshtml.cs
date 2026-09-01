@@ -60,11 +60,11 @@ public class CargarModel : PageModel
         // Colaborador con acceso a una sola excursión: en el desplegable ve SÓLO la suya.
         // El desplegable muestra el precio de venta de cada excursión, así que sin este
         // filtro se le estarían mostrando los precios de todo el catálogo.
-        var soloEsta = User?.FindFirst("excursion_permitida")?.Value;
-        if (int.TryParse(soloEsta, out var excLimitada))
+        var permitidas = Wamani.Reservas.Services.Permisos.Excursiones(User);
+        if (permitidas.Count > 0)
         {
-            Excursiones = Excursiones.Where(e => e.Id == excLimitada).ToList();
-            if (Reserva.ExcursionId == 0) Reserva.ExcursionId = excLimitada;
+            Excursiones = Excursiones.Where(e => permitidas.Contains(e.Id)).ToList();
+            if (Reserva.ExcursionId == 0 && permitidas.Count == 1) Reserva.ExcursionId = permitidas[0];
         }
     }
 
@@ -81,8 +81,7 @@ public class CargarModel : PageModel
 
             // Colaborador limitado: sólo puede abrir reservas de SU excursión, aunque
             // escriba el número de otra a mano en la dirección.
-            var soloEstaExc = User?.FindFirst("excursion_permitida")?.Value;
-            if (int.TryParse(soloEstaExc, out var excPermitida) && existente.ExcursionId != excPermitida)
+            if (!Wamani.Reservas.Services.Permisos.Puede(User, existente.ExcursionId ?? 0))
                 return RedirectToPage("/Operativo/Index");
             Reserva = existente;
 

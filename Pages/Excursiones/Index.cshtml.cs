@@ -28,6 +28,12 @@ public class IndexModel : PageModel
         Excursiones = await _db.Excursiones
             .OrderBy(e => e.Nombre)
             .ToListAsync();
+
+        // Colaborador con acceso limitado: ve SÓLO sus excursiones, con sus precios.
+        // Las demás no aparecen en la lista.
+        var permitidas = Wamani.Reservas.Services.Permisos.Excursiones(User);
+        if (permitidas.Count > 0)
+            Excursiones = Excursiones.Where(e => permitidas.Contains(e.Id)).ToList();
     }
 
     // ---------- Viaje a medida ----------

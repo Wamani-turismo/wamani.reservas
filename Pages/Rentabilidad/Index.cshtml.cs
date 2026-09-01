@@ -29,6 +29,11 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         var excs = await _db.Excursiones.Where(e => e.Activa).OrderBy(e => e.Nombre).ToListAsync();
+
+        // Colaborador con acceso limitado: sólo la rentabilidad de SUS excursiones
+        var permitidas = Wamani.Reservas.Services.Permisos.Excursiones(User);
+        if (permitidas.Count > 0)
+            excs = excs.Where(e => permitidas.Contains(e.Id)).ToList();
         var gastos = (await _db.GastosExcursion.ToListAsync())
             .GroupBy(g => g.ExcursionId)
             .ToDictionary(g => g.Key, g => g.ToList());

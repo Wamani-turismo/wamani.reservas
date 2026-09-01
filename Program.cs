@@ -221,7 +221,7 @@ using (var scope = app.Services.CreateScope())
             ""Activo"" INTEGER NOT NULL
         );");
     // Acceso limitado de un colaborador a UNA sola excursión
-    EnsureSqliteColumn(db, "Usuarios", "ExcursionPermitidaId", "INTEGER NULL");
+    EnsureSqliteColumn(db, "Usuarios", "ExcursionesPermitidas", "TEXT NULL");
     db.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS ""Interesados"" (
             ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_Interesados"" PRIMARY KEY AUTOINCREMENT,
@@ -382,7 +382,7 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Excursiones"" ADD COLUMN IF NOT EXISTS ""EsAMedida"" boolean NOT NULL DEFAULT false;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Excursiones"" ADD COLUMN IF NOT EXISTS ""EsPersonalizada"" boolean NOT NULL DEFAULT false;");
         // Acceso limitado de un colaborador a UNA sola excursión
-        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Usuarios"" ADD COLUMN IF NOT EXISTS ""ExcursionPermitidaId"" integer;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Usuarios"" ADD COLUMN IF NOT EXISTS ""ExcursionesPermitidas"" text;");
         // Fondo del 10%: marca de los gastos que se pagan con ese fondo
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""GastosEmpresa"" ADD COLUMN IF NOT EXISTS ""DelFondo"" boolean NOT NULL DEFAULT false;");
         // Ingresos EXTRA (comisiones, alquileres, servicios sueltos)
@@ -802,8 +802,8 @@ app.UseAuthorization();
 // ═══════════════════════════════════════════════════════════════════════
 app.Use(async (ctx, siguiente) =>
 {
-    var permitidaTxt = ctx.User?.FindFirst("excursion_permitida")?.Value;
-    if (string.IsNullOrEmpty(permitidaTxt) || !int.TryParse(permitidaTxt, out var permitida))
+    var permitidas = Wamani.Reservas.Services.Permisos.Excursiones(ctx.User);
+    if (permitidas.Count == 0)
     {
         await siguiente();          // socio de Wamani: ve todo, como siempre
         return;
@@ -825,11 +825,15 @@ app.Use(async (ctx, siguiente) =>
     // en cada una (null = esa pantalla no lleva número).
     var habilitadas = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
     {
-        ["/Operativo"]              = null,          // la lista, ya filtrada a su excursión
+        ["/Operativo"]              = null,          // la lista, ya filtrada a lo suyo
         ["/Operativo/Index"]        = null,
         ["/Operativo/Salida"]       = "excursionId",
         ["/Operativo/Pagar"]        = "excursionId", // detalle de lo que falta pagar
-        ["/Excursiones/Cargar"]     = "id",          // cargar los costos de SU travesía
+        ["/Excursiones"]            = null,          // la lista, filtrada: de ahí entra a los costos
+        ["/Excursiones/Index"]      = null,
+        ["/Excursiones/Cargar"]     = "id",          // los costos de una travesía suya
+        ["/Rentabilidad"]           = null,          // la lista, filtrada
+        ["/Rentabilidad/Index"]     = null,
         ["/Rentabilidad/Detalle"]   = "id",
         ["/Rentabilidad/Comparar"]  = "excursionId",
         ["/Reservas/Cargar"]        = null,          // anotar los pasajeros que consigue
@@ -846,7 +850,7 @@ app.Use(async (ctx, siguiente) =>
     if (campoId is not null)
     {
         var valor = ctx.Request.Query[campoId].ToString();
-        if (!int.TryParse(valor, out var pedida) || pedida != permitida)
+        if (!int.TryParse(valor, out var pedida) || !permitidas.Contains(pedida))
         {
             ctx.Response.Redirect("/Operativo");
             return;

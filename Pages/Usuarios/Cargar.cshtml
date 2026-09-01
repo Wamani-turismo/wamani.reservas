@@ -35,6 +35,25 @@
                     Activo (puede entrar)
                 </label>
             </div>
+
+            @* Acceso limitado: para un colaborador de afuera que sólo participa de una
+               travesía. Si se elige una excursión, ese usuario NO ve la plata de Wamani
+               ni los precios de las demás. *@
+            <div class="field full">
+                <label asp-for="Usuario.ExcursionPermitidaId">Acceso limitado a una sola excursión</label>
+                <select asp-for="Usuario.ExcursionPermitidaId">
+                    <option value="">Socio de Wamani — ve todo el sistema</option>
+                    @foreach (var e in Model.Excursiones)
+                    {
+                        <option value="@e.Id">Sólo @e.Nombre</option>
+                    }
+                </select>
+                <div class="hint">
+                    Si elegís una excursión, ese usuario entra <strong>únicamente</strong> a
+                    su operativo, sus costos, su rentabilidad y a anotar pasajeros de esa
+                    salida. No ve Finanzas, ni Caja, ni los precios de las otras excursiones.
+                </div>
+            </div>
         </div>
     </div>
 

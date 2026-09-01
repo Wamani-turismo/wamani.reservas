@@ -35,6 +35,12 @@ public class IndexModel : PageModel
             .Where(r => r.FechaHasta.Date >= hoy)
             .ToListAsync();
 
+        // Colaborador con acceso a una sola excursión: sólo ve las salidas de esa.
+        // Sin esto vería en la lista los nombres y las salidas de todo Wamani.
+        var soloEsta = User?.FindFirst("excursion_permitida")?.Value;
+        if (int.TryParse(soloEsta, out var excLimitada))
+            reservas = reservas.Where(r => r.ExcursionId == excLimitada).ToList();
+
         var plantillaPorExc = (await _db.GastosExcursion.ToListAsync())
             .GroupBy(g => g.ExcursionId)
             .ToDictionary(g => g.Key, g => g.ToList());

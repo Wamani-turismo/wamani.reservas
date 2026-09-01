@@ -56,6 +56,16 @@ public class CargarModel : PageModel
             .OrderByDescending(e => e.EsAMedida)
             .ThenBy(e => e.Nombre)
             .ToListAsync();
+
+        // Colaborador con acceso a una sola excursión: en el desplegable ve SÓLO la suya.
+        // El desplegable muestra el precio de venta de cada excursión, así que sin este
+        // filtro se le estarían mostrando los precios de todo el catálogo.
+        var soloEsta = User?.FindFirst("excursion_permitida")?.Value;
+        if (int.TryParse(soloEsta, out var excLimitada))
+        {
+            Excursiones = Excursiones.Where(e => e.Id == excLimitada).ToList();
+            if (Reserva.ExcursionId == 0) Reserva.ExcursionId = excLimitada;
+        }
     }
 
     public async Task<IActionResult> OnGetAsync(int? id)
@@ -68,6 +78,12 @@ public class CargarModel : PageModel
         {
             var existente = await _db.Reservas.FindAsync(id);
             if (existente is null) return RedirectToPage("/Index");
+
+            // Colaborador limitado: sólo puede abrir reservas de SU excursión, aunque
+            // escriba el número de otra a mano en la dirección.
+            var soloEstaExc = User?.FindFirst("excursion_permitida")?.Value;
+            if (int.TryParse(soloEstaExc, out var excPermitida) && existente.ExcursionId != excPermitida)
+                return RedirectToPage("/Operativo/Index");
             Reserva = existente;
 
             Pasajeros = await _db.Pasajeros

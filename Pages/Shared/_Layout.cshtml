@@ -57,6 +57,33 @@
                 <button class="sb-toggle" type="button" onclick="toggleColapsar()" title="Achicar / agrandar menú" aria-label="Achicar o agrandar el menú"></button>
             </div>
 
+            @* Un colaborador con acceso a una sola excursión ve un menú corto: sólo su
+               operativo y sus reservas. Las demás pantallas, además de no estar acá,
+               están bloqueadas del lado del servidor (ver el candado en Program.cs). *@
+            @{
+                var excLimitada = User?.FindFirst("excursion_permitida")?.Value;
+                var esLimitado = !string.IsNullOrEmpty(excLimitada);
+            }
+            @if (esLimitado)
+            {
+                <nav class="sb-nav">
+                    <div class="sb-section">Mi travesía</div>
+                    <a class="sb-item @Activo("/operativo")" asp-page="/Operativo/Index" title="Operativo">
+                        <span class="sb-ico"><svg class="ic"><use href="#ic-operativo"/></svg></span> <span>Operativo</span>
+                    </a>
+                    <a class="sb-item" href="/Excursiones/Cargar?id=@excLimitada" title="Costos de la travesía">
+                        <span class="sb-ico"><svg class="ic"><use href="#ic-excursiones"/></svg></span> <span>Costos</span>
+                    </a>
+                    <a class="sb-item" href="/Rentabilidad/Detalle?id=@excLimitada" title="Rentabilidad">
+                        <span class="sb-ico"><svg class="ic"><use href="#ic-rentabilidad"/></svg></span> <span>Rentabilidad</span>
+                    </a>
+                    <a class="sb-item" href="/Reservas/Cargar" title="Anotar un pasajero">
+                        <span class="sb-ico"><svg class="ic"><use href="#ic-reservas"/></svg></span> <span>Anotar pasajero</span>
+                    </a>
+                </nav>
+            }
+            else
+            {
             <nav class="sb-nav">
                 <div class="sb-section">Principal</div>
                 <a class="sb-item @Activo("/index")" asp-page="/Index" title="Inicio">
@@ -105,11 +132,15 @@
                     <span class="sb-ico">✉️</span> <span>Consultas</span>
                 </a>
             </nav>
+            }
 
             <div class="sb-foot">
-                <a class="sb-item sb-item-foot @Activo("/usuarios")" asp-page="/Usuarios/Index" title="Usuarios">
-                    <span class="sb-ico"><svg class="ic"><use href="#ic-usuarios"/></svg></span> <span>Usuarios</span>
-                </a>
+                @if (!esLimitado)
+                {
+                    <a class="sb-item sb-item-foot @Activo("/usuarios")" asp-page="/Usuarios/Index" title="Usuarios">
+                        <span class="sb-ico"><svg class="ic"><use href="#ic-usuarios"/></svg></span> <span>Usuarios</span>
+                    </a>
+                }
             </div>
         </aside>
 

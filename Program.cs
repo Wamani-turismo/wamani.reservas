@@ -220,6 +220,8 @@ using (var scope = app.Services.CreateScope())
             ""PasswordHash"" TEXT NOT NULL,
             ""Activo"" INTEGER NOT NULL
         );");
+    // Acceso limitado de un colaborador a UNA sola excursión
+    EnsureSqliteColumn(db, "Usuarios", "ExcursionPermitidaId", "INTEGER NULL");
     db.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS ""Interesados"" (
             ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_Interesados"" PRIMARY KEY AUTOINCREMENT,
@@ -379,6 +381,8 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""ReservaId"" integer;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Excursiones"" ADD COLUMN IF NOT EXISTS ""EsAMedida"" boolean NOT NULL DEFAULT false;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Excursiones"" ADD COLUMN IF NOT EXISTS ""EsPersonalizada"" boolean NOT NULL DEFAULT false;");
+        // Acceso limitado de un colaborador a UNA sola excursión
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Usuarios"" ADD COLUMN IF NOT EXISTS ""ExcursionPermitidaId"" integer;");
         // Fondo del 10%: marca de los gastos que se pagan con ese fondo
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""GastosEmpresa"" ADD COLUMN IF NOT EXISTS ""DelFondo"" boolean NOT NULL DEFAULT false;");
         // Ingresos EXTRA (comisiones, alquileres, servicios sueltos)
@@ -778,6 +782,80 @@ if (!string.IsNullOrWhiteSpace(carpetaComprobantes))
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// ═══════════════════════════════════════════════════════════════════════
+//  CANDADO para los usuarios con acceso limitado a UNA excursión
+//
+//  Pensado para un colaborador de afuera (por ejemplo, un socio sólo de una
+//  travesía): tiene que poder cargar los costos, ver la rentabilidad, manejar el
+//  operativo y anotar los pasajeros que consigue de ESA excursión, y NADA MÁS.
+//  No tiene que ver la plata de Wamani ni los precios de las otras excursiones.
+//
+//  El criterio es al revés del habitual: acá está TODO PROHIBIDO y se habilita
+//  sólo lo que figura en esta lista. Si mañana se agrega una pantalla nueva al
+//  sistema, ese usuario NO la va a ver hasta que alguien la agregue acá a mano.
+//  Es a propósito: preferimos que le falte una pantalla y no que se le escape la
+//  plata de la empresa.
+//
+//  Además de la pantalla, se controla el NÚMERO de excursión que viene en la
+//  dirección: aunque escriba a mano el id de otra travesía, no entra.
+// ═══════════════════════════════════════════════════════════════════════
+app.Use(async (ctx, siguiente) =>
+{
+    var permitidaTxt = ctx.User?.FindFirst("excursion_permitida")?.Value;
+    if (string.IsNullOrEmpty(permitidaTxt) || !int.TryParse(permitidaTxt, out var permitida))
+    {
+        await siguiente();          // socio de Wamani: ve todo, como siempre
+        return;
+    }
+
+    var ruta = (ctx.Request.Path.Value ?? "/").TrimEnd('/');
+    if (ruta.Length == 0) ruta = "/";
+
+    // Archivos (css, imágenes, comprobantes): no son pantallas, pasan derecho
+    if (Path.HasExtension(ruta)) { await siguiente(); return; }
+
+    // Entrar y salir siempre tienen que funcionar
+    if (ruta.Equals("/Login", StringComparison.OrdinalIgnoreCase) ||
+        ruta.Equals("/Logout", StringComparison.OrdinalIgnoreCase) ||
+        ruta.Equals("/Error", StringComparison.OrdinalIgnoreCase))
+    { await siguiente(); return; }
+
+    // Las pantallas habilitadas, y con qué nombre viaja el número de excursión
+    // en cada una (null = esa pantalla no lleva número).
+    var habilitadas = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["/Operativo"]              = null,          // la lista, ya filtrada a su excursión
+        ["/Operativo/Index"]        = null,
+        ["/Operativo/Salida"]       = "excursionId",
+        ["/Operativo/Pagar"]        = "excursionId", // detalle de lo que falta pagar
+        ["/Excursiones/Cargar"]     = "id",          // cargar los costos de SU travesía
+        ["/Rentabilidad/Detalle"]   = "id",
+        ["/Rentabilidad/Comparar"]  = "excursionId",
+        ["/Reservas/Cargar"]        = null,          // anotar los pasajeros que consigue
+    };
+
+    if (!habilitadas.TryGetValue(ruta, out var campoId))
+    {
+        // Pantalla no habilitada: se lo manda a la suya, sin explicaciones
+        ctx.Response.Redirect("/Operativo");
+        return;
+    }
+
+    // Si la pantalla lleva número de excursión, tiene que ser el suyo
+    if (campoId is not null)
+    {
+        var valor = ctx.Request.Query[campoId].ToString();
+        if (!int.TryParse(valor, out var pedida) || pedida != permitida)
+        {
+            ctx.Response.Redirect("/Operativo");
+            return;
+        }
+    }
+
+    await siguiente();
+});
+
 app.MapRazorPages();
 
 // La "puerta de entrada" (la dirección raíz) muestra la LANDING pública.

@@ -23,8 +23,15 @@ public class CargarModel : PageModel
     public bool EsNuevo => Usuario.Id == 0;
     public string? Error { get; set; }
 
+    // Para el desplegable de "acceso limitado a una sola excursión"
+    public List<Wamani.Reservas.Models.Excursion> Excursiones { get; set; } = new();
+
+    private void CargarExcursiones() =>
+        Excursiones = _db.Excursiones.Where(e => e.Activa).OrderBy(e => e.Nombre).ToList();
+
     public IActionResult OnGet(int? id)
     {
+        CargarExcursiones();
         if (id is null) { Usuario = new Usuario { Activo = true }; return Page(); }
         var u = _db.Usuarios.Find(id);
         if (u is null) return RedirectToPage("/Usuarios/Index");
@@ -34,6 +41,8 @@ public class CargarModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
+        CargarExcursiones();   // por si hay que volver a mostrar el formulario con un error
+
         Usuario.NombreUsuario = (Usuario.NombreUsuario ?? "").Trim().ToLower().Replace(" ", "");
 
         if (string.IsNullOrWhiteSpace(Usuario.Nombre) || string.IsNullOrWhiteSpace(Usuario.NombreUsuario))
@@ -63,6 +72,7 @@ public class CargarModel : PageModel
             u.Nombre = Usuario.Nombre;
             u.NombreUsuario = Usuario.NombreUsuario;
             u.Activo = Usuario.Activo;
+            u.ExcursionPermitidaId = Usuario.ExcursionPermitidaId;
             if (!string.IsNullOrWhiteSpace(Password))
                 u.PasswordHash = _hasher.HashPassword(u, Password);   // solo si escribió una nueva
         }

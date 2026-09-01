@@ -531,8 +531,27 @@ public class SalidaModel : PageModel
         return Page();
     }
 
+    // Cuánta plata ya salió de esta salida: los gastos marcados como comprados más
+    // lo que se le pagó a los proveedores (seña + saldo). Se mide antes y después de
+    // guardar para anotar en Actividad quién movió cuánto.
+    private async Task<decimal> PagadoDeLaSalidaAsync()
+    {
+        var pax = await _db.Reservas.AsNoTracking()
+            .Where(r => r.ExcursionId == ExcursionId && r.FechaDesde.Date == Fecha.Date)
+            .SumAsync(r => (int?)r.CantidadPersonas) ?? 0;
+
+        var gs = await _db.OperativoGastos.AsNoTracking()
+            .Where(o => o.ExcursionId == ExcursionId && o.Fecha.Date == Fecha.Date).ToListAsync();
+        var ps = await _db.OperativoProveedores.AsNoTracking()
+            .Where(p => p.ExcursionId == ExcursionId && p.Fecha.Date == Fecha.Date).ToListAsync();
+
+        return gs.Where(g => g.Comprado).Sum(g => g.TotalPara(pax)) + ps.Sum(p => p.Pagado());
+    }
+
     public async Task<IActionResult> OnPostAsync()
     {
+        var pagadoAntes = await PagadoDeLaSalidaAsync();
+
         var existentes = await _db.OperativoGastos
             .Where(o => o.ExcursionId == ExcursionId && o.Fecha.Date == Fecha.Date)
             .ToListAsync();
@@ -818,6 +837,17 @@ public class SalidaModel : PageModel
                 _db.OperativoProveedores.Remove(e);
 
         await _db.SaveChangesAsync();
+
+        // Anotar quién pagó y cuánto en este guardado. Va con el signo dado vuelta
+        // porque acá la plata SALE: si se pagaron 340.000 más, es un egreso de 340.000.
+        var pagadoDespues = await PagadoDeLaSalidaAsync();
+        var nombreExc = await _db.Excursiones.AsNoTracking()
+            .Where(e => e.Id == ExcursionId).Select(e => e.Nombre).FirstOrDefaultAsync() ?? "Excursión";
+        Wamani.Reservas.Services.Registro.Anotar(_db, User, "Operativo",
+            $"{nombreExc} · salida del {Fecha:dd/MM/yyyy}",
+            ExcursionId, -(pagadoDespues - pagadoAntes));
+        await _db.SaveChangesAsync();
+
         return RedirectToPage("/Operativo/Salida",
             new { ExcursionId, Fecha = Fecha.ToString("yyyy-MM-dd"), guardado = true });
     }

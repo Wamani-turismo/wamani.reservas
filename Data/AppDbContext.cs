@@ -34,6 +34,9 @@ namespace Wamani.Reservas.Data
         // Las consultas que deja la gente con el formulario de la web
         public DbSet<ConsultaWeb> ConsultasWeb => Set<ConsultaWeb>();
 
+        // Quién movió plata en el sistema (ver Services/Registro.cs)
+        public DbSet<Actividad> Actividades => Set<Actividad>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

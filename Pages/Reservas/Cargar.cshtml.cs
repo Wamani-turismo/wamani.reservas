@@ -103,6 +103,15 @@ public class CargarModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
+        // Cuánta plata había cobrada ANTES de este guardado. Se usa al final para
+        // anotar en Actividad quién movió dinero y cuánto (ver Services/Registro.cs).
+        decimal cobradoAntes = 0m;
+        if (Reserva.Id != 0)
+        {
+            var previa = await _db.Reservas.AsNoTracking().FirstOrDefaultAsync(x => x.Id == Reserva.Id);
+            cobradoAntes = previa?.Cobrado() ?? 0m;
+        }
+
         // Buscar la excursión elegida para congelar nombre/precio/mínimo
         var exc = Reserva.ExcursionId is null
             ? null
@@ -246,6 +255,21 @@ public class CargarModel : PageModel
                 _db.Pasajeros.Remove(e);
 
         await _db.SaveChangesAsync();
+
+        // Anotar quién movió plata con este guardado (la diferencia con lo que había antes)
+        var guardada = await _db.Reservas.AsNoTracking().FirstOrDefaultAsync(x => x.Id == Reserva.Id);
+        if (guardada is not null)
+        {
+            Wamani.Reservas.Services.Registro.Anotar(_db, User, "Reserva",
+                $"{guardada.Excursion} · {guardada.FechaDesde:dd/MM/yyyy} · {guardada.NombreCliente}",
+                guardada.ExcursionId, guardada.Cobrado() - cobradoAntes);
+            await _db.SaveChangesAsync();
+        }
+
+        // Un colaborador con acceso limitado no puede entrar al listado general de reservas:
+        // lo mandamos a la lista de su propia excursión, que sí tiene permitida.
+        if (Wamani.Reservas.Services.Permisos.EsLimitado(User) && guardada?.ExcursionId is int exId)
+            return RedirectToPage("/Operativo/Reservas", new { excursionId = exId });
 
         // Le pasamos el id al listado para que revise si hay otras reservas en la misma
         // salida (excursión + fecha) y muestre el modal de aviso si corresponde.

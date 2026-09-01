@@ -1,0 +1,117 @@
+@page
+@model Wamani.Reservas.Pages.Operativo.ReservasModel
+@{
+    ViewData["Title"] = "Reservas de " + Model.ExcursionNombre;
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+    var hoy = DateTime.Today;
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Reservas · @Model.ExcursionNombre</h1>
+        <p class="subtitle" style="margin:0">
+            Todas las salidas con la gente anotada en cada una.
+            @if (Model.TotalPasajeros > 0)
+            {
+                <strong>@Model.TotalPasajeros pasajero(s) en total.</strong>
+            }
+        </p>
+    </div>
+    <a asp-page="/Operativo/Index">← Volver al operativo</a>
+</div>
+
+@if (Model.Salidas.Count == 0)
+{
+    <div class="table-wrap">
+        <div class="empty">
+            <div class="big">🧭</div>
+            <p>Todavía no hay nadie anotado en esta travesía.</p>
+            <a class="btn btn-primary" asp-page="/Reservas/Cargar">Cargar la primera reserva</a>
+        </div>
+    </div>
+}
+else
+{
+    @foreach (var s in Model.Salidas)
+    {
+        var pasada = s.Fecha < hoy;
+        <div class="card" style="margin-bottom:18px">
+            <div class="toolbar" style="margin-bottom:10px">
+                <div>
+                    <h2 style="margin:0">
+                        @s.Fecha.ToString("dd/MM/yyyy")
+                        @if (pasada)
+                        {
+                            <span class="pill pill-muted">ya salió</span>
+                        }
+                    </h2>
+                    <p class="subtitle" style="margin:0">
+                        <strong>@s.Pasajeros pasajero(s)</strong>
+                        @if (Model.MinimoPersonas > 0)
+                        {
+                            <text>(mínimo @Model.MinimoPersonas)</text>
+                            if (s.Pasajeros < Model.MinimoPersonas)
+                            {
+                                <span class="pill pill-muted">faltan @(Model.MinimoPersonas - s.Pasajeros)</span>
+                            }
+                        }
+                    </p>
+                </div>
+                <a class="btn btn-ghost" asp-page="/Operativo/Salida"
+                   asp-route-ExcursionId="@Model.ExcursionId"
+                   asp-route-Fecha="@s.Fecha.ToString("yyyy-MM-dd")">Ver el operativo</a>
+            </div>
+
+            <div class="table-wrap">
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th class="num">Personas</th>
+                            <th>Contacto</th>
+                            <th class="num">Total</th>
+                            <th class="num">Cobrado</th>
+                            <th class="num">Falta cobrar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var r in s.Reservas)
+                    {
+                        <tr>
+                            <td data-label="Cliente"><strong>@r.NombreCliente</strong></td>
+                            <td class="num" data-label="Personas">@r.CantidadPersonas</td>
+                            <td data-label="Contacto">
+                                @if (!string.IsNullOrWhiteSpace(r.Telefono)) { <div>@r.Telefono</div> }
+                                @if (!string.IsNullOrWhiteSpace(r.Email)) { <div class="hint">@r.Email</div> }
+                            </td>
+                            <td class="num" data-label="Total">@Money(r.TotalConDescuento())</td>
+                            <td class="num" data-label="Cobrado">@Money(r.Cobrado())</td>
+                            <td class="num" data-label="Falta cobrar">
+                                @if (r.Pendiente() == 0m)
+                                {
+                                    <span class="pill pill-ok">paga</span>
+                                }
+                                else
+                                {
+                                    <span class="pill pill-muted">@Money(r.Pendiente())</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total de la salida</th>
+                            <th class="num">@s.Pasajeros</th>
+                            <th></th>
+                            <th class="num">@Money(s.Facturado)</th>
+                            <th class="num">@Money(s.Cobrado)</th>
+                            <th class="num">@Money(s.Pendiente)</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    }
+}

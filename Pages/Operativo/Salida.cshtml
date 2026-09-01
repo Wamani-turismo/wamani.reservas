@@ -33,6 +33,10 @@
         <div>
             @string.Join(" · ", Model.Reservas.Select(r => $"{r.NombreCliente} ({r.CantidadPersonas})"))
         </div>
+        <div style="margin-top:12px">
+            <a class="btn btn-ghost" asp-page="/Operativo/Reservas"
+               asp-route-excursionId="@Model.ExcursionId">👥 Ver todas las reservas de esta excursión</a>
+        </div>
     </div>
 }
 

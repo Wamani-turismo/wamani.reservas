@@ -18,6 +18,16 @@ public class IndexModel : PageModel
     public string? Mes { get; set; }   // formato "yyyy-MM"
 
     public DateTime MesActual { get; set; }
+
+    // Quién movió plata este mes: se llena desde la tabla Actividad
+    public class QuienCargo
+    {
+        public string Nombre { get; set; } = "";
+        public decimal Ingresos { get; set; }
+        public decimal Egresos { get; set; }
+        public int Movimientos { get; set; }
+    }
+    public List<QuienCargo> CargadoPor { get; set; } = new();
     public string MesTexto { get; set; } = "";
 
     public class LineaExcursion
@@ -96,6 +106,22 @@ public class IndexModel : PageModel
         MesTexto = MesActual.ToString("MMMM yyyy", new System.Globalization.CultureInfo("es-AR"));
 
         bool EnMes(DateTime? f) => f is DateTime d && d.Date >= MesActual && d.Date < fin;
+
+        // ---- Quién cargó plata este mes (informativo, ver Services/Registro.cs) ----
+        var actividad = await _db.Actividades.AsNoTracking()
+            .Where(a => a.Fecha >= MesActual && a.Fecha < fin)
+            .ToListAsync();
+        CargadoPor = actividad
+            .GroupBy(a => a.Nombre)
+            .Select(g => new QuienCargo
+            {
+                Nombre      = g.Key,
+                Ingresos    = g.Where(x => x.EsIngreso).Sum(x => x.Monto),
+                Egresos     = g.Where(x => !x.EsIngreso).Sum(x => x.Monto),
+                Movimientos = g.Count()
+            })
+            .OrderByDescending(x => x.Movimientos)
+            .ToList();
 
         var excNombres = await _db.Excursiones.ToDictionaryAsync(e => e.Id, e => e.Nombre);
         var reservas = await _db.Reservas.ToListAsync();

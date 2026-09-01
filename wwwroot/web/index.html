@@ -1072,9 +1072,18 @@ carrusel.addEventListener("pointerleave", function(){ if (!autoCar) arrancarAuto
 /* ═══ Modal de guía ═══ */
 const modalFondo = document.getElementById("modal-fondo");
 const modalCont = document.getElementById("modal-contenido");
+// Le avisa a Google Analytics que pasó algo que nos importa. Si Analytics no cargó
+// (por un bloqueador, por ejemplo), no hace nada y la web sigue andando igual.
+function medir(evento, datos){
+  try { if (typeof gtag === "function") gtag('event', evento, datos || {}); } catch (e) {}
+}
+
 function abrirGuia(id){
   const g = GUIAS[id];
   if (!g) return;
+  // Qué excursión abrió: así sabemos cuáles miran más. La web es UNA sola página,
+  // así que sin esto Analytics no distingue entre una experiencia y otra.
+  medir('ver_excursion', { excursion: g.n });
   const msg = "¡Hola! Quiero consultar por " + g.n + ".";
   modalCont.innerHTML =
     (function(){
@@ -1240,7 +1249,16 @@ window.addEventListener("hashchange", abrirDesdeLaDireccion);
 /* ═══ Formulario de contacto ═══
    Se abre al tocar el mail. La consulta le llega a Wamani y queda guardada en el sistema,
    así que no depende de que el visitante tenga un programa de correo. */
-function abrirFormulario(){ document.getElementById("fondo-form").style.display = "flex"; }
+function abrirFormulario(){ medir('abrir_formulario', { desde: 'web' }); document.getElementById("fondo-form").style.display = "flex"; }
+
+// Cada clic a WhatsApp, con la excursión si salió de la ficha de una. Es la otra puerta
+// de entrada además del formulario, y hasta ahora no se medía en ningún lado.
+document.addEventListener('click', function(ev){
+  var a = ev.target.closest ? ev.target.closest('a[href*="wa.me"]') : null;
+  if (!a) return;
+  var ficha = document.querySelector('#modal h2, #modal h3');
+  medir('clic_whatsapp', { desde: 'web', excursion: ficha ? ficha.textContent.trim() : 'general' });
+});
 function cerrarFormulario(){ document.getElementById("fondo-form").style.display = "none"; }
 
 document.getElementById("form-consulta").addEventListener("submit", async function(ev){
@@ -1263,6 +1281,9 @@ document.getElementById("form-consulta").addEventListener("submit", async functi
     const r = await fetch("/web/consulta", { method: "POST", body: new FormData(this) });
     const res = await r.json();
     if (!res.ok) throw new Error(res.error || "No se pudo enviar.");
+    // Consulta enviada de verdad. Es LO QUE MÁS IMPORTA medir: con esto Analytics
+    // puede decir de dónde venía el que escribió (Instagram, Google, el QR de la feria).
+    medir('consulta_enviada', { desde: 'web' });
     this.style.display = "none";
     aviso.style.display = "block";
     aviso.style.color = "#25d366";

@@ -422,7 +422,21 @@ function mail(asunto, cuerpo){
   return "mailto:" + MAIL + "?subject=" + encodeURIComponent(asunto) + "&body=" + encodeURIComponent(cuerpo);
 }
 
+// Le avisa a Google Analytics. Si Analytics no cargó, no hace nada.
+function medir(evento, datos){
+  try { if (typeof gtag === "function") gtag('event', evento, datos || {}); } catch (e) {}
+}
+
+// Cada clic a WhatsApp desde la landing de la feria
+document.addEventListener('click', function(ev){
+  var a = ev.target.closest ? ev.target.closest('a[href*="wa.me"]') : null;
+  if (a) medir('clic_whatsapp', { desde: 'receptivo' });
+});
+
 function abrirAgencia(){
+  // Cuántos de los que escanean el QR son agencias y cuántos viajeros: es el dato
+  // que dice si la feria sirvió para el receptivo o para venta directa.
+  medir('camino_elegido', { camino: 'agencia' });
   document.getElementById("portada").style.display = "none";
   document.getElementById("agencia").classList.add("visible");
   document.getElementById("wsp-flotante").classList.add("visible");
@@ -504,7 +518,7 @@ if (sueltas.length){
   sueltas.forEach(function(e){ lista.appendChild(ficha(e)); });
 }
 
-function abrirCatalogo(){ document.getElementById("fondo-catalogo").style.display = "flex"; }
+function abrirCatalogo(){ medir('ver_catalogo', { desde: 'receptivo' }); document.getElementById("fondo-catalogo").style.display = "flex"; }
 function cerrarCatalogo(){ document.getElementById("fondo-catalogo").style.display = "none"; }
 
 /* Pie */
@@ -514,7 +528,7 @@ document.getElementById("pie-datos").innerHTML =
   '<a href="' + mail("Consulta desde la web de Wamani", "Hola Wamani,\n\n") + '">' + MAIL + "</a>";
 
 /* ---- El formulario de contacto ---- */
-function abrirFormulario(){ document.getElementById("fondo-form").style.display = "flex"; }
+function abrirFormulario(){ medir('abrir_formulario', { desde: 'receptivo' }); document.getElementById("fondo-form").style.display = "flex"; }
 function cerrarFormulario(){ document.getElementById("fondo-form").style.display = "none"; }
 
 document.getElementById("form-consulta").addEventListener("submit", async function(ev){
@@ -545,6 +559,8 @@ document.getElementById("form-consulta").addEventListener("submit", async functi
     var r = await fetch("/web/consulta", { method: "POST", body: datos });
     var res = await r.json();
     if (res.ok) {
+      // Consulta enviada desde la landing de la feria, con archivo o sin él
+      medir('consulta_enviada', { desde: 'receptivo', con_archivo: arch ? 'si' : 'no' });
       this.style.display = "none";
       aviso.style.display = "block";
       aviso.style.color = "#25d366";

@@ -128,6 +128,8 @@ else
                     </td>
                     <td class="acciones" data-label="">
                         <a asp-page="/Excursiones/Cargar" asp-route-id="@e.Id">Editar</a>
+                        @* Entrada a las reservas que no depende de que haya una salida próxima *@
+                        <a asp-page="/Operativo/Reservas" asp-route-excursionId="@e.Id">👥 Reservas</a>
                     </td>
                 </tr>
             }

@@ -73,6 +73,7 @@ else
                             <th class="num">Total</th>
                             <th class="num">Cobrado</th>
                             <th class="num">Falta cobrar</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -97,6 +98,12 @@ else
                                     <span class="pill pill-muted">@Money(r.Pendiente())</span>
                                 }
                             </td>
+                            <td class="acciones" data-label="">
+                                @* La ficha completa: pasajeros, pagos, comprobantes y notas *@
+                                <a class="btn-mini btn-mini-ghost" asp-page="/Reservas/Cargar" asp-route-id="@r.Id">
+                                    Ver ficha
+                                </a>
+                            </td>
                         </tr>
                     }
                     </tbody>
@@ -108,6 +115,7 @@ else
                             <th class="num">@Money(s.Facturado)</th>
                             <th class="num">@Money(s.Cobrado)</th>
                             <th class="num">@Money(s.Pendiente)</th>
+                            <th></th>
                         </tr>
                     </tfoot>
                 </table>

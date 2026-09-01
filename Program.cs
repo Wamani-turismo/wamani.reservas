@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -802,7 +803,36 @@ app.UseAuthorization();
 // ═══════════════════════════════════════════════════════════════════════
 app.Use(async (ctx, siguiente) =>
 {
-    var permitidas = Wamani.Reservas.Services.Permisos.Excursiones(ctx.User);
+    // Los permisos se leen de la BASE en cada pedido, NO de la sesión.
+    //
+    // Es a propósito: la sesión dura 14 días, así que si se guardaran ahí, cambiarle los
+    // permisos a alguien —o darlo de baja— no tendría efecto hasta que volviera a entrar.
+    // Con esto, un cambio en Usuarios se aplica en el próximo clic.
+    List<int> permitidas;
+    if (ctx.User?.Identity?.IsAuthenticated != true)
+    {
+        await siguiente();
+        return;
+    }
+    else
+    {
+        var idTxt = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        var baseDatos = ctx.RequestServices.GetRequiredService<AppDbContext>();
+        var quien = int.TryParse(idTxt, out var uid)
+            ? await baseDatos.Usuarios.AsNoTracking().FirstOrDefaultAsync(x => x.Id == uid)
+            : null;
+
+        // Usuario borrado o desactivado mientras tenía la sesión abierta: se lo saca.
+        if (quien is null || !quien.Activo)
+        {
+            await ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            ctx.Response.Redirect("/Login");
+            return;
+        }
+
+        permitidas = quien.IdsPermitidos();
+    }
+
     if (permitidas.Count == 0)
     {
         await siguiente();          // socio de Wamani: ve todo, como siempre

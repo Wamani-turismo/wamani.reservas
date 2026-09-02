@@ -1,10 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- La lista de páginas del sitio para los buscadores. La web es una sola página:
-     las experiencias se abren adentro, no son direcciones aparte. -->
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+     las experiencias se abren adentro, no son direcciones aparte.
+     Cada página se declara en los tres idiomas con "hreflang", para que Google
+     le muestre a cada persona la versión que le corresponde. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://wamaniturismo.com/</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://wamaniturismo.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://wamaniturismo.com/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://wamaniturismo.com/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://wamaniturismo.com/"/>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://wamaniturismo.com/receptivo/</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://wamaniturismo.com/receptivo/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://wamaniturismo.com/receptivo/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://wamaniturismo.com/receptivo/?lang=fr"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://wamaniturismo.com/receptivo/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>

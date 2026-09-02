@@ -8,6 +8,13 @@
 <!-- El logo chiquito de la pestaña y de los resultados de Google. Antes era la montaña
      sola, en una imagen muy ancha y en color claro: al achicarla quedaba una franjita
      ilegible. Ahora es el logo redondo, con el fondo bordo de la marca. -->
+<!-- Le dice a Google que la misma página existe en tres idiomas, para que muestre
+     el que corresponda según quién busca. -->
+<link rel="alternate" hreflang="es" href="https://wamaniturismo.com/">
+<link rel="alternate" hreflang="en" href="https://wamaniturismo.com/?lang=en">
+<link rel="alternate" hreflang="fr" href="https://wamaniturismo.com/?lang=fr">
+<link rel="alternate" hreflang="x-default" href="https://wamaniturismo.com/">
+
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="192x192" href="/logo/wamani-icono-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/logo/wamani-icono-512.png">
@@ -94,6 +101,18 @@ nav.menu a:hover{opacity:1;color:var(--dorado)}
 .barra .btn{display:none}
 
 #check-menu{display:none}
+/* ── Selector de idioma (ES · EN · FR) ─────────────────────── */
+.sel-idioma{display:flex;align-items:center;gap:1px;flex-shrink:0}
+.sel-idioma button{
+  background:none;border:none;cursor:pointer;color:var(--texto-suave);
+  font-family:'Quicksand',sans-serif;font-weight:700;font-size:.8rem;
+  letter-spacing:.05em;padding:.34rem .46rem;border-radius:8px;line-height:1;
+  transition:color .2s ease, background .2s ease;
+}
+.sel-idioma button + button{border-left:1px solid var(--linea)}
+.sel-idioma button:hover{color:var(--dorado)}
+.sel-idioma button.on{color:var(--dorado);background:rgba(216,192,150,.14)}
+
 .hamburguesa{display:flex;flex-direction:column;gap:5px;cursor:pointer;padding:.5rem}
 .hamburguesa span{width:26px;height:2.5px;background:var(--dorado);border-radius:2px;transition:.25s}
 #check-menu:checked ~ .hamburguesa span:nth-child(1){transform:translateY(7.5px) rotate(45deg)}
@@ -584,6 +603,13 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
       <a href="#contacto">Contacto</a>
       <a href="/receptivo/">Receptivo</a>
     </nav>
+    <!-- Idioma: castellano, inglés y francés. Sin banderitas a propósito: una bandera
+         representa un país, no un idioma (el francés no es sólo de Francia). -->
+    <div class="sel-idioma" role="group" aria-label="Idioma">
+      <button type="button" data-lang="es" onclick="WamaniIdioma.cambiar('es')">ES</button>
+      <button type="button" data-lang="en" onclick="WamaniIdioma.cambiar('en')">EN</button>
+      <button type="button" data-lang="fr" onclick="WamaniIdioma.cambiar('fr')">FR</button>
+    </div>
     <a class="btn btn-coral btn-chico wsp" data-msg="¡Hola! Vi la página de Wamani Turismo y quiero reservar una excursión.">Reservá ahora</a>
     <input type="checkbox" id="check-menu" aria-hidden="true">
     <label class="hamburguesa" for="check-menu" aria-label="Abrir menú">
@@ -1300,6 +1326,13 @@ document.getElementById("form-consulta").addEventListener("submit", async functi
 document.getElementById("anio").textContent = new Date().getFullYear();
 function cerrarMenu(){ document.getElementById("check-menu").checked = false; }
 </script>
+
+<!-- Inglés y francés. Van ÚLTIMOS a propósito: para ese momento el sistema ya
+     dibujó las tarjetas, los testimonios y el equipo, así que el traductor los
+     encuentra hechos. Lo que se dibuje después (la guía de una excursión, el
+     panel del mapa) lo traduce solo. Ver idiomas.js. -->
+<script src="idiomas-textos.js"></script>
+<script src="idiomas.js"></script>
 
 </body>
 </html>

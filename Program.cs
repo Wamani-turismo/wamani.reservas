@@ -917,7 +917,10 @@ app.MapRazorPages();
 // La "puerta de entrada" (la dirección raíz) muestra la LANDING pública.
 // Así, cuando se conecte el dominio (wamaniturismo.com), los visitantes ven la
 // web y NO el sistema. Los chicos entran al sistema por /panel (requiere login).
-app.MapGet("/", () => Results.Redirect("/web/")).AllowAnonymous();
+// Se conserva lo que venga después del "?" (hoy: ?lang=en / ?lang=fr). Sin esto, el
+// enlace en inglés que le damos a Google terminaba en la web en castellano.
+app.MapGet("/", (HttpRequest pedido) =>
+    Results.Redirect("/web/" + pedido.QueryString)).AllowAnonymous();
 
 // La página del QR de la feria (FIT). Sin la barra final el servidor no encuentra la
 // carpeta, así que se la agregamos: wamaniturismo.com/receptivo funciona igual.

@@ -166,6 +166,19 @@ namespace Wamani.Reservas.Models
         // va al menos uno) y 0 para arrieros y caballos, que se deciden salida por salida.
         public int CantidadReferencia() => Cantidad ?? (Tipo == Guia ? 1 : 0);
 
+        // Cuántos vehículos se pagan en un TRASLADO.
+        //
+        // Por defecto la cuenta es "1 auto cada 4, contando a los guías", que es lo que
+        // pasa cuando manejamos nosotros. Pero muchos traslados son contratados y entra
+        // todo el grupo en uno solo (una traffic, una camioneta): ahí se escribe 1 en
+        // "Cuántos" y esa cifra manda. Vacío o 0 = que lo calcule el sistema.
+        public int VehiculosPara(int pax, int guias)
+        {
+            if (Cantidad is int fijo && fijo > 0) return fijo;
+            var cabezas = pax + guias;
+            return cabezas <= 0 ? 0 : (int)System.Math.Ceiling(cabezas / (double)Excursion.PersonasPorAuto);
+        }
+
         // Qué comidas vienen incluidas en el precio de esa noche (ej. "merienda + cena +
         // desayuno"). No se desglosa como gasto aparte: es sólo para saber qué le toca a
         // la gente cada día y no volver a comprarlo por las dudas.

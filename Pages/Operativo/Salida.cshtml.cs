@@ -362,7 +362,9 @@ public class SalidaModel : PageModel
                 // ellos en cada salida, no hay fórmula que lo saque de la cantidad de gente.
                 var sugerida = tipo switch
                 {
-                    EtapaExcursion.Traslado => autosSugeridos,
+                    // Si la excursión dice cuántos vehículos son (traslado contratado donde
+                    // entra todo el grupo), se respeta. Si no, se sugiere 1 auto cada 4.
+                    EtapaExcursion.Traslado => e.Cantidad is int v && v > 0 ? v : autosSugeridos,
                     // El micro se paga por boleto: uno por cada cabeza que viaja, guías incluidos
                     EtapaExcursion.Pasaje   => PasajerosSalida <= 0 ? 0 : PasajerosSalida + guias,
                     // Siempre va al menos un guía; si hacen falta más se suman a mano

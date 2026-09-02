@@ -202,8 +202,11 @@
             <ul style="margin:6px 0 0 18px">
                 <li>🏨 <strong>Hospedaje</strong> — personas × precio por persona × <em>noches</em>.
                     Si dormís 2 noches seguidas en el mismo lado, poné 2 en “Veces”: una sola fila.</li>
-                <li>🚐 <strong>Traslado</strong> — autos × precio por auto. Entran 4 por auto
-                    <em>contando a los guías</em>, así que el operativo te sugiere cuántos hacen falta.</li>
+                <li>🚐 <strong>Traslado</strong> — vehículos × precio × <em>veces</em>. Si el traslado es
+                    <strong>contratado y entra todo el grupo</strong> (una traffic, una camioneta),
+                    poné <strong>1</strong> en “Cuántos” y se cobra una sola vez. Si lo dejás
+                    <strong>vacío</strong> lo calcula solo: 1 auto cada 4, contando a los guías
+                    —que es lo que corresponde cuando manejamos nosotros.</li>
                 <li>🎟️ <strong>Pasajes</strong> — para el micro, donde se saca un boleto por cabeza:
                     pasajes × precio del boleto. También cuenta a los guías.</li>
                 <li>🧑‍🏫 <strong>Guía</strong> — guías × precio por día × <em>días</em>. El precio va acá y
@@ -241,10 +244,16 @@
                     // El número de noche real lo escribe el JS al cargar la página, porque
                     // una fila puede valer por varias noches.
                     var etNoches = et.Noches > 0 ? et.Noches : 1;
-                    // "Cuántos" sólo se usa en guías, arrieros y caballos
+                    // "Cuántos" se usa en guías, arrieros y caballos… y ahora también en los
+                    // TRASLADOS, para poder decir "entramos todos en una sola traffic".
+                    // En el traslado se deja vacío si nadie lo tocó: vacío = que lo calcule
+                    // el sistema (1 auto cada 4).
                     var etEsPorDia = Wamani.Reservas.Models.EtapaExcursion.EsPorDia(et.Tipo);
-                    var etCant = etEsPorDia ? et.CantidadReferencia().ToString() : "";
-                    var etCantEstilo = etEsPorDia ? "" : "display:none";
+                    var etEsTraslado = et.Tipo == Wamani.Reservas.Models.EtapaExcursion.Traslado;
+                    var etCant = etEsPorDia ? et.CantidadReferencia().ToString()
+                               : etEsTraslado ? (et.Cantidad?.ToString() ?? "")
+                               : "";
+                    var etCantEstilo = (etEsPorDia || etEsTraslado) ? "" : "display:none";
                     <tr class="etapa-row" data-tipo="@et.Tipo">
                         <td data-label="Nº" class="etapa-nro">@(i + 1)</td>
                         <td data-label="Qué es">
@@ -602,7 +611,7 @@
 
                 // "Veces" cuenta en todos: un traslado que se hace dos veces (ida y vuelta)
                 // se paga dos veces. El operativo ya lo contaba así; acá faltaba.
-                if (tipo === 'Traslado')      total += precio * Math.ceil((min + guias) / PERSONAS_POR_AUTO) * veces;
+                if (tipo === 'Traslado')      total += precio * vehiculos(f, min, guias) * veces;
                 else if (tipo === 'Pasaje')   total += precio * (min + guias) * veces;
                 else if (esPorDia(tipo))      total += precio * (parseInt(f.querySelector('.in-cuantos').value) || 0) * veces;
                 else                          total += precio * min * veces;   // Hospedaje
@@ -650,6 +659,17 @@
         // llevan "cuántos"; en el resto la cantidad sale de la gente, así que se esconde.
         function esPorDia(tipo) { return tipo === 'Guía' || tipo === 'Arriero' || tipo === 'Caballo'; }
 
+        // Cuántos vehículos paga un traslado. Si la fila dice un número, manda ese
+        // (traslado contratado donde entra todo el grupo). Vacío = 1 auto cada 4.
+        // Es la misma cuenta que hace EtapaExcursion.VehiculosPara en el servidor.
+        function vehiculos(fila, pax, guias) {
+            var inp = fila.querySelector('.in-cuantos');
+            var fijo = inp ? (parseInt(inp.value) || 0) : 0;
+            if (fijo > 0) return fijo;
+            var cabezas = pax + guias;
+            return cabezas <= 0 ? 0 : Math.ceil(cabezas / PERSONAS_POR_AUTO);
+        }
+
         function aplicarTipoEtapa(fila, tipo) {
             var veces = fila.querySelector('.in-noches');
             if (veces) {
@@ -661,6 +681,11 @@
                 if (esPorDia(tipo)) {
                     cuantos.style.display = '';
                     if (!cuantos.value) cuantos.value = (tipo === 'Guía') ? '1' : '0';
+                } else if (tipo === 'Traslado') {
+                    // Se muestra vacío: así se ve que, si no se toca, lo calcula el sistema.
+                    cuantos.style.display = '';
+                    cuantos.placeholder = 'auto';
+                    cuantos.title = 'Cuántos vehículos se pagan. Vacío = lo calcula solo (1 cada 4 personas).';
                 } else {
                     cuantos.style.display = 'none';
                     cuantos.value = '';

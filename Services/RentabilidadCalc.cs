@@ -53,8 +53,11 @@ public static class RentabilidadCalc
 
         return e.Tipo switch
         {
-            // Un auto cada 4, contando a los guías que viajan
-            EtapaExcursion.Traslado => e.PrecioPorPersona * AutosPara(pax, guias) * veces,
+            // Un auto cada 4, contando a los guías que viajan. PERO si la fila dice
+            // cuántos vehículos son, manda ese número: hay traslados contratados donde
+            // entra todo el grupo en uno solo (una traffic, una camioneta) y la cuenta
+            // de 1 cada 4 los cobraría de más.
+            EtapaExcursion.Traslado => e.PrecioPorPersona * e.VehiculosPara(pax, guias) * veces,
             // El micro se paga por boleto: uno por cada cabeza, guías incluidos
             EtapaExcursion.Pasaje   => e.PrecioPorPersona * (pax <= 0 ? 0 : pax + guias) * veces,
             // Guías, arrieros y caballos se contratan POR DÍA y cuántos van no sale de

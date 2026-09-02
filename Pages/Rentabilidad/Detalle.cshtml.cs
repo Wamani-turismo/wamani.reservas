@@ -47,7 +47,9 @@ public class DetalleModel : PageModel
     // Lo mismo para lo que se contrata para el grupo.
     public string ComoSeCuentaEtapa(EtapaExcursion et) => et.Tipo switch
     {
-        EtapaExcursion.Traslado => "1 auto cada " + PersonasPorAuto + " (con los guías)",
+        EtapaExcursion.Traslado => et.Cantidad is int v && v > 0
+                                   ? v + " vehículo(s) para todo el grupo"
+                                   : "1 auto cada " + PersonasPorAuto + " (con los guías)",
         EtapaExcursion.Pasaje   => "un boleto por cabeza (con los guías)",
         EtapaExcursion.Guia     => et.CantidadReferencia() + " × " + Veces(et) + " día(s)",
         EtapaExcursion.Arriero  => et.CantidadReferencia() + " × " + Veces(et) + " día(s)",

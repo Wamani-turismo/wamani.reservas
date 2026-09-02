@@ -155,7 +155,9 @@ else
         // Lo que sale una fila del grupo. Sin precio cargado no se cuenta.
         function montoEtapa(et, p){
             if (et.monto <= 0) return 0;
-            if (et.modo === "traslado") return et.monto * autosConGuias(p) * et.veces;
+            // Si la etapa dice cuántos vehículos son (traslado contratado, entra todo el
+            // grupo), manda ese número; si no, 1 auto cada 4 contando a los guías.
+            if (et.modo === "traslado") return et.monto * (et.cant > 0 ? et.cant : autosConGuias(p)) * et.veces;
             if (et.modo === "pasaje")   return et.monto * (p <= 0 ? 0 : p + GUIAS) * et.veces;
             if (et.modo === "pordia")   return et.monto * et.cant * et.veces;
             return et.monto * p * et.veces;   // Hospedaje

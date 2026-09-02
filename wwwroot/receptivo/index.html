@@ -57,6 +57,12 @@ a:hover{text-decoration:underline}
 
 /* Selector de idioma (ES · EN · FR) */
 .sel-idioma{display:flex; align-items:center; gap:1px; flex-shrink:0}
+/* El globito: se entiende sin leer nada, en cualquier idioma. */
+.sel-idioma .ico-idioma{
+  width:16px; height:16px; flex-shrink:0; margin-right:5px;
+  fill:none; stroke:var(--dorado); stroke-width:1.6;
+  stroke-linecap:round; opacity:.75;
+}
 .sel-idioma button{
   background:none; border:none; cursor:pointer; color:var(--texto-suave);
   font-family:'Quicksand',sans-serif; font-weight:700; font-size:.8rem;
@@ -192,6 +198,9 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
     <div style="display:flex;align-items:center;gap:14px">
       <!-- Idioma. Sin banderitas: una bandera es un país, no un idioma. -->
       <div class="sel-idioma" role="group" aria-label="Idioma">
+        <svg class="ico-idioma" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><ellipse cx="12" cy="12" rx="4" ry="9"/>
+        </svg>
         <button type="button" data-lang="es" onclick="WamaniIdioma.cambiar('es')">ES</button>
         <button type="button" data-lang="en" onclick="WamaniIdioma.cambiar('en')">EN</button>
         <button type="button" data-lang="fr" onclick="WamaniIdioma.cambiar('fr')">FR</button>

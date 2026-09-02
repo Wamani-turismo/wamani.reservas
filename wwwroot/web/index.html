@@ -103,6 +103,13 @@ nav.menu a:hover{opacity:1;color:var(--dorado)}
 #check-menu{display:none}
 /* ── Selector de idioma (ES · EN · FR) ─────────────────────── */
 .sel-idioma{display:flex;align-items:center;gap:1px;flex-shrink:0}
+/* El globito: se entiende sin leer nada, en cualquier idioma. Por eso va esto y no
+   la palabra "Idioma", que sólo le sirve al que ya lee castellano. */
+.sel-idioma .ico-idioma{
+  width:16px;height:16px;flex-shrink:0;margin-right:5px;
+  fill:none;stroke:var(--dorado);stroke-width:1.6;
+  stroke-linecap:round;opacity:.75;
+}
 .sel-idioma button{
   background:none;border:none;cursor:pointer;color:var(--texto-suave);
   font-family:'Quicksand',sans-serif;font-weight:700;font-size:.8rem;
@@ -606,6 +613,9 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
     <!-- Idioma: castellano, inglés y francés. Sin banderitas a propósito: una bandera
          representa un país, no un idioma (el francés no es sólo de Francia). -->
     <div class="sel-idioma" role="group" aria-label="Idioma">
+      <svg class="ico-idioma" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><ellipse cx="12" cy="12" rx="4" ry="9"/>
+      </svg>
       <button type="button" data-lang="es" onclick="WamaniIdioma.cambiar('es')">ES</button>
       <button type="button" data-lang="en" onclick="WamaniIdioma.cambiar('en')">EN</button>
       <button type="button" data-lang="fr" onclick="WamaniIdioma.cambiar('fr')">FR</button>

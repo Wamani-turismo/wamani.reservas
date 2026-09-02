@@ -46,6 +46,7 @@ en: {
     "Excursiones y travesías en Jujuy: Yungas, Quebrada, Valles y Puna. Grupos reducidos y guías locales. Trabajamos con agencias y operadores de todo el mundo.": "Day tours and treks in Jujuy: Yungas, Quebrada, Valleys and Puna. Small groups and local guides. We work with agencies and tour operators worldwide.",
 
     /* ── Landing de agencias (/receptivo) ── */
+    "Idioma": "Language",
     "Ir a la web ↗": "Go to the website ↗",
     "¿Cómo llegaste hasta nosotros?": "How did you find us?",
     "Soy viajero": "I'm a traveller",
@@ -414,6 +415,7 @@ fr: {
     "Excursiones y travesías en Jujuy: Yungas, Quebrada, Valles y Puna. Grupos reducidos y guías locales. Trabajamos con agencias y operadores de todo el mundo.": "Excursions et treks à Jujuy : Yungas, Quebrada, Vallées et Puna. Petits groupes et guides locaux. Nous travaillons avec des agences et des tour-opérateurs du monde entier.",
 
     /* ── Landing de agencias (/receptivo) ── */
+    "Idioma": "Langue",
     "Ir a la web ↗": "Aller au site ↗",
     "¿Cómo llegaste hasta nosotros?": "Comment nous avez-vous trouvés ?",
     "Soy viajero": "Je suis voyageur",

@@ -217,13 +217,22 @@ public class CargarModel : PageModel
             var tipoEtapa = i < EtapaTipos.Count && EtapaExcursion.Tipos.Contains(EtapaTipos[i])
                 ? EtapaTipos[i] : EtapaExcursion.Hospedaje;
 
-            // Cuántos van: sólo tiene sentido en guías, arrieros y caballos. En el resto la
-            // cantidad sale de la gente de la salida, así que queda en null.
+            // Cuántos van: tiene sentido en guías, arrieros y caballos… y en los TRASLADOS,
+            // donde dice cuántos vehículos se pagan (un traslado contratado se paga una vez
+            // aunque vayan 6). En el resto la cantidad sale de la gente, así que queda null.
+            //
+            // En el traslado, vacío NO es cero: significa "calculalo vos" (1 auto cada 4).
+            // Por eso ahí sólo se guarda si viene un número mayor que cero.
             int? cuantosEtapa = null;
             if (EtapaExcursion.EsPorDia(tipoEtapa))
             {
                 var cTxt = i < EtapaCantidades.Count ? EtapaCantidades[i] : null;
                 if (int.TryParse(cTxt, out var cc) && cc >= 0) cuantosEtapa = cc;
+            }
+            else if (tipoEtapa == EtapaExcursion.Traslado)
+            {
+                var cTxt = i < EtapaCantidades.Count ? EtapaCantidades[i] : null;
+                if (int.TryParse(cTxt, out var cv) && cv > 0) cuantosEtapa = cv;
             }
 
             _db.EtapasExcursion.Add(new EtapaExcursion

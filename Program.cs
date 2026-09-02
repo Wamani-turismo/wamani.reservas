@@ -754,9 +754,17 @@ app.UseStaticFiles(new StaticFileOptions
     // antes de usarla": si no cambió, el servidor contesta que siga con la que tiene.
     //
     // Las fotos, el CSS y el logo se siguen guardando normalmente (son los que pesan).
+    //
+    // Los .js van igual que el .html, y por la misma razón. Detectado el 02/09/2026:
+    // se subió una traducción nueva, el servidor ya la tenía, pero el navegador seguía
+    // usando el idiomas-textos.js que había bajado antes. Cualquier corrección de una
+    // traducción habría quedado invisible para el que ya visitó la web. Pesan poco y
+    // con "no-cache" el servidor contesta "no cambió" sin mandarlos de nuevo.
     OnPrepareResponse = ctx =>
     {
-        if (ctx.File.Name.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+        var n = ctx.File.Name;
+        if (n.EndsWith(".html", StringComparison.OrdinalIgnoreCase) ||
+            n.EndsWith(".js", StringComparison.OrdinalIgnoreCase))
             ctx.Context.Response.Headers["Cache-Control"] = "no-cache, must-revalidate";
     }
 });

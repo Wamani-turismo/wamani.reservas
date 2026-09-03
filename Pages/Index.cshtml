@@ -2,10 +2,140 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Inicio";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+    var hoyTxt = DateTime.Today.ToString("yyyy-MM-dd");
 }
 
 <h1>Inicio</h1>
 <p class="subtitle">Un vistazo rápido a tus próximas salidas.</p>
+
+@* ═══ HOY SALE ═══════════════════════════════════════════════════════════
+   El cartel salta solo al entrar. Como se puede cerrar, la misma información
+   queda abajo en una tarjeta fija: así no se pierde el aviso por cerrarlo. *@
+@if (Model.SalidasDeHoy.Count > 0)
+{
+    <div class="modal-overlay aviso-hoy" id="avisoHoy" style="display:none">
+        <div class="modal-box">
+            <h2>🚐 Hoy sale @(Model.SalidasDeHoy.Count == 1 ? "una excursión" : Model.SalidasDeHoy.Count + " excursiones")</h2>
+
+            @foreach (var s in Model.SalidasDeHoy)
+            {
+                <div class="hoy-bloque">
+                    <div class="hoy-nombre">@s.Excursion</div>
+                    <div class="hoy-gente">@s.Pasajeros pasajero(s) · @string.Join(" · ", s.Clientes)</div>
+
+                    @if (!s.HayOperativo)
+                    {
+                        <div class="aviso-warn" style="margin:10px 0 0">
+                            ⚠️ <strong>No hay operativo armado para esta salida.</strong>
+                            Sin eso no se puede saber qué falta pagar.
+                        </div>
+                    }
+                    else if (s.TodoPago)
+                    {
+                        <div class="aviso-ok" style="margin:10px 0 0">
+                            ✔ <strong>Está todo pago.</strong> No queda nada pendiente.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="aviso-warn" style="margin:10px 0 0">
+                            💸 <strong>Falta pagar @Money(s.FaltaTotal)</strong>
+                            @if (s.GastosPendientes > 0)
+                            {
+                                <div>· @s.GastosPendientes gasto(s) sin tildar — @Money(s.FaltaGastos)</div>
+                            }
+                            @if (s.ProveedoresPendientes > 0)
+                            {
+                                <div>· @s.ProveedoresPendientes proveedor(es) con saldo — @Money(s.FaltaProveedores)</div>
+                            }
+                            @if (s.HaySinPrecio)
+                            {
+                                <div>⚠️ Hay gastos en $0: el total real es mayor.</div>
+                            }
+                            @if (s.HayProveedorSinAsignar)
+                            {
+                                <div>⚠️ Hay un proveedor sin asignar.</div>
+                            }
+                        </div>
+                    }
+
+                    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+                        <a class="btn btn-primary" asp-page="/Operativo/Pagar"
+                           asp-route-excursionId="@s.ExcursionId" asp-route-fecha="@hoyTxt">💸 Detalle a pagar</a>
+                        <a class="btn btn-ghost" asp-page="/Operativo/Salida"
+                           asp-route-excursionId="@s.ExcursionId" asp-route-fecha="@hoyTxt">🎒 Ver operativo</a>
+                    </div>
+                </div>
+            }
+
+            <div style="margin-top:18px;text-align:right">
+                <button type="button" class="btn btn-ghost" onclick="cerrarAvisoHoy()">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card hoy-card">
+        <h2>🚐 Hoy sale</h2>
+        @foreach (var s in Model.SalidasDeHoy)
+        {
+            <div class="hoy-bloque">
+                <div class="hoy-nombre">@s.Excursion</div>
+                <div class="hoy-gente">@s.Pasajeros pasajero(s) · @string.Join(" · ", s.Clientes)</div>
+                <div style="margin-top:8px">
+                    @if (!s.HayOperativo)
+                    {
+                        <span class="pill pill-warn">Sin operativo armado</span>
+                    }
+                    else if (s.TodoPago)
+                    {
+                        <span class="pill pill-ok">✔ Todo pago</span>
+                    }
+                    else
+                    {
+                        <span class="pill pill-warn">Falta pagar @Money(s.FaltaTotal)</span>
+                        @if (s.HaySinPrecio)
+                        {
+                            <span class="pill pill-warn">Hay gastos en $0</span>
+                        }
+                    }
+                    <a class="btn-mini btn-mini-ghost" asp-page="/Operativo/Pagar"
+                       asp-route-excursionId="@s.ExcursionId" asp-route-fecha="@hoyTxt">💸 Detalle a pagar</a>
+                </div>
+            </div>
+        }
+    </div>
+
+    <style>
+        .hoy-bloque { padding: 12px 0; border-bottom: 1px solid var(--line); }
+        .hoy-bloque:last-of-type { border-bottom: none; padding-bottom: 0; }
+        .hoy-nombre { font-weight: 700; font-size: 1.05rem; }
+        .hoy-gente { color: var(--muted); font-size: .9rem; margin-top: 2px; }
+        .hoy-card { border-left: 4px solid var(--naranja); }
+    </style>
+
+    <script>
+        // El cartel salta cada vez que se abre la sesión y se entra al inicio.
+        // Si se cierra, no vuelve a molestar hasta la próxima vez que se abra el
+        // navegador (sessionStorage). La tarjeta de arriba queda igual, así que
+        // la información no se pierde por haberlo cerrado.
+        (function () {
+            var caja = document.getElementById('avisoHoy');
+            if (!caja) return;
+            var clave = 'wamani-aviso-salida-@hoyTxt';
+            var yaLoVio = false;
+            try { yaLoVio = sessionStorage.getItem(clave) === '1'; } catch (e) { }
+            if (!yaLoVio) caja.style.display = 'flex';
+        })();
+
+        function cerrarAvisoHoy() {
+            var caja = document.getElementById('avisoHoy');
+            if (caja) caja.style.display = 'none';
+            try { sessionStorage.setItem('wamani-aviso-salida-@hoyTxt', '1'); } catch (e) { }
+        }
+    </script>
+}
 
 @if (Model.CobrosPendientesCount > 0)
 {

@@ -39,6 +39,13 @@ public static class ReservaPdf
         var fechaLimite = r.FechaAvisoSaldo();       // el ÚLTIMO día para pagar el saldo
         var esTravesia = r.EsTravesia;
 
+        // ¿Ya pagó el saldo? Si sí, el comprobante tiene que decirlo: antes mostraba
+        // siempre "Seña abonada" y el cliente recibía un papel que parecía el de la seña
+        // aunque estuviera pagando el final.
+        var montoSaldo = r.SaldoMonto ?? 0m;
+        var pagoElSaldo = montoSaldo > 0m;
+        var queEs = esTravesia ? "la travesía" : "la excursión";
+
         var doc = Document.Create(container =>
         {
             container.Page(page =>
@@ -120,8 +127,14 @@ public static class ReservaPdf
                             });
                             row.RelativeItem().Column(x =>
                             {
-                                x.Item().Text("Seña abonada").FontSize(9).FontColor(Gris);
-                                x.Item().Text(Money(sena)).FontSize(16).Bold().FontColor("#4A7D6B");
+                                // Con el saldo pagado se muestra el TOTAL abonado y abajo,
+                                // en chico, cómo se compone. Sin saldo, sólo la seña.
+                                x.Item().Text(pagoElSaldo ? "Abonado" : "Seña abonada").FontSize(9).FontColor(Gris);
+                                x.Item().Text(Money(pagoElSaldo ? r.Cobrado() : sena))
+                                        .FontSize(16).Bold().FontColor("#4A7D6B");
+                                if (pagoElSaldo)
+                                    x.Item().Text($"Seña {Money(sena)} + saldo {Money(montoSaldo)}")
+                                            .FontSize(8).FontColor(Gris);
                             });
                             row.RelativeItem().Column(x =>
                             {
@@ -142,8 +155,22 @@ public static class ReservaPdf
                         }
                         else
                         {
-                            c.Item().PaddingTop(14).Background("#E8F1EC").Padding(12)
-                                .Text("¡Reserva paga por completo! No queda saldo pendiente.").FontColor("#4A7D6B").Bold();
+                            c.Item().PaddingTop(14).Background("#E8F1EC").Padding(12).Text(t =>
+                            {
+                                if (pagoElSaldo)
+                                {
+                                    t.Span("Se abonó el saldo restante de ").FontColor("#4A7D6B");
+                                    t.Span(queEs).Bold().FontColor("#4A7D6B");
+                                    if (r.SaldoFecha is DateTime f)
+                                        t.Span($" el {f:dd/MM/yyyy}").FontColor("#4A7D6B");
+                                    t.Span(". ¡Reserva paga por completo!").Bold().FontColor("#4A7D6B");
+                                }
+                                else
+                                {
+                                    t.Span("¡Reserva paga por completo! No queda saldo pendiente.")
+                                     .Bold().FontColor("#4A7D6B");
+                                }
+                            });
                         }
                     });
 

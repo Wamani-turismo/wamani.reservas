@@ -111,10 +111,17 @@ a:hover{text-decoration:underline}
 .encabezado h2{font-size:clamp(1.7rem,4.4vw,2.5rem)}
 .encabezado p{color:var(--texto-suave); max-width:660px; margin:14px auto 0}
 
-.regiones{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:0 0 34px}
-.regiones span{
+.regiones{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:0 0 10px}
+.regiones button{
   border:1px solid var(--linea); border-radius:999px; padding:7px 16px;
   font-size:.88rem; color:var(--texto-suave); background:var(--panel);
+  font-family:inherit; cursor:pointer; transition:border-color .2s, color .2s, background .2s;
+}
+.regiones button:hover, .regiones button:focus-visible{
+  border-color:var(--dorado); color:var(--dorado); background:rgba(216,192,150,.08);
+}
+.pista-regiones{
+  text-align:center; margin:0 0 34px; font-size:.82rem; color:var(--texto-suave); opacity:.8;
 }
 
 /* Bloques de a cuatro */
@@ -250,9 +257,12 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
       <p>Agencia especializada en experiencias de naturaleza, trekking y aventura. Operamos en destino: recibimos a tus pasajeros y nos ocupamos de todo mientras están en Jujuy.</p>
     </div>
 
+    <!-- Cada región abre la MISMA ventana del catálogo, filtrada a esa zona.
+         No lleva a ningún lado: se abre y se cierra sin perder la página. -->
     <div class="regiones">
-      <span>Yungas</span><span>Quebrada</span><span>Valle</span><span>Puna</span><span>Travesías</span>
+      <button type="button" onclick="abrirRegion('Yungas')">Yungas</button><button type="button" onclick="abrirRegion('Quebrada')">Quebrada</button><button type="button" onclick="abrirRegion('Valle')">Valle</button><button type="button" onclick="abrirRegion('Puna')">Puna</button><button type="button" onclick="abrirRegion('Travesías')">Travesías</button>
     </div>
+    <p class="pista-regiones">Tocá una zona para ver qué operamos ahí</p>
 
     <div class="puntos">
       <div class="punto"><b>Excursiones de un día</b><span>Salidas regulares por la Quebrada, la Puna, las termas y las cascadas.</span></div>
@@ -323,8 +333,8 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
   <div style="background:var(--panel);border:1px solid var(--linea);border-radius:var(--radio);width:100%;max-width:760px;padding:26px;box-shadow:var(--sombra);margin:auto">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:4px">
       <div>
-        <h2 style="margin:0 0 6px">Lo que <em>operamos</em></h2>
-        <p style="color:var(--texto-suave);font-size:.95rem;margin:0">Todas nuestras experiencias, con el detalle de cada una.</p>
+        <h2 style="margin:0 0 6px" id="titulo-catalogo">Lo que <em>operamos</em></h2>
+        <p style="color:var(--texto-suave);font-size:.95rem;margin:0" id="sub-catalogo">Todas nuestras experiencias, con el detalle de cada una.</p>
       </div>
       <button type="button" class="boton boton-linea" onclick="cerrarCatalogo()" aria-label="Cerrar">✕</button>
     </div>
@@ -511,10 +521,21 @@ var REGIONES = [
 /* Para que un texto cargado desde el panel nunca pueda romper la página */
 function txt(s){ var d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
 
+/* Dónde pasa cada experiencia. Casi todo es Jujuy, pero la travesía Iruya – Nazareno
+   es en SALTA y hay que decirlo: una agencia arma el paquete con eso en la mano. */
+var PROVINCIA = { "iruya-nazareno": "Salta" };
+var DETALLE_ZONA = {
+  "iruya-nazareno": "El trekking es íntegramente en la provincia de Salta. El encuentro es en Humahuaca (Jujuy) y desde ahí se viaja a Iruya."
+};
+
 function ficha(e){
+  var prov = PROVINCIA[e.clave] || "Jujuy";
   var h = '<div class="arriba"><h3>' + txt(e.n) + "</h3>" +
     '<span class="tipo">' + (e.t ? "Travesía" : "Excursión") + "</span>" +
+    '<span class="tipo">📍 ' + txt(prov) + "</span>" +
     (e.chip ? '<span class="tipo">' + txt(e.chip) + "</span>" : "") + "</div>";
+  if (DETALLE_ZONA[e.clave])
+    h += '<div class="bloque"><b>Dónde:</b> ' + txt(DETALLE_ZONA[e.clave]) + "</div>";
   if (e.resumen) h += "<p>" + txt(e.resumen) + "</p>";
   if (e.datos && e.datos.length)
     h += '<div class="bloque"><b>Datos:</b> ' + e.datos.map(txt).join(" · ") + "</div>";
@@ -530,30 +551,73 @@ function ficha(e){
 }
 
 var lista = document.getElementById("lista-catalogo");
-var yaPuestas = {};
-REGIONES.forEach(function(r){
-  var deLaRegion = r.claves
-    .map(function(c){ return EXC.find(function(e){ return e.clave === c; }); })
-    .filter(Boolean);
-  if (!deLaRegion.length) return;
-  var t = document.createElement("div");
-  t.className = "region";
-  t.textContent = r.titulo;
-  lista.appendChild(t);
-  deLaRegion.forEach(function(e){ yaPuestas[e.clave] = true; lista.appendChild(ficha(e)); });
-});
-/* Lo que se haya cargado después y todavía no esté en ninguna región */
-var sueltas = EXC.filter(function(e){ return !yaPuestas[e.clave]; });
-if (sueltas.length){
-  var t = document.createElement("div");
-  t.className = "region";
-  t.textContent = "Otras experiencias";
-  lista.appendChild(t);
-  sueltas.forEach(function(e){ lista.appendChild(ficha(e)); });
+
+/* Dibuja el catálogo. Con soloRegion pinta esa zona nada más; sin nada, todo.
+   Es la MISMA ventana en los dos casos: no hay dos catálogos que mantener. */
+function pintarCatalogo(soloRegion){
+  lista.innerHTML = "";
+  var yaPuestas = {};
+
+  REGIONES.forEach(function(r){
+    if (soloRegion && r.titulo !== soloRegion) return;
+    var deLaRegion = r.claves
+      .map(function(c){ return EXC.find(function(e){ return e.clave === c; }); })
+      .filter(Boolean);
+    if (!deLaRegion.length) return;
+    var t = document.createElement("div");
+    t.className = "region";
+    t.textContent = r.titulo;
+    lista.appendChild(t);
+    deLaRegion.forEach(function(e){ yaPuestas[e.clave] = true; lista.appendChild(ficha(e)); });
+  });
+
+  /* Lo que se haya cargado después y todavía no esté en ninguna región.
+     Sólo en el catálogo completo: si no, aparecería en cualquier zona. */
+  if (!soloRegion){
+    var sueltas = EXC.filter(function(e){ return !yaPuestas[e.clave]; });
+    if (sueltas.length){
+      var t2 = document.createElement("div");
+      t2.className = "region";
+      t2.textContent = "Otras experiencias";
+      lista.appendChild(t2);
+      sueltas.forEach(function(e){ lista.appendChild(ficha(e)); });
+    }
+  }
+
+  if (!lista.children.length)
+    lista.innerHTML = '<p style="color:var(--texto-suave)">Todavía no hay experiencias cargadas en esta zona.</p>';
 }
 
-function abrirCatalogo(){ medir('ver_catalogo', { desde: 'receptivo' }); document.getElementById("fondo-catalogo").style.display = "flex"; }
-function cerrarCatalogo(){ document.getElementById("fondo-catalogo").style.display = "none"; }
+function mostrarCatalogo(titulo, sub){
+  document.getElementById("titulo-catalogo").innerHTML = titulo;
+  document.getElementById("sub-catalogo").textContent = sub;
+  document.getElementById("fondo-catalogo").style.display = "flex";
+  document.body.style.overflow = "hidden";       // que no scrollee lo de atrás
+}
+
+function abrirCatalogo(){
+  medir('ver_catalogo', { desde: 'receptivo' });
+  pintarCatalogo(null);
+  mostrarCatalogo("Lo que <em>operamos</em>", "Todas nuestras experiencias, con el detalle de cada una.");
+}
+
+function abrirRegion(titulo){
+  medir('ver_region', { region: titulo });
+  pintarCatalogo(titulo);
+  mostrarCatalogo(txt(titulo), "Lo que operamos en esta zona, con el detalle de cada experiencia.");
+}
+
+function cerrarCatalogo(){
+  document.getElementById("fondo-catalogo").style.display = "none";
+  document.body.style.overflow = "";
+}
+
+/* Cerrar con Escape o tocando afuera: en una ventana que se abre y se cierra
+   mucho, quedarse encerrado es lo que más molesta. */
+document.addEventListener("keydown", function(e){ if (e.key === "Escape") cerrarCatalogo(); });
+document.getElementById("fondo-catalogo").addEventListener("click", function(e){
+  if (e.target === this) cerrarCatalogo();
+});
 
 /* Pie */
 document.getElementById("anio").textContent = new Date().getFullYear();

@@ -47,6 +47,11 @@ en: {
 
     /* ── Landing de agencias (/receptivo) ── */
     "Idioma": "Language",
+    "Tocá una zona para ver qué operamos ahí": "Tap a region to see what we operate there",
+    "Dónde:": "Where:",
+    "El trekking es íntegramente en la provincia de Salta. El encuentro es en Humahuaca (Jujuy) y desde ahí se viaja a Iruya.": "The trek takes place entirely in the province of Salta. The meeting point is Humahuaca (Jujuy), and from there we travel to Iruya.",
+    "Lo que operamos en esta zona, con el detalle de cada experiencia.": "What we operate in this region, with the details of each experience.",
+    "Todavía no hay experiencias cargadas en esta zona.": "There are no experiences loaded in this region yet.",
     "Ir a la web ↗": "Go to the website ↗",
     "¿Cómo llegaste hasta nosotros?": "How did you find us?",
     "Soy viajero": "I'm a traveller",
@@ -416,6 +421,11 @@ fr: {
 
     /* ── Landing de agencias (/receptivo) ── */
     "Idioma": "Langue",
+    "Tocá una zona para ver qué operamos ahí": "Touchez une zone pour voir ce que nous y opérons",
+    "Dónde:": "Où :",
+    "El trekking es íntegramente en la provincia de Salta. El encuentro es en Humahuaca (Jujuy) y desde ahí se viaja a Iruya.": "Le trek se déroule entièrement dans la province de Salta. Le rendez-vous est à Humahuaca (Jujuy), et de là nous rejoignons Iruya.",
+    "Lo que operamos en esta zona, con el detalle de cada experiencia.": "Ce que nous opérons dans cette zone, avec le détail de chaque expérience.",
+    "Todavía no hay experiencias cargadas en esta zona.": "Aucune expérience n'est encore enregistrée dans cette zone.",
     "Ir a la web ↗": "Aller au site ↗",
     "¿Cómo llegaste hasta nosotros?": "Comment nous avez-vous trouvés ?",
     "Soy viajero": "Je suis voyageur",

@@ -66,6 +66,12 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Es travesía (varios días)")]
         public bool EsTravesia { get; set; } = false;
 
+        // Wamani Selecta: la línea premium. En la web tiene su propio filtro y las
+        // tarjetas se ven distintas (más oscuras y con el sello dorado), igual que los
+        // PDF. Una experiencia puede ser Selecta y travesía a la vez.
+        [Display(Name = "Wamani Selecta (línea premium)")]
+        public bool EsSelecta { get; set; } = false;
+
         [Display(Name = "Color (R,G,B — ej: 58,110,90)")]
         public string Color { get; set; } = "58,110,90";
 

@@ -260,6 +260,39 @@ section{padding:3.4rem 0}
   border:1px solid rgba(216,192,150,.25);
 }
 .tarjeta .chip.trav{background:rgba(210,103,58,.88);color:#fff;border-color:transparent}
+
+/* ── Wamani Selecta: la línea premium ─────────────────────────────
+   Se diferencia por MENOS, no por más: el velo se va a negro en vez del
+   color de la región, el borde pasa a dorado y aparece un sello arriba a
+   la derecha. Es el mismo criterio de los PDF, que van más oscuros. */
+.tarjeta.selecta{border-color:rgba(216,192,150,.55)}
+.tarjeta.selecta .velo{
+  background:linear-gradient(180deg, rgba(10,14,12,.30) 0%, rgba(10,14,12,.62) 62%, rgba(10,14,12,.93) 100%);
+}
+.tarjeta.selecta .monte{background:var(--dorado);opacity:1}
+.tarjeta.selecta .pie-tarjeta h3{color:#f4ead6}
+.sello-selecta{
+  position:absolute;top:.9rem;right:.9rem;z-index:2;
+  display:inline-flex;align-items:center;gap:.3rem;
+  padding:.28rem .7rem;border-radius:999px;
+  background:rgba(10,14,12,.6);border:1px solid var(--dorado);
+  color:var(--dorado);font-size:.63rem;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;backdrop-filter:blur(4px);
+}
+/* El botón del filtro, en dorado y con un hilo arriba: se lee como otra categoría */
+.filtro.filtro-selecta{border-color:rgba(216,192,150,.55);color:var(--dorado)}
+.filtro.filtro-selecta.activo{background:var(--dorado);color:#1c2a24}
+.carrusel-vacio{
+  color:var(--texto-suave);padding:2.2rem 1rem;text-align:center;width:100%;
+}
+.mg-chip.selecta{
+  background:transparent;border:1px solid var(--dorado);color:var(--dorado);
+  letter-spacing:.1em;
+}
+.mg-selecta{
+  margin-top:.5rem;color:var(--dorado);font-size:.92rem;line-height:1.55;
+  border-left:2px solid rgba(216,192,150,.45);padding-left:.8rem;
+}
 .tarjeta .pie-tarjeta{
   position:absolute;left:0;right:0;bottom:0;padding:0 1.15rem 1.05rem;color:#fff;
 }
@@ -668,6 +701,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
       <button class="filtro activo" data-f="todas">Todas</button>
       <button class="filtro" data-f="dia">Excursiones</button>
       <button class="filtro" data-f="trav">Travesías</button>
+      <button class="filtro filtro-selecta" data-f="selecta">✦ Wamani Selecta</button>
     </div>
     <div class="carrusel-marco">
       <button class="flecha-car izq" aria-label="Anterior" onclick="moverCarrusel(-1)">‹</button>
@@ -1048,7 +1082,7 @@ let ORDEN = ["jordan","salinas","yungas","quebrada","santuyoc","yungas-express",
 if (D && D.excursiones && D.excursiones.length){
   GUIAS = {}; ORDEN = [];
   D.excursiones.forEach(function(e){
-    GUIAS[e.clave] = { n:e.n, chip:e.chip, t:e.t, c:e.c, img:"img/"+e.img,
+    GUIAS[e.clave] = { n:e.n, chip:e.chip, t:e.t, sel:e.sel, c:e.c, img:"img/"+e.img,
       fotos:(e.fotos && e.fotos.length ? e.fotos : [e.img]).map(function(f){ return "img/"+f; }),
       resumen:e.resumen, datos:e.datos, itinerario:e.itinerario, incluye:e.incluye, llevar:e.llevar };
     ORDEN.push(e.clave);
@@ -1061,18 +1095,30 @@ function pintarCarrusel(filtro){
     const g = GUIAS[id];
     if (filtro === "dia" && g.t) return;
     if (filtro === "trav" && !g.t) return;
+    if (filtro === "selecta" && !g.sel) return;
     const t = document.createElement("article");
-    t.className = "tarjeta";
+    t.className = "tarjeta" + (g.sel ? " selecta" : "");
     if (g.c) t.style.setProperty("--c", g.c);
     t.innerHTML =
       '<img src="' + g.img + '" alt="' + g.n + '" loading="lazy">' +
       '<div class="velo"></div>' +
       '<span class="monte" aria-hidden="true"></span>' +
+      (g.sel ? '<span class="sello-selecta">✦ Selecta</span>' : '') +
       '<span class="chip' + (g.t ? " trav" : "") + '">' + g.chip + '</span>' +
       '<div class="pie-tarjeta"><h3>' + g.n + '</h3><span>Ver la guía ↗</span></div>';
     t.addEventListener("click", function(){ abrirGuia(id); });
     carrusel.appendChild(t);
   });
+
+  // Si un filtro no tiene nada todavía, decirlo. Un carrusel vacío parece roto.
+  if (!carrusel.children.length){
+    const v = document.createElement("p");
+    v.className = "carrusel-vacio";
+    v.textContent = filtro === "selecta"
+      ? "Muy pronto vas a poder ver acá nuestras experiencias Wamani Selecta."
+      : "Todavía no hay experiencias en esta categoría.";
+    carrusel.appendChild(v);
+  }
 }
 pintarCarrusel("todas");
 
@@ -1130,7 +1176,9 @@ function abrirGuia(id){
     })() +
     '<div class="mg-cuerpo">' +
       '<span class="mg-chip' + (g.t ? " trav" : "") + '">' + g.chip + '</span>' +
+      (g.sel ? '<span class="mg-chip selecta">✦ Wamani Selecta</span>' : '') +
       '<h3>' + g.n + '</h3>' +
+      (g.sel ? '<p class="mg-selecta">Una experiencia de nuestra línea premium: grupos más chicos, hospedajes elegidos y un ritmo pensado para disfrutar sin apuro.</p>' : '') +
       '<p class="mg-resumen">' + g.resumen + '</p>' +
       '<div class="mg-datos">' + g.datos.map(d => "<span>" + d + "</span>").join("") + '</div>' +
       '<h4>Itinerario</h4><ul>' + g.itinerario.map(i => "<li>" + i + "</li>").join("") + '</ul>' +

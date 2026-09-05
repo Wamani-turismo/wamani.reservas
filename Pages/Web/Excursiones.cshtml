@@ -29,7 +29,7 @@
             <tr style="@(e.Activa ? "" : "opacity:.5")">
                 <td data-label="Orden">@e.Orden</td>
                 <td data-label="Nombre"><strong>@e.Nombre</strong><br><small style="color:#999">@e.Chip</small></td>
-                <td data-label="Tipo">@(e.EsTravesia ? "Travesía" : "Día")</td>
+                <td data-label="Tipo">@(e.EsTravesia ? "Travesía" : "Día")@(e.EsSelecta ? " · ✦ Selecta" : "")</td>
                 <td data-label="Estado">@(e.Activa ? "✅ En la web" : "⛔ Oculta")</td>
                 <td class="acciones" data-label="">
                     <div class="acciones-fila">

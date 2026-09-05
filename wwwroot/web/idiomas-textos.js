@@ -138,6 +138,8 @@ en: {
     "Travesías": "Treks",
     "✨ Las tarjetas avanzan solas — tocá una para abrir su guía": "✨ The cards scroll on their own — tap one to open its guide",
     "Anterior": "Previous",
+    "Foto anterior": "Previous photo",
+    "Foto siguiente": "Next photo",
     "Siguiente": "Next",
     "Ver la guía ↗": "View the guide ↗",
 
@@ -517,6 +519,8 @@ fr: {
     "Travesías": "Treks",
     "✨ Las tarjetas avanzan solas — tocá una para abrir su guía": "✨ Les cartes défilent toutes seules — touchez-en une pour ouvrir son guide",
     "Anterior": "Précédent",
+    "Foto anterior": "Photo précédente",
+    "Foto siguiente": "Photo suivante",
     "Siguiente": "Suivant",
     "Ver la guía ↗": "Voir le guide ↗",
 

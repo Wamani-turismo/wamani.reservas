@@ -500,8 +500,29 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
 .mg-galeria::-webkit-scrollbar{display:none}
 .mg-slide{flex:0 0 100%;scroll-snap-align:center;aspect-ratio:4/3}
 .mg-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.mg-galeria-marco{position:relative}
+.mg-flecha{
+  position:absolute;top:50%;transform:translateY(-50%);z-index:2;
+  width:42px;height:42px;border-radius:50%;border:1px solid rgba(216,192,150,.35);
+  background:rgba(13,21,18,.62);color:var(--dorado);
+  font-size:1.5rem;line-height:1;cursor:pointer;backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;
+  transition:background .2s, border-color .2s;
+}
+.mg-flecha:hover{background:rgba(13,21,18,.85);border-color:var(--dorado)}
+.mg-flecha.izq{left:.7rem}
+.mg-flecha.der{right:.7rem}
+.mg-contador{
+  position:absolute;right:.8rem;bottom:.8rem;z-index:2;
+  background:rgba(13,21,18,.65);color:var(--dorado);backdrop-filter:blur(6px);
+  border:1px solid rgba(216,192,150,.25);border-radius:999px;
+  padding:.2rem .6rem;font-size:.72rem;font-weight:700;letter-spacing:.05em;
+}
 .mg-dots{display:flex;gap:7px;justify-content:center;padding:.7rem 0 .1rem}
-.mg-dots span{width:7px;height:7px;border-radius:50%;background:rgba(216,192,150,.3);transition:.2s}
+.mg-dots span{
+  width:7px;height:7px;border-radius:50%;background:rgba(216,192,150,.3);
+  transition:.2s;cursor:pointer;
+}
 .mg-dots span.on{background:var(--dorado);transform:scale(1.15)}
 .mg-cuerpo{padding:1.4rem 1.5rem 1.7rem}
 .mg-chip{
@@ -1172,7 +1193,18 @@ function abrirGuia(id){
       const fs = (g.fotos && g.fotos.length) ? g.fotos : [g.img];
       const slides = fs.map(function(f){ return '<div class="mg-slide"><img src="' + f + '" alt="' + g.n + '"></div>'; }).join('');
       const dots = fs.length > 1 ? '<div class="mg-dots">' + fs.map(function(_,i){ return '<span' + (i===0?' class="on"':'') + '></span>'; }).join('') + '</div>' : '';
-      return '<div class="mg-galeria" id="mg-galeria">' + slides + '</div>' + dots;
+      // Con más de una foto: flechas y contador. Sin esto, en la compu no había
+      // forma de pasar de foto (el dedo funciona, el mouse no) y encima no se
+      // notaba que hubiera más.
+      const controles = fs.length > 1
+        ? '<button type="button" class="mg-flecha izq" onclick="moverGaleria(-1)" aria-label="Foto anterior">‹</button>' +
+          '<button type="button" class="mg-flecha der" onclick="moverGaleria(1)" aria-label="Foto siguiente">›</button>' +
+          '<span class="mg-contador" id="mg-contador">1 / ' + fs.length + '</span>'
+        : '';
+      return '<div class="mg-galeria-marco">' +
+               '<div class="mg-galeria" id="mg-galeria">' + slides + '</div>' +
+               controles +
+             '</div>' + dots;
     })() +
     '<div class="mg-cuerpo">' +
       '<span class="mg-chip' + (g.t ? " trav" : "") + '">' + g.chip + '</span>' +
@@ -1197,18 +1229,44 @@ function abrirGuia(id){
   // Puntitos de la galería: se marcan según la foto que se está viendo
   const gal = document.getElementById("mg-galeria");
   const dots = modalCont.querySelectorAll(".mg-dots span");
+  const cont = document.getElementById("mg-contador");
   if (gal && dots.length){
     gal.addEventListener("scroll", function(){
       const i = Math.round(gal.scrollLeft / gal.clientWidth);
       dots.forEach(function(d,j){ d.classList.toggle("on", j === i); });
+      if (cont) cont.textContent = (i + 1) + " / " + dots.length;
+    });
+    // Los puntitos también llevan a su foto: se ven como botones, que lo sean.
+    dots.forEach(function(d,j){
+      d.addEventListener("click", function(){
+        gal.scrollTo({ left: j * gal.clientWidth, behavior: "smooth" });
+      });
     });
   }
+}
+
+// Pasar de foto con las flechas. Da la vuelta: de la última va a la primera.
+function moverGaleria(dir){
+  const g = document.getElementById("mg-galeria");
+  if (!g || !g.children.length) return;
+  const ancho = g.clientWidth;
+  const total = g.children.length;
+  let i = Math.round(g.scrollLeft / ancho) + dir;
+  if (i < 0) i = total - 1;
+  if (i >= total) i = 0;
+  g.scrollTo({ left: i * ancho, behavior: "smooth" });
 }
 function cerrarGuia(){
   modalFondo.classList.remove("abierto");
   document.body.style.overflow = "";
 }
-document.addEventListener("keydown", function(e){ if (e.key === "Escape") cerrarGuia(); });
+document.addEventListener("keydown", function(e){
+  if (e.key === "Escape") { cerrarGuia(); return; }
+  // Con la guía abierta, las flechas del teclado pasan las fotos
+  if (!modalFondo.classList.contains("abierto")) return;
+  if (e.key === "ArrowLeft")  moverGaleria(-1);
+  if (e.key === "ArrowRight") moverGaleria(1);
+});
 
 /* ═══ Mapa: panel lateral (usa los mismos datos de GUIAS) ═══ */
 const panelMapa = document.getElementById("mapa-panel");

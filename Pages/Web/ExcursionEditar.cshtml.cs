@@ -46,6 +46,33 @@ public class ExcursionEditarModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
+        // Un campo de texto que se deja EN BLANCO llega como null (así bindea ASP.NET),
+        // y las columnas de la tabla no aceptan null: sin esto, guardar una excursión con
+        // cualquier campo vacío rompía con un error 500. Pasaba sobre todo al crear una
+        // nueva, que es cuando más campos quedan sin llenar.
+        static string T(string? s) => s ?? "";
+        Ex.Clave      = T(Ex.Clave);
+        Ex.Nombre     = T(Ex.Nombre);
+        Ex.Chip       = T(Ex.Chip);
+        Ex.Color      = T(Ex.Color);
+        Ex.Foto       = T(Ex.Foto);
+        Ex.Fotos      = T(Ex.Fotos);
+        Ex.Resumen    = T(Ex.Resumen);
+        Ex.Datos      = T(Ex.Datos);
+        Ex.Itinerario = T(Ex.Itinerario);
+        Ex.Incluye    = T(Ex.Incluye);
+        Ex.Llevar     = T(Ex.Llevar);
+
+        // Sin color la tarjeta de la web queda sin su tinte: se pone el verde de siempre.
+        if (string.IsNullOrWhiteSpace(Ex.Color)) Ex.Color = "58,110,90";
+
+        // El nombre es lo único imprescindible: de ahí sale la clave.
+        if (string.IsNullOrWhiteSpace(Ex.Nombre))
+        {
+            ModelState.AddModelError("Ex.Nombre", "Poné el nombre de la excursión.");
+            return Page();
+        }
+
         // Clave automática a partir del nombre si viene vacía
         if (string.IsNullOrWhiteSpace(Ex.Clave))
             Ex.Clave = Slug(Ex.Nombre);
@@ -75,6 +102,7 @@ public class ExcursionEditarModel : PageModel
             actual.Nombre = Ex.Nombre;
             actual.Chip = Ex.Chip;
             actual.EsTravesia = Ex.EsTravesia;
+            actual.EsSelecta = Ex.EsSelecta;
             actual.Color = Ex.Color;
             actual.Resumen = Ex.Resumen;
             actual.Datos = Ex.Datos;

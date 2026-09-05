@@ -13,6 +13,17 @@
 </div>
 
 <form method="post" enctype="multipart/form-data" class="form-card">
+    @* Si algo falta, decirlo acá arriba. Sin esto la página volvía igual y sin explicar nada. *@
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="aviso-warn" style="margin-bottom:16px">
+            @foreach (var m in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <div>⚠️ @m.ErrorMessage</div>
+            }
+        </div>
+    }
+
     <input type="hidden" asp-for="Ex.Id" />
     <input type="hidden" asp-for="Ex.Clave" />
 

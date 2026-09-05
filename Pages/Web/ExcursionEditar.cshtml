@@ -101,30 +101,30 @@
 
     <div class="campo">
         <label asp-for="Ex.Resumen"></label>
-        <textarea class="input" asp-for="Ex.Resumen" rows="2"></textarea>
+        <textarea class="input crece" asp-for="Ex.Resumen" rows="4"></textarea>
     </div>
 
     <div class="campo">
         <label asp-for="Ex.Datos"></label>
-        <textarea class="input" asp-for="Ex.Datos" rows="4" placeholder="🕐 10 hs&#10;🚌 Salida 9:00 · SSJ&#10;👥 2 a 15 personas&#10;🥾 Dificultad baja"></textarea>
+        <textarea class="input crece" asp-for="Ex.Datos" rows="4" placeholder="🕐 10 hs&#10;🚌 Salida 9:00 · SSJ&#10;👥 2 a 15 personas&#10;🥾 Dificultad baja"></textarea>
         <small>Un dato por renglón (apretá Enter para separar).</small>
     </div>
 
     <div class="campo">
         <label asp-for="Ex.Itinerario"></label>
-        <textarea class="input" asp-for="Ex.Itinerario" rows="6"></textarea>
+        <textarea class="input crece" asp-for="Ex.Itinerario" rows="6"></textarea>
         <small>Un paso por renglón.</small>
     </div>
 
     <div class="campo">
         <label asp-for="Ex.Incluye"></label>
-        <textarea class="input" asp-for="Ex.Incluye" rows="5"></textarea>
+        <textarea class="input crece" asp-for="Ex.Incluye" rows="5"></textarea>
         <small>Un ítem por renglón.</small>
     </div>
 
     <div class="campo">
         <label asp-for="Ex.Llevar"></label>
-        <textarea class="input" asp-for="Ex.Llevar" rows="2"></textarea>
+        <textarea class="input crece" asp-for="Ex.Llevar" rows="4"></textarea>
     </div>
 
     <div style="margin-top:18px">
@@ -155,5 +155,16 @@
   var m = document.getElementById("muestraColor");
   function pintar(){ if(inp && m) m.style.background = "rgb(" + (inp.value || "58,110,90") + ")"; }
   if(inp){ inp.addEventListener("input", pintar); pintar(); }
+})();
+
+// Los cuadros de texto crecen con lo que tienen adentro. Antes el resumen entraba
+// en dos renglones y había que escribir a ciegas dentro de una ventanita.
+(function(){
+  function ajustar(t){ t.style.height = "auto"; t.style.height = (t.scrollHeight + 4) + "px"; }
+  document.querySelectorAll("textarea.crece").forEach(function(t){
+    t.style.overflowY = "hidden";
+    ajustar(t);
+    t.addEventListener("input", function(){ ajustar(t); });
+  });
 })();
 </script>

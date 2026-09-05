@@ -496,6 +496,10 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
 .mg-galeria{
   display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;
   border-radius:26px 26px 0 0;background:#0d1512;
+  /* La animación va ACÁ y no en el JS: con "scroll-snap" mandatorio, un
+     scrollTo({behavior:"smooth"}) queda atrapado en el punto de anclaje actual
+     y no llega al destino (probado: iba de la 1 a la 2 pero nunca volvía). */
+  scroll-behavior:smooth;
 }
 .mg-galeria::-webkit-scrollbar{display:none}
 .mg-slide{flex:0 0 100%;scroll-snap-align:center;aspect-ratio:4/3}
@@ -1239,7 +1243,7 @@ function abrirGuia(id){
     // Los puntitos también llevan a su foto: se ven como botones, que lo sean.
     dots.forEach(function(d,j){
       d.addEventListener("click", function(){
-        gal.scrollTo({ left: j * gal.clientWidth, behavior: "smooth" });
+        gal.scrollLeft = j * gal.clientWidth;
       });
     });
   }
@@ -1254,7 +1258,7 @@ function moverGaleria(dir){
   let i = Math.round(g.scrollLeft / ancho) + dir;
   if (i < 0) i = total - 1;
   if (i >= total) i = 0;
-  g.scrollTo({ left: i * ancho, behavior: "smooth" });
+  g.scrollLeft = i * ancho;   // directo: la animación la pone el CSS
 }
 function cerrarGuia(){
   modalFondo.classList.remove("abierto");

@@ -340,6 +340,12 @@ section{padding:3.4rem 0}
 .punto:hover .centro{stroke-width:3}
 .punto.activo .centro{stroke:var(--dorado);stroke-width:3.5;fill:#fff}
 .punto.activo.travesia .centro{stroke:var(--coral)}
+/* Wamani Selecta en el mapa: relleno oscuro con anillo dorado, como las tarjetas.
+   Además de distinguir la línea premium, ayuda a separarlas de un punto vecino. */
+.punto.selecta .halo{fill:rgba(216,192,150,.28)}
+.punto.selecta .centro{fill:#14201b;stroke:var(--dorado);stroke-width:2.5}
+.punto.selecta:hover .centro{stroke-width:3.5}
+.punto.activo.selecta .centro{fill:var(--dorado);stroke:#14201b}
 @keyframes pulso{0%{transform:scale(.6);opacity:1}80%{transform:scale(1.8);opacity:0}100%{transform:scale(1.8);opacity:0}}
 .pto-salida{fill:#fff;stroke:var(--verde);stroke-width:1.5}
 .lbl-salida{fill:rgba(245,242,234,.85);font-family:'Quicksand',sans-serif;font-weight:600;font-size:13px}
@@ -364,6 +370,7 @@ section{padding:3.4rem 0}
   padding:.28rem .85rem;border-radius:999px;font-size:.76rem;font-weight:700;
 }
 .mapa-panel .mp-chip.travesia{background:var(--dorado);color:var(--verde)}
+.mapa-panel .mp-chip.selecta{background:transparent;border:1px solid var(--dorado);color:var(--dorado);letter-spacing:.06em}
 .mapa-panel h3{font-size:1.35rem;color:#fff}
 .mapa-panel .mp-datos{font-size:.85rem;color:var(--dorado);font-weight:600}
 .mapa-panel p{font-size:.93rem;opacity:.85}
@@ -765,11 +772,18 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
             <g class="punto travesia" data-id="humahuaca-yungas" transform="translate(414,335)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Humahuaca – Yungas</title></g>
             <g class="punto travesia" data-id="tilcara-calilegua" transform="translate(371,384)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Tilcara – Calilegua</title></g>
             <g class="punto travesia" data-id="iruya-nazareno" transform="translate(391,215)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Iruya – Nazareno</title></g>
-            <g class="punto" data-id="especial-ecolodge-de-la-selva" transform="translate(357,500)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Especial EcoLodge de la Selva</title></g>
+            <!-- Wamani Selecta. La posición sale de las coordenadas reales de cada lugar,
+                 con la misma escala que el resto del mapa. Las dos primeras están corridas
+                 unos pocos kilómetros para que no se pisen con el punto de al lado. -->
+            <!-- Canuto: -23,9646 -65,4632 · Ecolodge: -24,1417 -65,2925 · Finca: -24,3184 -64,5455 -->
+            <g class="punto selecta" data-id="especial-ecolodge-de-la-selva" transform="translate(385,502)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Especial Ecolodge de la Selva</title></g>
+            <g class="punto selecta" data-id="especial-the-canuto-glamping" transform="translate(333,478)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Especial The Canuto Glamping</title></g>
+            <g class="punto selecta" data-id="especial-finca-la-fe" transform="translate(533,545)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Especial Finca la Fé</title></g>
           </svg>
           <div class="mapa-leyenda">
             <span><i style="background:var(--coral)"></i> Excursión de un día</span>
             <span><i style="background:var(--dorado)"></i> Travesía</span>
+            <span><i style="background:#14201b;border:2px solid var(--dorado)"></i> ✦ Wamani Selecta</span>
             <span><i style="background:#fff"></i> Salida: S. S. de Jujuy</span>
           </div>
         </div>
@@ -1286,6 +1300,7 @@ document.querySelectorAll(".punto").forEach(function(p){
       '<div class="mp-foto"><img src="' + g.img + '" alt="' + g.n + '"></div>' +
       '<div class="mp-cuerpo">' +
         '<span class="mp-chip' + (g.t ? " travesia" : "") + '">' + g.chip + '</span>' +
+        (g.sel ? '<span class="mp-chip selecta">✦ Wamani Selecta</span>' : '') +
         '<h3>' + g.n + '</h3>' +
         '<div class="mp-datos">' + g.datos.join(" · ") + '</div>' +
         '<p>' + g.resumen + '</p>' +

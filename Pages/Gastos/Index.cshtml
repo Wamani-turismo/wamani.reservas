@@ -97,7 +97,13 @@
         @foreach (var g in Model.Lista)
         {
             <tr>
-                <td data-label="Fecha">@g.Fecha.ToString("dd/MM/yy")</td>
+                <td data-label="Fecha">
+                    <form method="post" asp-page-handler="Fecha" asp-route-id="@g.Id" class="fecha-gasto">
+                        <input type="hidden" asp-for="Mes" />
+                        <input type="date" name="fecha" value="@g.Fecha.ToString("yyyy-MM-dd")" />
+                        <button type="submit" class="btn-mini" title="Mover el gasto a esta fecha">💾</button>
+                    </form>
+                </td>
                 <td data-label="Tipo">@g.Tipo</td>
                 <td data-label="Descripción">
                     @g.Descripcion
@@ -140,3 +146,10 @@
         }
     </table>
 </div>
+
+<style>
+/* La fecha se puede corregir sin borrar el gasto: lo que vale es el día del CONSUMO,
+   no el del pago (la tarjeta se paga al mes siguiente). */
+.fecha-gasto{display:flex;gap:4px;align-items:center}
+.fecha-gasto input[type=date]{padding:3px 6px;border:1px solid var(--linea,#d8d3c6);border-radius:7px;font:inherit;font-size:.82rem;background:#fff}
+</style>

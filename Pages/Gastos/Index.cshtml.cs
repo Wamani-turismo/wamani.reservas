@@ -84,6 +84,24 @@ public class IndexModel : PageModel
         return RedirectToPage(new { Mes = NuevoFecha.ToString("yyyy-MM") });
     }
 
+    // Corregir la fecha de un gasto ya cargado, sin borrarlo ni volver a subir el
+    // comprobante. Hace falta porque la fecha que importa es la del CONSUMO y no la del
+    // pago: el resumen de la tarjeta se paga al mes siguiente, y si queda con la fecha
+    // del pago le infla la ganancia a un mes y se la hunde al otro. Sólo cambia el día:
+    // no toca el monto, la descripción ni el comprobante.
+    public async Task<IActionResult> OnPostFechaAsync(int id, DateTime fecha)
+    {
+        var g = await _db.GastosEmpresa.FindAsync(id);
+        if (g is not null && fecha != default)
+        {
+            g.Fecha = fecha.Date;
+            await _db.SaveChangesAsync();
+            Aviso = $"Gasto movido al {fecha:dd/MM/yyyy}.";
+            return RedirectToPage(new { Mes = fecha.ToString("yyyy-MM") });
+        }
+        return RedirectToPage(new { Mes });
+    }
+
     public async Task<IActionResult> OnPostEliminarAsync(int id)
     {
         var g = await _db.GastosEmpresa.FindAsync(id);

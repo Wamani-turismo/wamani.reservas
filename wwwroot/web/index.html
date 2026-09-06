@@ -1244,6 +1244,10 @@ function abrirGuia(id){
     '</div>';
   modalFondo.classList.add("abierto");
   document.body.style.overflow = "hidden";
+  // Cada ficha se abre arriba de todo. El navegador se acuerda de dónde había
+  // quedado el scroll y, al volver a entrar, arrancaba por la mitad del itinerario.
+  const hoja = modalFondo.querySelector(".modal-guia");
+  if (hoja) hoja.scrollTop = 0;
   // Puntitos de la galería: se marcan según la foto que se está viendo
   const gal = document.getElementById("mg-galeria");
   const dots = modalCont.querySelectorAll(".mg-dots span");

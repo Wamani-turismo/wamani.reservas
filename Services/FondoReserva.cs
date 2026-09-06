@@ -115,10 +115,8 @@ public static class FondoReserva
         }
 
         var gastosEmpresa = await db.GastosEmpresa.ToListAsync();
-        // Los pagados con el fondo del 10% y las INVERSIONES no restan de la ganancia:
-        // los primeros se descuentan del fondo acá abajo, las segundas salen del fondo de
-        // inversión. La regla está en GastoEmpresa.RestaDeLaGanancia.
-        foreach (var g in gastosEmpresa.Where(g => g.RestaDeLaGanancia))
+        // Los pagados con el fondo NO restan de la ganancia: se descuentan del fondo abajo.
+        foreach (var g in gastosEmpresa.Where(g => !g.DelFondo))
             Sumar(g.Fecha, -g.Monto);
 
         // ---- Lo gastado del fondo, por mes ----

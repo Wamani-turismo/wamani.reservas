@@ -74,9 +74,7 @@ public class PeriodoModel : PageModel
     // ganancia: esa plata ya se había apartado de meses anteriores (misma regla que
     // la Financiera mensual, para que los dos números coincidan).
     public decimal TotalDelFondo => GastosEmpresaLista.Where(g => g.DelFondo).Sum(g => g.Monto);
-    // Las inversiones tampoco restan: salen del fondo de inversión, no de las ventas.
-    public decimal TotalInversion => GastosEmpresaLista.Where(g => g.EsInversion).Sum(g => g.Monto);
-    public decimal TotalGastosPropios => GastosEmpresaLista.Where(g => g.RestaDeLaGanancia).Sum(g => g.Monto);
+    public decimal TotalGastosPropios => TotalGastosEmpresa - TotalDelFondo;
 
     public decimal Neto => TotalIngresos - TotalEgresos - TotalGastosPropios;
 
@@ -202,7 +200,7 @@ public class PeriodoModel : PageModel
         // corto (hasta 31 días) se muestran todos, para ver también los días en cero.
         var ingXDia = Ingresos.GroupBy(m => m.Fecha).ToDictionary(g => g.Key, g => g.Sum(x => x.Monto));
         var egrXDia = Egresos.GroupBy(m => m.Fecha).ToDictionary(g => g.Key, g => g.Sum(x => x.Monto));
-        var gasXDia = GastosEmpresaLista.Where(g => g.RestaDeLaGanancia)
+        var gasXDia = GastosEmpresaLista.Where(g => !g.DelFondo)
             .GroupBy(g => g.Fecha.Date).ToDictionary(g => g.Key, g => g.Sum(x => x.Monto));
         var resXDia = Reservas.GroupBy(r => r.Cargada).ToDictionary(g => g.Key, g => g.Count());
 

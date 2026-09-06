@@ -74,7 +74,7 @@ public class AnualModel : PageModel
         // Los pagados con el FONDO del 10% no entran: esa plata ya se había apartado de
         // las ganancias de meses anteriores, así que no vuelve a restar de la ganancia.
         decimal GastoEmpresaDe(int anio, int? mes = null)
-            => gastosEmp.Where(g => g.RestaDeLaGanancia && g.Fecha.Year == anio && (mes == null || g.Fecha.Month == mes))
+            => gastosEmp.Where(g => !g.DelFondo && g.Fecha.Year == anio && (mes == null || g.Fecha.Month == mes))
                         .Sum(g => g.Monto);
 
         // Plata que entró / salió, por fecha de pago

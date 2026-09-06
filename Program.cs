@@ -162,6 +162,7 @@ using (var scope = app.Services.CreateScope())
     EnsureSqliteColumn(db, "Excursiones", "EsAMedida", "INTEGER NOT NULL DEFAULT 0");
     EnsureSqliteColumn(db, "Excursiones", "EsPersonalizada", "INTEGER NOT NULL DEFAULT 0");
     EnsureSqliteColumn(db, "GastosEmpresa", "DelFondo", "INTEGER NOT NULL DEFAULT 0");
+    EnsureSqliteColumn(db, "GastosEmpresa", "EsInversion", "INTEGER NOT NULL DEFAULT 0");
     db.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS ""IngresosExtra"" (
             ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_IngresosExtra"" PRIMARY KEY AUTOINCREMENT,
@@ -408,6 +409,8 @@ using (var scope = app.Services.CreateScope())
             );");
         // Fondo del 10%: marca de los gastos que se pagan con ese fondo
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""GastosEmpresa"" ADD COLUMN IF NOT EXISTS ""DelFondo"" boolean NOT NULL DEFAULT false;");
+        // Inversión: la FIT, la computadora, las radios… no bajan la ganancia del mes
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""GastosEmpresa"" ADD COLUMN IF NOT EXISTS ""EsInversion"" boolean NOT NULL DEFAULT false;");
         // Ingresos EXTRA (comisiones, alquileres, servicios sueltos)
         db.Database.ExecuteSqlRaw(@"
             CREATE TABLE IF NOT EXISTS ""IngresosExtra"" (

@@ -76,6 +76,18 @@
                     el saldo del fondo, para saber cuánto queda ahí.
                 </div>
             </div>
+            <div class="field full">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                    <input asp-for="NuevoEsInversion" type="checkbox" style="width:auto" />
+                    🏗️ Es una inversión
+                </label>
+                <div class="hint">
+                    La FIT, la computadora, las radios, el stand: cosas que se compran para que
+                    la empresa crezca. <strong>No bajan la ganancia del mes</strong>, porque no son
+                    un costo de vender excursiones: es plata que se cambia por algo que queda.
+                    Igual sale de la caja, y se ve aparte.
+                </div>
+            </div>
         </div>
         <div class="acciones-form" style="margin-top:12px">
             <button type="submit" class="btn btn-primary">+ Agregar gasto</button>
@@ -111,6 +123,17 @@
                     {
                         <span style="display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;color:#fff;background:var(--accent)">del fondo 10%</span>
                     }
+                    @if (g.EsInversion)
+                    {
+                        <span style="display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;color:#fff;background:#4b6fa8">🏗️ inversión</span>
+                    }
+                    <form method="post" asp-page-handler="Inversion" asp-route-id="@g.Id" style="display:inline">
+                        <input type="hidden" asp-for="Mes" />
+                        <button type="submit" class="btn-mini btn-mini-ghost" style="margin-left:6px"
+                                title="@(g.EsInversion ? "Volver a marcarlo como gasto corriente" : "Marcarlo como inversión (no baja la ganancia del mes)")">
+                            @(g.EsInversion ? "↩ gasto" : "🏗️ inversión")
+                        </button>
+                    </form>
                 </td>
                 <td class="num" data-label="Monto" style="color:var(--warn)">@Money(g.Monto)</td>
                 <td data-label="Comprobante">

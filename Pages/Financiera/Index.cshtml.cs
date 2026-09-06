@@ -74,7 +74,16 @@ public class IndexModel : PageModel
     // Los gastos pagados CON EL FONDO no restan de la ganancia del mes: esa plata ya se
     // había apartado de meses anteriores. Restan del saldo del fondo (y de la Caja).
     public decimal GastosEmpresaDelFondo { get; set; }
-    public decimal GastosEmpresaPropios => GastosEmpresaTotal - GastosEmpresaDelFondo;
+
+    // Las INVERSIONES (la FIT, la computadora, las radios…) tampoco restan: no son un
+    // costo de vender excursiones, salen del fondo de inversión. Se muestran aparte para
+    // que se vea que la plata salió, sin que un mes bueno parezca malo por haber comprado.
+    public decimal GastosEmpresaInversion { get; set; }
+
+    // Lo que sí resta de la ganancia: los gastos corrientes del mes. Se suma derecho de la
+    // lista y no restando los otros dos, por si alguna vez un gasto queda tildado como del
+    // fondo Y como inversión: así no se descuenta dos veces.
+    public decimal GastosEmpresaPropios { get; set; }
 
     // Ganancia del mes, antes de apartar el 10%
     public decimal Neta => IngresoTotal - Gastos - GastosEmpresaPropios;
@@ -196,6 +205,8 @@ public class IndexModel : PageModel
             .ToListAsync();
         GastosEmpresaTotal = GastosEmpresaLista.Sum(g => g.Monto);
         GastosEmpresaDelFondo = GastosEmpresaLista.Where(g => g.DelFondo).Sum(g => g.Monto);
+        GastosEmpresaInversion = GastosEmpresaLista.Where(g => g.EsInversion).Sum(g => g.Monto);
+        GastosEmpresaPropios = GastosEmpresaLista.Where(g => g.RestaDeLaGanancia).Sum(g => g.Monto);
 
         // ---- Ingresos extra del mes (comisiones, alquileres, etc.) ----
         ExtrasLista = await _db.IngresosExtra

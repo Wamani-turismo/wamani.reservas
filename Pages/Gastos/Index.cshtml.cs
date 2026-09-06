@@ -31,6 +31,7 @@ public class IndexModel : PageModel
     [BindProperty] public string? NuevoDescripcion { get; set; }
     [BindProperty] public decimal NuevoMonto { get; set; }
     [BindProperty] public bool NuevoDelFondo { get; set; }
+    [BindProperty] public bool NuevoEsInversion { get; set; }
     [BindProperty] public List<IFormFile> NuevoComprobante { get; set; } = new();
 
     // Fondo del 10% acumulado, para saber cuánto hay disponible antes de gastarlo
@@ -71,7 +72,8 @@ public class IndexModel : PageModel
                 Tipo = GastoEmpresa.Tipos.Contains(NuevoTipo) ? NuevoTipo : "Fijo",
                 Descripcion = NuevoDescripcion.Trim(),
                 Monto = NuevoMonto,
-                DelFondo = NuevoDelFondo
+                DelFondo = NuevoDelFondo,
+                EsInversion = NuevoEsInversion
             };
 
             g.Comprobante = await Wamani.Reservas.Services.Adjuntos.AgregarAsync(
@@ -98,6 +100,22 @@ public class IndexModel : PageModel
             await _db.SaveChangesAsync();
             Aviso = $"Gasto movido al {fecha:dd/MM/yyyy}.";
             return RedirectToPage(new { Mes = fecha.ToString("yyyy-MM") });
+        }
+        return RedirectToPage(new { Mes });
+    }
+
+    // Marcar (o desmarcar) un gasto ya cargado como inversión. Hace falta para los que
+    // ya estaban antes de que existiera el tilde, como la FIT.
+    public async Task<IActionResult> OnPostInversionAsync(int id)
+    {
+        var g = await _db.GastosEmpresa.FindAsync(id);
+        if (g is not null)
+        {
+            g.EsInversion = !g.EsInversion;
+            await _db.SaveChangesAsync();
+            Aviso = g.EsInversion
+                ? "Marcado como inversión: ya no baja la ganancia del mes."
+                : "Vuelve a ser un gasto corriente: baja la ganancia del mes.";
         }
         return RedirectToPage(new { Mes });
     }

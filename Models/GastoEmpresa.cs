@@ -34,6 +34,25 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Sale del fondo del 10%")]
         public bool DelFondo { get; set; } = false;
 
+        // INVERSIÓN: la FIT, la computadora, las radios, el stand… todo lo que se compra
+        // para que la empresa crezca y queda como algo de la empresa. No es un costo de
+        // vender excursiones, así que NO baja la ganancia del mes: si no, un mes bueno
+        // parece malo nada más porque se compró algo. Sale del fondo de inversión (la
+        // plata que pusieron los socios más las ganancias que se van reinvirtiendo).
+        [Display(Name = "Es una inversión")]
+        public bool EsInversion { get; set; } = false;
+
+        // ¿Este gasto baja la ganancia del mes? Sólo los gastos corrientes (publicidad,
+        // suscripciones, viáticos…). Los del fondo del 10% y los de inversión no, porque
+        // esa plata ya se había apartado antes: descontarla de nuevo sería contarla dos
+        // veces. En la Caja los tres restan igual, porque ahí se mide la plata que salió.
+        //
+        // La regla vive acá y no en cada pantalla a propósito: la ganancia se calcula en
+        // cinco lugares distintos (Financiera del mes, del año, por período, el fondo del
+        // 10% y la cuenta de los socios) y si se escribe cinco veces, tarde o temprano una
+        // queda vieja y los números dejan de cerrar entre sí.
+        public bool RestaDeLaGanancia => !DelFondo && !EsInversion;
+
         public static readonly string[] Tipos = { "Fijo", "Variable" };
     }
 }

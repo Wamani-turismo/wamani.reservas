@@ -57,6 +57,15 @@
         estimación hasta que los vas cargando y tildando. Los <strong>proveedores</strong> ya tienen
         lugar tomado y precio acordado, así que esa deuda es firme. Por eso van separados.
     </p>
+    @if (Model.HistoricoIgnorado > 0)
+    {
+        <p style="margin:8px 0 0;color:var(--ink-soft)">
+            No se cuentan @Money(Model.HistoricoIgnorado) de @Model.SalidasHistoricas salida(s)
+            <strong>anteriores al sistema</strong> (las de "Reservas Históricas"): esas ya se
+            pagaron en su momento, fuera del sistema. Los gastos que figuran ahí salieron solos
+            de la plantilla de la excursión, no son una deuda.
+        </p>
+    }
 </div>
 
 @if (Model.CobrarVencido > 0 || Model.PagarVencido > 0)

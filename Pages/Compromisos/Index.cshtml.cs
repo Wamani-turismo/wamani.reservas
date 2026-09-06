@@ -63,6 +63,11 @@ public class IndexModel : PageModel
     public List<GastoPendiente> Gastos { get; set; } = new();
 
     public decimal CajaHoy { get; set; }
+
+    // Cuánta plata de salidas históricas se dejó AFUERA de la proyección, y de cuántas
+    // salidas. Se muestra como aclaración: si no, el número cambia y no se sabe por qué.
+    public decimal HistoricoIgnorado { get; set; }
+    public int SalidasHistoricas { get; set; }
     public decimal PorCobrar => Cobros.Sum(c => c.Falta);
     public decimal PorPagarProveedores => Pagos.Sum(p => p.Falta);
     public decimal PorPagarGastos => Gastos.Sum(g => g.Falta);
@@ -115,9 +120,25 @@ public class IndexModel : PageModel
             .OrderBy(c => c.Fecha).ThenBy(c => c.Cliente)
             .ToList();
 
+        // ---- Salidas viejas, anteriores al sistema ----
+        // Se cargaron como "Reservas Históricas": quedan como registro pero sin plata, por
+        // eso facturan $0. El operativo igual les armó los gastos de la plantilla de la
+        // excursión, pero esa plata nunca se debió ni se va a pagar: ya se pagó en su
+        // momento, fuera del sistema. Contarla acá inventaba una deuda que no existe y
+        // hundía la proyección. Si a una de esas salidas se le suma una reserva de verdad,
+        // deja de ser histórica y vuelve a contar como cualquier otra.
+        var salidasHistoricas = reservas
+            .Where(r => r.ExcursionId != null)
+            .GroupBy(r => (Exc: r.ExcursionId!.Value, Fecha: r.FechaDesde.Date))
+            .Where(g => g.All(r => r.NombreCliente == Reserva.NombreHistorica))
+            .Select(g => g.Key)
+            .ToHashSet();
+        bool EsHistorica(int excursionId, DateTime fecha)
+            => salidasHistoricas.Contains((excursionId, fecha.Date));
+
         // ---- Por pagar (1): deuda con proveedores ya reservados ----
         Pagos = provs
-            .Where(p => p.TieneDeuda())
+            .Where(p => p.TieneDeuda() && !EsHistorica(p.ExcursionId, p.Fecha))
             .Select(p => new PagoPendiente
             {
                 Excursion = NombreExc(p.ExcursionId),
@@ -137,7 +158,7 @@ public class IndexModel : PageModel
         // Sin fecha de pago = sin tildar = todavía no salió esa plata. Se agrupan por salida
         // para que se lea de un vistazo; el detalle ítem por ítem está en el operativo.
         Gastos = todosGastos
-            .Where(o => o.FechaPago == null && o.Precio > 0)
+            .Where(o => o.FechaPago == null && o.Precio > 0 && !EsHistorica(o.ExcursionId, o.Fecha))
             .GroupBy(o => new { o.ExcursionId, Fecha = o.Fecha.Date })
             .Select(g => new GastoPendiente
             {
@@ -149,5 +170,16 @@ public class IndexModel : PageModel
             })
             .OrderBy(g => g.Fecha)
             .ToList();
+
+        var gastosHist = todosGastos
+            .Where(o => o.FechaPago == null && o.Precio > 0 && EsHistorica(o.ExcursionId, o.Fecha))
+            .ToList();
+        var provsHist = provs
+            .Where(p => p.TieneDeuda() && EsHistorica(p.ExcursionId, p.Fecha))
+            .ToList();
+        HistoricoIgnorado = gastosHist.Sum(o => o.Precio) + provsHist.Sum(p => p.Pendiente());
+        SalidasHistoricas = gastosHist.Select(o => (o.ExcursionId, o.Fecha.Date))
+            .Concat(provsHist.Select(p => (p.ExcursionId, p.Fecha.Date)))
+            .Distinct().Count();
     }
 }

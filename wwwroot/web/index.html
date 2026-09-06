@@ -1325,12 +1325,26 @@ if (D){
   const hp = document.querySelector(".hero-inner p");
   if (hp && D.heroTexto) hp.textContent = D.heroTexto;
 
-  // Quiénes somos (3 párrafos)
-  const qp = document.querySelectorAll(".quienes-texto p");
-  if (qp.length === 3 && D.quienes){
-    qp[0].textContent = D.quienes[0];
-    qp[1].textContent = D.quienes[1];
-    qp[2].innerHTML = "<b>" + D.quienes[2] + "</b>";
+  // Quiénes somos.
+  //
+  // En el panel el texto se escribe con un renglón en blanco entre párrafos. Antes
+  // todo eso entraba en UN solo <p> con textContent, y el HTML se come los saltos de
+  // línea: quedaba un bloque corrido, imposible de leer. Ahora cada párrafo del panel
+  // es su propio <p>, así que los puntos y aparte se respetan tal como se escribieron.
+  const ct = document.querySelector(".quienes-texto");
+  if (ct && D.quienes){
+    // Que un texto del panel no pueda romper la página
+    function esc(s){ const d = document.createElement("div"); d.textContent = s == null ? "" : s; return d.innerHTML; }
+    function enParrafos(t){
+      return (t || "").replace(/\r/g, "").split(/\n\s*\n/)
+        .map(function(x){ return x.trim(); }).filter(Boolean);
+    }
+
+    const partes = enParrafos(D.quienes[0]).concat(enParrafos(D.quienes[1]));
+    let html = partes.map(function(t){ return "<p>" + esc(t) + "</p>"; }).join("");
+    // El último va en negrita: es el cierre
+    if (D.quienes[2]) html += "<p><b>" + esc(D.quienes[2]) + "</b></p>";
+    if (html) ct.innerHTML = html;
   }
 
   // Testimonios

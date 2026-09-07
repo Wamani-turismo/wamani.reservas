@@ -179,6 +179,28 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script>
+        // ---- Volver al mismo lugar después de guardar ----
+        // Guardar una nota recarga la página, y la página volvía arriba de todo: si estabas
+        // anotando el noveno gasto de una travesía, tenías que buscarlo de nuevo cada vez.
+        // Antes de mandar el formulario se anota dónde estabas, y al volver a cargar esa
+        // misma pantalla se baja sola hasta ahí. La marca se borra apenas se usa, así que
+        // pasa una sola vez y no reaparece si después entrás a mano.
+        function recordarPosicion() {
+            try { sessionStorage.setItem('wamani-scroll:' + location.pathname, String(window.scrollY)); } catch (e) { }
+        }
+        (function () {
+            try {
+                var clave = 'wamani-scroll:' + location.pathname;
+                var y = sessionStorage.getItem(clave);
+                if (y === null) return;
+                sessionStorage.removeItem(clave);
+                // Después del load: si no, todavía no está toda la página y el número no llega.
+                window.addEventListener('load', function () {
+                    requestAnimationFrame(function () { window.scrollTo(0, parseInt(y, 10) || 0); });
+                });
+            } catch (e) { }
+        })();
+
         // Menú lateral (abrir/cerrar en celular)
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('abierto');

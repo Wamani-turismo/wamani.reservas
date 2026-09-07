@@ -454,6 +454,7 @@
             var volver = document.getElementById('seguirAca');
             if (volver) volver.value = 'true';
             cerrarNota();
+            recordarPosicion();   // para volver a esta misma altura y no arriba de todo
             if (form) form.submit();
         }
 

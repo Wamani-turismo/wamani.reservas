@@ -481,6 +481,7 @@
             // el suyo (el botón "Salir") y mandar ése cerraría la sesión sin guardar nada.
             var form = filaNota.closest('form');
             cerrarNota();
+            recordarPosicion();   // para volver a esta misma altura y no arriba de todo
             if (form) form.submit();
         }
 

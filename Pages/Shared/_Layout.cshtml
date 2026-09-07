@@ -194,9 +194,25 @@
                 var y = sessionStorage.getItem(clave);
                 if (y === null) return;
                 sessionStorage.removeItem(clave);
-                // Después del load: si no, todavía no está toda la página y el número no llega.
+                var destino = parseInt(y, 10) || 0;
+                if (destino <= 0) return;
+                // Insistir un rato: bajar una sola vez no alcanza. Después del "load" el
+                // navegador vuelve a poner el scroll en cero por su cuenta (lo hace al
+                // terminar de acomodar la página), así que le ganamos reintentando hasta
+                // que quede. Se corta solo al llegar, al medio segundo, o apenas la
+                // persona toca la rueda: si ya está moviéndose, mandar ella.
                 window.addEventListener('load', function () {
-                    requestAnimationFrame(function () { window.scrollTo(0, parseInt(y, 10) || 0); });
+                    var hasta = Date.now() + 500, corte = false;
+                    function frenar() { corte = true; }
+                    window.addEventListener('wheel', frenar, { once: true, passive: true });
+                    window.addEventListener('touchstart', frenar, { once: true, passive: true });
+                    (function ir() {
+                        if (corte) return;
+                        window.scrollTo(0, destino);
+                        if (Math.abs(window.scrollY - destino) > 2 && Date.now() < hasta) {
+                            setTimeout(ir, 50);
+                        }
+                    })();
                 });
             } catch (e) { }
         })();

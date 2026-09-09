@@ -58,6 +58,12 @@ public class CompararModel : PageModel
 
     // Contexto
     public decimal Ingreso { get; set; }
+
+    // Lo que habrían pagado al precio de lista. Sólo sirve para avisar, cuando no coincide,
+    // que a alguien se le hizo un precio distinto: si no, la diferencia no se explica sola.
+    public decimal IngresoDeLista { get; set; }
+    public decimal DiferenciaPrecio => Ingreso - IngresoDeLista;
+
     public decimal GananciaTeorica => Ingreso - TeoricaTotal;
     public decimal GananciaReal => Ingreso - RealTotal;
 
@@ -77,7 +83,14 @@ public class CompararModel : PageModel
         Pax = reservas.Sum(r => r.CantidadPersonas);
         Autos = Pax <= 0 ? 0 : (int)Math.Ceiling(Pax / (double)Models.Excursion.PersonasPorAuto);
 
-        Ingreso = exc.PrecioPorPersona * Pax;
+        // Lo que se les cobró DE VERDAD a estos pasajeros, reserva por reserva. Antes acá
+        // decía "precio de la excursión × pasajeros", y eso miente cada vez que a alguien
+        // se le hace un precio distinto: pasó en Tilcara del 10/09 (dos pasajeros pagaron
+        // $100.000 menos cada uno) y en la del 22/10. La ganancia salía inflada.
+        // TotalConDescuento() sirve para los dos casos: el descuento cargado como tal y el
+        // precio cambiado a mano en la reserva, porque cada reserva guarda su propio precio.
+        Ingreso = reservas.Sum(r => r.TotalConDescuento());
+        IngresoDeLista = exc.PrecioPorPersona * Pax;
 
         var plantilla = await _db.GastosExcursion
             .Where(g => g.ExcursionId == ExcursionId).OrderBy(g => g.Id).ToListAsync();

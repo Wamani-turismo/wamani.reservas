@@ -167,7 +167,20 @@ else
     <div class="card">
         <h2>Para referencia</h2>
         <div class="fin-cards">
-            <div class="fin-card"><div class="fin-label">Ingreso (@Model.Pax × precio)</div><div class="fin-val">@M(Model.Ingreso)</div></div>
+            <div class="fin-card">
+                <div class="fin-label">Ingreso (lo que se les cobró)</div>
+                <div class="fin-val">@M(Model.Ingreso)</div>
+                @* Cuando a alguien se le hizo un precio distinto, decirlo: si no, la
+                   ganancia parece más chica (o más grande) sin motivo visible. *@
+                @if (Model.DiferenciaPrecio != 0)
+                {
+                    var signo = Model.DiferenciaPrecio < 0 ? "menos" : "más";
+                    <div class="fin-label" style="margin-top:4px">
+                        @M(System.Math.Abs(Model.DiferenciaPrecio)) @signo que el precio de lista
+                        (@Model.Pax × @M(Model.Excursion.PrecioPorPersona) = @M(Model.IngresoDeLista))
+                    </div>
+                }
+            </div>
             <div class="fin-card"><div class="fin-label">Ganancia teórica</div><div class="fin-val">@M(Model.GananciaTeorica)</div></div>
             <div class="fin-card fin-card-net"><div class="fin-label">Ganancia real</div><div class="fin-val" style="color:var(--accent)">@M(Model.GananciaReal)</div></div>
         </div>

@@ -1,0 +1,56 @@
+@page
+@model Wamani.Reservas.Pages.Interesados.CargarModel
+@{
+    ViewData["Title"] = Model.EsNuevo ? "Nuevo interesado" : "Editar interesado";
+}
+
+<h1>@(Model.EsNuevo ? "Nuevo interesado" : "Editar interesado")</h1>
+<p class="subtitle">Alguien que consultó por una excursión. Si coincide con una salida, te avisamos para unirlos.</p>
+
+<form method="post">
+    <input type="hidden" asp-for="Interesado.Id" />
+    <input type="hidden" asp-for="Interesado.CreadoEl" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="card">
+        <div class="form-grid">
+            <div class="field">
+                <label asp-for="Interesado.Nombre"></label>
+                <input asp-for="Interesado.Nombre" placeholder="Ej: Pedro Ramírez" />
+                <span asp-validation-for="Interesado.Nombre" class="text-danger"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Interesado.Telefono"></label>
+                <input asp-for="Interesado.Telefono" placeholder="Ej: 388 123 4567" />
+                <div class="hint">Con esto después le escribís por WhatsApp.</div>
+            </div>
+            <div class="field full">
+                <label asp-for="Interesado.ExcursionId"></label>
+                <select asp-for="Interesado.ExcursionId">
+                    <option value="">— Elegí una excursión —</option>
+                    @foreach (var e in Model.Excursiones)
+                    {
+                        <option value="@e.Id">@e.Nombre</option>
+                    }
+                </select>
+                <span asp-validation-for="Interesado.ExcursionId" class="text-danger"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Interesado.FechaDesde"></label>
+                <input asp-for="Interesado.FechaDesde" type="date" />
+            </div>
+            <div class="field">
+                <label asp-for="Interesado.FechaHasta"></label>
+                <input asp-for="Interesado.FechaHasta" type="date" />
+                <span asp-validation-for="Interesado.FechaHasta" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="acciones-form">
+        <button type="submit" class="btn btn-primary">💾 Guardar interesado</button>
+        <a class="btn btn-ghost" asp-page="/Interesados/Index">Cancelar</a>
+    </div>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

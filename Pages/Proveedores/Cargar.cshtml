@@ -1,0 +1,60 @@
+@page
+@model Wamani.Reservas.Pages.Proveedores.CargarModel
+@{
+    ViewData["Title"] = Model.EsNuevo ? "Nuevo proveedor" : "Editar proveedor";
+}
+
+<h1>@(Model.EsNuevo ? "Nuevo proveedor" : "Editar proveedor")</h1>
+<p class="subtitle">Guías, hospedajes, restaurantes o autos/agencias.</p>
+
+<form method="post">
+    <input type="hidden" asp-for="Proveedor.Id" />
+    <div class="card">
+        <div class="form-grid">
+            <div class="field">
+                <label asp-for="Proveedor.Tipo"></label>
+                <select asp-for="Proveedor.Tipo">
+                    @foreach (var t in Wamani.Reservas.Models.Proveedor.Tipos)
+                    {
+                        <option value="@t">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label asp-for="Proveedor.Nombre"></label>
+                <input asp-for="Proveedor.Nombre" placeholder="Ej: Hostería La Puna / Juan Pérez (guía)" />
+                <span asp-validation-for="Proveedor.Nombre" class="text-danger"></span>
+            </div>
+            <div class="field">
+                <label asp-for="Proveedor.Precio"></label>
+                <input asp-for="Proveedor.Precio" type="number" step="0.01" min="0" />
+                <div class="hint">En el operativo se completa solo al elegirlo (después lo podés cambiar).</div>
+            </div>
+            <div class="field full">
+                <label asp-for="Proveedor.Contacto"></label>
+                <input asp-for="Proveedor.Contacto" placeholder="Teléfono, dirección o alguna nota" />
+            </div>
+            <div class="field full">
+                <label class="check-linea">
+                    <input asp-for="Proveedor.Activo" type="checkbox" style="width:auto" />
+                    Activo (aparece para elegir en las salidas)
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="acciones-form">
+        <button type="submit" class="btn btn-primary">💾 Guardar proveedor</button>
+        <a class="btn btn-ghost" asp-page="/Proveedores/Index">Cancelar</a>
+        @if (!Model.EsNuevo)
+        {
+            <button type="submit" class="btn btn-danger" style="margin-left:auto"
+                    asp-page-handler="Eliminar" asp-route-id="@Model.Proveedor.Id" formnovalidate
+                    onclick="return confirm('¿Eliminar este proveedor? Si ya se usó, se oculta en vez de borrarse.');">
+                🗑 Eliminar
+            </button>
+        }
+    </div>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

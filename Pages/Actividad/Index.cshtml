@@ -1,0 +1,127 @@
+@page
+@model Wamani.Reservas.Pages.Actividad.IndexModel
+@{
+    ViewData["Title"] = "Quién cargó qué";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Quién cargó qué</h1>
+        <p class="subtitle" style="margin:0">
+            Cada vez que alguien guarda una reserva o un operativo y eso mueve plata,
+            queda anotado acá. El monto es la <strong>diferencia</strong> con lo que había antes.
+        </p>
+    </div>
+    <a href="/Financiera">← Volver a finanzas</a>
+</div>
+
+<div class="card">
+    <form method="get" class="form-grid">
+        <div class="field">
+            <label for="Quien">Persona</label>
+            <select id="Quien" name="Quien">
+                <option value="">— todas —</option>
+                @foreach (var u in Model.Usuarios)
+                {
+                    <option value="@u" selected="@(u == Model.Quien)">@u</option>
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label for="Dias">Últimos (días)</label>
+            <input id="Dias" name="Dias" type="number" min="1" max="3650" value="@Model.Dias" />
+        </div>
+        <div class="field" style="align-self:end">
+            <button type="submit" class="btn btn-primary">Ver</button>
+        </div>
+    </form>
+</div>
+
+@if (Model.Resumen.Count > 0)
+{
+    <h2 style="margin-top:28px">Resumen del período</h2>
+    <div class="table-wrap">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Persona</th>
+                    <th class="num">Movimientos</th>
+                    <th class="num">Ingresos</th>
+                    <th class="num">Egresos</th>
+                    <th class="num">Neto</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model.Resumen)
+            {
+                <tr>
+                    <td data-label="Persona"><strong>@r.Nombre</strong></td>
+                    <td class="num" data-label="Movimientos">@r.Movimientos</td>
+                    <td class="num" data-label="Ingresos">@Money(r.Ingresos)</td>
+                    <td class="num" data-label="Egresos">@Money(r.Egresos)</td>
+                    <td class="num" data-label="Neto">
+                        <strong>@(r.Neto >= 0 ? "+" : "−") @Money(Math.Abs(r.Neto))</strong>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+
+<h2 style="margin-top:28px">Movimiento por movimiento</h2>
+
+@if (Model.Lineas.Count == 0)
+{
+    <div class="table-wrap">
+        <div class="empty">
+            <div class="big">📋</div>
+            <p>Todavía no hay movimientos anotados en este período.</p>
+            <p class="hint">
+                El registro arranca desde que se activó esta pantalla: lo cargado antes no figura.
+            </p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Cuándo</th>
+                    <th>Quién</th>
+                    <th>Qué</th>
+                    <th>Detalle</th>
+                    <th class="num">Monto</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var a in Model.Lineas)
+            {
+                <tr>
+                    <td data-label="Cuándo">@a.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td data-label="Quién"><strong>@a.Nombre</strong></td>
+                    <td data-label="Qué">
+                        <span class="pill pill-muted">@a.Que</span>
+                    </td>
+                    <td data-label="Detalle">@a.Detalle</td>
+                    <td class="num" data-label="Monto">
+                        @if (a.EsIngreso)
+                        {
+                            <span class="pill pill-ok">+ @Money(a.Monto)</span>
+                        }
+                        else
+                        {
+                            <span class="pill pill-muted">− @Money(a.Monto)</span>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <p class="hint" style="margin-top:10px">Se muestran hasta 400 movimientos.</p>
+}

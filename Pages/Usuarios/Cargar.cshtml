@@ -1,0 +1,68 @@
+@page
+@model Wamani.Reservas.Pages.Usuarios.CargarModel
+@{
+    ViewData["Title"] = Model.EsNuevo ? "Nuevo usuario" : "Editar usuario";
+}
+
+<h1>@(Model.EsNuevo ? "Nuevo usuario" : "Editar usuario")</h1>
+<p class="subtitle">Un usuario por socio, con su propia contraseña.</p>
+
+@if (!string.IsNullOrEmpty(Model.Error))
+{
+    <div class="aviso-warn">@Model.Error</div>
+}
+
+<form method="post">
+    <input type="hidden" asp-for="Usuario.Id" />
+    <div class="card">
+        <div class="form-grid">
+            <div class="field">
+                <label asp-for="Usuario.Nombre"></label>
+                <input asp-for="Usuario.Nombre" placeholder="Ej: Lautaro" />
+            </div>
+            <div class="field">
+                <label asp-for="Usuario.NombreUsuario"></label>
+                <input asp-for="Usuario.NombreUsuario" placeholder="Ej: lautaro" autocomplete="off" />
+                <div class="hint">Sin espacios. Con esto inicia sesión.</div>
+            </div>
+            <div class="field">
+                <label>Contraseña@(Model.EsNuevo ? "" : " (dejar vacío para no cambiarla)")</label>
+                <input asp-for="Password" type="password" autocomplete="new-password" />
+            </div>
+            <div class="field full">
+                <label class="check-linea">
+                    <input asp-for="Usuario.Activo" type="checkbox" style="width:auto" />
+                    Activo (puede entrar)
+                </label>
+            </div>
+
+            @* Acceso limitado: para un colaborador de afuera que sólo participa de una
+               travesía. Si se elige una excursión, ese usuario NO ve la plata de Wamani
+               ni los precios de las demás. *@
+            <div class="field full">
+                <label>Acceso limitado: qué excursiones puede ver</label>
+                <div class="hint" style="margin:-2px 0 10px">
+                    <strong>No tildes ninguna</strong> si es socio de Wamani: ve todo el sistema.
+                    Si tildás una o varias, entra <strong>únicamente</strong> a esas: su
+                    operativo, sus costos, su rentabilidad y a anotar los pasajeros que consiga.
+                    No ve Finanzas, ni Caja, ni los precios de las demás excursiones.
+                </div>
+                <div style="display:grid; gap:8px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">
+                    @foreach (var e in Model.Excursiones)
+                    {
+                        <label class="check-linea">
+                            <input type="checkbox" name="Permitidas" value="@e.Id" style="width:auto"
+                                   checked="@(Model.Permitidas.Contains(e.Id))" />
+                            @e.Nombre
+                        </label>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="acciones-form">
+        <button type="submit" class="btn btn-primary">💾 Guardar usuario</button>
+        <a class="btn btn-ghost" asp-page="/Usuarios/Index">Cancelar</a>
+    </div>
+</form>

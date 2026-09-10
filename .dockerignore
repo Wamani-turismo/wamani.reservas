@@ -1,0 +1,10 @@
+# Cosas que NO hay que mandar a Render (se generan solas o son de tu compu)
+bin/
+obj/
+wamani.db
+wamani.db-shm
+wamani.db-wal
+wwwroot/comprobantes/
+.DS_Store
+.git/
+.vs/

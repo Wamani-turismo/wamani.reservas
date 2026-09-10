@@ -1,0 +1,200 @@
+@page
+@model Wamani.Reservas.Pages.Operativo.PagarModel
+@{
+    ViewData["Title"] = "Detalle a pagar · " + Model.ExcursionNombre;
+    string M(decimal m) => Wamani.Reservas.Pages.Operativo.PagarModel.Money(m);
+    var fechaUrl = Model.Fecha.ToString("yyyy-MM-dd");
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Detalle a pagar</h1>
+        <p class="subtitle" style="margin:0">
+            @Model.ExcursionNombre · sale el @Model.Fecha.ToString("dd/MM/yy") · @Model.Pasajeros pasajero(s)
+        </p>
+    </div>
+    <div class="salida-pills">
+        <a class="btn btn-ghost" asp-page="/Operativo/Index">← Volver</a>
+        <a class="btn-nueva" asp-page="/Operativo/Salida"
+           asp-route-excursionId="@Model.ExcursionId" asp-route-fecha="@fechaUrl">🎒 Ir al operativo</a>
+    </div>
+</div>
+
+@if (!Model.HayOperativo)
+{
+    <div class="card">
+        <p>Esta salida todavía no tiene nada cargado en el operativo.
+        Abrí el <a asp-page="/Operativo/Salida" asp-route-excursionId="@Model.ExcursionId" asp-route-fecha="@fechaUrl">operativo de la salida</a> para empezar.</p>
+    </div>
+}
+else
+{
+    <!-- Cuánto falta en total -->
+    <div class="card">
+        <div class="fin-cards">
+            <div class="fin-card fin-card-net">
+                <div class="fin-label">Falta pagar en total</div>
+                <div class="fin-val" style="color:var(--warn)">@M(Model.FaltaTotal)</div>
+                <div class="hint" style="margin-top:4px">gastos @M(Model.FaltaGastos) · proveedores @M(Model.FaltaProveedores)</div>
+            </div>
+            <div class="fin-card">
+                <div class="fin-label">Ya pagado</div>
+                <div class="fin-val" style="color:var(--ok)">@M(Model.PagadoTotal)</div>
+                <div class="hint" style="margin-top:4px">@Model.GastosListos de @Model.GastosEnTotal gastos listos</div>
+            </div>
+            <div class="fin-card">
+                <div class="fin-label">Cuesta la salida</div>
+                <div class="fin-val">@M(Model.TotalSalida)</div>
+                <div class="hint" style="margin-top:4px">lo pagado más lo que falta</div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.EstaTodoPagado)
+    {
+        <div class="card">
+            <p style="color:var(--ok);font-weight:600;margin:0">✔ No queda nada por pagar en esta salida.</p>
+        </div>
+    }
+
+    <!-- Gastos -->
+    <div class="card">
+        <h2>Gastos que faltan pagar</h2>
+        @if (Model.Gastos.Count == 0)
+        {
+            <p class="hint" style="margin:0">Están todos tildados como listos. ✔</p>
+        }
+        else
+        {
+            <p class="hint" style="margin:-8px 0 12px">
+                Son los que todavía no tienen el tilde de <strong>LISTO</strong> en el operativo.
+            </p>
+            <div class="table-wrap">
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th>Ítem</th>
+                            <th>De quién</th>
+                            <th>Cómo se cuenta</th>
+                            <th class="num">Falta pagar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var g in Model.Gastos)
+                    {
+                        <tr>
+                            <td data-label="Ítem"><strong>@g.Nombre</strong></td>
+                            <td data-label="De quién">
+                                @if (string.IsNullOrWhiteSpace(g.DeQuien))
+                                {
+                                    <span class="cliente-sub">toda la salida</span>
+                                }
+                                else
+                                {
+                                    @g.DeQuien
+                                }
+                            </td>
+                            <td data-label="Cómo se cuenta"><span class="cliente-sub">@g.ComoSeCuenta</span></td>
+                            <td class="num" data-label="Falta pagar">
+                                @if (g.SinPrecio)
+                                {
+                                    <span class="pill pill-warn">sin precio</span>
+                                }
+                                else
+                                {
+                                    <strong>@M(g.Monto)</strong>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total de gastos</th>
+                            <th></th>
+                            <th></th>
+                            <th class="num">@M(Model.FaltaGastos)</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            @if (Model.HayGastosSinPrecio)
+            {
+                <p class="hint" style="color:var(--warn)">⚠️ Hay ítems con el precio en cero: no suman al total hasta que se les cargue el monto.</p>
+            }
+        }
+    </div>
+
+    <!-- Proveedores -->
+    <div class="card">
+        <h2>Proveedores que faltan pagar</h2>
+        @if (Model.Proveedores.Count == 0)
+        {
+            <p class="hint" style="margin:0">No queda saldo pendiente con ningún proveedor. ✔</p>
+        }
+        else
+        {
+            <p class="hint" style="margin:-8px 0 12px">
+                Lo que queda después de descontar la seña y el saldo ya cargados. En las
+                travesías cada noche y cada traslado va por separado, con su lugar.
+            </p>
+            <div class="table-wrap">
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th>Qué</th>
+                            <th>A quién</th>
+                            <th class="num">Cuesta</th>
+                            <th class="num">Ya pagado</th>
+                            <th class="num">Falta pagar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var p in Model.Proveedores)
+                    {
+                        <tr>
+                            <td data-label="Qué">
+                                <strong>@p.Tipo</strong>
+                                @if (!string.IsNullOrWhiteSpace(p.Donde))
+                                {
+                                    <div class="cliente-sub">@p.Donde</div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(p.ParaQuien))
+                                {
+                                    <div class="cliente-sub">para @p.ParaQuien</div>
+                                }
+                            </td>
+                            <td data-label="A quién">
+                                @if (p.SinAsignar)
+                                {
+                                    <span class="pill pill-warn">sin asignar</span>
+                                }
+                                else
+                                {
+                                    @p.Quien
+                                }
+                            </td>
+                            <td class="num" data-label="Cuesta">@M(p.Total)</td>
+                            <td class="num" data-label="Ya pagado">@M(p.Pagado)</td>
+                            <td class="num" data-label="Falta pagar"><strong style="color:var(--warn)">@M(p.Falta)</strong></td>
+                        </tr>
+                    }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total de proveedores</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th class="num">@M(Model.FaltaProveedores)</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            @if (Model.HayProveedoresSinAsignar)
+            {
+                <p class="hint" style="color:var(--warn)">⚠️ Hay servicios sin proveedor elegido: hay plata reservada pero todavía no se sabe a quién pagarle.</p>
+            }
+        }
+    </div>
+}

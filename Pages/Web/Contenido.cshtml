@@ -1,0 +1,87 @@
+@page "/panel-web/datos"
+@model Wamani.Reservas.Pages.Web.ContenidoModel
+@{
+    ViewData["Title"] = "Datos y textos de la web";
+}
+
+<div class="toolbar">
+    <div>
+        <h1>📞 Datos y textos</h1>
+        <p class="subtitle" style="margin:0">Lo que cambies acá se ve en la web al instante.</p>
+    </div>
+    <a class="btn btn-ghost" asp-page="/Web/Index">← Volver</a>
+</div>
+
+@if (Model.Guardado)
+{
+    <div class="aviso-ok">✅ Guardado. Ya se actualizó la web.</div>
+}
+
+<form method="post" class="form-card">
+    <h2 class="form-sec">Contacto y redes</h2>
+
+    <div class="campo">
+        <label asp-for="Datos.Whatsapp"></label>
+        <input class="input" asp-for="Datos.Whatsapp" placeholder="5491178898516" />
+        <small>Sin espacios ni signos. Es el número que abre WhatsApp en todos los botones.</small>
+    </div>
+    <div class="grid2">
+        <div class="campo">
+            <label asp-for="Datos.Instagram"></label>
+            <input class="input" asp-for="Datos.Instagram" placeholder="wamaniturismo" />
+        </div>
+        <div class="campo">
+            <label asp-for="Datos.Email"></label>
+            <input class="input" asp-for="Datos.Email" />
+        </div>
+    </div>
+    <div class="grid2">
+        <div class="campo">
+            <label asp-for="Datos.Facebook"></label>
+            <input class="input" asp-for="Datos.Facebook" />
+        </div>
+        <div class="campo">
+            <label asp-for="Datos.Linktree"></label>
+            <input class="input" asp-for="Datos.Linktree" />
+        </div>
+    </div>
+    <div class="campo">
+        <label asp-for="Datos.Ubicacion"></label>
+        <input class="input" asp-for="Datos.Ubicacion" />
+    </div>
+
+    <h2 class="form-sec">Textos de la página</h2>
+    <div class="campo">
+        <label asp-for="Datos.HeroTexto"></label>
+        <textarea class="input" asp-for="Datos.HeroTexto" rows="2"></textarea>
+    </div>
+    <div class="campo">
+        <label asp-for="Datos.Quienes1"></label>
+        <textarea class="input" asp-for="Datos.Quienes1" rows="3"></textarea>
+    </div>
+    <div class="campo">
+        <label asp-for="Datos.Quienes2"></label>
+        <textarea class="input" asp-for="Datos.Quienes2" rows="3"></textarea>
+    </div>
+    <div class="campo">
+        <label asp-for="Datos.Quienes3"></label>
+        <input class="input" asp-for="Datos.Quienes3" />
+    </div>
+
+    <div style="margin-top:18px">
+        <button type="submit" class="btn-nueva">💾 Guardar cambios</button>
+    </div>
+</form>
+
+<style>
+.form-card{background:#fff;border:1px solid var(--line,#e6e2d8);border-radius:16px;padding:22px;max-width:760px}
+.form-sec{font-size:1.05rem;margin:18px 0 12px;padding-bottom:6px;border-bottom:1px solid #eee}
+.form-sec:first-child{margin-top:0}
+.campo{margin-bottom:14px}
+.campo label{display:block;font-weight:600;font-size:.9rem;margin-bottom:5px}
+.campo small{display:block;color:#888;font-size:.8rem;margin-top:4px}
+.input{width:100%;padding:10px 12px;border:1px solid #d8d3c6;border-radius:10px;font:inherit;background:#fff}
+.input:focus{outline:none;border-color:var(--accent,#d2673a)}
+.grid2{display:grid;gap:14px;grid-template-columns:1fr 1fr}
+@@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+</style>

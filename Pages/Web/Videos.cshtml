@@ -1,0 +1,98 @@
+@page "/panel-web/videos"
+@model Wamani.Reservas.Pages.Web.VideosModel
+@{
+    ViewData["Title"] = "Videos";
+    var editando = Model.Item.Id != 0;
+}
+
+<div class="toolbar">
+    <div>
+        <h1>🎥 Videos</h1>
+        <p class="subtitle" style="margin:0">Testimonios y momentos en video que se ven en la web.</p>
+    </div>
+    <a class="btn btn-ghost" asp-page="/Web/Index">← Volver</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Aviso))
+{
+    <div class="aviso-ok">@Model.Aviso</div>
+}
+
+<form method="post" asp-page-handler="Guardar" enctype="multipart/form-data" class="form-card" style="margin-bottom:20px">
+    <input type="hidden" asp-for="Item.Id" />
+    <h2 class="form-sec">@(editando ? "Editar video" : "Agregar video")</h2>
+    <div class="campo">
+        <label asp-for="Item.Titulo">Título</label>
+        <input class="input" asp-for="Item.Titulo" />
+    </div>
+    <div class="campo">
+        <label asp-for="Item.Descripcion">Descripción</label>
+        <textarea class="input" asp-for="Item.Descripcion" rows="2"></textarea>
+    </div>
+    <div class="campo">
+        <label>Video (archivo .mp4)</label>
+        @if (!string.IsNullOrEmpty(Model.Item.Archivo))
+        {
+            <div style="margin-bottom:8px"><video src="/web/img/@Model.Item.Archivo" style="height:120px;border-radius:10px;background:#000" controls muted></video></div>
+        }
+        <input class="input" asp-for="VideoArchivo" type="file" accept="video/*" />
+        <small>Si no subís uno nuevo, se mantiene el actual.</small>
+    </div>
+    <div class="campo">
+        <label>Foto de portada (opcional)</label>
+        @if (!string.IsNullOrEmpty(Model.Item.Poster))
+        {
+            <div style="margin-bottom:8px"><img src="/web/img/@Model.Item.Poster" style="height:80px;border-radius:8px" onerror="this.style.display='none'" /></div>
+        }
+        <input class="input" asp-for="PosterArchivo" type="file" accept="image/*" />
+        <small>Es la imagen que se ve antes de darle play. Si no ponés, se ve el primer cuadro del video.</small>
+    </div>
+    <div class="grid2">
+        <div class="campo campo-check"><label><input type="checkbox" asp-for="Item.Vertical" /> Es vertical (video de celular)</label></div>
+        <div class="campo campo-check"><label><input type="checkbox" asp-for="Item.Activo" /> Mostrar en la web</label></div>
+    </div>
+    <div class="campo" style="max-width:180px"><label asp-for="Item.Orden">Orden</label><input class="input" asp-for="Item.Orden" type="number" /></div>
+    <button type="submit" class="btn-nueva">💾 Guardar</button>
+    @if (editando)
+    {
+        <a class="btn btn-ghost" asp-page="/Web/Videos">Cancelar</a>
+    }
+</form>
+
+<div class="table-wrap">
+    <table class="tabla">
+        <thead><tr><th>Video</th><th>Título</th><th>Estado</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var v in Model.Lista)
+        {
+            <tr style="@(v.Activo ? "" : "opacity:.5")">
+                <td data-label="Video"><video src="/web/img/@v.Archivo" style="height:60px;border-radius:8px;background:#000" muted></video></td>
+                <td data-label="Título"><strong>@v.Titulo</strong><br><small style="color:#999">@(v.Vertical ? "Vertical" : "Horizontal")</small></td>
+                <td data-label="Estado">@(v.Activo ? "✅" : "⛔")</td>
+                <td class="acciones" data-label="">
+                    <div class="acciones-fila">
+                        <a class="btn-mini btn-mini-ghost" asp-page="/Web/Videos" asp-route-editar="@v.Id">✏️</a>
+                        <form method="post" asp-page-handler="Eliminar" asp-route-id="@v.Id" style="display:inline"
+                              onsubmit="return confirm('¿Eliminar este video?');">
+                            <button type="submit" class="btn-mini btn-mini-danger">🗑</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<style>
+.form-card{background:#fff;border:1px solid var(--line,#e6e2d8);border-radius:16px;padding:22px;max-width:760px}
+.form-sec{font-size:1.05rem;margin:0 0 12px;padding-bottom:6px;border-bottom:1px solid #eee}
+.campo{margin-bottom:14px}
+.campo label{display:block;font-weight:600;font-size:.9rem;margin-bottom:5px}
+.campo small{display:block;color:#888;font-size:.8rem;margin-top:4px}
+.campo-check label{font-weight:500;display:flex;gap:8px;align-items:center;cursor:pointer}
+.input{width:100%;padding:10px 12px;border:1px solid #d8d3c6;border-radius:10px;font:inherit;background:#fff}
+.input:focus{outline:none;border-color:var(--accent,#d2673a)}
+.grid2{display:grid;gap:14px;grid-template-columns:1fr 1fr}
+@@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+</style>

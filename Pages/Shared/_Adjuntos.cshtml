@@ -1,0 +1,18 @@
+@* Muestra la lista de comprobantes subidos (con su nombre real). Model = el texto guardado en la columna. *@
+@model string
+@{
+    var adjuntos = Wamani.Reservas.Services.Adjuntos.Listar(Model);
+}
+@if (adjuntos.Count > 0)
+{
+    <div class="adjuntos">
+        @foreach (var a in adjuntos)
+        {
+            <a class="adjunto" href="@a.Url" target="_blank" title="@a.Nombre">📎 @a.Nombre</a>
+        }
+        @if (adjuntos.Count > 1)
+        {
+            <span class="adjuntos-cant">@adjuntos.Count archivos</span>
+        }
+    </div>
+}

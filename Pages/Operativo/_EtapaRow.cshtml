@@ -1,0 +1,106 @@
+@model Wamani.Reservas.Pages.Operativo.EtapaRowVm
+@{
+    var a = Model.Asig;
+    var id = a?.Id ?? 0;
+    string Num(decimal m) => m.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+    // En el hospedaje la nota son las comidas incluidas; en un traslado o en los arrieros
+    // es cualquier apunte (por ejemplo el equivalente por persona).
+    var etiquetaNota = Model.EsHospedaje ? "Incluye:" : "Nota:";
+
+    // Los días en que se pagó de verdad la seña y el saldo (ver _ProvRow: es lo mismo).
+    var hoy = Wamani.Reservas.Services.Reloj.HoyJujuy().ToString("yyyy-MM-dd");
+    var fechaSena = a?.FechaSena?.ToString("yyyy-MM-dd") ?? ((a?.Sena ?? 0) > 0 ? hoy : "");
+    var fechaSaldo = a?.FechaSaldo?.ToString("yyyy-MM-dd") ?? ((a?.Saldo ?? 0) > 0 ? hoy : "");
+}
+<div class="prov-row prov-bloque etapa-bloque">
+    <input type="hidden" name="ProvIds" value="@id" />
+    <input type="hidden" name="ProvKeys" value="@Model.Key" />
+    <input type="hidden" name="ProvTipos" value="@Model.Tipo" />
+    <input type="hidden" name="ProvLugares" value="@Model.Lugar" />
+    <input type="hidden" name="ProvReservaIds" value="0" />
+    <input type="hidden" name="ProvParaQuien" value="" />
+
+    <div class="prov-head">
+        <span class="prov-tipo">@Model.Icono @Model.TituloNoches() · @Model.Lugar</span>
+        <select name="ProvProveedorIds" class="prov-select">
+            <option value="0" data-precio="0">— sin asignar —</option>
+            @foreach (var p in Model.Cat)
+            {
+                <option value="@p.Id" data-precio="@Num(p.Precio)" selected="@(Model.ProveedorId == p.Id)">@p.Nombre</option>
+            }
+            @* Por si esta vez se para en un refugio que todavía no está cargado *@
+            <option value="-1" data-precio="0">➕ Otro (escribir el nombre)</option>
+        </select>
+        <input name="ProvNombresNuevos" class="prov-nuevo" type="text" value=""
+               placeholder="Nombre del hospedaje nuevo" style="display:none" />
+        <span class="prov-falta-wrap">Falta: <strong class="prov-pend"></strong></span>
+        @* La nota de esta parada en esta salida (botón 📋). Igual que en _ProvRow: el campo
+           va siempre para que las listas del formulario queden alineadas. *@
+        <input type="hidden" name="ProvComentarios" value="@a?.Comentario" />
+        <button type="button" class="btn-mini btn-mini-ghost btn-nota" onclick="abrirNota(this)">📋</button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Incluye))
+    {
+        <p class="hint" style="margin:2px 0 8px">@etiquetaNota @Model.Incluye</p>
+    }
+
+    <div class="prov-grid">
+        <div class="field">
+            <label>@Model.EtiquetaCantidad</label>
+            @* En los traslados y los pasajes la cantidad sale de la gente que viaja (los
+               guías incluidos: el chofer es contratado y va aparte). El número no se pisa
+               solo, para no tocar lo que se ajustó a mano, pero si no coincide con la gente
+               de la salida se avisa acá abajo. *@
+            <input name="ProvPersonas" type="number" step="1" min="0" value="@Model.Personas"
+                   class="etapa-personas" data-sugerida="@(Model.TieneSugerencia ? Model.CantidadSugerida : -1)" />
+            @if (Model.TieneSugerencia)
+            {
+                <div class="aviso-cantidad" data-texto="@Model.TextoSugerencia()"></div>
+            }
+        </div>
+        <div class="field">
+            <label>@Model.EtiquetaPrecio</label>
+            <input name="ProvPreciosPorPersona" type="number" step="0.01" min="0" value="@Num(Model.PrecioPorPersona)" class="etapa-precio" />
+        </div>
+        @if (Model.Tipo == Wamani.Reservas.Models.EtapaExcursion.Traslado || Model.Tipo == Wamani.Reservas.Models.EtapaExcursion.Pasaje)
+        {
+            @* Un traslado o un pasaje son una sola vez: el campo va escondido para no ensuciar la fila,
+               pero tiene que viajar igual para que las listas del form queden alineadas. *@
+            <input type="hidden" name="ProvNoches" value="1" class="etapa-noches" />
+        }
+        else
+        {
+            <div class="field">
+                <label>@Model.EtiquetaVeces</label>
+                <input name="ProvNoches" type="number" step="1" min="1" value="@Model.Noches" class="etapa-noches" />
+            </div>
+        }
+        <div class="field">
+            <label>Total <button type="button" class="prov-edit-total" onclick="editarTotal(this)" title="Cambiar el total a mano">✏️ a mano</button></label>
+            <input name="ProvTotales" type="number" step="0.01" min="0" value="@Num(Model.Total)" class="prov-total" />
+        </div>
+        <div class="field">
+            <label>Seña ($)</label>
+            <input name="ProvSenas" type="number" step="0.01" min="0" value="@Num(a?.Sena ?? 0)" class="prov-sena" />
+            <input type="date" name="ProvFechasSena" value="@fechaSena" class="prov-fecha in-fecha-sena"
+                   title="El día en que se pagó la seña" />
+        </div>
+        <div class="field">
+            <label>Comprobante seña</label>
+            <input type="file" name="provcompsena_@Model.Key" accept="image/*,.pdf" multiple />
+            <partial name="_Adjuntos" model="@(a?.ComprobanteSena ?? "")" />
+        </div>
+        <div class="field">
+            <label>Saldo ($)</label>
+            <input name="ProvSaldos" type="number" step="0.01" min="0" value="@Num(a?.Saldo ?? 0)" class="prov-saldo" />
+            <input type="date" name="ProvFechasSaldo" value="@fechaSaldo" class="prov-fecha in-fecha-saldo"
+                   title="El día en que se pagó el saldo" />
+        </div>
+        <div class="field">
+            <label>Comprobante saldo</label>
+            <input type="file" name="provcompsaldo_@Model.Key" accept="image/*,.pdf" multiple />
+            <partial name="_Adjuntos" model="@(a?.ComprobanteSaldo ?? "")" />
+        </div>
+    </div>
+</div>

@@ -1,0 +1,65 @@
+@page
+@model Wamani.Reservas.Pages.Rentabilidad.IndexModel
+@{
+    ViewData["Title"] = "Rentabilidad";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+    var maxGan = Model.Filas.Count > 0 ? Model.Filas.Max(f => f.GananciaMax) : 0;
+}
+
+<h1>Rentabilidad</h1>
+<p class="subtitle">Cuánto ganás en cada excursión según la cantidad de pasajeros. Tocá una para ver la calculadora.</p>
+
+@if (Model.Filas.Count == 0)
+{
+    <div class="table-wrap">
+        <div class="empty">
+            <div class="big">📈</div>
+            <p>No hay excursiones activas.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Excursión / Travesía</th>
+                    <th class="num">Precio/persona</th>
+                    <th>Mín–Máx</th>
+                    <th class="num">Ganancia al mínimo</th>
+                    <th class="num">Ganancia lleno</th>
+                    <th>Margen lleno</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var f in Model.Filas)
+            {
+                var pct = maxGan > 0 ? (double)(f.GananciaMax / maxGan) * 100 : 0;
+                <tr>
+                    <td data-label="Excursión">
+                        <strong>@f.Nombre</strong>
+                        @if (f.SinCostos)
+                        {
+                            <div class="cliente-sub" style="color:var(--warn)">⚠️ sin costos cargados</div>
+                        }
+                    </td>
+                    <td class="num" data-label="Precio/persona">@Money(f.PrecioPorPersona)</td>
+                    <td data-label="Mín–Máx">@f.Min – @f.Max</td>
+                    <td class="num" data-label="Ganancia al mínimo">@Money(f.GananciaMin)</td>
+                    <td class="num" data-label="Ganancia lleno">
+                        <strong style="color:var(--accent)">@Money(f.GananciaMax)</strong>
+                        <div class="barra"><span style="width:@pct.ToString("0", System.Globalization.CultureInfo.InvariantCulture)%"></span></div>
+                    </td>
+                    <td data-label="Margen lleno"><span class="pill pill-ok">@f.MargenMax.ToString("0")%</span></td>
+                    <td class="acciones" data-label="">
+                        <a class="btn-mini btn-mini-ghost" asp-page="/Rentabilidad/Detalle" asp-route-id="@f.Id">📊 Ver</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}

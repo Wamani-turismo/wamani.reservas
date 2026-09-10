@@ -1,0 +1,46 @@
+@page
+@model Wamani.Reservas.Pages.Historial.IndexModel
+@{
+    ViewData["Title"] = "Historial";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Historial</h1>
+        <p class="subtitle" style="margin:0">
+            Registro de las salidas que <strong>ya pasaron</strong>, guardadas por mes.
+        </p>
+    </div>
+</div>
+
+@if (!Model.Meses.Any())
+{
+    <div class="card" style="text-align:center; padding:40px">
+        <p style="margin:0; color:var(--muted)">
+            Todavía no hay salidas pasadas para mostrar.<br />
+            Cuando pase el día de una salida, va a aparecer acá automáticamente.
+        </p>
+    </div>
+}
+else
+{
+    <div class="hist-meses">
+        @foreach (var m in Model.Meses)
+        {
+            <a class="hist-mes-card" asp-page="/Historial/Mes" asp-route-mes="@m.Clave">
+                <div class="hist-mes-nombre">@m.Nombre</div>
+                <div class="hist-mes-stats">
+                    <span><strong>@m.Salidas</strong> salida@(m.Salidas == 1 ? "" : "s")</span>
+                    <span><strong>@m.Pasajeros</strong> pasajero@(m.Pasajeros == 1 ? "" : "s")</span>
+                </div>
+                <div class="hist-mes-plata">
+                    <span class="hist-mes-facturado">@Money(m.Facturado)</span>
+                    <span class="hist-mes-sub">facturado</span>
+                </div>
+                <div class="hist-mes-ver">Ver el mes →</div>
+            </a>
+        }
+    </div>
+}

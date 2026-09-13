@@ -523,6 +523,10 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
   filter:blur(26px);opacity:.5;
 }
 .mg-slide img{position:relative;width:100%;height:100%;object-fit:contain;display:block}
+/* En el celular el recuadro pasa a ser cuadrado. Con el apaisado 4:3 una foto vertical
+   entraba a unos 118 px de ancho —ilegible—; cuadrado le da casi 200 y la apaisada
+   sigue viéndose bien. */
+@media (max-width:560px){ .mg-slide{aspect-ratio:1/1} }
 .mg-galeria-marco{position:relative}
 .mg-flecha{
   position:absolute;top:50%;transform:translateY(-50%);z-index:2;

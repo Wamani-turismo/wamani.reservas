@@ -1155,6 +1155,9 @@ a{color:var(--dorado)}
 .tapa::before{content:"";position:absolute;inset:-8%;background-image:var(--f);
       background-size:cover;background-position:center;filter:blur(26px);opacity:.5}
 .tapa img{position:relative;width:100%;height:100%;object-fit:contain;display:block}
+/* En el celular la portada pasa a ser cuadrada: con la altura de 210 px una foto
+   vertical entraba a unos 118 px de ancho y no se veía nada. */
+@media (max-width:560px){ .tapa{height:auto;aspect-ratio:1/1} }
 h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,5vw,2.7rem);line-height:1.15;margin-bottom:14px}
 h2{font-family:'Playfair Display',Georgia,serif;font-size:1.35rem;color:var(--dorado);margin:32px 0 10px}
 .chip{display:inline-block;background:var(--verde);border:1px solid var(--linea);color:var(--dorado);

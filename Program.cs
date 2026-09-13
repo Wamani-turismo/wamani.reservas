@@ -1061,8 +1061,11 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db) =>
     var fotoAbs = foto.StartsWith("http") ? foto : "https://wamaniturismo.com" + foto;
     // El título de la pestaña y del resultado de Google. Se le agrega "Jujuy" porque
     // casi nadie busca el nombre pelado: busca el lugar.
+    // Se corta cerca de los 60 caracteres en el resultado de Google, así que el agregado
+    // es corto: la palabra que describe qué es, y el lugar.
+    var queEs = e.EsTravesia ? " — Travesía en Jujuy" : " — Excursión en Jujuy";
     var titulo = e.Nombre + (e.Nombre.Contains("Jujuy", StringComparison.OrdinalIgnoreCase)
-        ? "" : " — Excursión en Jujuy") + " | Wamani Turismo";
+        ? "" : queEs) + " | Wamani Turismo";
     // Descripción para el resultado de Google: Google recorta cerca de 160 caracteres.
     var resumen = (e.Resumen ?? "").Trim();
     var desc = resumen.Length > 155 ? resumen.Substring(0, 152).TrimEnd() + "…" : resumen;

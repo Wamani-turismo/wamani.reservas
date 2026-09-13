@@ -941,7 +941,16 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
 
 <!-- ═════════════ FOOTER ═════════════ -->
 <footer>
+  <style>
+    .mapa-exc{display:flex;flex-wrap:wrap;gap:6px 18px;padding-bottom:26px;margin-bottom:26px;
+              border-bottom:1px solid var(--linea)}
+    .mapa-exc a{color:var(--texto-suave);text-decoration:none;font-size:.9rem}
+    .mapa-exc a:hover{color:var(--dorado)}
+    .mapa-exc:empty{display:none}
+  </style>
   <div class="contenedor">
+    <!-- Un enlace a la página propia de cada experiencia. Lo llena el JS. -->
+    <nav class="mapa-exc" id="mapa-exc" aria-label="Todas las experiencias"></nav>
     <div class="footer-grid">
       <img src="img/logo-completo.webp" alt="Wamani Turismo">
       <p>Excursiones y travesías por la Quebrada, la Puna y las Yungas. Más de 4 años creando experiencias inolvidables en el norte argentino.</p>
@@ -1160,6 +1169,23 @@ function pintarCarrusel(filtro){
   }
 }
 pintarCarrusel("todas");
+
+// Mapa de experiencias del pie: un enlace de texto a la página propia de cada una
+// (/excursiones/loquesea). No es decorativo — es el camino por el que Google llega
+// a esas páginas. Sin enlaces que seguir, sólo las vería por el sitemap.
+function pintarMapaExcursiones(){
+  const cont = document.getElementById("mapa-exc");
+  if (!cont) return;
+  cont.innerHTML = ORDEN.map(function(id){
+    const g = GUIAS[id];
+    if (!g) return "";
+    const a = document.createElement("a");
+    a.href = "/excursiones/" + encodeURIComponent(id);
+    a.textContent = g.n;
+    return a.outerHTML;
+  }).join("");
+}
+pintarMapaExcursiones();
 
 document.querySelectorAll(".filtro").forEach(function(b){
   b.addEventListener("click", function(){

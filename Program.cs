@@ -1016,6 +1016,234 @@ app.MapGet("/web/contenido.js", (AppDbContext db) =>
 }).AllowAnonymous();
 
 // ═══════════════════════════════════════════════════════════════════════
+//  UNA PÁGINA PROPIA POR EXCURSIÓN  (/excursiones/hornocal, /excursiones/salinas…)
+//
+//  Por qué existe: la web pública es UNA sola dirección (/web/) y las experiencias
+//  se abren en una ventanita adentro. Google ve entonces una única página y no puede
+//  mandar a nadie "a la mitad" de ella: en Search Console se comprobó que el 100 % de
+//  las visitas de buscador son de gente que escribió "wamani" — de búsquedas como
+//  "excursión al Hornocal" no llega nadie, porque no hay ninguna página que hable
+//  de eso.
+//
+//  Estas páginas se arman en el servidor con el MISMO contenido que ya carga Lautaro
+//  desde el panel (tabla ExcursionesWeb): no hay que escribir nada dos veces. Cada una
+//  tiene su título, su descripción y su itinerario como texto de verdad, que es lo
+//  único que Google sabe leer.
+//
+//  NO reemplazan a la web: son la puerta de entrada desde el buscador. El visitante
+//  lee, y de ahí va a WhatsApp o a la web completa.
+// ═══════════════════════════════════════════════════════════════════════
+app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db) =>
+{
+    var e = db.ExcursionesWeb.FirstOrDefault(x => x.Activa && x.Clave == clave);
+    // Si la clave no existe (o la excursión se dio de baja), al inicio de la web.
+    // Mejor eso que un 404 feo para alguien que llegó de Google con un link viejo.
+    if (e == null) return Results.Redirect("/web/", permanent: false);
+
+    var c = db.ContenidoWeb.FirstOrDefault() ?? new Wamani.Reservas.Models.ContenidoWeb();
+    var wpp = string.IsNullOrWhiteSpace(c.Whatsapp) ? "5491178898516" : c.Whatsapp;
+
+    string Esc(string s) => System.Net.WebUtility.HtmlEncode(s ?? "");
+    string[] Lineas(string s) => (s ?? "").Replace("\r", "")
+        .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    // Lista <li> a partir de un campo de varias líneas del panel. Si está vacío
+    // devuelve "" y más abajo la sección entera no se dibuja.
+    string Items(string s)
+    {
+        var ls = Lineas(s);
+        return ls.Length == 0 ? "" : string.Concat(ls.Select(x => "<li>" + Esc(x) + "</li>"));
+    }
+    string Bloque(string titulo, string html) =>
+        string.IsNullOrEmpty(html) ? "" : $"<h2>{Esc(titulo)}</h2><ul>{html}</ul>";
+
+    var url = "https://wamaniturismo.com/excursiones/" + Uri.EscapeDataString(e.Clave);
+    var foto = string.IsNullOrWhiteSpace(e.Foto) ? "/logo/wamani-icono-512.png" : e.Foto;
+    var fotoAbs = foto.StartsWith("http") ? foto : "https://wamaniturismo.com" + foto;
+    // El título de la pestaña y del resultado de Google. Se le agrega "Jujuy" porque
+    // casi nadie busca el nombre pelado: busca el lugar.
+    var titulo = e.Nombre + (e.Nombre.Contains("Jujuy", StringComparison.OrdinalIgnoreCase)
+        ? "" : " — Excursión en Jujuy") + " | Wamani Turismo";
+    // Descripción para el resultado de Google: Google recorta cerca de 160 caracteres.
+    var resumen = (e.Resumen ?? "").Trim();
+    var desc = resumen.Length > 155 ? resumen.Substring(0, 152).TrimEnd() + "…" : resumen;
+    if (string.IsNullOrWhiteSpace(desc))
+        desc = e.Nombre + " con Wamani Turismo: guías locales y grupos reducidos en Jujuy.";
+    var msg = Uri.EscapeDataString("¡Hola! Quiero consultar por " + e.Nombre + ".");
+
+    var llevar = string.IsNullOrWhiteSpace(e.Llevar)
+        ? "" : "<h2>Qué llevar</h2><p class='resumen'>" + Esc(e.Llevar) + "</p>";
+    var datos = Lineas(e.Datos);
+    var chips = string.Concat(datos.Select(d => $"<span class=\"dato\">{Esc(d)}</span>"));
+    var plazo = e.EsTravesia ? 7 : 4;
+    var tipo = e.EsTravesia ? "travesía" : "excursión";
+
+    // Ficha para Google en su propio formato (JSON-LD). Es lo que le permite mostrar
+    // el resultado enriquecido con nombre, foto y a qué agencia pertenece.
+    var ficha = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>
+    {
+        ["@context"] = "https://schema.org",
+        ["@type"] = "TouristTrip",
+        ["name"] = e.Nombre,
+        ["description"] = resumen,
+        ["url"] = url,
+        ["image"] = fotoAbs,
+        ["touristType"] = e.EsTravesia ? "Trekking y travesías de varios días" : "Excursión de un día",
+        ["provider"] = new Dictionary<string, object>
+        {
+            ["@type"] = "TravelAgency",
+            ["name"] = "Wamani Turismo",
+            ["url"] = "https://wamaniturismo.com/",
+            ["areaServed"] = "Jujuy, Argentina"
+        }
+    }, new System.Text.Json.JsonSerializerOptions
+    {
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    });
+
+    var html = $$"""
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{Esc(titulo)}}</title>
+<meta name="description" content="{{Esc(desc)}}">
+<link rel="canonical" href="{{Esc(url)}}">
+<meta property="og:type" content="article">
+<meta property="og:title" content="{{Esc(titulo)}}">
+<meta property="og:description" content="{{Esc(desc)}}">
+<meta property="og:image" content="{{Esc(fotoAbs)}}">
+<meta property="og:url" content="{{Esc(url)}}">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X04DXRSG6H"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-X04DXRSG6H');
+</script>
+<script type="application/ld+json">{{ficha}}</script>
+<style>
+:root{
+  --fondo:#131c18; --panel:#1c2a24; --verde:#22332f; --dorado:#d8c096;
+  --coral:#d2673a; --texto:#ece5d4; --texto-suave:rgba(236,229,212,.72);
+  --linea:rgba(216,192,150,.18);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--fondo);color:var(--texto);font-family:Quicksand,system-ui,sans-serif;line-height:1.65}
+img{max-width:100%;display:block}
+a{color:var(--dorado)}
+.barra{padding:18px 22px;border-bottom:1px solid var(--linea)}
+.barra a{color:var(--dorado);text-decoration:none;font-weight:600;font-size:.95rem}
+.envoltorio{max-width:820px;margin:0 auto;padding:0 22px 70px}
+.tapa{width:100%;height:clamp(210px,42vw,400px);object-fit:cover;border-radius:18px;margin:26px 0 22px}
+h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,5vw,2.7rem);line-height:1.15;margin-bottom:14px}
+h2{font-family:'Playfair Display',Georgia,serif;font-size:1.35rem;color:var(--dorado);margin:32px 0 10px}
+.chip{display:inline-block;background:var(--verde);border:1px solid var(--linea);color:var(--dorado);
+      padding:5px 14px;border-radius:999px;font-size:.82rem;font-weight:600;margin-bottom:16px}
+.resumen{font-size:1.1rem;color:var(--texto-suave)}
+.datos{display:flex;flex-wrap:wrap;gap:9px;margin:20px 0}
+.dato{background:var(--panel);border:1px solid var(--linea);padding:7px 14px;border-radius:12px;font-size:.9rem}
+ul{padding-left:22px}
+li{margin:7px 0}
+.condiciones{background:var(--panel);border:1px solid var(--linea);border-radius:16px;
+             padding:18px 20px;margin-top:30px;font-size:.95rem;color:var(--texto-suave)}
+.acciones{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.btn{display:inline-block;padding:14px 26px;border-radius:14px;text-decoration:none;font-weight:700}
+.btn-coral{background:var(--coral);color:#fff}
+.btn-borde{border:1px solid var(--linea);color:var(--texto)}
+.pie{border-top:1px solid var(--linea);margin-top:48px;padding-top:22px;font-size:.88rem;color:var(--texto-suave)}
+</style>
+</head>
+<body>
+<nav class="barra"><a href="/web/">← Wamani Turismo · todas las experiencias</a></nav>
+<div class="envoltorio">
+  <img class="tapa" src="{{Esc(foto)}}" alt="{{Esc(e.Nombre)}}">
+  <span class="chip">{{Esc(e.Chip)}}</span>
+  <h1>{{Esc(e.Nombre)}}</h1>
+  <p class="resumen">{{Esc(resumen)}}</p>
+  <div class="datos">{{chips}}</div>
+  {{Bloque("Itinerario", Items(e.Itinerario))}}
+  {{Bloque("Qué incluye", Items(e.Incluye))}}
+  {{llevar}}
+  <div class="condiciones">
+    Se reserva con una seña del 50 % y el saldo se abona hasta {{plazo}} días antes de
+    realizar la {{tipo}}. En caso de cancelar, se retendrá la totalidad de la seña.
+  </div>
+  <div class="acciones">
+    <a id="wpp" class="btn btn-coral" target="_blank" rel="noopener"
+       href="https://wa.me/{{Esc(wpp)}}?text={{msg}}"
+       data-excursion="{{Esc(e.Nombre)}}">💬 Consultar por WhatsApp</a>
+    <a class="btn btn-borde" href="/web/">Ver todas las experiencias</a>
+  </div>
+  <p class="pie">Wamani Turismo — excursiones, trekking y travesías en Jujuy, Argentina.
+  Guías locales y grupos reducidos.</p>
+</div>
+<script>
+  // El mismo evento que mide la web grande, para que las consultas que salen de estas
+  // páginas aparezcan en Analytics junto a las otras y con el nombre de la excursión.
+  // El nombre viaja en un atributo (y no escrito acá adentro) para que un apóstrofo
+  // en el nombre no rompa el script.
+  document.getElementById('wpp').addEventListener('click', function(){
+    try { if (typeof gtag === 'function')
+      gtag('event','clic_whatsapp',{ desde:'ficha', excursion:this.dataset.excursion }); } catch(e){}
+  });
+</script>
+</body>
+</html>
+""";
+    return Results.Content(html, "text/html; charset=utf-8");
+}).AllowAnonymous();
+
+// ═══════════════════════════════════════════════════════════════════════
+//  El mapa del sitio para los buscadores.
+//
+//  Antes era un archivo fijo en wwwroot con dos direcciones. Ahora se arma solo,
+//  porque las excursiones se dan de alta y de baja desde el panel: si quedara fijo,
+//  cada excursión nueva sería invisible para Google hasta que alguien se acordara
+//  de editar el XML a mano. El archivo viejo se borró (si no, tapaba a este).
+// ═══════════════════════════════════════════════════════════════════════
+app.MapGet("/sitemap.xml", (AppDbContext db) =>
+{
+    const string baseUrl = "https://wamaniturismo.com";
+    var hoy = DateTime.UtcNow.ToString("yyyy-MM-dd");
+    var sb = new System.Text.StringBuilder();
+    sb.AppendLine("""<?xml version="1.0" encoding="UTF-8"?>""");
+    sb.AppendLine("""<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">""");
+
+    // Las dos páginas de siempre, cada una declarada en los tres idiomas.
+    foreach (var (ruta, freq, prio) in new[] { ("/", "weekly", "1.0"), ("/receptivo/", "monthly", "0.8") })
+    {
+        sb.AppendLine("  <url>");
+        sb.AppendLine($"    <loc>{baseUrl}{ruta}</loc>");
+        foreach (var (idioma, sufijo) in new[] { ("es", ""), ("en", "?lang=en"), ("fr", "?lang=fr"), ("x-default", "") })
+            sb.AppendLine($"""    <xhtml:link rel="alternate" hreflang="{idioma}" href="{baseUrl}{ruta}{sufijo}"/>""");
+        sb.AppendLine($"    <changefreq>{freq}</changefreq>");
+        sb.AppendLine($"    <priority>{prio}</priority>");
+        sb.AppendLine("  </url>");
+    }
+
+    // Una entrada por excursión activa.
+    foreach (var clave in db.ExcursionesWeb.Where(x => x.Activa).OrderBy(x => x.Orden)
+                            .Select(x => x.Clave).ToList())
+    {
+        if (string.IsNullOrWhiteSpace(clave)) continue;
+        sb.AppendLine("  <url>");
+        sb.AppendLine($"    <loc>{baseUrl}/excursiones/{Uri.EscapeDataString(clave)}</loc>");
+        sb.AppendLine($"    <lastmod>{hoy}</lastmod>");
+        sb.AppendLine("    <changefreq>monthly</changefreq>");
+        sb.AppendLine("    <priority>0.9</priority>");
+        sb.AppendLine("  </url>");
+    }
+
+    sb.AppendLine("</urlset>");
+    return Results.Content(sb.ToString(), "application/xml; charset=utf-8");
+}).AllowAnonymous();
+
+// ═══════════════════════════════════════════════════════════════════════
 //  El formulario de contacto de la web
 //
 //  La consulta se GUARDA siempre en el sistema (así no se pierde ninguna) y además se

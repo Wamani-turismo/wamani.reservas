@@ -509,8 +509,20 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
   scroll-behavior:smooth;
 }
 .mg-galeria::-webkit-scrollbar{display:none}
-.mg-slide{flex:0 0 100%;scroll-snap-align:center;aspect-ratio:4/3}
-.mg-slide img{width:100%;height:100%;object-fit:cover;display:block}
+/* La foto se muestra ENTERA. Antes se recortaba al recuadro apaisado con
+   "object-fit:cover", y como siete de las fotos cargadas son verticales (1080x1920,
+   1440x1920…), a esas les cortaba media imagen. Ahora entra completa y los costados
+   se rellenan con una copia borrosa de la misma foto, así no quedan franjas negras. */
+.mg-slide{
+  flex:0 0 100%;scroll-snap-align:center;aspect-ratio:4/3;
+  position:relative;overflow:hidden;background:#0d1512;
+}
+.mg-slide::before{
+  content:"";position:absolute;inset:-8%;
+  background-image:var(--f);background-size:cover;background-position:center;
+  filter:blur(26px);opacity:.5;
+}
+.mg-slide img{position:relative;width:100%;height:100%;object-fit:contain;display:block}
 .mg-galeria-marco{position:relative}
 .mg-flecha{
   position:absolute;top:50%;transform:translateY(-50%);z-index:2;
@@ -1235,7 +1247,11 @@ function abrirGuia(id){
   modalCont.innerHTML =
     (function(){
       const fs = (g.fotos && g.fotos.length) ? g.fotos : [g.img];
-      const slides = fs.map(function(f){ return '<div class="mg-slide"><img src="' + f + '" alt="' + g.n + '"></div>'; }).join('');
+      // --f lleva la misma foto al relleno borroso del fondo (ver .mg-slide::before).
+      const slides = fs.map(function(f){
+        return '<div class="mg-slide" style="--f:url(\'' + f + '\')">' +
+               '<img src="' + f + '" alt="' + g.n + '"></div>';
+      }).join('');
       const dots = fs.length > 1 ? '<div class="mg-dots">' + fs.map(function(_,i){ return '<span' + (i===0?' class="on"':'') + '></span>'; }).join('') + '</div>' : '';
       // Con más de una foto: flechas y contador. Sin esto, en la compu no había
       // forma de pasar de foto (el dedo funciona, el mouse no) y encima no se

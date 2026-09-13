@@ -1057,7 +1057,12 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db) =>
         string.IsNullOrEmpty(html) ? "" : $"<h2>{Esc(titulo)}</h2><ul>{html}</ul>";
 
     var url = "https://wamaniturismo.com/excursiones/" + Uri.EscapeDataString(e.Clave);
-    var foto = string.IsNullOrWhiteSpace(e.Foto) ? "/logo/wamani-icono-512.png" : e.Foto;
+    // La base guarda SOLO el nombre del archivo ("iruya-2.webp"); las fotos se sirven en
+    // /web/img. Hay que poner esa carpeta adelante: sin ella el navegador la buscaba al
+    // lado de esta página (/excursiones/iruya-2.webp) y no la encontraba.
+    var foto = string.IsNullOrWhiteSpace(e.Foto)
+        ? "/logo/wamani-icono-512.png"
+        : (e.Foto.StartsWith("http") || e.Foto.StartsWith("/")) ? e.Foto : "/web/img/" + e.Foto;
     var fotoAbs = foto.StartsWith("http") ? foto : "https://wamaniturismo.com" + foto;
     // El título de la pestaña y del resultado de Google. Se le agrega "Jujuy" porque
     // casi nadie busca el nombre pelado: busca el lugar.
@@ -1142,7 +1147,14 @@ a{color:var(--dorado)}
 .barra{padding:18px 22px;border-bottom:1px solid var(--linea)}
 .barra a{color:var(--dorado);text-decoration:none;font-weight:600;font-size:.95rem}
 .envoltorio{max-width:820px;margin:0 auto;padding:0 22px 70px}
-.tapa{width:100%;height:clamp(210px,42vw,400px);object-fit:cover;border-radius:18px;margin:26px 0 22px}
+/* La foto de portada se muestra ENTERA: varias de las fotos cargadas son verticales
+   (1080x1920 y parecidas) y recortarlas a un recuadro apaisado les corta media imagen.
+   Los costados se rellenan con una copia borrosa de la misma foto. */
+.tapa{position:relative;overflow:hidden;border-radius:18px;margin:26px 0 22px;
+      height:clamp(210px,42vw,400px);background:#0d1512}
+.tapa::before{content:"";position:absolute;inset:-8%;background-image:var(--f);
+      background-size:cover;background-position:center;filter:blur(26px);opacity:.5}
+.tapa img{position:relative;width:100%;height:100%;object-fit:contain;display:block}
 h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,5vw,2.7rem);line-height:1.15;margin-bottom:14px}
 h2{font-family:'Playfair Display',Georgia,serif;font-size:1.35rem;color:var(--dorado);margin:32px 0 10px}
 .chip{display:inline-block;background:var(--verde);border:1px solid var(--linea);color:var(--dorado);
@@ -1164,7 +1176,9 @@ li{margin:7px 0}
 <body>
 <nav class="barra"><a href="/web/">← Wamani Turismo · todas las experiencias</a></nav>
 <div class="envoltorio">
-  <img class="tapa" src="{{Esc(foto)}}" alt="{{Esc(e.Nombre)}}">
+  <div class="tapa" style="--f:url('{{Esc(foto)}}')">
+    <img src="{{Esc(foto)}}" alt="{{Esc(e.Nombre)}}">
+  </div>
   <span class="chip">{{Esc(e.Chip)}}</span>
   <h1>{{Esc(e.Nombre)}}</h1>
   <p class="resumen">{{Esc(resumen)}}</p>

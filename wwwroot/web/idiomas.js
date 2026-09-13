@@ -288,12 +288,21 @@
       if (!pedido) pedido = localStorage.getItem("wamani_idioma");
     } catch (e) {}
 
-    // Sin elección previa: si el navegador está en inglés o francés, se abre así.
-    if (!pedido) {
-      var nav = (navigator.language || "").toLowerCase();
-      if (nav.indexOf("en") === 0) pedido = "en";
-      else if (nav.indexOf("fr") === 0) pedido = "fr";
-    }
+    // Antes, sin elección previa, se miraba el idioma del navegador y la página se abría
+    // en inglés o francés sola. Se sacó, y el motivo es importante:
+    //
+    // El robot de Google rastrea con el navegador en inglés. Entraba a
+    // wamaniturismo.com, la página se pasaba sola a inglés y le cambiaba el título y la
+    // descripción — así que Google indexó la versión en inglés como LA página del sitio.
+    // Resultado: un argentino buscaba "wamani turismo" y le aparecía el resultado en
+    // inglés ("Hiking tours and treks in Jujuy").
+    //
+    // Además contradecía lo que el propio HTML declara: la dirección sin ?lang es la
+    // española (hreflang="es" y x-default). Ahora coinciden. Google va a mostrarle la
+    // ficha en inglés a quien busque en inglés, porque para eso están declaradas las
+    // direcciones ?lang=en y ?lang=fr.
+    //
+    // Sigue respetándose la elección guardada: el que ya eligió EN o FR lo conserva.
     cambiar(pedido && IDIOMAS[pedido] ? pedido : "es", false);
   }
 

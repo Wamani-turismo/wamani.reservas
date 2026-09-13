@@ -15,6 +15,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
     <PackageReference Include="QuestPDF" Version="2024.12.3" />
+    <!-- Para achicar las fotos que se suben desde el panel (ver Services/FotosWeb.cs).
+         Es la misma versión que ya usa ClosedXML por dentro, así que no agrega peso. -->
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
   </ItemGroup>
 
 </Project>

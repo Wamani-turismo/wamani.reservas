@@ -1435,7 +1435,11 @@ function abrirFormulario(){ medir('abrir_formulario', { desde: 'web' }); documen
 document.addEventListener('click', function(ev){
   var a = ev.target.closest ? ev.target.closest('a[href*="wa.me"]') : null;
   if (!a) return;
-  var ficha = document.querySelector('#modal h2, #modal h3');
+  // Sólo cuenta como "de esta excursión" si la ficha está abierta: el contenido del modal
+  // queda en la página aunque se cierre, y sin este chequeo le atribuiríamos a la última
+  // ficha vista un clic al WhatsApp del pie.
+  var abierto = modalFondo && modalFondo.classList.contains('abierto');
+  var ficha = abierto ? document.querySelector('#modal-contenido h3') : null;
   medir('clic_whatsapp', { desde: 'web', excursion: ficha ? ficha.textContent.trim() : 'general' });
 });
 function cerrarFormulario(){ document.getElementById("fondo-form").style.display = "none"; }

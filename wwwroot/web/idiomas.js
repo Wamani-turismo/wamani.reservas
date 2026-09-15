@@ -218,6 +218,16 @@
           if (td) meta.setAttribute("content", td);
         }
       }
+      // La dirección oficial tiene que acompañar al idioma: la versión en inglés se
+      // declara a sí misma (…/?lang=en) y no como copia de la castellana. Si no, Google
+      // toma las otras dos como duplicados y no las muestra a quien busca en su idioma.
+      var can = document.querySelector('link[rel="canonical"]');
+      if (can) {
+        if (window.__wCanonEs === undefined) window.__wCanonEs = can.getAttribute("href");
+        can.setAttribute("href", lang === "es"
+          ? window.__wCanonEs
+          : window.__wCanonEs + "?lang=" + lang);
+      }
     } catch (e) { /* nunca romper la página por una traducción */ }
     trabajando = false;
 

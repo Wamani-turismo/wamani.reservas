@@ -737,6 +737,26 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// /web/ es la dirección VIEJA de la landing: ahora vive en la raíz. Se manda con 301
+// (permanente) para que Google traslade a "/" lo que tenía acumulado en /web/ y para que
+// el que la tenga en favoritos no se quede en una copia. Va ANTES de los archivos
+// estáticos, que si no entregarían el index.html sin llegar hasta acá.
+//
+// Sólo la dirección exacta: /web/img/…, /web/contenido.js y /web/consulta siguen
+// funcionando igual, y de hecho la página los necesita.
+app.Use(async (ctx, siguiente) =>
+{
+    var ruta = ctx.Request.Path.Value ?? "";
+    if (ruta.Equals("/web", StringComparison.OrdinalIgnoreCase) ||
+        ruta.Equals("/web/", StringComparison.OrdinalIgnoreCase) ||
+        ruta.Equals("/web/index.html", StringComparison.OrdinalIgnoreCase))
+    {
+        ctx.Response.Redirect("/" + ctx.Request.QueryString, permanent: true);
+        return;
+    }
+    await siguiente();
+});
+
 // Hace que una carpeta (ej. /web/) muestre su index.html automáticamente.
 // Solo afecta a carpetas que TIENEN index.html; la raíz "/" sigue siendo el
 // sistema (no hay index.html en wwwroot), así que no cambia nada del sistema.
@@ -877,8 +897,11 @@ app.Use(async (ctx, siguiente) =>
     // Archivos (css, imágenes, comprobantes): no son pantallas, pasan derecho
     if (Path.HasExtension(ruta)) { await siguiente(); return; }
 
-    // Entrar y salir siempre tienen que funcionar
-    if (ruta.Equals("/Login", StringComparison.OrdinalIgnoreCase) ||
+    // Entrar y salir siempre tienen que funcionar. "/" también: desde el 15/09/2026 es
+    // la web pública, que la ve cualquiera —no tiene sentido negársela justo a alguien
+    // que además trabaja con nosotros.
+    if (ruta.Equals("/", StringComparison.Ordinal) ||
+        ruta.Equals("/Login", StringComparison.OrdinalIgnoreCase) ||
         ruta.Equals("/Logout", StringComparison.OrdinalIgnoreCase) ||
         ruta.Equals("/Error", StringComparison.OrdinalIgnoreCase))
     { await siguiente(); return; }
@@ -930,8 +953,24 @@ app.MapRazorPages();
 // web y NO el sistema. Los chicos entran al sistema por /panel (requiere login).
 // Se conserva lo que venga después del "?" (hoy: ?lang=en / ?lang=fr). Sin esto, el
 // enlace en inglés que le damos a Google terminaba en la web en castellano.
-app.MapGet("/", (HttpRequest pedido) =>
-    Results.Redirect("/web/" + pedido.QueryString)).AllowAnonymous();
+// Desde el 15/09/2026 la landing se SIRVE acá, ya no redirige a /web/. El motivo es de
+// buscadores: wamaniturismo.com es la dirección que repartimos (tarjetas, folletos,
+// Instagram) y la que declaran el sitemap y los hreflang, pero respondía con una
+// redirección temporal. Para Google eso significa "no consolides nada acá", así que la
+// autoridad quedaba repartida entre dos direcciones y el informe de Indexación marcaba
+// páginas duplicadas. Ahora / responde 200 y /web/ manda 301 hacia acá (más abajo).
+//
+// El archivo sigue viviendo en wwwroot/web/: sólo cambia por dónde se entrega. Por eso
+// index.html tuvo que pasar sus rutas a absolutas (/web/img/…, /web/idiomas.js): siendo
+// relativas, servido desde la raíz las hubiera buscado en /img/ y no cargaba nada.
+app.MapGet("/", (HttpContext ctx, IWebHostEnvironment entorno) =>
+{
+    // Igual que el resto de las páginas: se revisa contra el servidor antes de usarse,
+    // para que nadie siga viendo una versión vieja después de publicar un cambio.
+    ctx.Response.Headers.CacheControl = "no-cache";
+    return Results.File(Path.Combine(entorno.WebRootPath, "web", "index.html"),
+                        "text/html; charset=utf-8");
+}).AllowAnonymous();
 
 // La página del QR de la feria (FIT). Sin la barra final el servidor no encuentra la
 // carpeta, así que se la agregamos: wamaniturismo.com/receptivo funciona igual.
@@ -1038,7 +1077,7 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db) =>
     var e = db.ExcursionesWeb.FirstOrDefault(x => x.Activa && x.Clave == clave);
     // Si la clave no existe (o la excursión se dio de baja), al inicio de la web.
     // Mejor eso que un 404 feo para alguien que llegó de Google con un link viejo.
-    if (e == null) return Results.Redirect("/web/", permanent: false);
+    if (e == null) return Results.Redirect("/", permanent: false);
 
     var c = db.ContenidoWeb.FirstOrDefault() ?? new Wamani.Reservas.Models.ContenidoWeb();
     var wpp = string.IsNullOrWhiteSpace(c.Whatsapp) ? "5491178898516" : c.Whatsapp;
@@ -1177,7 +1216,7 @@ li{margin:7px 0}
 </style>
 </head>
 <body>
-<nav class="barra"><a href="/web/">← Wamani Turismo · todas las experiencias</a></nav>
+<nav class="barra"><a href="/">← Wamani Turismo · todas las experiencias</a></nav>
 <div class="envoltorio">
   <div class="tapa" style="--f:url('{{Esc(foto)}}')">
     <img src="{{Esc(foto)}}" alt="{{Esc(e.Nombre)}}">
@@ -1197,7 +1236,7 @@ li{margin:7px 0}
     <a id="wpp" class="btn btn-coral" target="_blank" rel="noopener"
        href="https://wa.me/{{Esc(wpp)}}?text={{msg}}"
        data-excursion="{{Esc(e.Nombre)}}">💬 Consultar por WhatsApp</a>
-    <a class="btn btn-borde" href="/web/">Ver todas las experiencias</a>
+    <a class="btn btn-borde" href="/">Ver todas las experiencias</a>
   </div>
   <p class="pie">Wamani Turismo — excursiones, trekking y travesías en Jujuy, Argentina.
   Guías locales y grupos reducidos.</p>

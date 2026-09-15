@@ -8,6 +8,14 @@
 <!-- El logo chiquito de la pestaña y de los resultados de Google. Antes era la montaña
      sola, en una imagen muy ancha y en color claro: al achicarla quedaba una franjita
      ilegible. Ahora es el logo redondo, con el fondo bordo de la marca. -->
+<!-- LA dirección oficial de esta página. Sin esto, Google veía wamaniturismo.com,
+     wamaniturismo.com/web/ y las versiones con ?lang= como páginas distintas y elegía
+     él cuál valía: en el informe de Indexación aparecían como "Duplicada: el usuario no
+     ha indicado ninguna versión canónica". idiomas.js la actualiza al cambiar de idioma,
+     para que cada versión se declare a sí misma. -->
+<link rel="canonical" href="https://wamaniturismo.com/">
+<meta property="og:url" content="https://wamaniturismo.com/">
+
 <!-- Le dice a Google que la misma página existe en tres idiomas, para que muestre
      el que corresponda según quién busca. -->
 <link rel="alternate" hreflang="es" href="https://wamaniturismo.com/">
@@ -248,8 +256,8 @@ section{padding:3.4rem 0}
 .tarjeta .monte{
   position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);
   width:88px;height:62px;background:#ecdfc2;opacity:.92;
-  -webkit-mask:url("img/montana.png") center/contain no-repeat;
-  mask:url("img/montana.png") center/contain no-repeat;
+  -webkit-mask:url("/web/img/montana.png") center/contain no-repeat;
+  mask:url("/web/img/montana.png") center/contain no-repeat;
   filter:drop-shadow(0 2px 8px rgba(0,0,0,.4));
   transition:transform .35s ease;
 }
@@ -681,7 +689,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
 <header>
   <div class="contenedor barra">
     <a href="#inicio" class="logo" aria-label="Wamani Turismo — inicio">
-      <img src="img/logo-completo.webp" alt="Wamani Turismo">
+      <img src="/web/img/logo-completo.webp" alt="Wamani Turismo">
     </a>
     <nav class="menu" aria-label="Navegación principal">
       <a href="#experiencias">Experiencias</a>
@@ -721,13 +729,13 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
 <section class="hero" id="inicio">
   <!-- Video de fondo (sin sonido, se repite solo). El poster se ve mientras carga. -->
   <video class="hero-video" autoplay muted loop playsinline preload="auto"
-         poster="img/hero-video-poster.webp" aria-hidden="true">
-    <source src="img/hero-video.mp4" type="video/mp4">
+         poster="/web/img/hero-video-poster.webp" aria-hidden="true">
+    <source src="/web/img/hero-video.mp4" type="video/mp4">
   </video>
   <div class="hero-inner">
-    <img class="hero-monte" src="img/montana.png" alt="">
+    <img class="hero-monte" src="/web/img/montana.png" alt="">
     <span class="hero-eyebrow">Turismo de aventura · Jujuy · Argentina</span>
-    <h1><img src="img/wamani-texto.png" alt="WAMANI"></h1>
+    <h1><img src="/web/img/wamani-texto.png" alt="WAMANI"></h1>
     <p>Conocemos los caminos secretos de la Quebrada, la Puna y la selva de las Yungas. Vení a descubrirlos con nosotros.</p>
     <div class="hero-botones">
       <a class="btn btn-coral wsp" data-msg="¡Hola! Vi la página de Wamani Turismo y quisiera recibir información sobre las excursiones.">💬 Reservá por WhatsApp</a>
@@ -805,7 +813,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
         </div>
         <div class="mapa-panel" id="mapa-panel">
           <div class="mp-vacio">
-            <img src="img/montana.png" alt="">
+            <img src="/web/img/montana.png" alt="">
             <p><b>Tocá un punto del mapa</b><br>y acá vas a ver toda la info de esa aventura.</p>
           </div>
         </div>
@@ -828,35 +836,35 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
         <p><b>Vos elegís la experiencia. Nosotros nos ocupamos del resto.</b></p>
       </div>
       <div class="quienes-sello">
-        <img src="img/equipo.webp" alt="Sello Wamani Turismo y Aventura">
+        <img src="/web/img/equipo.webp" alt="Sello Wamani Turismo y Aventura">
       </div>
     </div>
     <!-- ═══ INTEGRANTES ═══════════════════════════════════════════
          ⚠️ FOTOS PENDIENTES: cuando tengas las fotos de los tres,
          guardalas en img/ como integrante-1.jpg, integrante-2.jpg e
          integrante-3.jpg y reemplazá cada
-           <img src="img/montana.png" class="pendiente" ...>
+           <img src="/web/img/montana.png" class="pendiente" ...>
          por
-           <img src="img/integrante-1.jpg" alt="Nombre">
+           <img src="/web/img/integrante-1.jpg" alt="Nombre">
          También corregí acá nombres, roles y descripciones. -->
     <div class="integrantes">
       <div class="integrante">
         <div class="foto-guia">
-          <img src="img/guia-lucho.webp" alt="Luciano, guía y fundador de Wamani" loading="lazy">
+          <img src="/web/img/guia-lucho.webp" alt="Luciano, guía y fundador de Wamani" loading="lazy">
           <div class="nombre"><h3>Luciano</h3><span class="rol">Guía y fundador</span></div>
         </div>
         <p class="bio">El que empezó todo: conoce cada sendero de estos cerros como la palma de su mano.</p>
       </div>
       <div class="integrante">
         <div class="foto-guia">
-          <img src="img/guia-lautaro.webp" alt="Lautaro, cofundador de Wamani" loading="lazy">
+          <img src="/web/img/guia-lautaro.webp" alt="Lautaro, cofundador de Wamani" loading="lazy">
           <div class="nombre"><h3>Lautaro</h3><span class="rol">Cofundador</span></div>
         </div>
         <p class="bio">Se sumó a la aventura: el que hace que todo funcione para que vos solo disfrutes.</p>
       </div>
       <div class="integrante">
         <div class="foto-guia">
-          <img src="img/guia-facu.webp" alt="Facundo, guía y cofundador de Wamani" loading="lazy">
+          <img src="/web/img/guia-facu.webp" alt="Facundo, guía y cofundador de Wamani" loading="lazy">
           <div class="nombre"><h3>Facundo</h3><span class="rol">Guía y cofundador</span></div>
         </div>
         <p class="bio">Historias, mates y la calidez del norte acompañándote en cada salida.</p>
@@ -968,7 +976,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
     <!-- Un enlace a la página propia de cada experiencia. Lo llena el JS. -->
     <nav class="mapa-exc" id="mapa-exc" aria-label="Todas las experiencias"></nav>
     <div class="footer-grid">
-      <img src="img/logo-completo.webp" alt="Wamani Turismo">
+      <img src="/web/img/logo-completo.webp" alt="Wamani Turismo">
       <p>Excursiones y travesías por la Quebrada, la Puna y las Yungas. Más de 4 años creando experiencias inolvidables en el norte argentino.</p>
       <div class="footer-redes">
         <a href="https://www.instagram.com/wamaniturismo" target="_blank" rel="noopener" aria-label="Instagram">
@@ -1061,7 +1069,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
      Con la web publicada, este archivo trae los datos de la base de datos.
      Si se abre el index.html suelto, no carga y se usan como respaldo los
      valores de más abajo. -->
-<script src="contenido.js"></script>
+<script src="/web/contenido.js"></script>
 <script>
 /* Contenido que mandó el sistema (o null si se abrió el archivo suelto) */
 const D = window.CONTENIDO || null;
@@ -1071,67 +1079,67 @@ let NUMERO_WHATSAPP = (D && D.whatsapp) || "5491178898516";
 
 /* ═══ GUIAS: contenido de cada experiencia (respaldo; el sistema lo reemplaza) ═══ */
 let GUIAS = {
-  "salinas": { n:"Atardecer en las Salinas", chip:"Día completo", img:"img/salinas-1.webp", c:"122,106,160",
+  "salinas": { n:"Atardecer en las Salinas", chip:"Día completo", img:"/web/img/salinas-1.webp", c:"122,106,160",
     resumen:"Purmamarca, la Cuesta de Lipán y el momento mágico: el atardecer reflejado en el blanco infinito del salar.",
     datos:["🕐 10 hs","🚌 Salida 9:30 · SSJ","👥 2 a 15 personas","🥾 Dificultad baja"],
     itinerario:["Mirador del Cerro de los 7 Colores en Purmamarca","Paseo de Los Colorados y tiempo libre en el pueblo","Ascenso por la Cuesta de Lipán y Mirador Alto El Morado","Salinas Grandes: recorrido guiado, Ojos del Salar y atardecer con merienda","Regreso en horas de la noche"],
     incluye:["Traslado ida y vuelta desde S. S. de Jujuy","Guía toda la experiencia","Recorrido guiado en el salar","Merienda en las Salinas","Snacks y botiquín"],
     llevar:"Abrigo para la tarde-noche, anteojos de sol, protector, agua y cámara." },
-  "quebrada": { n:"Recorriendo la Quebrada", chip:"Día completo", img:"img/quebrada-1.webp", c:"112,72,105",
+  "quebrada": { n:"Recorriendo la Quebrada", chip:"Día completo", img:"/web/img/quebrada-1.webp", c:"112,72,105",
     resumen:"La Quebrada de las Señoritas, almuerzo regional en Humahuaca y el Cerro de los 14 Colores a más de 4.000 msnm.",
     datos:["🕐 12 hs","🚌 Salida 9:00 · SSJ","👥 2 a 15 personas","🥾 Dificultad moderada"],
     itinerario:["Ruta 9 al norte por la Quebrada de Humahuaca (Patrimonio de la Humanidad)","Trekking guiado en la Quebrada de las Señoritas, Uquía (2-3 hs)","Almuerzo regional en Humahuaca","Serranía del Hornocal: mirador del Cerro de los 14 Colores","Regreso en horas de la noche"],
     incluye:["Traslado ida y vuelta","Entradas a Hornocal y Señoritas","Guía y trekking guiado","Snacks y refrigerios"],
     llevar:"Calzado cómodo, abrigo, protector solar, gorra y agua. Almuerzo no incluido." },
-  "jordan": { n:"Termas de Jordán", chip:"Día completo", img:"img/termas-jordan-1.webp", c:"58,110,90",
+  "jordan": { n:"Termas de Jordán", chip:"Día completo", img:"/web/img/termas-jordan-1.webp", c:"58,110,90",
     resumen:"Trekking profundo por la selva de las yungas hasta las piscinas naturales de aguas termales color turquesa.",
     datos:["🕐 14-16 hs","🚌 Salida 5:00 · SSJ","👥 2 a 15 · Dif. moderada/alta"],
     itinerario:["Traslado a San Francisco, puerta del Parque Nacional Calilegua (3:30 hs)","Trekking de 5-6 hs por selva, ríos y montaña","Tiempo libre en las piscinas termales turquesas","Almuerzo y paseo por San Francisco","Regreso en horas de la noche"],
     incluye:["Traslado ida y vuelta","Entrada a la excursión","Guía toda la jornada","Snacks y refrigerios","Asistencia permanente"],
     llevar:"Calzado de trekking, traje de baño y toalla, ropa de cambio, repelente y agua. Almuerzo no incluido." },
-  "lagunas": { n:"Ruta de Lagunas y Termas", chip:"Día completo", img:"img/lagunas-2.webp", c:"63,118,131",
+  "lagunas": { n:"Ruta de Lagunas y Termas", chip:"Día completo", img:"/web/img/lagunas-2.webp", c:"63,118,131",
     resumen:"Lagunas de altura, una cascada escondida con picada gourmet y el cierre perfecto: las Termas de Reyes.",
     datos:["🕐 7-8 hs","🚌 Salida 9:00 · SSJ","👥 2 a 15 personas","🥾 Dificultad media/baja"],
     itinerario:["Lagunas de Yala a 2.300 msnm: Comedero, Rodeo y Desaguadero","Cascada La Horqueta (40 m) con picada gourmet al aire libre","Relax en las Termas de Reyes: aguas que brotan a 52°C","Regreso por el camino panorámico"],
     incluye:["Traslado ida y vuelta","Guía y trekking guiado","Picada gourmet + snacks","Entrada a las Termas de Reyes"],
     llevar:"Traje de baño, calzado cómodo, abrigo ligero y agua." },
-  "santuyoc": { n:"Cascada Santuyoc y Angosto de Jaire", chip:"Día completo", img:"img/santuyoc-3.webp", c:"92,125,80",
+  "santuyoc": { n:"Cascada Santuyoc y Angosto de Jaire", chip:"Día completo", img:"/web/img/santuyoc-3.webp", c:"92,125,80",
     resumen:"Un cañón secreto de paredes cubiertas de musgo y una cascada de 80 metros escondida en el verde.",
     datos:["🕐 8 hs","🚌 Salida 9:00 · SSJ","👥 2 a 15 · Dif. baja/moderada"],
     itinerario:["Camino de montaña por Yala, Lozano y León (RP 29)","Angosto de Jaire: cañón de helechos, arroyos y cascadas","Caminata a la Cascada Santuyoc (80 m)","Almuerzo regional en Canuto Glamping (incluido)","Regreso 17-18 hs"],
     incluye:["Traslado ida y vuelta","Guía y caminatas guiadas","Almuerzo (sin bebida)","Snacks y botiquín"],
     llevar:"Calzado de trekking, ropa liviana + abrigo, protector y agua." },
-  "yungas": { n:"Conociendo las Yungas", chip:"Travesía · 3 días", t:true, img:"img/yungas-1.webp", c:"47,95,80",
+  "yungas": { n:"Conociendo las Yungas", chip:"Travesía · 3 días", t:true, img:"/web/img/yungas-1.webp", c:"47,95,80",
     resumen:"Tres días en el corazón de la selva: cuevas, termas turquesas y rincones que casi nadie conoce.",
     datos:["🗓️ 3 días / 2 noches","🚌 Salida 8:00 · SSJ","👥 2 a 10 personas","🥾 Dificultad moderada/alta"],
     itinerario:["Día 1 · Llegada a San Francisco y trekking a las Cuevas del Toro","Día 2 · Trekking a las Termas del Jordán (5-6 hs, la joya de la travesía)","Día 3 · Fuente del Jaguar, Refugio del Tapir y Cañón de los Loros"],
     incluye:["Traslado ida y vuelta","2 noches de hospedaje en San Francisco","Desayunos y cenas (media pensión)","Guía local, entrada a las termas, snacks y botiquín"],
     llevar:"2 calzados de trekking, traje de baño, repelente y mochila chica. Almuerzos y bebidas no incluidos." },
-  "yungas-express": { n:"Yungas Express", chip:"Travesía · 2 días", t:true, img:"img/yungas-express-1.webp", c:"104,138,74",
+  "yungas-express": { n:"Yungas Express", chip:"Travesía · 2 días", t:true, img:"/web/img/yungas-express-1.webp", c:"104,138,74",
     resumen:"La versión intensa de la selva: senderos, cena gourmet y las termas turquesas, todo en un fin de semana.",
     datos:["🗓️ 2 días / 1 noche","🚌 Salida 8:00 · SSJ","👥 2 a 10 personas","🥾 Dificultad moderada/alta"],
     itinerario:["Día 1 · Refugio del Tapir, Fuente del Jaguar y Cañón de los Loros + cena gourmet en El Puesto","Día 2 · Trekking a las Termas del Jordán (5-6 hs) y regreso"],
     incluye:["Traslado ida y vuelta","Hospedaje en San Francisco","Cena gourmet + desayuno","Guía, snacks y asistencia"],
     llevar:"Calzado de trekking, traje de baño, ropa de cambio y repelente." },
-  "humahuaca-yungas": { n:"Humahuaca – Yungas", chip:"Travesía · 5 días", t:true, img:"img/humahuaca-yungas-1.webp", c:"178,94,58",
+  "humahuaca-yungas": { n:"Humahuaca – Yungas", chip:"Travesía · 5 días", t:true, img:"/web/img/humahuaca-yungas-1.webp", c:"178,94,58",
     resumen:"De la Quebrada a la selva por el Camino del Inca: pueblos ancestrales, cascadas y termas escondidas.",
     datos:["🗓️ 5 días / 4 noches","🚌 Salida · SSJ","👥 4 a 12 personas","🥾 Dificultad moderada/alta"],
     itinerario:["Día 1 · Humahuaca, Hornocal y llegada a Caspalá","Día 2 · Sitio arqueológico El Antiguito y Cascada Casa Mocha → Santa Ana","Día 3 · Trekking por el Qhapaq Ñan (Camino del Inca) → San Francisco","Día 4 · Trekking a las Termas del Jordán (jornada estrella)","Día 5 · Rincones de las yungas y regreso"],
     incluye:["Todos los traslados","4 noches de hospedaje","Desayunos y cenas","Guía local, entradas, snacks y botiquín"],
     llevar:"Calzado de trekking, abrigo (noches frías) y traje de baño. Almuerzos no incluidos." },
-  "tilcara": { n:"Tilcara – Calilegua", chip:"Travesía · 5 días", t:true, img:"img/tilcara-2.webp", c:"86,132,96",
+  "tilcara": { n:"Tilcara – Calilegua", chip:"Travesía · 5 días", t:true, img:"/web/img/tilcara-2.webp", c:"86,132,96",
     resumen:"En solo 68 km, del árido quebradeño a la nuboselva: el trekking que une dos mundos.",
     datos:["🗓️ 5 días / 4 noches","🥾 6-8 hs por día · Dificultad media/alta","👥 6 a 16 · Hasta 4.200 msnm"],
     itinerario:["Día 1 · Aclimatación en Tilcara + cena de bienvenida","Día 2 · Casa Colorada → Wayra Wasi (20 km, hasta 4.200 msnm)","Día 3 · Wayra Wasi → Molúlo (20 km)","Día 4 · Molúlo → San Lucas (22 km)","Día 5 · San Lucas → Peña Alta (San Francisco) y regreso"],
     incluye:["1 noche en Tilcara + 3 en refugios de montaña","Cenas con gastronomía local","Guía y traslados de inicio y fin"],
     llevar:"Equipo de trekking completo, abrigo de altura y bolsa de dormir. Consultanos el listado detallado." },
-  "iruya": { n:"Iruya – Nazareno", chip:"Travesía · 5 días", t:true, img:"img/iruya-2.webp", c:"88,106,140",
+  "iruya": { n:"Iruya – Nazareno", chip:"Travesía · 5 días", t:true, img:"/web/img/iruya-2.webp", c:"88,106,140",
     resumen:"Caminos ancestrales entre pueblos remotos, durmiendo en casas de familias que te reciben como a uno más.",
     datos:["🗓️ 5 días / 4 noches","📍 Inicio: Humahuaca 15 hs","👥 4 a 12 personas","🥾 Jornadas de 9-10 hs","📅 Próxima salida: 5 al 9 de agosto"],
     itinerario:["Día 1 · Colectivo a Iruya y cena de bienvenida","Día 2 · Iruya → Chiyayoc (15 km) — nos recibe Paula y su familia","Día 3 · Chiyayoc → Rodeo Colorado (13 km)","Día 4 · Rodeo Colorado → Cuesta Azul (18 km)","Día 5 · Llegada a Nazareno, almuerzo de despedida y regreso"],
     incluye:["Todos los traslados","4 noches con familias anfitrionas","Pensión completa de marcha (desayuno, almuerzo, merienda y cena)"],
     llevar:"Calzado de trekking usado (no nuevo), abrigo y linterna. La montaña marca el ritmo." },
-  "ecolodge": { n:"Especial EcoLodge de la Selva", chip:"Travesía · 3 días", t:true, img:"img/ecolodge-2.webp", c:"134,124,82",
+  "ecolodge": { n:"Especial EcoLodge de la Selva", chip:"Travesía · 3 días", t:true, img:"/web/img/ecolodge-2.webp", c:"134,124,82",
     resumen:"Cascadas, lagunas, termas y tirolesas, durmiendo en cabañas inmersas en la selva a minutos de la ciudad.",
     datos:["🗓️ 3 días / 2 noches","🚌 Salida 9:00 · SSJ","👥 2 a 12 · Dif. baja/media"],
     itinerario:["Día 1 · Angosto de Jaire y Cascada Santuyoc + almuerzo regional","Día 2 · Lagunas de Yala, Cascada La Horqueta y Termas de Reyes","Día 3 · Parque Aéreo Los Coatíes: tirolesas y circuitos entre los árboles"],
@@ -1146,8 +1154,8 @@ let ORDEN = ["jordan","salinas","yungas","quebrada","santuyoc","yungas-express",
 if (D && D.excursiones && D.excursiones.length){
   GUIAS = {}; ORDEN = [];
   D.excursiones.forEach(function(e){
-    GUIAS[e.clave] = { n:e.n, chip:e.chip, t:e.t, sel:e.sel, c:e.c, img:"img/"+e.img,
-      fotos:(e.fotos && e.fotos.length ? e.fotos : [e.img]).map(function(f){ return "img/"+f; }),
+    GUIAS[e.clave] = { n:e.n, chip:e.chip, t:e.t, sel:e.sel, c:e.c, img:"/web/img/"+e.img,
+      fotos:(e.fotos && e.fotos.length ? e.fotos : [e.img]).map(function(f){ return "/web/img/"+f; }),
       resumen:e.resumen, datos:e.datos, itinerario:e.itinerario, incluye:e.incluye, llevar:e.llevar };
     ORDEN.push(e.clave);
   });
@@ -1412,10 +1420,10 @@ if (D){
     const sv = document.getElementById("videos");
     if (cv && D.videos.length){
       cv.innerHTML = D.videos.map(function(v){
-        const poster = v.poster ? ' poster="img/' + v.poster + '"' : '';
+        const poster = v.poster ? ' poster="/web/img/' + v.poster + '"' : '';
         return '<div class="video-card' + (v.vertical ? '' : ' horizontal') + '">' +
           '<video controls preload="metadata" playsinline' + poster + '>' +
-          '<source src="img/' + v.archivo + '" type="video/mp4"></video>' +
+          '<source src="/web/img/' + v.archivo + '" type="video/mp4"></video>' +
           '<div class="vc-cuerpo"><h3>' + v.titulo + '</h3><p>' + v.desc + '</p></div></div>';
       }).join("");
       if (sv) sv.style.display = "";   // mostrar la sección
@@ -1427,7 +1435,7 @@ if (D){
     const ce = document.querySelector(".integrantes");
     if (ce) ce.innerHTML = D.equipo.map(function(p){
       return '<div class="integrante"><div class="foto-guia">' +
-             '<img src="img/' + p.foto + '" alt="' + p.nombre + '" loading="lazy">' +
+             '<img src="/web/img/' + p.foto + '" alt="' + p.nombre + '" loading="lazy">' +
              '<div class="nombre"><h3>' + p.nombre + '</h3><span class="rol">' + p.rol + '</span></div>' +
              '</div><p class="bio">' + p.bio + '</p></div>';
     }).join("");
@@ -1534,8 +1542,8 @@ function cerrarMenu(){ document.getElementById("check-menu").checked = false; }
      dibujó las tarjetas, los testimonios y el equipo, así que el traductor los
      encuentra hechos. Lo que se dibuje después (la guía de una excursión, el
      panel del mapa) lo traduce solo. Ver idiomas.js. -->
-<script src="idiomas-textos.js"></script>
-<script src="idiomas.js"></script>
+<script src="/web/idiomas-textos.js"></script>
+<script src="/web/idiomas.js"></script>
 
 </body>
 </html>

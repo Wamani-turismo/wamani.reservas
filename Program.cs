@@ -1115,7 +1115,9 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db) =>
     var desc = resumen.Length > 155 ? resumen.Substring(0, 152).TrimEnd() + "…" : resumen;
     if (string.IsNullOrWhiteSpace(desc))
         desc = e.Nombre + " con Wamani Turismo: guías locales y grupos reducidos en Jujuy.";
-    var msg = Uri.EscapeDataString("¡Hola! Quiero consultar por " + e.Nombre + ".");
+    // Texto distinto al de la web principal a propósito: es la única forma de saber, al
+    // leer el WhatsApp, si la consulta salió de estas páginas nuevas o del sitio de siempre.
+    var msg = Uri.EscapeDataString("¡Hola! Estuve viendo la página de " + e.Nombre + " y quiero consultar.");
 
     var llevar = string.IsNullOrWhiteSpace(e.Llevar)
         ? "" : "<h2>Qué llevar</h2><p class='resumen'>" + Esc(e.Llevar) + "</p>";

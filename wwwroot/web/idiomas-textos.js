@@ -230,14 +230,14 @@ en: {
     "Se reserva con una seña del 50% y el saldo se abona hasta 7 días antes de realizar la travesía. En caso de cancelar, se retendrá la totalidad de la seña.": "Booking requires a 50% deposit, with the balance due up to 7 days before the trek. In case of cancellation, the full deposit is non-refundable.",
     "Se reserva con una seña del 50% y el saldo se abona hasta 4 días antes de realizar la excursión. En caso de cancelar, se retendrá la totalidad de la seña.": "Booking requires a 50% deposit, with the balance due up to 4 days before the tour. In case of cancellation, the full deposit is non-refundable.",
 
-    /* ── Nombres de las experiencias ── */
-    "Conociendo las Yungas": "Discovering the Yungas",
-    "Cascada Santuyoc y Angosto de Jaire": "Santuyoc Waterfall & Angosto de Jaire",
-    "Recorriendo la Quebrada": "Through the Quebrada",
-    "Termas de Jordán": "Jordán Hot Springs",
-    "Ruta de Lagunas y Termas": "Lagoons & Hot Springs Route",
-    "Atardecer en las Salinas": "Sunset over the Salt Flats",
-    "Especial EcoLodge de la Selva": "Rainforest EcoLodge Special",
+    /* ── Los NOMBRES de las experiencias NO se traducen ───────────────────
+       Decisión de Wamani (17/09/2026): cada propuesta se llama igual en los
+       cuatro idiomas, como la nombramos nosotros ("Conociendo las Yungas",
+       "Tilcara – Calilegua", "Iruya – Nazareno"…). Sí se traduce todo lo demás
+       de la ficha: el resumen, el itinerario, qué incluye y qué llevar.
+       Por eso acá no hay ninguna clave: lo que no está en el diccionario el
+       motor lo deja en castellano. Si algún día se quiere traducir un nombre,
+       alcanza con sumarlo acá. ── */
 
     /* ── Etiquetas de duración ── */
     "3 días": "3 days",
@@ -616,14 +616,8 @@ fr: {
     "Se reserva con una seña del 50% y el saldo se abona hasta 7 días antes de realizar la travesía. En caso de cancelar, se retendrá la totalidad de la seña.": "La réservation se fait avec un acompte de 50 %, le solde étant dû jusqu'à 7 jours avant le départ du trek. En cas d'annulation, l'acompte est retenu en totalité.",
     "Se reserva con una seña del 50% y el saldo se abona hasta 4 días antes de realizar la excursión. En caso de cancelar, se retendrá la totalidad de la seña.": "La réservation se fait avec un acompte de 50 %, le solde étant dû jusqu'à 4 jours avant l'excursion. En cas d'annulation, l'acompte est retenu en totalité.",
 
-    /* ── Nombres de las experiencias ── */
-    "Conociendo las Yungas": "À la découverte des Yungas",
-    "Cascada Santuyoc y Angosto de Jaire": "Cascade de Santuyoc et Angosto de Jaire",
-    "Recorriendo la Quebrada": "Au fil de la Quebrada",
-    "Termas de Jordán": "Sources chaudes de Jordán",
-    "Ruta de Lagunas y Termas": "Route des lagunes et des sources chaudes",
-    "Atardecer en las Salinas": "Coucher de soleil sur les salines",
-    "Especial EcoLodge de la Selva": "Spécial EcoLodge de la forêt",
+    /* ── Los NOMBRES de las experiencias NO se traducen (ver la nota en el
+       bloque de inglés). Se traduce la descripción, no el nombre. ── */
 
     /* ── Etiquetas de duración ── */
     "3 días": "3 jours",
@@ -1001,14 +995,8 @@ pt: {
     "Se reserva con una seña del 50% y el saldo se abona hasta 7 días antes de realizar la travesía. En caso de cancelar, se retendrá la totalidad de la seña.": "A reserva é feita com um sinal de 50% e o saldo é pago até 7 dias antes de realizar a travessia. Em caso de cancelamento, o sinal será retido integralmente.",
     "Se reserva con una seña del 50% y el saldo se abona hasta 4 días antes de realizar la excursión. En caso de cancelar, se retendrá la totalidad de la seña.": "A reserva é feita com um sinal de 50% e o saldo é pago até 4 dias antes de realizar a excursão. Em caso de cancelamento, o sinal será retido integralmente.",
 
-    /* ── Nombres de las experiencias ── */
-    "Conociendo las Yungas": "Conhecendo as Yungas",
-    "Cascada Santuyoc y Angosto de Jaire": "Cachoeira Santuyoc e Angosto de Jaire",
-    "Recorriendo la Quebrada": "Percorrendo a Quebrada",
-    "Termas de Jordán": "Termas de Jordán",
-    "Ruta de Lagunas y Termas": "Rota de Lagunas e Termas",
-    "Atardecer en las Salinas": "Pôr do sol nas Salinas",
-    "Especial EcoLodge de la Selva": "Especial EcoLodge da Selva",
+    /* ── Los NOMBRES de las experiencias NO se traducen (ver la nota en el
+       bloque de inglés). Se traduce la descripción, no el nombre. ── */
 
     /* ── Etiquetas de duración ── */
     "3 días": "3 dias",

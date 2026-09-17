@@ -310,7 +310,7 @@
     // Además contradecía lo que el propio HTML declara: la dirección sin ?lang es la
     // española (hreflang="es" y x-default). Ahora coinciden. Google va a mostrarle la
     // ficha en inglés a quien busque en inglés, porque para eso están declaradas las
-    // direcciones ?lang=en y ?lang=fr.
+    // direcciones ?lang=en, ?lang=fr y ?lang=pt.
     //
     // Sigue respetándose la elección guardada: el que ya eligió EN o FR lo conserva.
     cambiar(pedido && IDIOMAS[pedido] ? pedido : "es", false);

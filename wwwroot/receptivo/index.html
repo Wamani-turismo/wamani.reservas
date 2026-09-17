@@ -11,6 +11,7 @@
 <link rel="alternate" hreflang="es" href="https://wamaniturismo.com/receptivo/">
 <link rel="alternate" hreflang="en" href="https://wamaniturismo.com/receptivo/?lang=en">
 <link rel="alternate" hreflang="fr" href="https://wamaniturismo.com/receptivo/?lang=fr">
+<link rel="alternate" hreflang="pt" href="https://wamaniturismo.com/receptivo/?lang=pt">
 <link rel="alternate" hreflang="x-default" href="https://wamaniturismo.com/receptivo/">
 
 <link rel="icon" href="/favicon.ico" sizes="any">
@@ -57,7 +58,7 @@ a:hover{text-decoration:underline}
 .barra img{height:34px; width:auto; display:block}
 .barra a.volver{font-size:.92rem; color:var(--texto-suave)}
 
-/* Selector de idioma (ES · EN · FR) */
+/* Selector de idioma (ES · EN · FR · PT) */
 .sel-idioma{display:flex; align-items:center; gap:1px; flex-shrink:0}
 /* El globito: se entiende sin leer nada, en cualquier idioma. */
 .sel-idioma .ico-idioma{
@@ -74,6 +75,12 @@ a:hover{text-decoration:underline}
 .sel-idioma button + button{border-left:1px solid var(--linea)}
 .sel-idioma button:hover{color:var(--dorado)}
 .sel-idioma button.on{color:var(--dorado); background:rgba(216,192,150,.14)}
+/* con cuatro idiomas la cabecera queda justa en celulares angostos */
+@media (max-width:420px){
+  .sel-idioma button{padding:.34rem .28rem; font-size:.74rem; letter-spacing:.02em}
+  .sel-idioma .ico-idioma{margin-right:2px}
+  .barra a.volver{font-size:.84rem}
+}
 
 /* ---------- Portada: la elección ---------- */
 .portada{
@@ -213,6 +220,7 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
         <button type="button" data-lang="es" onclick="WamaniIdioma.cambiar('es')">ES</button>
         <button type="button" data-lang="en" onclick="WamaniIdioma.cambiar('en')">EN</button>
         <button type="button" data-lang="fr" onclick="WamaniIdioma.cambiar('fr')">FR</button>
+        <button type="button" data-lang="pt" onclick="WamaniIdioma.cambiar('pt')">PT</button>
       </div>
       <a class="volver" href="/">Ir a la web ↗</a>
     </div>

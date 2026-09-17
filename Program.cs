@@ -951,7 +951,7 @@ app.MapRazorPages();
 // La "puerta de entrada" (la dirección raíz) muestra la LANDING pública.
 // Así, cuando se conecte el dominio (wamaniturismo.com), los visitantes ven la
 // web y NO el sistema. Los chicos entran al sistema por /panel (requiere login).
-// Se conserva lo que venga después del "?" (hoy: ?lang=en / ?lang=fr). Sin esto, el
+// Se conserva lo que venga después del "?" (hoy: ?lang=en / ?lang=fr / ?lang=pt). Sin esto, el
 // enlace en inglés que le damos a Google terminaba en la web en castellano.
 // Desde el 15/09/2026 la landing se SIRVE acá, ya no redirige a /web/. El motivo es de
 // buscadores: wamaniturismo.com es la dirección que repartimos (tarjetas, folletos,
@@ -1275,12 +1275,12 @@ app.MapGet("/sitemap.xml", (AppDbContext db) =>
     sb.AppendLine("""<?xml version="1.0" encoding="UTF-8"?>""");
     sb.AppendLine("""<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">""");
 
-    // Las dos páginas de siempre, cada una declarada en los tres idiomas.
+    // Las dos páginas de siempre, cada una declarada en los cuatro idiomas.
     foreach (var (ruta, freq, prio) in new[] { ("/", "weekly", "1.0"), ("/receptivo/", "monthly", "0.8") })
     {
         sb.AppendLine("  <url>");
         sb.AppendLine($"    <loc>{baseUrl}{ruta}</loc>");
-        foreach (var (idioma, sufijo) in new[] { ("es", ""), ("en", "?lang=en"), ("fr", "?lang=fr"), ("x-default", "") })
+        foreach (var (idioma, sufijo) in new[] { ("es", ""), ("en", "?lang=en"), ("fr", "?lang=fr"), ("pt", "?lang=pt"), ("x-default", "") })
             sb.AppendLine($"""    <xhtml:link rel="alternate" hreflang="{idioma}" href="{baseUrl}{ruta}{sufijo}"/>""");
         sb.AppendLine($"    <changefreq>{freq}</changefreq>");
         sb.AppendLine($"    <priority>{prio}</priority>");

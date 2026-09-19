@@ -22,9 +22,23 @@ public class IndexModel : PageModel
         public decimal GananciaMax { get; set; }
         public decimal MargenMax { get; set; }
         public bool SinCostos { get; set; }
+
+        // Cuánta gente hace falta para no perder plata. 0 = no cierra ni lleno.
+        public int ParaEmpatar { get; set; }
     }
 
     public List<Fila> Filas { get; set; } = new();
+
+    // La lista se muestra en tres bloques, igual que en Excursiones: el catálogo de
+    // siempre, La Combi (que se lee por butacas) y los viajes armados a medida. Mezclados
+    // no se entiende nada: una combi al lado de una travesía de 5 días no se compara.
+    public class Grupo
+    {
+        public string Titulo { get; set; } = "";
+        public string Subtitulo { get; set; } = "";
+        public List<Fila> Filas { get; set; } = new();
+    }
+    public List<Grupo> Grupos { get; set; } = new();
 
     public async Task OnGetAsync()
     {
@@ -60,8 +74,36 @@ public class IndexModel : PageModel
                 GananciaMin = alMin.Ganancia,
                 GananciaMax = alMax.Ganancia,
                 MargenMax = alMax.MargenPct,
-                SinCostos = items.Count == 0 && etps.Count == 0
+                SinCostos = items.Count == 0 && etps.Count == 0,
+                ParaEmpatar = RentabilidadCalc.PersonasParaEmpatar(e, items, etps)
             });
         }
+
+        // ---- Los tres bloques ----
+        var porId = excs.ToDictionary(e => e.Id);
+        bool EsCombi(Fila f) => porId[f.Id].EsCombi;
+        bool EsAMedida(Fila f) => !EsCombi(f) &&
+            (porId[f.Id].EsPersonalizada || porId[f.Id].EsAMedida);
+
+        Grupos.Add(new Grupo
+        {
+            Titulo = "Excursiones y travesías",
+            Subtitulo = "El catálogo de siempre.",
+            Filas = Filas.Where(f => !EsCombi(f) && !EsAMedida(f)).ToList()
+        });
+        Grupos.Add(new Grupo
+        {
+            Titulo = "🚐 La Combi de Wamani",
+            Subtitulo = "Se venden por butaca. Lo que manda es cuántas hace falta vender "
+                      + "para empatar: la traffic y la guía se pagan igual vaya quien vaya.",
+            Filas = Filas.Where(EsCombi).ToList()
+        });
+        Grupos.Add(new Grupo
+        {
+            Titulo = "Viajes a medida",
+            Subtitulo = "Armados para un grupo puntual.",
+            Filas = Filas.Where(EsAMedida).ToList()
+        });
+        Grupos.RemoveAll(g => g.Filas.Count == 0);
     }
 }

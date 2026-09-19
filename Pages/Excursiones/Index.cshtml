@@ -158,6 +158,14 @@ else
                         <th class="num">Sale vacía</th>
                         <th class="num">Cada butaca</th>
                         <th class="num">Butacas para empatar</th>
+                        @* Probar una ocupación floja sin hacer cuentas a mano: "¿y si sólo
+                           vienen 6?". Es la pregunta que se hace antes de decidir si una
+                           salida sale o se cancela. *@
+                        <th class="num" style="white-space:nowrap">
+                            Si vendés
+                            <input id="combiN" type="number" min="1" max="40" value="6"
+                                   style="width:56px;padding:2px 4px;border:1px solid var(--linea,#d8d3c6);border-radius:6px;font:inherit;text-align:center" />
+                        </th>
                         <th class="num">Si va llena</th>
                         <th></th>
                     </tr>
@@ -202,6 +210,15 @@ else
                                 <span class="cliente-sub"> de @lleno</span>
                             }
                         </td>
+                        <td class="num" data-label="Si vendés esas butacas">
+                            @* En invariante a propósito: el JS los lee con parseFloat, que
+                               no entiende la coma decimal del formato argentino. *@
+                            <span class="combi-res"
+                                  data-fijo="@((n?.CostoSalidaVacia ?? 0).ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                                  data-butaca="@((n?.CostoPorButaca ?? 0).ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                                  data-precio="@e.PrecioPorPersona.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                  data-max="@lleno">—</span>
+                        </td>
                         <td class="num" data-label="Si va llena">
                             @if (n is null || e.PrecioPorPersona <= 0)
                             {
@@ -227,7 +244,59 @@ else
             <strong>Sale vacía</strong> es lo que pagás aunque no vendas una sola butaca (la traffic,
             la guía y sus viáticos). <strong>Cada butaca</strong> es lo que suma un pasajero más
             (snacks y su seguro). De ahí sale cuántas hacen falta para empatar.
+            Cambiá el número de arriba para ver <strong>cuánto ganás o perdés con la ocupación
+            que quieras</strong>: sirve para decidir si una salida floja sale igual o se cancela.
         </p>
+
+        <script>
+        // Cuánto deja cada combi con la ocupación que se pruebe.
+        //
+        // Se calcula acá y no en el servidor para que cambie al toque mientras se mueve el
+        // número. La cuenta es exacta porque en una combi todo costo es de una de dos clases:
+        // o se paga igual vaya quien vaya (la traffic, la guía) o va por butaca (snacks,
+        // seguro). No hay saltos como el "otro auto cada 4 personas" de las excursiones
+        // comunes, así que alcanza con: precio × butacas − (fijo + porButaca × butacas).
+        (function () {
+            var inp = document.getElementById('combiN');
+            if (!inp) return;
+
+            function plata(v) {
+                var s = Math.round(Math.abs(v)).toLocaleString('es-AR');
+                return (v < 0 ? '−$ ' : '$ ') + s;
+            }
+
+            function pintar() {
+                var n = parseInt(inp.value, 10) || 0;
+                document.querySelectorAll('.combi-res').forEach(function (el) {
+                    var fijo = parseFloat(el.dataset.fijo) || 0;
+                    var porButaca = parseFloat(el.dataset.butaca) || 0;
+                    var precio = parseFloat(el.dataset.precio) || 0;
+                    var tope = parseInt(el.dataset.max, 10) || 0;
+
+                    if (precio <= 0 || n <= 0) { el.textContent = '—'; el.removeAttribute('style'); return; }
+                    if (tope > 0 && n > tope) {
+                        el.textContent = 'no entran';
+                        el.style.color = 'var(--muted)';
+                        return;
+                    }
+                    var ganancia = precio * n - (fijo + porButaca * n);
+                    el.textContent = plata(ganancia);
+                    el.style.color = ganancia < 0 ? 'var(--warn)' : 'var(--accent)';
+                    el.style.fontWeight = '700';
+                });
+                // Queda elegido el número que se usó la última vez, en esta computadora.
+                try { localStorage.setItem('wamani-combi-butacas', String(n)); } catch (e) { }
+            }
+
+            try {
+                var guardado = localStorage.getItem('wamani-combi-butacas');
+                if (guardado) inp.value = guardado;
+            } catch (e) { }
+
+            inp.addEventListener('input', pintar);
+            pintar();
+        })();
+        </script>
     }
 
     @* Los viajes a medida, aparte y al final: no son parte del catálogo de siempre. *@

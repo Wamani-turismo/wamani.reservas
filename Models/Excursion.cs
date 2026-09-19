@@ -51,6 +51,14 @@ namespace Wamani.Reservas.Models
         // el precio a mano, y estos SÍ tienen precio propio para que Rentabilidad dé bien.
         public bool EsPersonalizada { get; set; } = false;
 
+        // LA COMBI DE WAMANI: salidas regulares desde San Salvador en una traffic alquilada,
+        // vendidas POR BUTACA. La diferencia con el resto del catálogo es de dónde sale la
+        // plata: acá casi todo el costo es fijo (la traffic y la guía se pagan igual vayan
+        // 4 personas o 19), así que lo único que importa es cuántas butacas se venden.
+        // Por eso van agrupadas aparte y por eso tienen el cálculo del punto de equilibrio.
+        [Display(Name = "Es una salida de La Combi de Wamani")]
+        public bool EsCombi { get; set; } = false;
+
         // Nombre de la excursión a medida que se crea sola la primera vez.
         public const string NombreAMedida = "Excursión a medida";
 

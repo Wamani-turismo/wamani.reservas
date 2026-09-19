@@ -118,4 +118,33 @@ public static class RentabilidadCalc
         var margen = costo > 0 ? Math.Round(ganancia / costo * 100, 0) : 0;
         return (ingreso, costo, ganancia, margen);
     }
+
+    // ---------- PUNTO DE EQUILIBRIO ----------
+    //
+    // Cuánta gente hace falta para no perder plata. Nació para La Combi, donde casi todo
+    // el costo es fijo (la traffic y la guía se pagan igual vayan 4 personas o 19) y la
+    // única pregunta que importa es cuántas butacas hay que vender. Vale para cualquier
+    // excursión igual.
+    //
+    // Se prueba persona por persona en vez de despejar una fórmula a propósito: hay costos
+    // que dan saltos (cada 4 personas entra otro auto, con su chofer y su nafta) y una
+    // división no los vería. Probando de a uno, el número siempre es el de verdad.
+    //
+    // Devuelve 0 cuando no cierra ni con la excursión llena: ahí el problema es el precio,
+    // no la cantidad de gente.
+    public static int PersonasParaEmpatar(
+        Excursion exc, IEnumerable<GastoExcursion> items, IEnumerable<EtapaExcursion> etapas)
+    {
+        if (exc.PrecioPorPersona <= 0) return 0;
+
+        var lista = items as ICollection<GastoExcursion> ?? items.ToList();
+        var etps = etapas as ICollection<EtapaExcursion> ?? etapas.ToList();
+        var tope = exc.MaximoPersonas > 0 ? exc.MaximoPersonas : 30;
+
+        for (var n = 1; n <= tope; n++)
+            if (exc.PrecioPorPersona * n >= Costo(lista, etps, n))
+                return n;
+
+        return 0;
+    }
 }

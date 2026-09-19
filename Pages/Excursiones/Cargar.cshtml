@@ -96,6 +96,18 @@
             </div>
             <div class="field full">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                    <input asp-for="Excursion.EsCombi" type="checkbox" style="width:auto" />
+                    🚐 Es una salida de <strong>La Combi de Wamani</strong>
+                </label>
+                <div class="hint">
+                    Se vende <strong>por butaca</strong>. Aparece agrupada aparte en Excursiones y
+                    muestra <strong>cuántas butacas hay que vender para no perder plata</strong>.
+                    El alquiler de la traffic va como proveedor de tipo 🚐 Traslado con
+                    <strong>cantidad 1</strong>, así se paga el vehículo entero y no por asiento.
+                </div>
+            </div>
+            <div class="field full">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
                     <input asp-for="Excursion.Activa" type="checkbox" style="width:auto" />
                     Activa (aparece para cargar reservas nuevas)
                 </label>
@@ -589,35 +601,43 @@
             });
             if (guias <= 0) guias = 1;
 
-            var total = 0;
+            // Cuánto sale la salida con N pasajeros. Está como función para poder
+            // preguntárselo varias veces: con 0 (lo fijo), con 1 y 2 (para saber cuánto
+            // suma cada persona) y probando de a uno hasta encontrar el punto de equilibrio.
+            function costoCon(n) {
+                var total = 0;
 
-            // 1) Los costos sueltos de arriba
-            document.querySelectorAll('#gastosBody .gasto-row').forEach(function (tr) {
-                var precio = parseFloat(tr.querySelector('[name=GastoPrecios]').value) || 0;
-                if (precio <= 0) return;
-                var tipo = tr.querySelector('[name=GastoTipos]').value;
-                if (tipo === 'Por persona')      total += precio * min;
-                else if (tipo === 'Por auto')    total += precio * Math.ceil(min / PERSONAS_POR_AUTO);
-                else if (tipo === 'Cantidad')    total += precio * (parseInt(tr.querySelector('[name=GastoCantidades]').value) || 0);
-                else                             total += precio;   // Fijo
-            });
+                // 1) Los costos sueltos de arriba
+                document.querySelectorAll('#gastosBody .gasto-row').forEach(function (tr) {
+                    var precio = parseFloat(tr.querySelector('[name=GastoPrecios]').value) || 0;
+                    if (precio <= 0) return;
+                    var tipo = tr.querySelector('[name=GastoTipos]').value;
+                    if (tipo === 'Por persona')      total += precio * n;
+                    else if (tipo === 'Por auto')    total += precio * Math.ceil(n / PERSONAS_POR_AUTO);
+                    else if (tipo === 'Cantidad')    total += precio * (parseInt(tr.querySelector('[name=GastoCantidades]').value) || 0);
+                    else                             total += precio;   // Fijo
+                });
 
-            // 2) Lo que se contrata para el grupo
-            document.querySelectorAll('#etapasBody .etapa-row').forEach(function (f) {
-                var precio = parseFloat(f.querySelector('.in-precio-etapa').value) || 0;
-                if (precio <= 0) return;   // sin precio cargado no se puede contar
-                var tipo = f.querySelector('.sel-etapa-tipo').value;
-                var veces = parseInt(f.querySelector('.in-noches').value) || 1;
-                if (veces < 1) veces = 1;
+                // 2) Lo que se contrata para el grupo
+                document.querySelectorAll('#etapasBody .etapa-row').forEach(function (f) {
+                    var precio = parseFloat(f.querySelector('.in-precio-etapa').value) || 0;
+                    if (precio <= 0) return;   // sin precio cargado no se puede contar
+                    var tipo = f.querySelector('.sel-etapa-tipo').value;
+                    var veces = parseInt(f.querySelector('.in-noches').value) || 1;
+                    if (veces < 1) veces = 1;
 
-                // "Veces" cuenta en todos: un traslado que se hace dos veces (ida y vuelta)
-                // se paga dos veces. El operativo ya lo contaba así; acá faltaba.
-                if (tipo === 'Traslado')      total += precio * vehiculos(f, min, guias) * veces;
-                else if (tipo === 'Pasaje')   total += precio * (min + guias) * veces;
-                else if (esPorDia(tipo))      total += precio * (parseInt(f.querySelector('.in-cuantos').value) || 0) * veces;
-                else                          total += precio * min * veces;   // Hospedaje
-            });
+                    // "Veces" cuenta en todos: un traslado que se hace dos veces (ida y vuelta)
+                    // se paga dos veces. El operativo ya lo contaba así; acá faltaba.
+                    if (tipo === 'Traslado')      total += precio * vehiculos(f, n, guias) * veces;
+                    else if (tipo === 'Pasaje')   total += precio * (n <= 0 ? 0 : n + guias) * veces;
+                    else if (esPorDia(tipo))      total += precio * (parseInt(f.querySelector('.in-cuantos').value) || 0) * veces;
+                    else                          total += precio * n * veces;   // Hospedaje
+                });
 
+                return total;
+            }
+
+            var total = costoCon(min);
             var porPersona = total / min;
             var cobramos = parseFloat(document.getElementById('Excursion_PrecioPorPersona').value) || 0;
 
@@ -637,6 +657,38 @@
                   + '<b style="color:' + color + '">' + plata(Math.abs(ganancia)) + '</b>'
                   + (ganancia >= 0 ? ' (' + margen + '% sobre el costo)' : '')
                   + '</div>';
+            }
+
+            // ---- De dónde sale ese costo, y cuánta gente hace falta para empatar ----
+            //
+            // Partir el costo en "lo que se paga igual" y "lo que agrega cada persona" es lo
+            // que deja ver el negocio de un vistazo: en La Combi la traffic y la guía se pagan
+            // vaya quien vaya, así que la única pregunta real es cuántas butacas vender.
+            var fijo = costoCon(0);
+            var porCabeza = costoCon(2) - costoCon(1);
+            var maximo = parseInt(document.getElementById('Excursion_MaximoPersonas').value) || 0;
+
+            html += '<div class="costo-detalle" style="margin-top:10px">'
+              + 'Se paga igual vaya quien vaya: <b>' + plata(fijo) + '</b>'
+              + ' &nbsp;·&nbsp; cada persona suma <b>' + plata(porCabeza) + '</b>'
+              + '</div>';
+
+            if (cobramos > 0 && maximo > 0) {
+                // De a uno y no con una división: cada 4 personas entra otro auto y el costo
+                // pega un salto que una fórmula no vería.
+                var empate = 0;
+                for (var n = 1; n <= maximo; n++) {
+                    if (cobramos * n >= costoCon(n)) { empate = n; break; }
+                }
+                if (empate > 0) {
+                    html += '<div class="costo-detalle" style="margin-top:6px">'
+                      + 'Para no perder plata hay que vender <b style="color:var(--ok);font-size:1.1em">'
+                      + empate + '</b> de ' + maximo + '</div>';
+                } else {
+                    html += '<div class="costo-detalle" style="margin-top:6px;color:var(--warn)">'
+                      + '<b>No cierra ni con ' + maximo + ' personas.</b> Con este precio se pierde plata siempre.'
+                      + '</div>';
+                }
             }
 
             html += '<div class="costo-nota">Es una estimación con los precios cargados acá. '

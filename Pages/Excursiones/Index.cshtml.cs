@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Wamani.Reservas.Data;
 using Wamani.Reservas.Models;
+using Wamani.Reservas.Services;
 
 namespace Wamani.Reservas.Pages.Excursiones;
 
@@ -17,11 +18,30 @@ public class IndexModel : PageModel
     // armados a medida. Así no se mezcla el catálogo con lo que se hizo para un grupo
     // puntual. La "Excursión a medida" genérica de toda la vida también va abajo.
     public bool EsDeAMedida(Excursion e) => e.EsPersonalizada || e.EsAMedida;
-    public List<Excursion> DelCatalogo => Excursiones.Where(e => !EsDeAMedida(e)).ToList();
-    public List<Excursion> AMedida => Excursiones.Where(EsDeAMedida).ToList();
+
+    // Tres grupos, cada uno con su lógica: el catálogo de siempre, los viajes armados para
+    // un grupo puntual, y La Combi (salidas regulares en traffic, vendidas por butaca).
+    // Una combi nunca es "a medida": si alguna vez tuviera las dos marcas, manda la combi.
+    public List<Excursion> Combis => Excursiones.Where(e => e.EsCombi).ToList();
+    public List<Excursion> DelCatalogo =>
+        Excursiones.Where(e => !e.EsCombi && !EsDeAMedida(e)).ToList();
+    public List<Excursion> AMedida =>
+        Excursiones.Where(e => !e.EsCombi && EsDeAMedida(e)).ToList();
 
     [BindProperty(SupportsGet = true)]
     public string? Aviso { get; set; }
+
+    // Para cada salida de La Combi: cuántas butacas hay que vender para no perder plata,
+    // y cuánto sale la salida vacía. Es LO que hay que mirar en este producto, porque la
+    // traffic y la guía se pagan igual vaya la gente que vaya.
+    public class NumerosCombi
+    {
+        public int ButacasParaEmpatar { get; set; }   // 0 = no cierra ni con la combi llena
+        public decimal CostoSalidaVacia { get; set; } // lo fijo: traffic, guía y sus viáticos
+        public decimal CostoPorButaca { get; set; }   // lo que suma cada pasajero (snacks, seguro)
+        public decimal GananciaLlena { get; set; }
+    }
+    public Dictionary<int, NumerosCombi> Numeros { get; set; } = new();
 
     public async Task OnGetAsync()
     {
@@ -34,6 +54,43 @@ public class IndexModel : PageModel
         var permitidas = Wamani.Reservas.Services.Permisos.Excursiones(User);
         if (permitidas.Count > 0)
             Excursiones = Excursiones.Where(e => permitidas.Contains(e.Id)).ToList();
+
+        await CargarNumerosCombiAsync();
+    }
+
+    // Las cuentas de La Combi. Se calculan sólo para las combis: el resto de la lista no
+    // las usa y no tiene sentido leer toda la base para nada.
+    private async Task CargarNumerosCombiAsync()
+    {
+        var combis = Combis;
+        if (combis.Count == 0) return;
+
+        var ids = combis.Select(e => e.Id).ToList();
+        var gastos = (await _db.GastosExcursion.Where(g => ids.Contains(g.ExcursionId)).ToListAsync())
+            .GroupBy(g => g.ExcursionId).ToDictionary(g => g.Key, g => g.ToList());
+        var etapas = (await _db.EtapasExcursion.Where(x => ids.Contains(x.ExcursionId)).ToListAsync())
+            .GroupBy(x => x.ExcursionId).ToDictionary(g => g.Key, g => g.ToList());
+
+        foreach (var e in combis)
+        {
+            var gs = gastos.GetValueOrDefault(e.Id) ?? new();
+            var ets = etapas.GetValueOrDefault(e.Id) ?? new();
+            var lleno = e.MaximoPersonas > 0 ? e.MaximoPersonas : 19;
+
+            // El costo de la salida vacía es lo fijo. Lo que agrega cada butaca sale de la
+            // diferencia entre una persona y dos: así no hay que adivinar qué renglón es
+            // fijo y cuál es por persona, lo dice la misma cuenta que usa todo el sistema.
+            var vacia = RentabilidadCalc.Costo(gs, ets, 0);
+            var porButaca = RentabilidadCalc.Costo(gs, ets, 2) - RentabilidadCalc.Costo(gs, ets, 1);
+
+            Numeros[e.Id] = new NumerosCombi
+            {
+                ButacasParaEmpatar = RentabilidadCalc.PersonasParaEmpatar(e, gs, ets),
+                CostoSalidaVacia = vacia,
+                CostoPorButaca = porButaca,
+                GananciaLlena = e.PrecioPorPersona * lleno - RentabilidadCalc.Costo(gs, ets, lleno)
+            };
+        }
     }
 
     // ---------- Viaje a medida ----------

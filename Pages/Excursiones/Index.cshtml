@@ -137,6 +137,99 @@ else
         </table>
     </div>
 
+    @* ── LA COMBI DE WAMANI ──────────────────────────────────────────────
+       Va aparte porque se lee distinto: acá no importa el margen por persona sino
+       CUÁNTAS BUTACAS hay que vender, que es lo único que mueve la aguja cuando el
+       costo es casi todo fijo. *@
+    @if (Model.Combis.Count > 0)
+    {
+        <h2 style="margin-top:36px">🚐 La Combi de Wamani</h2>
+        <p class="subtitle" style="margin-top:-6px">
+            Salidas regulares desde San Salvador en traffic alquilada, vendidas <strong>por butaca</strong>.
+            La traffic y la guía se pagan igual vayan 4 personas o 19, así que lo que decide si
+            ganás o perdés es cuántas butacas vendés.
+        </p>
+        <div class="table-wrap">
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>Salida</th>
+                        <th class="num">Precio por butaca</th>
+                        <th class="num">Sale vacía</th>
+                        <th class="num">Cada butaca</th>
+                        <th class="num">Butacas para empatar</th>
+                        <th class="num">Si va llena</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var e in Model.Combis)
+                {
+                    var n = Model.Numeros.GetValueOrDefault(e.Id);
+                    var lleno = e.MaximoPersonas > 0 ? e.MaximoPersonas : 19;
+                    <tr>
+                        <td data-label="Salida">
+                            <strong>@e.Nombre</strong>
+                            @if (!e.Activa)
+                            {
+                                <span class="pill pill-muted" style="margin-left:6px">Oculta</span>
+                            }
+                        </td>
+                        <td class="num" data-label="Precio por butaca">
+                            @if (e.PrecioPorPersona > 0)
+                            {
+                                @Money(e.PrecioPorPersona)
+                            }
+                            else
+                            {
+                                <span class="pill pill-muted">sin precio</span>
+                            }
+                        </td>
+                        <td class="num" data-label="Sale vacía">@(n is null ? "—" : Money(n.CostoSalidaVacia))</td>
+                        <td class="num" data-label="Cada butaca">@(n is null ? "—" : Money(n.CostoPorButaca))</td>
+                        <td class="num" data-label="Butacas para empatar">
+                            @if (n is null || e.PrecioPorPersona <= 0)
+                            {
+                                <span class="cliente-sub">falta el precio</span>
+                            }
+                            else if (n.ButacasParaEmpatar == 0)
+                            {
+                                <strong style="color:var(--warn)">no cierra ni llena</strong>
+                            }
+                            else
+                            {
+                                <strong style="font-size:1.15rem">@n.ButacasParaEmpatar</strong>
+                                <span class="cliente-sub"> de @lleno</span>
+                            }
+                        </td>
+                        <td class="num" data-label="Si va llena">
+                            @if (n is null || e.PrecioPorPersona <= 0)
+                            {
+                                <text>—</text>
+                            }
+                            else
+                            {
+                                var color = n.GananciaLlena < 0 ? "var(--warn)" : "var(--accent)";
+                                <strong style="color:@color">@Money(n.GananciaLlena)</strong>
+                            }
+                        </td>
+                        <td class="acciones" data-label="">
+                            <a asp-page="/Excursiones/Cargar" asp-route-id="@e.Id">Editar</a>
+                            <a asp-page="/Rentabilidad/Detalle" asp-route-id="@e.Id">📊 Números</a>
+                            <a asp-page="/Operativo/Reservas" asp-route-excursionId="@e.Id">👥 Butacas</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <p class="hint" style="margin-top:8px">
+            <strong>Sale vacía</strong> es lo que pagás aunque no vendas una sola butaca (la traffic,
+            la guía y sus viáticos). <strong>Cada butaca</strong> es lo que suma un pasajero más
+            (snacks y su seguro). De ahí sale cuántas hacen falta para empatar.
+        </p>
+    }
+
     @* Los viajes a medida, aparte y al final: no son parte del catálogo de siempre. *@
     @if (Model.AMedida.Count > 0)
     {

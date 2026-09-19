@@ -26,6 +26,17 @@ public class DetalleModel : PageModel
     // ¿Hay algo con lo que calcular?
     public bool SinCostos => Items.Count == 0 && Etapas.Count == 0;
 
+    // Cuánta gente hace falta para no perder plata. 0 = no cierra ni con la excursión llena.
+    public int ParaEmpatar => Wamani.Reservas.Services.RentabilidadCalc
+        .PersonasParaEmpatar(Excursion, Items, Etapas);
+
+    // El costo partido en dos: lo que se paga igual vaya quien vaya, y lo que agrega cada
+    // persona. En La Combi es la cuenta que importa.
+    public decimal CostoFijo => Wamani.Reservas.Services.RentabilidadCalc.Costo(Items, Etapas, 0);
+    public decimal CostoPorPersona =>
+        Wamani.Reservas.Services.RentabilidadCalc.Costo(Items, Etapas, 2) -
+        Wamani.Reservas.Services.RentabilidadCalc.Costo(Items, Etapas, 1);
+
     // Cuántas veces se cobra una fila del grupo (noches, o días si va por día).
     public int Veces(EtapaExcursion et) => et.Noches > 0 ? et.Noches : 1;
 

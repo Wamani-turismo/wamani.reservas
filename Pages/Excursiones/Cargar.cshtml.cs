@@ -137,6 +137,7 @@ public class CargarModel : PageModel
             db.MinimoPersonas = Excursion.MinimoPersonas;
             db.MaximoPersonas = Excursion.MaximoPersonas;
             db.EsTravesia = Excursion.EsTravesia;
+            db.EsCombi = Excursion.EsCombi;
             db.Activa = Excursion.Activa;
             db.GuiaBreve = Excursion.GuiaBreve;
             db.Recomendaciones = Excursion.Recomendaciones;

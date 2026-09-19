@@ -49,6 +49,40 @@ else
             <div class="fin-card fin-card-net"><div class="fin-label">Ganancia</div><div class="fin-val" style="color:var(--accent)" id="outGanancia">$ 0</div></div>
             <div class="fin-card"><div class="fin-label">Margen</div><div class="fin-val" id="outMargen">0%</div></div>
         </div>
+
+        @* El punto de equilibrio: la pregunta que de verdad importa cuando el costo es
+           casi todo fijo, como en La Combi. No se mueve con el simulador de arriba porque
+           no depende de cuánta gente pongas: depende del precio y de los costos. *@
+        @if (Model.CostoFijo > 0 || Model.CostoPorPersona > 0)
+        {
+            <div class="aviso-ok" style="margin-top:14px">
+                @if (e.PrecioPorPersona <= 0)
+                {
+                    <span>Poné el precio por persona y te digo cuánta gente hace falta para no perder plata.</span>
+                }
+                else if (Model.ParaEmpatar == 0)
+                {
+                    <span style="color:var(--warn)">
+                        <strong>Con este precio no cierra ni con la excursión llena.</strong>
+                        Cobrando @Money(e.PrecioPorPersona) por persona se pierde plata siempre:
+                        hay que subir el precio o bajar los costos.
+                    </span>
+                }
+                else
+                {
+                    <span>
+                        Para no perder plata hay que vender
+                        <strong style="font-size:1.25em">@Model.ParaEmpatar</strong>
+                        @(e.MaximoPersonas > 0 ? "de " + e.MaximoPersonas : "")
+                        @(Model.ParaEmpatar == 1 ? "lugar" : "lugares").
+                    </span>
+                }
+                <div class="hint" style="margin-top:6px">
+                    Se paga igual vaya quien vaya: <strong>@Money(Model.CostoFijo)</strong>
+                    &nbsp;·&nbsp; cada persona suma <strong>@Money(Model.CostoPorPersona)</strong>
+                </div>
+            </div>
+        }
     </div>
 
     <!-- De dónde sale el costo: los costos sueltos + todo lo que se contrata para el grupo -->

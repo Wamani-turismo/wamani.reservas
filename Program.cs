@@ -161,6 +161,7 @@ using (var scope = app.Services.CreateScope())
     EnsureSqliteColumn(db, "OperativoProveedores", "ReservaId", "INTEGER NULL");
     EnsureSqliteColumn(db, "Excursiones", "EsAMedida", "INTEGER NOT NULL DEFAULT 0");
     EnsureSqliteColumn(db, "Excursiones", "EsPersonalizada", "INTEGER NOT NULL DEFAULT 0");
+    EnsureSqliteColumn(db, "Excursiones", "EsCombi", "INTEGER NOT NULL DEFAULT 0");
     EnsureSqliteColumn(db, "GastosEmpresa", "DelFondo", "INTEGER NOT NULL DEFAULT 0");
     db.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS ""IngresosExtra"" (
@@ -391,6 +392,8 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""ReservaId"" integer;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Excursiones"" ADD COLUMN IF NOT EXISTS ""EsAMedida"" boolean NOT NULL DEFAULT false;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Excursiones"" ADD COLUMN IF NOT EXISTS ""EsPersonalizada"" boolean NOT NULL DEFAULT false;");
+        // La Combi de Wamani: salidas regulares en traffic alquilada, vendidas por butaca
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Excursiones"" ADD COLUMN IF NOT EXISTS ""EsCombi"" boolean NOT NULL DEFAULT false;");
         // Acceso limitado de un colaborador a UNA sola excursión
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Usuarios"" ADD COLUMN IF NOT EXISTS ""ExcursionesPermitidas"" text;");
         // Quién movió plata: se anota una línea por cada guardado que cambia dinero

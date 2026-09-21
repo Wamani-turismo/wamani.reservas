@@ -1085,6 +1085,16 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db) =>
     var c = db.ContenidoWeb.FirstOrDefault() ?? new Wamani.Reservas.Models.ContenidoWeb();
     var wpp = string.IsNullOrWhiteSpace(c.Whatsapp) ? "5491178898516" : c.Whatsapp;
 
+    // Las demás experiencias, para enlazarlas al pie. Sin esto la ficha es un callejón
+    // sin salida: el que llega de Google buscando "cascada de santuyoc" ve UNA excursión
+    // y no se entera de que hay otras doce. Y a Google le da un camino para recorrer el
+    // sitio entero desde cualquier ficha, que es como reparte la autoridad entre ellas.
+    var otras = db.ExcursionesWeb
+        .Where(x => x.Activa && x.Clave != e.Clave && x.Clave != "")
+        .OrderBy(x => x.Orden)
+        .Select(x => new { x.Clave, x.Nombre, x.Chip })
+        .ToList();
+
     string Esc(string s) => System.Net.WebUtility.HtmlEncode(s ?? "");
     string[] Lineas(string s) => (s ?? "").Replace("\r", "")
         .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -1152,6 +1162,39 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db) =>
         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     });
 
+    // Las migas de pan ("Wamani Turismo › Iruya – Nazareno"). Google las muestra ARRIBA
+    // del resultado, en lugar de la dirección pelada: se entiende mejor de dónde viene
+    // la página y deja claro que es parte del sitio y no algo suelto.
+    var migas = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>
+    {
+        ["@context"] = "https://schema.org",
+        ["@type"] = "BreadcrumbList",
+        ["itemListElement"] = new object[]
+        {
+            new Dictionary<string, object>
+            {
+                ["@type"] = "ListItem", ["position"] = 1,
+                ["name"] = "Wamani Turismo", ["item"] = "https://wamaniturismo.com/"
+            },
+            new Dictionary<string, object>
+            {
+                ["@type"] = "ListItem", ["position"] = 2,
+                ["name"] = e.Nombre, ["item"] = url
+            }
+        }
+    }, new System.Text.Json.JsonSerializerOptions
+    {
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    });
+
+    // Los enlaces a las demás, armados acá afuera para no complicar el texto de la página.
+    var otrasHtml = string.Concat(otras.Select(o =>
+        "<a class=\"otra\" href=\"/excursiones/" + Uri.EscapeDataString(o.Clave) + "\">" +
+        "<span class=\"otra-n\">" + Esc(o.Nombre) + "</span>" +
+        "<span class=\"otra-c\">" + Esc(o.Chip) + "</span></a>"));
+    var otrasBloque = otras.Count == 0 ? "" :
+        "<h2>Otras experiencias</h2><div class=\"otras\">" + otrasHtml + "</div>";
+
     var html = $$"""
 <!DOCTYPE html>
 <html lang="es-AR">
@@ -1178,6 +1221,7 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db) =>
   gtag('config', 'G-X04DXRSG6H');
 </script>
 <script type="application/ld+json">{{ficha}}</script>
+<script type="application/ld+json">{{migas}}</script>
 <style>
 :root{
   --fondo:#131c18; --panel:#1c2a24; --verde:#22332f; --dorado:#d8c096;
@@ -1218,6 +1262,14 @@ li{margin:7px 0}
 .btn-coral{background:var(--coral);color:#fff}
 .btn-borde{border:1px solid var(--linea);color:var(--texto)}
 .pie{border-top:1px solid var(--linea);margin-top:48px;padding-top:22px;font-size:.88rem;color:var(--texto-suave)}
+/* Las otras experiencias. En una sola columna en el celular y en dos o tres en pantallas
+   grandes, sin fotos: pesan y acá lo que importa es que se vea la lista de un vistazo. */
+.otras{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:14px}
+.otra{display:flex;flex-direction:column;gap:3px;padding:13px 16px;border-radius:14px;
+      background:var(--panel);border:1px solid var(--linea);text-decoration:none}
+.otra:hover{border-color:var(--dorado)}
+.otra-n{color:var(--texto);font-weight:600;line-height:1.3}
+.otra-c{color:var(--texto-suave);font-size:.82rem}
 </style>
 </head>
 <body>
@@ -1243,6 +1295,7 @@ li{margin:7px 0}
        data-excursion="{{Esc(e.Nombre)}}">💬 Consultar por WhatsApp</a>
     <a class="btn btn-borde" href="/">Ver todas las experiencias</a>
   </div>
+  {{otrasBloque}}
   <p class="pie">Wamani Turismo — excursiones, trekking y travesías en Jujuy, Argentina.
   Guías locales y grupos reducidos.</p>
 </div>

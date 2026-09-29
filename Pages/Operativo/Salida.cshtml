@@ -258,14 +258,33 @@
 
         <button type="button" class="btn btn-ghost" style="margin-top:12px" onclick="agregarGasto(0, @Model.PasajerosSalida)">+ Agregar gasto compartido</button>
 
+        @* Las totalidades, no el detalle: cuánto suman los gastos, cuánto ya salió y
+           cuánto falta. Antes acá abajo sólo estaba el total de la salida, y para saber
+           si quedaba algo por pagar había que ir a "Detalle a pagar" o sumar a mano. *@
         <div class="resumen" style="margin-top:18px">
             <div class="item">
                 <div class="label">Gastos listos</div>
                 <div class="val" id="outListos">@listos / @Model.Gastos.Count</div>
             </div>
             <div class="item">
+                <div class="label">Total de gastos</div>
+                <div class="val" id="outGastosTotal">@Money(total)</div>
+            </div>
+            <div class="item">
+                <div class="label">Gastos ya pagados</div>
+                <div class="val" id="outGastosPagado" style="color:var(--ok)">@Money(0)</div>
+            </div>
+            <div class="item">
+                <div class="label">Falta pagar de gastos</div>
+                <div class="val" id="outGastosFalta" style="color:var(--warn)">@Money(total)</div>
+            </div>
+            <div class="item">
                 <div class="label">Total de la salida (gastos + proveedores)</div>
                 <div class="val" id="outTotal">@Money(total)</div>
+            </div>
+            <div class="item">
+                <div class="label">Falta pagar en total (con proveedores)</div>
+                <div class="val" id="outFaltaTodo" style="color:var(--warn)">@Money(total)</div>
             </div>
         </div>
     </div>
@@ -348,16 +367,43 @@
             var inp = tr.querySelector('.in-precio'); inp.value = '';
             pintarFila(tr); recalcular(); inp.focus();
         }
-        function recalcular() {
-            var total = 0, listos = 0, filas = document.querySelectorAll('#gastosBody .gasto-row');
-            filas.forEach(function (tr) {
-                total += (typeof tr._total === 'number') ? tr._total : (parseFloat(tr.querySelector('.in-precio')?.value) || 0);
-                var c = tr.querySelector('.chk-listo');
-                if (c && c.checked) listos++;
+        // Lo que YA se le pagó a los proveedores: la seña más el saldo cargados.
+        // Es la misma cuenta que usa el "Falta" de cada fila, así los dos números cierran.
+        function pagadoProveedores() {
+            var t = 0;
+            document.querySelectorAll('.prov-row').forEach(function (tr) {
+                var total = parseFloat(tr.querySelector('.prov-total')?.value) || 0;
+                var sena = parseFloat(tr.querySelector('.prov-sena')?.value) || 0;
+                var saldo = parseFloat(tr.querySelector('.prov-saldo')?.value) || 0;
+                // Si cargaron de más, no se cuenta más de lo que costaba: si no, el
+                // "falta pagar" de abajo daría negativo y no se entendería.
+                t += Math.min(sena + saldo, total);
             });
-            // El total de la salida incluye gastos + proveedores
-            document.getElementById('outTotal').textContent = money(total + totalProveedores());
+            return t;
+        }
+
+        function recalcular() {
+            var total = 0, pagado = 0, listos = 0, filas = document.querySelectorAll('#gastosBody .gasto-row');
+            filas.forEach(function (tr) {
+                var suyo = (typeof tr._total === 'number') ? tr._total : (parseFloat(tr.querySelector('.in-precio')?.value) || 0);
+                total += suyo;
+                var c = tr.querySelector('.chk-listo');
+                // Un gasto tildado es un gasto que ya se pagó: es lo mismo que cuenta
+                // Finanzas cuando le pone la fecha de pago.
+                if (c && c.checked) { listos++; pagado += suyo; }
+            });
+
+            var provTotal = totalProveedores();
+            var provPagado = pagadoProveedores();
+
             document.getElementById('outListos').textContent = listos + " / " + filas.length;
+            document.getElementById('outGastosTotal').textContent = money(total);
+            document.getElementById('outGastosPagado').textContent = money(pagado);
+            document.getElementById('outGastosFalta').textContent = money(Math.max(0, total - pagado));
+            // El total de la salida incluye gastos + proveedores
+            document.getElementById('outTotal').textContent = money(total + provTotal);
+            document.getElementById('outFaltaTodo').textContent =
+                money(Math.max(0, total - pagado) + Math.max(0, provTotal - provPagado));
         }
         // Qué día es hoy en Jujuy (lo dice el servidor: si lo calculara el navegador y
         // alguien abre el sistema de viaje, podría poner otro día).

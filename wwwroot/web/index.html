@@ -1160,7 +1160,10 @@ let ORDEN = ["jordan","salinas","yungas","quebrada","santuyoc","yungas-express",
 if (D && D.excursiones && D.excursiones.length){
   GUIAS = {}; ORDEN = [];
   D.excursiones.forEach(function(e){
-    GUIAS[e.clave] = { n:e.n, chip:e.chip, t:e.t, sel:e.sel, c:e.c, img:"/web/img/"+e.img,
+    // w es la clave con la que el servidor publica la ficha (/excursiones/w). Acá la
+    // clave de GUIAS ya ES esa, pero se guarda igual para que el resto del código
+    // tenga siempre de dónde sacarla, venga del sistema o del respaldo de más arriba.
+    GUIAS[e.clave] = { w:e.clave, n:e.n, chip:e.chip, t:e.t, sel:e.sel, c:e.c, img:"/web/img/"+e.img,
       fotos:(e.fotos && e.fotos.length ? e.fotos : [e.img]).map(function(f){ return "/web/img/"+f; }),
       resumen:e.resumen, datos:e.datos, itinerario:e.itinerario, incluye:e.incluye, llevar:e.llevar };
     ORDEN.push(e.clave);
@@ -1209,13 +1212,13 @@ function pintarMapaExcursiones(){
   cont.innerHTML = ORDEN.map(function(id){
     const g = GUIAS[id];
     if (!g) return "";
-    // OJO: la dirección se arma con g.w (la clave de ExcursionesWeb), NO con la clave
-    // corta de acá. Estuvieron distintas mucho tiempo y 9 de estos 11 enlaces caían en
-    // el home: Google no tenía por dónde entrar a las fichas. Si a una experiencia le
-    // falta g.w, no la enlazamos — mejor sin enlace que con uno que no lleva a nada.
-    if (!g.w) return "";
+    // La dirección se arma con la clave de ExcursionesWeb: g.w cuando las experiencias
+    // vienen del sistema, y si no la clave de acá, que en el respaldo de más arriba es
+    // la corta (jordan, salinas...) y tiene su w al lado.
+    const clave = g.w || id;
+    if (!clave) return "";
     const a = document.createElement("a");
-    a.href = "/excursiones/" + encodeURIComponent(g.w);
+    a.href = "/excursiones/" + encodeURIComponent(clave);
     a.textContent = g.n;
     return a.outerHTML;
   }).join("");
@@ -1343,9 +1346,9 @@ function abrirGuia(id, delHistorial){
   // El título va siempre, incluso cuando la ficha se reabre con el botón "adelante":
   // si no, la pestaña dice "Wamani Turismo" mientras se está mirando una excursión.
   document.title = tituloDeFicha(g);
-  if (!delHistorial && g.w) {
+  if (!delHistorial) {
     try {
-      const dir = "/excursiones/" + encodeURIComponent(g.w);
+      const dir = "/excursiones/" + encodeURIComponent(g.w || id);
       if (yaEstabaAbierta) history.replaceState({ guia: id }, "", dir);
       else                 history.pushState({ guia: id }, "", dir);
       medir('page_view', {

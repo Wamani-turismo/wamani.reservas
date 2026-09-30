@@ -1,0 +1,147 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Estilos del blog de Wamani.
+   Un solo archivo para todas las notas: el visitante lo descarga una vez
+   y las siguientes notas ya lo tienen en el navegador.
+
+   El color lo define la ZONA de Jujuy de la que habla la nota, con la
+   misma paleta de los folletos de excursión: yungas verde, quebrada
+   tierra y ocre, puna celeste y blanco de las salinas, valle oliva.
+   Se elige poniendo data-zona="yungas" en el <body>. Nada más.
+   ═══════════════════════════════════════════════════════════════════ */
+:root{
+  --tinta:      #2a2620;
+  --tinta-2:    #5d564a;
+  --papel:      #fbf7ef;
+  --papel-2:    #f2ebdc;
+  --linea:      #e0d6c2;
+  --hondo:      #1e3a24;   /* se pisa por zona */
+  --acento:     #93bb4c;   /* se pisa por zona */
+  --sobre-hondo:#f3ecd9;
+}
+body[data-zona="yungas"]  { --hondo:#1e3a24; --acento:#7ba83c; }
+body[data-zona="quebrada"]{ --hondo:#3a1a10; --acento:#e2673a; }
+body[data-zona="puna"]    { --hondo:#33304a; --acento:#6f9dc4; }
+body[data-zona="valle"]   { --hondo:#48471f; --acento:#c9b03c; }
+
+*{ box-sizing:border-box }
+html{ scroll-behavior:smooth }
+body{
+  margin:0; background:var(--papel); color:var(--tinta);
+  font-family:Quicksand,-apple-system,"Segoe UI",system-ui,sans-serif;
+  font-size:17px; line-height:1.72; -webkit-font-smoothing:antialiased;
+}
+img{ max-width:100%; display:block }
+a{ color:var(--hondo); text-decoration-color:var(--acento); text-underline-offset:3px }
+
+/* ── Barra de arriba ───────────────────────────────────────────── */
+.barra{
+  background:var(--hondo); padding:12px 20px;
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+}
+.barra a{ color:var(--sobre-hondo); text-decoration:none; font-weight:600; font-size:15px }
+.barra img{ height:30px; width:auto }
+.barra .volver{ opacity:.85; font-size:14px }
+.barra .volver:hover{ opacity:1 }
+
+/* ── Encabezado con foto ───────────────────────────────────────── */
+.porta{ position:relative; background:var(--hondo) }
+.porta img{ width:100%; height:min(58vh,460px); object-fit:cover; opacity:.55 }
+.porta .texto{
+  position:absolute; inset:auto 0 0 0; padding:26px 20px 30px;
+  background:linear-gradient(to top,rgba(0,0,0,.72),transparent);
+}
+.porta .adentro{ max-width:760px; margin:0 auto }
+.porta .zona{
+  color:var(--acento); font-weight:700; font-size:12.5px;
+  letter-spacing:.14em; text-transform:uppercase; margin:0 0 8px;
+}
+.porta h1{
+  font-family:"Playfair Display",Georgia,serif; font-weight:600;
+  color:#fff; font-size:clamp(28px,5.4vw,46px); line-height:1.12; margin:0;
+  text-wrap:balance;
+}
+.porta .bajada{ color:#e9e2d2; margin:12px 0 0; font-size:17px; max-width:56ch }
+
+/* ── Cuerpo de la nota ─────────────────────────────────────────── */
+main{ max-width:760px; margin:0 auto; padding:34px 20px 10px }
+.dato-nota{ color:var(--tinta-2); font-size:14px; margin:0 0 26px }
+h2{
+  font-family:"Playfair Display",Georgia,serif; font-weight:600;
+  color:var(--hondo); font-size:clamp(23px,3.6vw,30px);
+  line-height:1.22; margin:42px 0 14px; text-wrap:balance;
+}
+h3{ font-size:19px; font-weight:700; color:var(--hondo); margin:30px 0 8px }
+p{ margin:0 0 18px }
+strong{ font-weight:700; color:#1d1a15 }
+ul,ol{ margin:0 0 20px; padding-left:22px }
+li{ margin-bottom:9px }
+li::marker{ color:var(--acento) }
+
+figure{ margin:28px 0 }
+figure img{ width:100%; border-radius:12px }
+figcaption{ color:var(--tinta-2); font-size:14.5px; margin-top:9px; font-style:italic }
+
+/* Recuadro para lo práctico: distancias, épocas, qué llevar */
+.ficha{
+  background:var(--papel-2); border:1px solid var(--linea);
+  border-left:4px solid var(--acento); border-radius:10px;
+  padding:18px 20px; margin:28px 0;
+}
+.ficha h3{ margin-top:0 }
+.ficha p:last-child, .ficha ul:last-child{ margin-bottom:0 }
+.ficha table{ border-collapse:collapse; width:100%; font-size:16px }
+.ficha td{ padding:7px 0; border-bottom:1px solid var(--linea) }
+.ficha tr:last-child td{ border-bottom:0 }
+.ficha td:last-child{ text-align:right; font-weight:600; white-space:nowrap }
+
+/* Frase destacada */
+.destacado{
+  border-left:3px solid var(--acento); padding:4px 0 4px 18px;
+  margin:26px 0; font-size:19px; line-height:1.55; color:var(--hondo);
+  font-family:"Playfair Display",Georgia,serif; font-style:italic;
+}
+
+/* ── Cierre: la invitación ─────────────────────────────────────── */
+.cierre{
+  background:var(--hondo); color:var(--sobre-hondo);
+  border-radius:14px; padding:26px 22px; margin:40px 0 10px;
+}
+.cierre h2{ color:#fff; margin:0 0 10px; font-size:25px }
+.cierre p{ color:#ddd6c4 }
+.cierre .botones{ display:flex; flex-wrap:wrap; gap:10px; margin-top:18px }
+.boton{
+  display:inline-block; padding:12px 20px; border-radius:999px;
+  font-weight:700; font-size:15.5px; text-decoration:none;
+}
+.boton.lleno{ background:var(--acento); color:#16220f }
+.boton.linea{ border:1.5px solid rgba(243,236,217,.5); color:var(--sobre-hondo) }
+
+/* ── Índice del blog ───────────────────────────────────────────── */
+.titulo-blog{ max-width:760px; margin:0 auto; padding:38px 20px 4px }
+.titulo-blog h1{
+  font-family:"Playfair Display",Georgia,serif; font-weight:600;
+  font-size:clamp(30px,5vw,42px); color:var(--hondo); margin:0 0 10px;
+}
+.titulo-blog p{ color:var(--tinta-2); max-width:56ch }
+.lista{ max-width:760px; margin:0 auto; padding:14px 20px 40px; display:grid; gap:18px }
+.tarjeta{
+  display:grid; grid-template-columns:150px 1fr; gap:16px; align-items:center;
+  background:#fff; border:1px solid var(--linea); border-radius:12px;
+  overflow:hidden; text-decoration:none; color:inherit;
+}
+.tarjeta img{ width:100%; height:100%; min-height:112px; object-fit:cover }
+.tarjeta .t{ padding:14px 16px 14px 0 }
+.tarjeta h2{ font-size:20px; margin:0 0 6px }
+.tarjeta p{ margin:0; color:var(--tinta-2); font-size:15px }
+@media (max-width:560px){
+  .tarjeta{ grid-template-columns:1fr }
+  .tarjeta img{ height:150px }
+  .tarjeta .t{ padding:0 16px 16px }
+}
+
+/* ── Pie ───────────────────────────────────────────────────────── */
+.pie{
+  border-top:1px solid var(--linea); margin-top:34px;
+  padding:22px 20px 34px; text-align:center; color:var(--tinta-2); font-size:14px;
+}
+.pie a{ color:var(--tinta-2) }

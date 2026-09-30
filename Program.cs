@@ -1323,7 +1323,7 @@ li{margin:7px 0}
 //  cada excursión nueva sería invisible para Google hasta que alguien se acordara
 //  de editar el XML a mano. El archivo viejo se borró (si no, tapaba a este).
 // ═══════════════════════════════════════════════════════════════════════
-app.MapGet("/sitemap.xml", (AppDbContext db) =>
+app.MapGet("/sitemap.xml", (AppDbContext db, IWebHostEnvironment env) =>
 {
     const string baseUrl = "https://wamaniturismo.com";
     var hoy = DateTime.UtcNow.ToString("yyyy-MM-dd");
@@ -1355,6 +1355,37 @@ app.MapGet("/sitemap.xml", (AppDbContext db) =>
         sb.AppendLine("    <priority>0.9</priority>");
         sb.AppendLine("  </url>");
     }
+
+    // El blog. Cada nota es una carpeta con un index.html adentro, en wwwroot/blog.
+    // Se leen del disco a propósito: así una nota nueva entra sola al sitemap y no hay
+    // que acordarse de tocar este archivo. Las carpetas sin index.html (la de fotos,
+    // por ejemplo) se saltean. Si algo falla leyendo el disco, el sitemap sale igual
+    // con el resto: es preferible un sitemap sin el blog que un sitemap caído.
+    try
+    {
+        var raizBlog = Path.Combine(env.WebRootPath ?? "", "blog");
+        if (Directory.Exists(raizBlog))
+        {
+            sb.AppendLine("  <url>");
+            sb.AppendLine($"    <loc>{baseUrl}/blog/</loc>");
+            sb.AppendLine("    <changefreq>weekly</changefreq>");
+            sb.AppendLine("    <priority>0.7</priority>");
+            sb.AppendLine("  </url>");
+
+            foreach (var carpeta in Directory.GetDirectories(raizBlog).OrderBy(x => x))
+            {
+                var pagina = Path.Combine(carpeta, "index.html");
+                if (!File.Exists(pagina)) continue;
+                sb.AppendLine("  <url>");
+                sb.AppendLine($"    <loc>{baseUrl}/blog/{Uri.EscapeDataString(Path.GetFileName(carpeta))}/</loc>");
+                sb.AppendLine($"    <lastmod>{File.GetLastWriteTimeUtc(pagina):yyyy-MM-dd}</lastmod>");
+                sb.AppendLine("    <changefreq>monthly</changefreq>");
+                sb.AppendLine("    <priority>0.7</priority>");
+                sb.AppendLine("  </url>");
+            }
+        }
+    }
+    catch { }
 
     sb.AppendLine("</urlset>");
     return Results.Content(sb.ToString(), "application/xml; charset=utf-8");

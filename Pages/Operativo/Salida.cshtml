@@ -230,15 +230,21 @@
             @{
                 var gComp = Model.Gastos.Where(x => x.ReservaId == null).ToList();
             }
-            @if (gComp.Count > 0)
+            @* El botón de cada grupo va DENTRO del grupo, abajo de sus filas. Antes el de
+               los compartidos estaba al pie de toda la tabla, después de los gastos de
+               cada pasajero, y no se entendía a cuál de todos pertenecía. *@
+            <tr class="grupo-head"><td colspan="5">🚐 Compartidos de la salida (nafta, etc.)</td></tr>
+            @if (gComp.Count == 0)
             {
-                <tr class="grupo-head"><td colspan="5">🚐 Compartidos de la salida (nafta, etc.)</td></tr>
-                foreach (var g in gComp)
-                {
-                    var m = g.MultiplicadorPropio(Model.PasajerosSalida);
-                    <partial name="_GastoRow" model="new Wamani.Reservas.Pages.Operativo.GastoRowVm { G = g, Mult = m, ReservaId = 0 }" />
-                }
+                <tr class="gasto-vacio"><td colspan="5" class="cliente-sub">Sin gastos compartidos cargados.</td></tr>
             }
+            @foreach (var g in gComp)
+            {
+                var m = g.MultiplicadorPropio(Model.PasajerosSalida);
+                <partial name="_GastoRow" model="new Wamani.Reservas.Pages.Operativo.GastoRowVm { G = g, Mult = m, ReservaId = 0 }" />
+            }
+            <tr class="gasto-add" data-add-res="0"><td colspan="5"><button type="button" class="btn-mini btn-mini-ghost" onclick="agregarGasto(0, @Model.PasajerosSalida)">+ Agregar gasto compartido</button></td></tr>
+
             @foreach (var r in Model.Reservas)
             {
                 var lista = Model.Gastos.Where(x => x.ReservaId == r.Id).ToList();
@@ -251,12 +257,10 @@
                 {
                     <partial name="_GastoRow" model="new Wamani.Reservas.Pages.Operativo.GastoRowVm { G = g, Mult = r.CantidadPersonas, ReservaId = r.Id }" />
                 }
-                <tr class="gasto-add"><td colspan="5"><button type="button" class="btn-mini btn-mini-ghost" onclick="agregarGasto(@r.Id, @r.CantidadPersonas)">+ Agregar gasto a @r.NombreCliente</button></td></tr>
+                <tr class="gasto-add" data-add-res="@r.Id"><td colspan="5"><button type="button" class="btn-mini btn-mini-ghost" onclick="agregarGasto(@r.Id, @r.CantidadPersonas)">+ Agregar gasto a @r.NombreCliente</button></td></tr>
             }
             </tbody>
         </table>
-
-        <button type="button" class="btn btn-ghost" style="margin-top:12px" onclick="agregarGasto(0, @Model.PasajerosSalida)">+ Agregar gasto compartido</button>
 
         @* Las totalidades, no el detalle: cuánto suman los gastos, cuánto ya salió y
            cuánto falta. Antes acá abajo sólo estaba el total de la salida, y para saber
@@ -446,7 +450,12 @@
                 '<td><input type="hidden" name="Comentarios" value="" />' +
                 '<button type="button" class="btn-mini btn-mini-ghost btn-nota" onclick="abrirNota(this)">📋</button>' +
                 '<button type="button" class="btn-mini btn-mini-danger" title="Borrar" onclick="quitarGasto(this)">🗑</button></td>';
-            document.getElementById('gastosBody').appendChild(tr);
+            // La fila nace DENTRO de su grupo, justo arriba del botón que la creó. Antes
+            // iba al final de toda la tabla: un gasto compartido aparecía abajo de los
+            // gastos del último pasajero, como si fuera de él.
+            var ancla = document.querySelector('.gasto-add[data-add-res="' + (resId || 0) + '"]');
+            if (ancla) ancla.parentNode.insertBefore(tr, ancla);
+            else document.getElementById('gastosBody').appendChild(tr);
             pintarNota(tr.querySelector('.btn-nota'));
             tr.querySelector('input[name=Nombres]').focus();
         }

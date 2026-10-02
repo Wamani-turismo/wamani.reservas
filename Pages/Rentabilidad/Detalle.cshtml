@@ -11,7 +11,22 @@
 <div class="toolbar">
     <div>
         <h1>@e.Nombre</h1>
-        <p class="subtitle" style="margin:0">Precio: $ @e.PrecioPorPersona.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("es-AR")) por persona · 1 auto/guía cada @Model.PersonasPorAuto personas</p>
+        @* Lo de "1 auto cada 4" sólo vale en las excursiones de un día, donde manejamos
+           nosotros y hay que sumar un auto más por cada 4 personas. En La Combi se alquila
+           UN vehículo para todos, y en las travesías los traslados se contratan uno por uno
+           en las etapas. Decirlo igual en los tres casos confunde y hace dudar de números
+           que están bien. *@
+        <p class="subtitle" style="margin:0">
+            Precio: $ @e.PrecioPorPersona.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("es-AR")) por persona
+            @if (e.EsCombi)
+            {
+                <text>· se vende por butaca, en una sola combi</text>
+            }
+            else if (!e.EsTravesia)
+            {
+                <text>· 1 auto/guía cada @Model.PersonasPorAuto personas</text>
+            }
+        </p>
     </div>
     <div class="salida-pills">
         <a class="btn btn-ghost" asp-page="/Rentabilidad/Index">← Volver</a>
@@ -39,7 +54,20 @@ else
                 </div>
             </div>
             <div class="calc-info">
-                <div>🚐 <strong id="outAutos">1</strong> auto(s) / guía(s)</div>
+                @if (e.EsCombi)
+                {
+                    <div>🚐 <strong>1</strong> combi para todo el grupo</div>
+                }
+                else if (e.EsTravesia)
+                {
+                    @* En una travesía los traslados están cargados uno por uno en las
+                       etapas: no hay nada que dividir por 4. *@
+                    <div>🧭 Los traslados se cuentan en las etapas de la travesía</div>
+                }
+                else
+                {
+                    <div>🚐 <strong id="outAutos">1</strong> auto(s) / guía(s)</div>
+                }
             </div>
         </div>
 
@@ -225,7 +253,10 @@ else
             var ing = PRECIO * pax, cos = costo(pax), gan = ing - cos;
             var mar = cos > 0 ? Math.round(gan / cos * 100) : 0;
             document.getElementById("paxVal").textContent = pax;
-            document.getElementById("outAutos").textContent = autos(pax);
+            // En La Combi y en las travesías este cartel no existe: sin el if, el error
+            // cortaba toda la recalculación y la calculadora quedaba congelada.
+            var cajaAutos = document.getElementById("outAutos");
+            if (cajaAutos) cajaAutos.textContent = autos(pax);
             document.getElementById("outIngreso").textContent = money(ing);
             document.getElementById("outCosto").textContent = money(cos);
             document.getElementById("outGanancia").textContent = money(gan);

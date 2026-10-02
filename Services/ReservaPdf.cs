@@ -182,13 +182,20 @@ public static class ReservaPdf
                             c.Item().Text("Pasajeros").FontSize(12).Bold().FontColor(VerdeOscuro);
                             c.Item().PaddingTop(8).Table(tabla =>
                             {
-                                tabla.ColumnsDefinition(cd => { cd.ConstantColumn(26); cd.RelativeColumn(); cd.ConstantColumn(110); });
+                                // La fecha de nacimiento va en el comprobante a propósito: el
+                                // pasajero la ve y, si está mal, lo dice ANTES del viaje. Con
+                                // la fecha mal cargada el seguro puede no cubrirlo.
+                                tabla.ColumnsDefinition(cd => { cd.ConstantColumn(26); cd.RelativeColumn(); cd.ConstantColumn(100); cd.ConstantColumn(95); });
                                 foreach (var (p, i) in pasajeros.Select((p, i) => (p, i)))
                                 {
                                     var fondo = i % 2 == 0 ? "#FFFDF7" : Crema;
+                                    var nac = p.FechaNacimiento is DateTime f
+                                        ? "Nac. " + f.ToString("dd/MM/yyyy")
+                                        : "";
                                     tabla.Cell().Background(fondo).Padding(7).Text($"{i + 1}").FontColor(Gris);
                                     tabla.Cell().Background(fondo).Padding(7).Text(p.NombreCompleto);
                                     tabla.Cell().Background(fondo).Padding(7).Text(string.IsNullOrWhiteSpace(p.Dni) ? "" : $"DNI {p.Dni}").FontColor(Gris);
+                                    tabla.Cell().Background(fondo).Padding(7).Text(nac).FontColor(Gris);
                                 }
                             });
                         });

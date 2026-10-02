@@ -327,7 +327,14 @@
         <div class="form-grid">
             <div class="field full">
                 <label asp-for="Excursion.GuiaBreve"></label>
-                <textarea asp-for="Excursion.GuiaBreve" rows="4" placeholder="Contá brevemente de qué se trata la excursión / travesía…"></textarea>
+                <textarea asp-for="Excursion.GuiaBreve" rows="4" placeholder="Ej: Día 1 · Llegada y traslado al hotel. Día 2 · Caminata por la selva de yungas…"></textarea>
+                @* Aviso puesto después de mandarle a un cliente una aclaración interna que
+                   nunca tendría que haber salido del sistema. *@
+                <div class="hint" style="color:var(--warn)">
+                    ⚠️ <strong>Esto lo lee el pasajero</strong>: sale tal cual en el comprobante
+                    de reserva que se le manda. Poné sólo el itinerario y qué se hace, día por
+                    día. Las aclaraciones internas van en la nota 📋 de cada costo, no acá.
+                </div>
             </div>
             <div class="field full">
                 <label asp-for="Excursion.Recomendaciones"></label>

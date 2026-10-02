@@ -20,7 +20,12 @@
         <h1>Teórica vs Real</h1>
         <p class="subtitle" style="margin:0">
             @Model.Excursion.Nombre · sale el @Model.Fecha.ToString("dd/MM/yy")
-            · @Model.Pax pasajero(s)@(Model.Autos > 0 ? $" · {Model.Autos} auto(s)" : "")
+            @* Los autos se cuentan de a uno cada 4 personas sólo en las excursiones de un
+               día. En La Combi va un vehículo solo y en las travesías los traslados están
+               cargados uno por uno. *@
+            · @Model.Pax pasajero(s)@(Model.Excursion.EsCombi
+                ? " · 1 combi"
+                : (!Model.Excursion.EsTravesia && Model.Autos > 0 ? $" · {Model.Autos} auto(s)" : ""))
         </p>
     </div>
     <div class="salida-pills">

@@ -101,6 +101,7 @@ h1,h2,h3{font-family:'Playfair Display',serif;font-weight:600;line-height:1.2}
 .btn-agencia{
   background:rgba(216,192,150,.10);color:var(--dorado);
   border:1.5px solid rgba(216,192,150,.5);
+  padding:.5rem 1rem;font-size:.85rem;margin-right:.6rem;
 }
 .btn-agencia:hover{background:rgba(216,192,150,.2);color:#f3e7cd}
 .btn-agencia svg{
@@ -118,11 +119,14 @@ header{
 .barra .logo img{height:44px;width:auto}
 nav.menu{display:none}
 nav.menu a{
-  color:#fff;opacity:.82;font-weight:600;font-size:.95rem;margin:0 .9rem;
+  color:#fff;opacity:.82;font-weight:600;font-size:.95rem;margin:0 .55rem;
+  white-space:nowrap;
   transition:opacity .2s, color .2s;
 }
 nav.menu a:hover{opacity:1;color:var(--dorado)}
-.barra .btn{display:none}
+/* Con dos botones en la barra ya no sobra lugar: sin esto "Reservá ahora" y
+   "Soy agencia" se parten en dos renglones y la barra se ve rota. */
+.barra .btn{display:none;white-space:nowrap;flex-shrink:0}
 
 #check-menu{display:none}
 /* ── Selector de idioma (ES · EN · FR · PT) ─────────────────── */

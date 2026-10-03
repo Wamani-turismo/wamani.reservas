@@ -92,8 +92,9 @@ public static class CierrePdf
                             c.Item().PaddingTop(6).Text(d.MesTexto).FontSize(24).FontColor(Crema).Bold();
                             c.Item().PaddingTop(4).Text("Wamani Turismo").FontSize(10).FontColor("#E9E3D4");
                         });
+                        // Mismo modo que el comprobante de reserva, que ya está probado.
                         if (File.Exists(rutaLogo))
-                            fila.ConstantItem(90).AlignRight().AlignMiddle().Height(44).Image(rutaLogo).FitHeight();
+                            fila.ConstantItem(130).AlignRight().AlignMiddle().Image(rutaLogo).FitWidth();
                     });
 
                     col.Item().Padding(28).Column(c =>
@@ -213,8 +214,16 @@ public static class CierrePdf
             celda2 = celda2.BorderBottom(1).BorderColor(Linea);
         }
 
-        celda1.Text(concepto).FontSize(total ? 11 : 10).Bold(total);
-        celda2.Text(monto).FontSize(total ? 12 : 10).Bold(total)
-            .FontColor(color ?? Tinta);
+        // Bold() no acepta un booleano: hay que armar cada caso por separado.
+        if (total)
+        {
+            celda1.Text(concepto).FontSize(11).Bold();
+            celda2.Text(monto).FontSize(12).Bold().FontColor(color ?? Tinta);
+        }
+        else
+        {
+            celda1.Text(concepto).FontSize(10);
+            celda2.Text(monto).FontSize(10).FontColor(color ?? Tinta);
+        }
     }
 }

@@ -3,91 +3,38 @@ using Wamani.Reservas.Data;
 
 namespace Wamani.Reservas.Services;
 
-// FONDO DEL 10%: de la ganancia de cada mes se aparta un 10% y se va acumulando.
-// Lo que no se gasta queda para el mes siguiente, y así sucesivamente.
+// GANANCIA ACUMULADA, mes por mes.
 //
-//   Saldo del mes = saldo que venía de antes + 10% de la ganancia de este mes
-//                   − lo que se gastó del fondo este mes.
+// Antes esta clase también llevaba el "fondo del 10%": de la ganancia de cada mes se
+// apartaba un 10% automático. Se sacó en octubre de 2026 porque ahora la reinversión se
+// decide a mano al cerrar el mes, y el fondo de verdad vive en dólares en otra pantalla
+// (ver Models/MovimientoFondo.cs). Dos fondos que decían cosas distintas sobre la misma
+// plata confundían más de lo que ayudaban.
 //
-// Un gasto sale del fondo cuando se tilda "Sale del fondo del 10%" en Gastos.
-// Ese gasto NO resta de la ganancia del mes: esa plata ya se había apartado de las
-// ganancias de meses anteriores, así que descontarla otra vez sería cobrársela dos veces
-// a los socios. Sale del saldo del fondo y nada más. (En la Caja sí resta, porque ahí se
-// mide la plata que efectivamente salió.)
-//
-// Los meses con pérdida no aportan al fondo (no se aparta el 10% de un número negativo)
-// pero tampoco lo achican: el fondo sólo baja cuando se gasta.
+// Lo que quedó es lo único que se usaba de verdad: cuánto ganó la empresa en total, que es
+// la base de la cuenta de cada socio.
 public static class FondoReserva
 {
-    public const decimal Porcentaje = 0.10m;
-
-    public class Mes
-    {
-        public DateTime MesActual { get; set; }
-        public decimal GananciaDelMes { get; set; }   // neta del mes (puede ser negativa)
-        public decimal AportadoDelMes { get; set; }   // 10% de la ganancia (0 si hubo pérdida)
-        public decimal VieneDeAntes { get; set; }     // saldo acumulado de los meses anteriores
-        public decimal GastadoDelMes { get; set; }    // gastos tildados "del fondo" en este mes
-        public decimal Saldo => VieneDeAntes + AportadoDelMes - GastadoDelMes;
-    }
-
-    // Totales acumulados hasta un mes (inclusive): sirve para saber cuánto se ganó en
-    // total, cuánto se apartó al fondo y cuánto quedó para repartir entre los socios.
     public class Acumulado
     {
-        public decimal Ganancia { get; set; }        // suma de las ganancias de todos los meses
-        public decimal AlFondo { get; set; }         // 10% apartado en los meses con ganancia
-        public decimal GastadoDelFondo { get; set; } // lo que se sacó del fondo
-        public decimal SaldoFondo => AlFondo - GastadoDelFondo;
-        public decimal ARepartir => Ganancia - AlFondo;   // lo que les corresponde a los socios
+        public decimal Ganancia { get; set; }   // suma de las ganancias de todos los meses
+        // Toda la ganancia es de los socios: ya no se aparta nada automático.
+        public decimal ARepartir => Ganancia;
     }
 
     public static async Task<Acumulado> AcumuladoAsync(AppDbContext db, DateTime hastaMes)
     {
-        var (porMes, gastadoPorMes) = await MovimientosPorMesAsync(db);
+        var porMes = await GananciaPorMesAsync(db);
         var tope = new DateTime(hastaMes.Year, hastaMes.Month, 1);
 
         var acu = new Acumulado();
-        foreach (var m in porMes.Keys.Concat(gastadoPorMes.Keys).Distinct().Where(m => m <= tope))
-        {
-            var ganancia = porMes.GetValueOrDefault(m);
-            acu.Ganancia += ganancia;
-            acu.AlFondo += Math.Round(Math.Max(0, ganancia) * Porcentaje, 2);
-            acu.GastadoDelFondo += gastadoPorMes.GetValueOrDefault(m);
-        }
+        foreach (var m in porMes.Keys.Where(m => m <= tope))
+            acu.Ganancia += porMes[m];
         return acu;
     }
 
-    // Calcula el fondo hasta el mes indicado (inclusive), recorriendo todos los meses
-    // anteriores desde el primer movimiento que exista.
-    public static async Task<Mes> CalcularAsync(AppDbContext db, DateTime mes)
-    {
-        var hasta = new DateTime(mes.Year, mes.Month, 1);
-        var (porMes, gastadoPorMes) = await MovimientosPorMesAsync(db);
-
-        var resultado = new Mes
-        {
-            MesActual = hasta,
-            GananciaDelMes = porMes.GetValueOrDefault(hasta),
-            AportadoDelMes = Math.Round(Math.Max(0, porMes.GetValueOrDefault(hasta)) * Porcentaje, 2),
-            GastadoDelMes = gastadoPorMes.GetValueOrDefault(hasta)
-        };
-
-        decimal acumulado = 0;
-        var meses = porMes.Keys.Concat(gastadoPorMes.Keys).Distinct().Where(m => m < hasta).OrderBy(m => m);
-        foreach (var m in meses)
-        {
-            acumulado += Math.Round(Math.Max(0, porMes.GetValueOrDefault(m)) * Porcentaje, 2);
-            acumulado -= gastadoPorMes.GetValueOrDefault(m);
-        }
-        resultado.VieneDeAntes = acumulado;
-
-        return resultado;
-    }
-
-    // Ganancia de cada mes (misma cuenta que la Financiera) y lo gastado del fondo cada mes.
-    private static async Task<(Dictionary<DateTime, decimal> PorMes, Dictionary<DateTime, decimal> Gastado)>
-        MovimientosPorMesAsync(AppDbContext db)
+    // Ganancia de cada mes (misma cuenta que la Financiera).
+    private static async Task<Dictionary<DateTime, decimal>> GananciaPorMesAsync(AppDbContext db)
     {
         var porMes = new Dictionary<DateTime, decimal>();
         void Sumar(DateTime? f, decimal monto)
@@ -114,25 +61,9 @@ public static class FondoReserva
             Sumar(p.FechaSaldo, -p.Saldo);
         }
 
-        var gastosEmpresa = await db.GastosEmpresa.ToListAsync();
-        // Los pagados con el fondo NO restan de la ganancia: se descuentan del fondo abajo.
-        foreach (var g in gastosEmpresa.Where(g => !g.DelFondo))
+        foreach (var g in await db.GastosEmpresa.ToListAsync())
             Sumar(g.Fecha, -g.Monto);
 
-        // ---- Lo gastado del fondo, por mes ----
-        var gastadoPorMes = gastosEmpresa
-            .Where(g => g.DelFondo)
-            .GroupBy(g => new DateTime(g.Fecha.Year, g.Fecha.Month, 1))
-            .ToDictionary(g => g.Key, g => g.Sum(x => x.Monto));
-
-        return (porMes, gastadoPorMes);
-    }
-
-    // Saldo del fondo a día de hoy (contando todos los meses hasta el actual).
-    public static async Task<decimal> SaldoHoyAsync(AppDbContext db)
-    {
-        var hoy = DateTime.Today;
-        var m = await CalcularAsync(db, new DateTime(hoy.Year, hoy.Month, 1));
-        return m.Saldo;
+        return porMes;
     }
 }

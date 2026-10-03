@@ -87,10 +87,6 @@
         <div class="fin-val" style="color:var(--warn)">@Money(Model.TotalGastosPropios)</div>
         <div class="fin-label" style="margin-top:4px">
             @Model.GastosEmpresaLista.Count gasto(s)
-            @if (Model.TotalDelFondo > 0)
-            {
-                <text>· aparte salieron @Money(Model.TotalDelFondo) del fondo del 10%</text>
-            }
         </div>
     </div>
     <div class="fin-card fin-card-net">
@@ -313,13 +309,10 @@
             <tbody>
                 @foreach (var g in Model.GastosEmpresaLista)
                 {
-                    var chipFondo = g.DelFondo
-                        ? "display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;color:#fff;background:var(--accent)"
-                        : "display:none";
                     <tr>
                         <td>@Dia(g.Fecha)</td>
                         <td>@g.Tipo</td>
-                        <td>@g.Descripcion<span style="@chipFondo">del fondo 10%</span></td>
+                        <td>@g.Descripcion</td>
                         <td style="text-align:right"><strong>@Money(g.Monto)</strong></td>
                     </tr>
                 }

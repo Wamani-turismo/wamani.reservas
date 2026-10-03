@@ -30,12 +30,9 @@ public class IndexModel : PageModel
     [BindProperty] public string NuevoTipo { get; set; } = "Fijo";
     [BindProperty] public string? NuevoDescripcion { get; set; }
     [BindProperty] public decimal NuevoMonto { get; set; }
-    [BindProperty] public bool NuevoDelFondo { get; set; }
     [BindProperty] public List<IFormFile> NuevoComprobante { get; set; } = new();
 
-    // Fondo del 10% acumulado, para saber cuánto hay disponible antes de gastarlo
-    public Wamani.Reservas.Services.FondoReserva.Mes Fondo { get; set; } = new();
-    public decimal TotalDelFondo { get; set; }   // lo gastado del fondo este mes
+
 
     [TempData] public string? Aviso { get; set; }
 
@@ -56,9 +53,8 @@ public class IndexModel : PageModel
             .OrderByDescending(g => g.Fecha)
             .ToListAsync();
         Total = Lista.Sum(g => g.Monto);
-        TotalDelFondo = Lista.Where(g => g.DelFondo).Sum(g => g.Monto);
 
-        Fondo = await Wamani.Reservas.Services.FondoReserva.CalcularAsync(_db, MesActual);
+
     }
 
     public async Task<IActionResult> OnPostAgregarAsync()
@@ -71,7 +67,7 @@ public class IndexModel : PageModel
                 Tipo = GastoEmpresa.Tipos.Contains(NuevoTipo) ? NuevoTipo : "Fijo",
                 Descripcion = NuevoDescripcion.Trim(),
                 Monto = NuevoMonto,
-                DelFondo = NuevoDelFondo
+                DelFondo = false
             };
 
             g.Comprobante = await Wamani.Reservas.Services.Adjuntos.AgregarAsync(

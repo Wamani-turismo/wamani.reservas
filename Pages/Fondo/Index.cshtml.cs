@@ -27,6 +27,12 @@ public class IndexModel : PageModel
     public decimal UltimoTipoCambio { get; set; }
     public decimal SaldoPesosHoy => Math.Round(SaldoDolares * UltimoTipoCambio, 2);
 
+    // Cuando se está editando un movimiento, el formulario de arriba se llena con sus
+    // datos y guarda encima en vez de crear otro. Hacía falta para poder corregir una
+    // fecha sin tener que borrar y volver a cargar todo.
+    [BindProperty] public int NuevoId { get; set; }
+    public bool Editando => NuevoId > 0;
+
     [BindProperty] public DateTime NuevoFecha { get; set; } = Wamani.Reservas.Services.Reloj.HoyJujuy();
     [BindProperty] public string NuevoTipo { get; set; } = MovimientoFondo.Aporte;
     [BindProperty] public string? NuevoConcepto { get; set; }
@@ -39,7 +45,23 @@ public class IndexModel : PageModel
 
     [TempData] public string? Aviso { get; set; }
 
-    public async Task OnGetAsync() => await CargarAsync();
+    public async Task OnGetAsync(int? editar)
+    {
+        await CargarAsync();
+
+        if (editar is int id && Lista.FirstOrDefault(m => m.Id == id) is MovimientoFondo m)
+        {
+            NuevoId = m.Id;
+            NuevoFecha = m.Fecha;
+            NuevoTipo = m.Tipo;
+            NuevoConcepto = m.Concepto;
+            NuevoQuien = m.Quien;
+            NuevoDolares = m.Dolares;
+            NuevoPesos = m.Pesos;
+            NuevoTipoCambio = m.TipoCambio;
+            NuevoNota = m.Nota;
+        }
+    }
 
     private async Task CargarAsync()
     {
@@ -72,23 +94,27 @@ public class IndexModel : PageModel
         if (tc > 0 && dolares > 0 && pesos <= 0) pesos = Math.Round(dolares * tc, 2);
         if (tc > 0 && pesos > 0 && dolares <= 0) dolares = Math.Round(pesos / tc, 2);
 
-        var m = new MovimientoFondo
-        {
-            Fecha = NuevoFecha.Date,
-            Tipo = MovimientoFondo.Tipos.Contains(NuevoTipo) ? NuevoTipo : MovimientoFondo.Aporte,
-            Concepto = NuevoConcepto.Trim(),
-            Quien = string.IsNullOrWhiteSpace(NuevoQuien) ? null : NuevoQuien.Trim(),
-            Dolares = dolares,
-            Pesos = pesos,
-            TipoCambio = tc,
-            Nota = string.IsNullOrWhiteSpace(NuevoNota) ? null : NuevoNota.Trim(),
-        };
-        m.Comprobante = await Wamani.Reservas.Services.Adjuntos.AgregarAsync(
-            NuevoComprobante, Wamani.Reservas.Services.Comprobantes.Carpeta(_env), null);
+        // Editando: se guarda encima del que ya estaba. Si no suben un comprobante nuevo,
+        // se conserva el que tenía.
+        var m = NuevoId > 0 ? await _db.MovimientosFondo.FindAsync(NuevoId) : new MovimientoFondo();
+        if (m is null) return RedirectToPage();
 
-        _db.MovimientosFondo.Add(m);
+        m.Fecha = NuevoFecha.Date;
+        m.Tipo = MovimientoFondo.Tipos.Contains(NuevoTipo) ? NuevoTipo : MovimientoFondo.Aporte;
+        m.Concepto = NuevoConcepto.Trim();
+        m.Quien = string.IsNullOrWhiteSpace(NuevoQuien) ? null : NuevoQuien.Trim();
+        m.Dolares = dolares;
+        m.Pesos = pesos;
+        m.TipoCambio = tc;
+        m.Nota = string.IsNullOrWhiteSpace(NuevoNota) ? null : NuevoNota.Trim();
+
+        var comp = await Wamani.Reservas.Services.Adjuntos.AgregarAsync(
+            NuevoComprobante, Wamani.Reservas.Services.Comprobantes.Carpeta(_env), m.Comprobante);
+        if (!string.IsNullOrEmpty(comp)) m.Comprobante = comp;
+
+        if (NuevoId == 0) _db.MovimientosFondo.Add(m);
         await _db.SaveChangesAsync();
-        Aviso = "Movimiento cargado.";
+        Aviso = NuevoId > 0 ? "Movimiento actualizado." : "Movimiento cargado.";
         return RedirectToPage();
     }
 

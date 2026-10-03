@@ -64,8 +64,9 @@
 
 <!-- Cargar un movimiento -->
 <div class="card" style="margin-top:12px">
-    <h2>Cargar un movimiento</h2>
+    <h2>@(Model.Editando ? "Editar el movimiento" : "Cargar un movimiento")</h2>
     <form method="post" enctype="multipart/form-data" asp-page-handler="Agregar">
+        <input type="hidden" asp-for="NuevoId" />
         <div class="form-grid">
             <div class="field"><label>Fecha</label><input asp-for="NuevoFecha" type="date" /></div>
             <div class="field">
@@ -96,7 +97,13 @@
             <div class="field"><label>Comprobante (opcional)</label><input asp-for="NuevoComprobante" type="file" accept="image/*,.pdf" multiple /></div>
         </div>
         <div class="acciones-form" style="margin-top:12px">
-            <button type="submit" class="btn btn-primary">+ Cargar movimiento</button>
+            <button type="submit" class="btn btn-primary">
+                @(Model.Editando ? "💾 Guardar cambios" : "+ Cargar movimiento")
+            </button>
+            @if (Model.Editando)
+            {
+                <a class="btn btn-ghost" asp-page="/Fondo/Index">Cancelar</a>
+            }
         </div>
     </form>
 </div>
@@ -163,7 +170,9 @@
                         <span class="cliente-sub">—</span>
                     }
                 </td>
-                <td>
+                <td class="acciones">
+                    <a class="btn-mini btn-mini-ghost" asp-page="/Fondo/Index" asp-route-editar="@m.Id"
+                       title="Editar este movimiento">✏️</a>
                     <form method="post" asp-page-handler="Eliminar" asp-route-id="@m.Id" style="display:inline">
                         <button type="submit" class="btn-mini btn-mini-danger" title="Borrar"
                                 onclick="return confirm('¿Realmente lo querés borrar?');">🗑</button>

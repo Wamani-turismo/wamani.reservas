@@ -27,8 +27,9 @@ public static class CuentaSocios
     public class Resultado
     {
         public decimal GananciaAcumulada { get; set; }   // de toda la operación
-        public decimal AlFondo { get; set; }             // 10% apartado
-        public decimal ARepartir { get; set; }           // ganancia − fondo
+        // Toda la ganancia es de los socios: desde octubre de 2026 no se aparta nada
+        // automático. Lo que se reinvierte se decide a mano al cerrar el mes.
+        public decimal ARepartir { get; set; }
         public decimal PorSocio { get; set; }            // a repartir / cantidad de socios
 
         public List<Socio> Socios { get; set; } = new();
@@ -51,7 +52,6 @@ public static class CuentaSocios
         var r = new Resultado
         {
             GananciaAcumulada = acu.Ganancia,
-            AlFondo = acu.AlFondo,
             ARepartir = acu.ARepartir,
             PorSocio = duenos.Length == 0 ? 0 : Math.Round(acu.ARepartir / duenos.Length, 2)
         };

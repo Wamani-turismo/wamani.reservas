@@ -29,9 +29,7 @@ public class IndexModel : PageModel
     public List<Aporte> Aportes { get; set; } = new();
     public List<Retiro> Retiros { get; set; } = new();
 
-    // En qué está repartido el patrimonio: lo que se les debe a los socios + el fondo del 10%.
     // Sirve para controlar: los dos números tienen que sumar exactamente el patrimonio.
-    public decimal SaldoFondo { get; set; }
     public decimal DeudaSocios { get; set; }
 
     // ---- Las dos cajas ----
@@ -91,8 +89,6 @@ public class IndexModel : PageModel
         var hoy = DateTime.Today;
         var cuentas = await Wamani.Reservas.Services.CuentaSocios.CalcularAsync(
             _db, Pages.Financiera.IndexModel.Duenos, new DateTime(hoy.Year, hoy.Month, 1));
-        SaldoFondo = (await Wamani.Reservas.Services.FondoReserva.CalcularAsync(
-            _db, new DateTime(hoy.Year, hoy.Month, 1))).Saldo;
         DeudaSocios = cuentas.Socios.Sum(s => s.Saldo);
 
         // ---- Fondo de inversión: las dos cajas ----

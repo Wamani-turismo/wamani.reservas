@@ -65,25 +65,17 @@ public class IndexModel : PageModel
     public decimal ExtrasTotal { get; set; }
     public decimal IngresoTotal => Ingreso + ExtrasTotal;
 
-    // Fondo del 10%: lo que se aparta de la ganancia y se acumula mes a mes
-    public Wamani.Reservas.Services.FondoReserva.Mes Fondo { get; set; } = new();
-
     // Cuenta de cada socio: cuánto ganó en total, cuánto ya retiró y cuánto le queda
     public Wamani.Reservas.Services.CuentaSocios.Resultado Cuentas { get; set; } = new();
 
-    // Los gastos pagados CON EL FONDO no restan de la ganancia del mes: esa plata ya se
-    // había apartado de meses anteriores. Restan del saldo del fondo (y de la Caja).
-    public decimal GastosEmpresaDelFondo { get; set; }
-    public decimal GastosEmpresaPropios => GastosEmpresaTotal - GastosEmpresaDelFondo;
+    public decimal GastosEmpresaPropios => GastosEmpresaTotal;
 
-    // Ganancia del mes, antes de apartar el 10%
+    // Ganancia del mes. Desde octubre de 2026 no se aparta un 10% automático: lo que se
+    // reinvierte se decide a mano al cerrar el mes y va al fondo de inversión, que vive en
+    // dólares y tiene su propia pantalla.
     public decimal Neta => IngresoTotal - Gastos - GastosEmpresaPropios;
 
-    // El 10% que se aparta para el fondo (sólo si el mes dio ganancia)
-    public decimal ParteFondo => Math.Round(Math.Max(0, Neta) * Wamani.Reservas.Services.FondoReserva.Porcentaje, 2);
-
-    // Lo que queda para los socios, ya apartado el 10%
-    public decimal GananciaARepartir => Neta - ParteFondo;
+    public decimal GananciaARepartir => Neta;
     public decimal PorDueno => Math.Round(GananciaARepartir / Duenos.Length, 2);
 
     // % de ganancia sobre TODO el costo (egresos de excursiones + gastos de empresa)
@@ -195,7 +187,6 @@ public class IndexModel : PageModel
             .OrderByDescending(g => g.Fecha)
             .ToListAsync();
         GastosEmpresaTotal = GastosEmpresaLista.Sum(g => g.Monto);
-        GastosEmpresaDelFondo = GastosEmpresaLista.Where(g => g.DelFondo).Sum(g => g.Monto);
 
         // ---- Ingresos extra del mes (comisiones, alquileres, etc.) ----
         ExtrasLista = await _db.IngresosExtra
@@ -204,8 +195,7 @@ public class IndexModel : PageModel
             .ToListAsync();
         ExtrasTotal = ExtrasLista.Sum(e => e.Monto);
 
-        // ---- Fondo del 10% acumulado hasta este mes ----
-        Fondo = await Wamani.Reservas.Services.FondoReserva.CalcularAsync(_db, MesActual);
+        // ---- La cuenta de cada socio, acumulada hasta este mes ----
         Cuentas = await Wamani.Reservas.Services.CuentaSocios.CalcularAsync(_db, Duenos, MesActual);
 
         // ---- Egresos por tipo (lo pagado este mes), con detalle por excursión ----

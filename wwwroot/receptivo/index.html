@@ -22,7 +22,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<!-- Esta página es la que se abre con el QR del stand de la FIT. Tiene su propio estilo
+<!-- Nació como la página del QR del stand de la FIT, pero la feria terminó y quedó colgada
+     del menú de la web ("Receptivo"), así que ahora entra cualquiera en cualquier momento:
+     no puede haber nada que dé por sentado que el visitante estuvo en la feria.
+     Tiene su propio estilo
      (los mismos colores y tipografías de la web, pero copiados acá) para que tocarla NUNCA
      pueda romper la página principal. Los datos —WhatsApp, mail y las experiencias— salen
      del sistema, del mismo archivo que usa la web: /web/contenido.js -->
@@ -363,7 +366,9 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
     <p style="color:var(--texto-suave);font-size:.95rem;margin:0 0 18px">Contanos qué necesitás y te respondemos a la brevedad.</p>
     <form id="form-consulta" autocomplete="on">
       <input type="hidden" name="tipo" value="Agencia">
-      <input type="hidden" name="origen" value="Receptivo (FIT)">
+      <!-- Así aparece la consulta en el sistema. Decía "Receptivo (FIT)" cuando la página
+           era sólo del stand; hoy entra gente todo el año desde el menú de la web. -->
+      <input type="hidden" name="origen" value="Receptivo">
       <!-- Campo trampa para robots: una persona no lo ve -->
       <input type="text" name="apellido2" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
 
@@ -506,8 +511,13 @@ function volver(){
   history.replaceState(null, "", location.pathname);
 }
 
-/* Mensajes ya escritos: cuando entra la consulta ya se sabe que viene de la feria */
-var MSG_AGENCIA = "¡Hola Wamani! Los vi en la FIT. Somos una agencia de viajes y queremos recibir las tarifas y condiciones para trabajar con ustedes.";
+/* Mensaje ya escrito. Arranca igual que el botón "Soy agencia" de la web —"Soy una
+   agencia de viajes"— a propósito: así en el CRM todas las agencias se encuentran
+   buscando esa misma frase, vengan de donde vengan. Lo que cambia es el final, porque
+   acá el botón dice "Solicitar tarifas" y el que lo toca ya vio la propuesta.
+   Antes decía "Los vi en la FIT": la feria terminó y esta página quedó colgada del menú
+   de la web, así que ese saludo ya no tenía sentido. */
+var MSG_AGENCIA = "¡Hola! Soy una agencia de viajes, estaba viendo la página de Wamani Turismo y quisiera recibir el tarifario y las condiciones para trabajar con ustedes.";
 document.getElementById("wpp-agencia").href = wpp(MSG_AGENCIA);
 document.getElementById("wsp-flotante").href = wpp(MSG_AGENCIA);
 document.getElementById("mail-texto").textContent = MAIL;
@@ -632,7 +642,7 @@ document.getElementById("fondo-catalogo").addEventListener("click", function(e){
 /* Pie */
 document.getElementById("anio").textContent = new Date().getFullYear();
 document.getElementById("pie-datos").innerHTML =
-  '<a href="' + wpp("¡Hola Wamani! Los vi en la FIT.") + '" target="_blank" rel="noopener">WhatsApp</a>' +
+  '<a href="' + wpp("¡Hola! Estaba viendo la página de Wamani Turismo y quisiera hacerles una consulta.") + '" target="_blank" rel="noopener">WhatsApp</a>' +
   '<a href="' + mail("Consulta desde la web de Wamani", "Hola Wamani,\n\n") + '">' + MAIL + "</a>";
 
 /* ---- El formulario de contacto ---- */

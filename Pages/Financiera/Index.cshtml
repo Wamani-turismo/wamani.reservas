@@ -19,6 +19,9 @@
     <a class="btn btn-ghost" asp-page="/Financiera/Periodo">📅 Por día / período</a>
     <a class="btn btn-primary" asp-page="/Financiera/Anual" asp-route-anio="@Model.MesActual.Year">📊 Rendimiento anual</a>
     <a class="btn btn-ghost" asp-page="/Actividad/Index">👤 Quién cargó qué</a>
+    @* El informe del mes: la plata que se movió MÁS los compromisos pendientes. *@
+    <a class="btn btn-primary" asp-page="/Financiera/Index" asp-page-handler="Cierre"
+       asp-route-mes="@Model.MesActual.ToString("yyyy-MM")">📄 Cierre del mes (PDF)</a>
 </div>
 
 @* Quién movió plata este mes. Aparece sólo si hubo movimientos anotados. *@

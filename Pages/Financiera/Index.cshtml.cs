@@ -9,7 +9,92 @@ namespace Wamani.Reservas.Pages.Financiera;
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
-    public IndexModel(AppDbContext db) => _db = db;
+    private readonly IWebHostEnvironment _env;
+    public IndexModel(AppDbContext db, IWebHostEnvironment env) { _db = db; _env = env; }
+
+    // ---- El informe de cierre del mes, en PDF ----
+    //
+    // Junta dos cosas que hay que mirar juntas: la plata que se movió en el mes y los
+    // compromisos pendientes de hoy. Con una sola de las dos se toman malas decisiones:
+    // un mes puede cerrar "ganando" con plata que ya está comprometida para pagar saldos.
+    public async Task<IActionResult> OnGetCierreAsync(string? mes)
+    {
+        var hoy = Wamani.Reservas.Services.Reloj.HoyJujuy();
+        int anio = hoy.Year, nmes = hoy.Month;
+        if (!string.IsNullOrWhiteSpace(mes) && DateTime.TryParse(mes + "-01", out var p))
+        {
+            anio = p.Year; nmes = p.Month;
+        }
+        var desde = new DateTime(anio, nmes, 1);
+        var hasta = desde.AddMonths(1);
+        bool EnMes(DateTime? f) => f is DateTime d && d.Date >= desde && d.Date < hasta;
+
+        var reservas = await _db.Reservas.ToListAsync();
+        var ops = await _db.OperativoGastos.ToListAsync();
+        var provs = await _db.OperativoProveedores.ToListAsync();
+        var extras = await _db.IngresosExtra.ToListAsync();
+        var gastosEmp = await _db.GastosEmpresa.ToListAsync();
+
+        var d = new Wamani.Reservas.Services.CierrePdf.Datos
+        {
+            Mes = desde,
+            MesTexto = desde.ToString("MMMM yyyy", new System.Globalization.CultureInfo("es-AR")),
+        };
+        // Primera letra en mayúscula: "Septiembre 2026", no "septiembre 2026".
+        if (d.MesTexto.Length > 0)
+            d.MesTexto = char.ToUpper(d.MesTexto[0]) + d.MesTexto[1..];
+
+        // ---- Lo que se movió este mes ----
+        d.CobradoReservas = reservas.Sum(r => (EnMes(r.SenaFecha) ? r.SenaMonto ?? 0 : 0)
+                                            + (EnMes(r.SaldoFecha) ? r.SaldoMonto ?? 0 : 0));
+        d.IngresosExtra = extras.Where(e => EnMes(e.Fecha)).Sum(e => e.Monto);
+        d.PagadoOperativo = ops.Where(o => EnMes(o.FechaPago)).Sum(o => o.Precio)
+                          + provs.Sum(x => (EnMes(x.FechaSena) ? x.Sena : 0) + (EnMes(x.FechaSaldo) ? x.Saldo : 0));
+        d.GastosEmpresa = gastosEmp.Where(g => EnMes(g.Fecha)).Sum(g => g.Monto);
+
+        var delMes = reservas.Where(r => EnMes(r.SenaFecha) || EnMes(r.SaldoFecha)).ToList();
+        d.Reservas = delMes.Count;
+        d.Personas = delMes.Sum(r => r.CantidadPersonas);
+
+        // ---- Lo que se llevaron los socios ----
+        d.Retiros = (await _db.Retiros.ToListAsync()).Where(r => EnMes(r.Fecha))
+            .Select(r => (r.Quien ?? "", r.Monto)).ToList();
+        d.Aportes = (await _db.Aportes.ToListAsync()).Where(a => EnMes(a.Fecha))
+            .Select(a => (a.Quien ?? "", a.Monto)).ToList();
+
+        // ---- Compromisos: igual que la pantalla de Compromisos ----
+        var ingresosHist = reservas.Sum(r => (r.SenaMonto ?? 0) + (r.SaldoMonto ?? 0)) + extras.Sum(e => e.Monto);
+        var egHist = ops.Where(o => o.FechaPago != null).Sum(o => o.Precio)
+                   + provs.Sum(x => (x.FechaSena != null ? x.Sena : 0) + (x.FechaSaldo != null ? x.Saldo : 0))
+                   + gastosEmp.Sum(g => g.Monto);
+        var aportesHist = (await _db.Aportes.ToListAsync()).Sum(a => a.Monto);
+        var retirosHist = (await _db.Retiros.ToListAsync()).Sum(r => r.Monto);
+        var movsFondo = await _db.MovimientosFondo.ToListAsync();
+        var alFondo = movsFondo.Where(m => m.SaleDeLaCaja).Sum(m => m.Pesos);
+        d.CajaHoy = ingresosHist - egHist + aportesHist - retirosHist - alFondo;
+
+        // Las "Reservas Históricas" no son deuda de nadie: ver Pages/Compromisos.
+        var cobrables = reservas.Where(r => r.NombreCliente != Reserva.NombreHistorica && r.Pendiente() > 0).ToList();
+        d.FaltaCobrar = cobrables.Sum(r => r.Pendiente());
+        d.CuantosSaldos = cobrables.Count;
+
+        var salidasHistoricas = reservas.Where(r => r.ExcursionId != null)
+            .GroupBy(r => (Exc: r.ExcursionId!.Value, Fecha: r.FechaDesde.Date))
+            .Where(g => g.All(r => r.NombreCliente == Reserva.NombreHistorica))
+            .Select(g => g.Key).ToHashSet();
+        bool EsHistorica(int excId, DateTime f) => salidasHistoricas.Contains((excId, f.Date));
+
+        d.FaltaPagarGastos = ops.Where(o => o.FechaPago == null && o.Precio > 0 && !EsHistorica(o.ExcursionId, o.Fecha))
+            .Sum(o => o.Precio);
+        d.FaltaPagarProveedores = provs.Where(x => x.TieneDeuda() && !EsHistorica(x.ExcursionId, x.Fecha))
+            .Sum(x => x.Pendiente());
+
+        d.FondoDolares = movsFondo.Sum(m => m.SignoDolares);
+
+        var logo = Path.Combine(_env.WebRootPath, "logo", "logo-pdf.png");
+        var pdf = Wamani.Reservas.Services.CierrePdf.Generar(d, logo);
+        return File(pdf, "application/pdf", $"Wamani - Cierre {desde:yyyy-MM}.pdf");
+    }
 
     // Los 3 dueños (reparto en partes iguales)
     public static readonly string[] Duenos = { "Lautaro", "Facundo", "Luciano" };

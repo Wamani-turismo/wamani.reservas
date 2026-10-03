@@ -93,6 +93,21 @@ h1,h2,h3{font-family:'Playfair Display',serif;font-weight:600;line-height:1.2}
 .btn-borde:hover{background:rgba(216,192,150,.18)}
 .btn-chico{padding:.55rem 1.2rem;font-size:.9rem}
 
+/* "Soy agencia": el atajo del otro público.
+   Va en dorado con borde y NO en coral a propósito. El coral es el botón de comprar; si
+   hubiera dos botones coral pegados, el turista no sabría cuál es el suyo y la agencia
+   tampoco. El dorado es el color del logo y acá quiere decir "esto no es para vos si
+   venís a reservar una excursión". */
+.btn-agencia{
+  background:rgba(216,192,150,.10);color:var(--dorado);
+  border:1.5px solid rgba(216,192,150,.5);
+}
+.btn-agencia:hover{background:rgba(216,192,150,.2);color:#f3e7cd}
+.btn-agencia svg{
+  width:15px;height:15px;flex-shrink:0;
+  fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+}
+
 /* ── Header ───────────────────────────────────────────────── */
 header{
   position:fixed;top:0;left:0;right:0;z-index:50;
@@ -143,6 +158,11 @@ nav.menu a:hover{opacity:1;color:var(--dorado)}
 #check-menu:checked ~ .menu-movil{transform:translateY(0)}
 .menu-movil a{color:#fff;font-weight:600;padding:.55rem 1rem}
 .menu-movil a:active{color:var(--dorado)}
+/* el atajo de agencias, separado del resto del menú para que no parezca una sección más */
+.wsp-agencia-movil{
+  color:var(--dorado)!important;margin-top:.3rem;padding-top:.7rem;
+  border-top:1px solid var(--linea);
+}
 
 /* ── Hero ─────────────────────────────────────────────────── */
 .hero{
@@ -718,6 +738,18 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
       <button type="button" data-lang="fr" onclick="WamaniIdioma.cambiar('fr')">FR</button>
       <button type="button" data-lang="pt" onclick="WamaniIdioma.cambiar('pt')">PT</button>
     </div>
+    <!-- Atajo para agencias. Les evita el camino largo: entrar a /receptivo, buscar el
+         mail, escribirlo y esperar. El mensaje de WhatsApp arranca SIEMPRE con "Soy una
+         agencia de viajes", así en el CRM se reconocen de un vistazo buscando esa frase.
+         Queda en castellano aunque la página esté en otro idioma, justamente para que la
+         frase sea siempre la misma y se pueda filtrar. -->
+    <a class="btn btn-chico btn-agencia wsp" data-agencia="1"
+       data-msg="¡Hola! Soy una agencia de viajes, estaba viendo la página de Wamani Turismo y quisiera contactarme con ustedes para trabajar en conjunto.">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M9 7.5V5.5h6v2"/><path d="M3 12.5h18"/>
+      </svg>
+      Soy agencia
+    </a>
     <a class="btn btn-coral btn-chico wsp" data-msg="¡Hola! Vi la página de Wamani Turismo y quiero reservar una excursión.">Reservá ahora</a>
     <input type="checkbox" id="check-menu" aria-hidden="true">
     <label class="hamburguesa" for="check-menu" aria-label="Abrir menú">
@@ -731,6 +763,10 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
       <a href="#contacto" onclick="cerrarMenu()">Contacto</a>
       <a href="/blog/" onclick="cerrarMenu()">Blog</a>
       <a href="/receptivo/" onclick="cerrarMenu()">Receptivo</a>
+      <!-- El mismo atajo que arriba, porque en el celular los botones de la barra no se
+           ven (.barra .btn está oculto hasta 860px). -->
+      <a class="wsp wsp-agencia-movil" data-agencia="1" onclick="cerrarMenu()"
+         data-msg="¡Hola! Soy una agencia de viajes, estaba viendo la página de Wamani Turismo y quisiera contactarme con ustedes para trabajar en conjunto.">Soy agencia</a>
     </nav>
   </div>
 </header>
@@ -1569,7 +1605,13 @@ document.addEventListener('click', function(ev){
   // ficha vista un clic al WhatsApp del pie.
   var abierto = modalFondo && modalFondo.classList.contains('abierto');
   var ficha = abierto ? document.querySelector('#modal-contenido h3') : null;
-  medir('clic_whatsapp', { desde: 'web', excursion: ficha ? ficha.textContent.trim() : 'general' });
+  // Los clics del botón "Soy agencia" se cuentan aparte: son otro negocio y hay que
+  // poder ver cuántas agencias entran por ahí sin mezclarlas con los turistas.
+  var esAgencia = !!(a.closest && a.closest('[data-agencia]'));
+  medir('clic_whatsapp', {
+    desde: esAgencia ? 'agencia' : 'web',
+    excursion: esAgencia ? 'agencia' : (ficha ? ficha.textContent.trim() : 'general')
+  });
 });
 function cerrarFormulario(){ document.getElementById("fondo-form").style.display = "none"; }
 

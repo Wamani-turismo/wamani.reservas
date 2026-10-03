@@ -7,11 +7,13 @@ namespace Wamani.Reservas.Services;
 
 // CIERRE DE MES: el informe que se baja al terminar cada mes.
 //
-// Tiene dos partes que contestan preguntas distintas, y mezclarlas es el error que más
+// Tiene partes que contestan preguntas distintas, y mezclarlas es el error que más
 // caro sale:
 //
 //   1. LA PLATA QUE SE MOVIÓ este mes: lo que entró menos lo que salió. Es la caja.
-//   2. LOS COMPROMISOS de hoy: lo que falta cobrar y lo que falta pagar de TODAS las
+//   2. EL MES A MES: la misma cuenta para cada mes anterior, con el acumulado al lado,
+//      para leer este mes contra lo que viene siendo el año.
+//   3. LOS COMPROMISOS de hoy: lo que falta cobrar y lo que falta pagar de TODAS las
 //      salidas, las de este mes y las que vienen.
 //
 // Hace falta ver las dos juntas porque en turismo se cobra la seña de una reserva y se
@@ -45,6 +47,28 @@ public static class CierrePdf
 
         public int Reservas { get; set; }
         public int Personas { get; set; }
+
+        // --- Mes a mes, desde el primer mes con movimiento hasta el mes del informe ---
+        //
+        // El cierre de un mes solo no dice si vamos para arriba o para abajo. Esta tabla
+        // pone los meses anteriores al lado y acumula las ganancias, para leer el mes del
+        // informe contra lo que viene siendo el año.
+        //
+        // No se muestran los meses POSTERIORES al del informe, aunque ya tengan plata
+        // cargada (siempre hay señas cobradas de salidas que vienen): el informe es la
+        // foto hasta ese mes y meterle un mes a medio empezar haría ruido.
+        public class LineaMes
+        {
+            public string Nombre { get; set; } = "";
+            public decimal Entro { get; set; }
+            public decimal Salio { get; set; }
+            public decimal Ganancia => Entro - Salio;
+            public decimal Acumulado { get; set; }    // la suma de las ganancias hasta este mes
+            public bool EsEsteMes { get; set; }
+        }
+        public List<LineaMes> Historia { get; set; } = new();
+        public decimal AcumuladoTotal => Historia.Count > 0 ? Historia[^1].Acumulado : Ganancia;
+        public decimal AcumuladoAntes => AcumuladoTotal - Ganancia;
 
         // --- Lo que se llevaron los socios este mes ---
         public List<(string Quien, decimal Monto)> Retiros { get; set; } = new();
@@ -119,11 +143,54 @@ public static class CierrePdf
                             $"{d.Reservas} reserva(s) · {d.Personas} pasajero(s) movieron plata este mes.")
                             .FontSize(9).FontColor(Gris);
 
-                        // ───── 2. Lo que se llevaron los socios ─────
+                        // ───── 2. Mes a mes ─────
+                        if (d.Historia.Count > 1)
+                        {
+                            c.Item().PaddingTop(22);
+                            Titulo(c, "2 · Mes a mes — cómo viene el año");
+                            c.Item().PaddingTop(4).Text(
+                                "Cada mes con su ganancia, y la columna acumulada sumando todos los meses " +
+                                "anteriores. Así se ve si " + d.MesTexto.ToLower() + " fue mejor o peor que lo que venía.")
+                                .FontSize(9).FontColor(Gris);
+
+                            c.Item().PaddingTop(10).Table(t =>
+                            {
+                                t.ColumnsDefinition(cd =>
+                                {
+                                    cd.RelativeColumn();        // mes
+                                    cd.ConstantColumn(95);      // entró
+                                    cd.ConstantColumn(95);      // salió
+                                    cd.ConstantColumn(95);      // ganancia
+                                    cd.ConstantColumn(100);     // acumulado
+                                });
+
+                                Encabezado(t, "Mes", "Entró", "Salió", "Ganancia", "Acumulado");
+
+                                foreach (var m in d.Historia)
+                                    FilaMes(t, m.Nombre, Money(m.Entro), Money(m.Salio),
+                                        Money(m.Ganancia), Money(m.Acumulado),
+                                        m.EsEsteMes, m.Ganancia < 0);
+
+                                FilaMes(t, "ACUMULADO",
+                                    Money(d.Historia.Sum(x => x.Entro)),
+                                    Money(d.Historia.Sum(x => x.Salio)),
+                                    "", Money(d.AcumuladoTotal),
+                                    false, d.AcumuladoTotal < 0, total: true);
+                            });
+
+                            c.Item().PaddingTop(8).Text(
+                                $"Hasta {d.MesTexto.ToLower()} Wamani lleva {Money(d.AcumuladoTotal)} de ganancia " +
+                                $"acumulada: {Money(d.AcumuladoAntes)} de los meses anteriores más " +
+                                $"{Money(d.Ganancia)} de este mes. El acumulado suma las ganancias de cada mes; " +
+                                "no descuenta lo que los socios ya retiraron.")
+                                .FontSize(9).FontColor(Gris);
+                        }
+
+                        // ───── 3. Lo que se llevaron los socios ─────
                         if (d.Retiros.Count > 0 || d.Aportes.Count > 0)
                         {
                             c.Item().PaddingTop(22);
-                            Titulo(c, "2 · Lo que se llevaron los socios");
+                            Titulo(c, "3 · Lo que se llevaron los socios");
                             c.Item().PaddingTop(10).Table(t =>
                             {
                                 t.ColumnsDefinition(cd => { cd.RelativeColumn(); cd.ConstantColumn(120); });
@@ -138,9 +205,9 @@ public static class CierrePdf
                             });
                         }
 
-                        // ───── 3. Compromisos ─────
+                        // ───── 4. Compromisos ─────
                         c.Item().PaddingTop(22);
-                        Titulo(c, "3 · Compromisos — lo que falta cobrar y pagar");
+                        Titulo(c, "4 · Compromisos — lo que falta cobrar y pagar");
                         c.Item().PaddingTop(4).Text(
                             "Esto no es de este mes: es todo lo pendiente a hoy, de las salidas que ya pasaron y " +
                             "de las que vienen. Se cobra la seña y se paga la seña; el resto, de los dos lados, " +
@@ -158,7 +225,7 @@ public static class CierrePdf
                                 d.Proyectado < 0 ? Rojo : Verde);
                         });
 
-                        // ───── 4. El cierre ─────
+                        // ───── 5. El cierre ─────
                         //
                         // Neutral a propósito: las dos puntas, lo que falta cobrar y lo que falta
                         // pagar, y cómo queda la foto. Lo pendiente de cobrar son reservas con la
@@ -171,6 +238,10 @@ public static class CierrePdf
                             a.Item().PaddingTop(6).Text(
                                 $"{d.MesTexto} dejó {Money(d.Ganancia)} de ganancia.")
                                 .FontSize(11).Bold();
+                            if (d.Historia.Count > 1)
+                                a.Item().PaddingTop(4).Text(
+                                    $"Con esto, el acumulado de todos los meses llega a {Money(d.AcumuladoTotal)}.")
+                                    .FontSize(10).Bold();
                             a.Item().PaddingTop(6).Text(
                                 $"Además, de las salidas ya vendidas quedan {Money(d.FaltaCobrar)} por cobrar y " +
                                 $"{Money(d.FaltaPagar)} por pagar, que se van a ir moviendo en los próximos meses. " +
@@ -197,6 +268,53 @@ public static class CierrePdf
 
     private static void Titulo(ColumnDescriptor c, string texto)
         => c.Item().Text(texto).FontSize(13).Bold().FontColor(VerdeOscuro);
+
+    // El encabezado de la tabla mes a mes.
+    private static void Encabezado(TableDescriptor t, params string[] titulos)
+    {
+        for (int i = 0; i < titulos.Length; i++)
+        {
+            var celda = t.Cell().Background(VerdeOscuro).PaddingVertical(6).PaddingHorizontal(6);
+            if (i == 0) celda.Text(titulos[i]).FontSize(8.5f).Bold().FontColor(Dorado);
+            else celda.AlignRight().Text(titulos[i]).FontSize(8.5f).Bold().FontColor(Dorado);
+        }
+    }
+
+    // Una fila de la tabla mes a mes. El mes del informe va resaltado para encontrarlo
+    // de un saque entre los demás.
+    private static void FilaMes(TableDescriptor t, string mes, string entro, string salio,
+        string ganancia, string acumulado, bool destacado, bool enRojo, bool total = false)
+    {
+        var fondo = total ? "#EDE7D8" : (destacado ? "#E8F0E6" : Crema);
+        var colorGan = enRojo ? Rojo : Verde;
+
+        IContainer Celda(bool derecha)
+        {
+            var x = t.Cell().Background(fondo).PaddingVertical(6).PaddingHorizontal(6);
+            x = total
+                ? x.BorderTop(1).BorderColor(VerdeOscuro)
+                : x.BorderBottom(1).BorderColor(Linea);
+            return derecha ? x.AlignRight() : x;
+        }
+
+        // Bold() no acepta un booleano: cada caso va por separado.
+        if (total || destacado)
+        {
+            Celda(false).Text(mes).FontSize(9.5f).Bold();
+            Celda(true).Text(entro).FontSize(9.5f).Bold();
+            Celda(true).Text(salio).FontSize(9.5f).Bold().FontColor(Rojo);
+            Celda(true).Text(ganancia).FontSize(9.5f).Bold().FontColor(colorGan);
+            Celda(true).Text(acumulado).FontSize(10).Bold().FontColor(colorGan);
+        }
+        else
+        {
+            Celda(false).Text(mes).FontSize(9);
+            Celda(true).Text(entro).FontSize(9);
+            Celda(true).Text(salio).FontSize(9).FontColor(Rojo);
+            Celda(true).Text(ganancia).FontSize(9).FontColor(colorGan);
+            Celda(true).Text(acumulado).FontSize(9).Bold().FontColor(Tinta);
+        }
+    }
 
     // Un renglón de la tabla. Los totales van en negrita y con una línea arriba.
     private static void Renglon(TableDescriptor t, string concepto, string monto, bool total, string? color = null)

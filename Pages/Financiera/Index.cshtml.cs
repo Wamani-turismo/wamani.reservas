@@ -14,9 +14,10 @@ public class IndexModel : PageModel
 
     // ---- El informe de cierre del mes, en PDF ----
     //
-    // Junta dos cosas que hay que mirar juntas: la plata que se movió en el mes y los
-    // compromisos pendientes de hoy. Con una sola de las dos se toman malas decisiones:
-    // un mes puede cerrar "ganando" con plata que ya está comprometida para pagar saldos.
+    // Junta las cosas que hay que mirar juntas: la plata que se movió en el mes, el mes a
+    // mes con el acumulado, y los compromisos pendientes de hoy. Con una sola de las tres
+    // se toman malas decisiones: un mes puede cerrar "ganando" con plata que ya está
+    // comprometida para pagar saldos, o parecer bueno siendo el peor del año.
     public async Task<IActionResult> OnGetCierreAsync(string? mes)
     {
         var hoy = Wamani.Reservas.Services.Reloj.HoyJujuy();
@@ -55,6 +56,75 @@ public class IndexModel : PageModel
         var delMes = reservas.Where(r => EnMes(r.SenaFecha) || EnMes(r.SaldoFecha)).ToList();
         d.Reservas = delMes.Count;
         d.Personas = delMes.Sum(r => r.CantidadPersonas);
+
+        // ---- Mes a mes, con el acumulado ----
+        //
+        // La misma cuenta del punto 1, repetida para cada mes desde el primero que tuvo
+        // movimiento hasta el mes del informe. Arranca en el primer mes con plata, no en
+        // enero: no tiene sentido mostrar meses en cero de antes de empezar.
+        //
+        // Los meses POSTERIORES al del informe no se muestran aunque ya tengan plata
+        // cargada (siempre hay señas de salidas que vienen): el informe es la foto hasta
+        // ese mes.
+        var ci2 = new System.Globalization.CultureInfo("es-AR");
+
+        decimal EntroEn(DateTime m)
+        {
+            var f0 = m; var f1 = m.AddMonths(1);
+            bool Ok(DateTime? f) => f is DateTime x && x.Date >= f0 && x.Date < f1;
+            return reservas.Sum(r => (Ok(r.SenaFecha) ? r.SenaMonto ?? 0 : 0)
+                                   + (Ok(r.SaldoFecha) ? r.SaldoMonto ?? 0 : 0))
+                 + extras.Where(e => Ok(e.Fecha)).Sum(e => e.Monto);
+        }
+        decimal SalioEn(DateTime m)
+        {
+            var f0 = m; var f1 = m.AddMonths(1);
+            bool Ok(DateTime? f) => f is DateTime x && x.Date >= f0 && x.Date < f1;
+            return ops.Where(o => Ok(o.FechaPago)).Sum(o => o.Precio)
+                 + provs.Sum(x => (Ok(x.FechaSena) ? x.Sena : 0) + (Ok(x.FechaSaldo) ? x.Saldo : 0))
+                 + gastosEmp.Where(g => Ok(g.Fecha)).Sum(g => g.Monto);
+        }
+
+        // El primer mes con plata, de cualquier lado.
+        var fechasConPlata = new List<DateTime>();
+        foreach (var r in reservas)
+        {
+            if (r.SenaFecha is DateTime fs && (r.SenaMonto ?? 0) != 0) fechasConPlata.Add(fs);
+            if (r.SaldoFecha is DateTime fl && (r.SaldoMonto ?? 0) != 0) fechasConPlata.Add(fl);
+        }
+        foreach (var o in ops) if (o.FechaPago is DateTime f && o.Precio != 0) fechasConPlata.Add(f);
+        foreach (var x in provs)
+        {
+            if (x.FechaSena is DateTime f1 && x.Sena != 0) fechasConPlata.Add(f1);
+            if (x.FechaSaldo is DateTime f2 && x.Saldo != 0) fechasConPlata.Add(f2);
+        }
+        foreach (var e in extras) if (e.Monto != 0) fechasConPlata.Add(e.Fecha);
+        foreach (var g in gastosEmp) if (g.Monto != 0) fechasConPlata.Add(g.Fecha);
+
+        var primeras = fechasConPlata.Where(f => f.Date < hasta).ToList();
+        if (primeras.Count > 0)
+        {
+            var min = primeras.Min();
+            var cursor = new DateTime(min.Year, min.Month, 1);
+            decimal acum = 0;
+            while (cursor < hasta)
+            {
+                var nombre = cursor.ToString("MMMM yyyy", ci2);
+                nombre = char.ToUpper(nombre[0]) + nombre[1..];
+                var entro = EntroEn(cursor);
+                var salio = SalioEn(cursor);
+                acum += entro - salio;
+                d.Historia.Add(new Wamani.Reservas.Services.CierrePdf.Datos.LineaMes
+                {
+                    Nombre = nombre,
+                    Entro = entro,
+                    Salio = salio,
+                    Acumulado = acum,
+                    EsEsteMes = cursor == desde
+                });
+                cursor = cursor.AddMonths(1);
+            }
+        }
 
         // ---- Lo que se llevaron los socios ----
         d.Retiros = (await _db.Retiros.ToListAsync()).Where(r => EnMes(r.Fecha))

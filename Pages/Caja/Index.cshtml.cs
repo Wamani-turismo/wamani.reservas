@@ -34,6 +34,18 @@ public class IndexModel : PageModel
     public decimal SaldoFondo { get; set; }
     public decimal DeudaSocios { get; set; }
 
+    // ---- Las dos cajas ----
+    // La operativa es el día a día (Mercado Pago). El fondo de inversión está en la cuenta
+    // de reserva, en dólares. Separarlas es lo que evita gastar sin querer la plata que se
+    // había apartado para crecer.
+    public decimal FondoDolares { get; set; }
+    public decimal FondoPesos { get; set; }        // al cambio de cada movimiento
+    public decimal MandadoAlFondo { get; set; }    // lo que salió de la caja operativa
+    public decimal GastadoDelFondo { get; set; }
+
+    // Lo que queda en el día a día: la caja de siempre menos lo que se mandó al fondo.
+    public decimal CajaOperativa => Caja + AportesTotal - RetirosTotal - MandadoAlFondo;
+
     // Form aportes
     [BindProperty] public DateTime ApFecha { get; set; } = DateTime.Today;
     [BindProperty] public string? ApQuien { get; set; }
@@ -82,6 +94,17 @@ public class IndexModel : PageModel
         SaldoFondo = (await Wamani.Reservas.Services.FondoReserva.CalcularAsync(
             _db, new DateTime(hoy.Year, hoy.Month, 1))).Saldo;
         DeudaSocios = cuentas.Socios.Sum(s => s.Saldo);
+
+        // ---- Fondo de inversión: las dos cajas ----
+        // La plata que se mandó al fondo salió de la caja operativa y está en la cuenta de
+        // reserva. Sigue siendo de Wamani, por eso no es un gasto: sólo cambió de bolsillo.
+        // Lo gastado DEL fondo sí salió de Wamani, pero nunca pasó por la caja del día a
+        // día: se descuenta del fondo y de ningún otro lado.
+        var movs = await _db.MovimientosFondo.ToListAsync();
+        FondoDolares = movs.Sum(m => m.SignoDolares);
+        FondoPesos = movs.Sum(m => m.SignoPesos);
+        MandadoAlFondo = movs.Where(m => m.SaleDeLaCaja).Sum(m => m.Pesos);
+        GastadoDelFondo = movs.Where(m => m.Tipo == Models.MovimientoFondo.Gasto).Sum(m => m.Pesos);
     }
 
     // Guarda uno o varios comprobantes conservando el nombre original

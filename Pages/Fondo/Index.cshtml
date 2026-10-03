@@ -1,0 +1,187 @@
+@page
+@model Wamani.Reservas.Pages.Fondo.IndexModel
+@{
+    ViewData["Title"] = "Fondo de inversión";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+    string Usd(decimal m) => "US$ " + m.ToString("N2", ci);
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Fondo de inversión</h1>
+        <p class="subtitle" style="margin:0">
+            La plata que Wamani aparta para crecer. Se guarda <strong>en dólares</strong> y vive
+            aparte de la caja del día a día, para no gastarla sin querer.
+        </p>
+    </div>
+    <a class="btn btn-ghost" asp-page="/Caja/Index">💰 Ver la caja</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Aviso))
+{
+    <div class="aviso-ok">@Model.Aviso</div>
+}
+
+<div class="fin-cards">
+    <div class="fin-card fin-card-net">
+        <div class="fin-label">Hay en el fondo</div>
+        <div class="fin-val" style="color:var(--accent)">@Usd(Model.SaldoDolares)</div>
+        @if (Model.UltimoTipoCambio > 0)
+        {
+            <div class="fin-label" style="margin-top:4px">
+                ≈ @Money(Model.SaldoPesosHoy) al cambio de @Money(Model.UltimoTipoCambio)
+            </div>
+        }
+    </div>
+    <div class="fin-card">
+        <div class="fin-label">Lo que pusieron los socios</div>
+        <div class="fin-val">@Money(Model.Aportado)</div>
+    </div>
+    <div class="fin-card">
+        <div class="fin-label">Lo que entró desde la caja</div>
+        <div class="fin-val">@Money(Model.EntroDesdeCaja)</div>
+        <div class="fin-label" style="margin-top:4px">meses buenos reinvertidos</div>
+    </div>
+    <div class="fin-card">
+        <div class="fin-label">Lo gastado del fondo</div>
+        <div class="fin-val" style="color:var(--warn)">@Money(Model.Gastado)</div>
+    </div>
+</div>
+
+<div class="card" style="margin-top:12px">
+    <p class="hint" style="margin:0">
+        <strong>Cómo funciona.</strong>
+        Un <strong>aporte</strong> es plata que pone un socio de su bolsillo: entra al fondo y
+        no sale de la caja, porque nunca estuvo ahí.
+        <strong>Desde la caja</strong> es cuando se cierra un buen mes y se manda parte al fondo:
+        la plata sigue siendo de Wamani, sólo cambia de bolsillo, así que baja la caja operativa
+        y sube el fondo.
+        Un <strong>gasto</strong> baja el fondo y nada más: no toca la caja del día a día ni la
+        ganancia del mes, porque esa plata ya se había apartado antes.
+    </p>
+</div>
+
+<!-- Cargar un movimiento -->
+<div class="card" style="margin-top:12px">
+    <h2>Cargar un movimiento</h2>
+    <form method="post" enctype="multipart/form-data" asp-page-handler="Agregar">
+        <div class="form-grid">
+            <div class="field"><label>Fecha</label><input asp-for="NuevoFecha" type="date" /></div>
+            <div class="field">
+                <label>Qué es</label>
+                <select asp-for="NuevoTipo">
+                    @foreach (var t in Wamani.Reservas.Models.MovimientoFondo.Tipos)
+                    {
+                        <option value="@t">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="field full">
+                <label>Concepto</label>
+                <input asp-for="NuevoConcepto" placeholder="Ej: Stand de la FIT · Computadora · Aporte de Facundo" />
+            </div>
+            <div class="field"><label>Quién (si es un aporte)</label><input asp-for="NuevoQuien" placeholder="Lautaro / Facundo / Luciano" /></div>
+            <div class="field"><label>Tipo de cambio</label><input asp-for="NuevoTipoCambio" type="number" step="0.01" min="0" /></div>
+            <div class="field"><label>Dólares</label><input asp-for="NuevoDolares" type="number" step="0.01" min="0" /></div>
+            <div class="field"><label>Pesos</label><input asp-for="NuevoPesos" type="number" step="0.01" min="0" /></div>
+            <div class="field full">
+                <div class="hint">
+                    Con el tipo de cambio cargado alcanza con poner <strong>uno</strong> de los dos
+                    montos: el otro se completa solo. El valor en pesos queda guardado como quedó
+                    ese día, es al sólo efecto informativo.
+                </div>
+            </div>
+            <div class="field full"><label>Nota (opcional)</label><input asp-for="NuevoNota" /></div>
+            <div class="field"><label>Comprobante (opcional)</label><input asp-for="NuevoComprobante" type="file" accept="image/*,.pdf" multiple /></div>
+        </div>
+        <div class="acciones-form" style="margin-top:12px">
+            <button type="submit" class="btn btn-primary">+ Cargar movimiento</button>
+        </div>
+    </form>
+</div>
+
+<!-- Movimientos -->
+<div class="table-wrap" style="margin-top:18px">
+    <table class="tabla">
+        <thead>
+            <tr>
+                <th>Fecha</th><th>Qué es</th><th>Concepto</th>
+                <th class="num">Dólares</th><th class="num">Pesos</th><th class="num">Cambio</th>
+                <th>Comprobante</th><th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (Model.Lista.Count == 0)
+        {
+            <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:30px">
+                Todavía no hay movimientos en el fondo.
+            </td></tr>
+        }
+        @foreach (var m in Model.Lista)
+        {
+            var esGasto = m.Tipo == Wamani.Reservas.Models.MovimientoFondo.Gasto;
+            var color = esGasto ? "var(--warn)" : "var(--accent)";
+            var signo = esGasto ? "−" : "+";
+            <tr>
+                <td data-label="Fecha">@m.Fecha.ToString("dd/MM/yy")</td>
+                <td data-label="Qué es">
+                    @if (esGasto)
+                    {
+                        <span class="pill" style="background:var(--warn);color:#fff">Gasto</span>
+                    }
+                    else if (m.SaleDeLaCaja)
+                    {
+                        <span class="pill pill-ok">Desde caja</span>
+                    }
+                    else
+                    {
+                        <span class="pill pill-muted">Aporte</span>
+                    }
+                </td>
+                <td data-label="Concepto">
+                    @m.Concepto
+                    @if (!string.IsNullOrWhiteSpace(m.Quien))
+                    {
+                        <div class="cliente-sub">@m.Quien</div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(m.Nota))
+                    {
+                        <div class="cliente-sub">@m.Nota</div>
+                    }
+                </td>
+                <td class="num" data-label="Dólares"><strong style="color:@color">@signo @Usd(m.Dolares)</strong></td>
+                <td class="num" data-label="Pesos" style="color:@color">@signo @Money(m.Pesos)</td>
+                <td class="num" data-label="Cambio">@(m.TipoCambio > 0 ? Money(m.TipoCambio) : "—")</td>
+                <td data-label="Comprobante">
+                    @if (!string.IsNullOrEmpty(m.Comprobante))
+                    {
+                        <partial name="_Adjuntos" model="@m.Comprobante" />
+                    }
+                    else
+                    {
+                        <span class="cliente-sub">—</span>
+                    }
+                </td>
+                <td>
+                    <form method="post" asp-page-handler="Eliminar" asp-route-id="@m.Id" style="display:inline">
+                        <button type="submit" class="btn-mini btn-mini-danger" title="Borrar"
+                                onclick="return confirm('¿Realmente lo querés borrar?');">🗑</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+        @if (Model.Lista.Count > 0)
+        {
+            <tfoot>
+                <tr>
+                    <td colspan="3"><strong>Saldo del fondo</strong></td>
+                    <td class="num"><strong style="color:var(--accent)">@Usd(Model.SaldoDolares)</strong></td>
+                    <td class="num"><strong>@Money(Model.SaldoPesos)</strong></td>
+                    <td colspan="3"></td>
+                </tr>
+            </tfoot>
+        }
+    </table>
+</div>

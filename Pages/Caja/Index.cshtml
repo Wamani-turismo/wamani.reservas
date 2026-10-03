@@ -41,6 +41,23 @@
         <div class="fin-label">Caja (ingresos − egresos)</div>
         <div class="fin-val">@Money(Model.Caja)</div>
     </div>
+    @* Las dos cajas: el día a día y la reserva. La suma tiene que dar el patrimonio, y así
+       se controla contra lo que de verdad hay en cada cuenta del banco. *@
+    <div class="fin-card fin-card-net">
+        <div class="fin-label">Caja operativa (el día a día)</div>
+        <div class="fin-val" style="color:var(--accent)">@Money(Model.CajaOperativa)</div>
+        @if (Model.MandadoAlFondo > 0)
+        {
+            <div class="fin-label" style="margin-top:4px">ya apartados @Money(Model.MandadoAlFondo) al fondo</div>
+        }
+    </div>
+    <div class="fin-card">
+        <div class="fin-label">
+            <a asp-page="/Fondo/Index">Fondo de inversión</a>
+        </div>
+        <div class="fin-val">US$ @Model.FondoDolares.ToString("N2", ci)</div>
+        <div class="fin-label" style="margin-top:4px">en la cuenta de reserva</div>
+    </div>
     <div class="fin-card fin-card-net">
         <div class="fin-label">Capital / Patrimonio</div>
         <div class="fin-val" style="color:var(--accent)">@Money(Model.Patrimonio)</div>

@@ -23,6 +23,7 @@ namespace Wamani.Reservas.Data
         public DbSet<IngresoExtra> IngresosExtra => Set<IngresoExtra>();
         public DbSet<Retiro> Retiros => Set<Retiro>();
         public DbSet<Aporte> Aportes => Set<Aporte>();
+        public DbSet<MovimientoFondo> MovimientosFondo => Set<MovimientoFondo>();
 
         // --- Contenido de la LANDING (página pública), editable desde "🌐 Web" ---
         public DbSet<ContenidoWeb> ContenidoWeb => Set<ContenidoWeb>();

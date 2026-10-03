@@ -60,8 +60,6 @@ public static class CierrePdf
         public decimal FaltaPagarProveedores { get; set; }
         public decimal FaltaPagar => FaltaPagarGastos + FaltaPagarProveedores;
         public decimal Proyectado => CajaHoy + FaltaCobrar - FaltaPagar;
-        // Lo que de verdad hay libre hoy: la caja menos todo lo que ya se debe.
-        public decimal LibreHoy => CajaHoy - FaltaPagar;
 
         // --- El fondo, sólo como dato ---
         public decimal FondoDolares { get; set; }
@@ -144,8 +142,9 @@ public static class CierrePdf
                         c.Item().PaddingTop(22);
                         Titulo(c, "3 · Compromisos — lo que falta cobrar y pagar");
                         c.Item().PaddingTop(4).Text(
-                            "Esto NO es de este mes: es todo lo pendiente a hoy, de las salidas que ya pasaron y " +
-                            "de las que vienen. Se cobra la seña y se paga la seña; el resto queda para después.")
+                            "Esto no es de este mes: es todo lo pendiente a hoy, de las salidas que ya pasaron y " +
+                            "de las que vienen. Se cobra la seña y se paga la seña; el resto, de los dos lados, " +
+                            "queda para los meses que siguen.")
                             .FontSize(9).FontColor(Gris);
 
                         c.Item().PaddingTop(10).Table(t =>
@@ -159,23 +158,24 @@ public static class CierrePdf
                                 d.Proyectado < 0 ? Rojo : Verde);
                         });
 
-                        // ───── 4. La advertencia ─────
-                        c.Item().PaddingTop(18).Background(d.LibreHoy < 0 ? "#F7E7E2" : "#E8F0E6")
-                            .Border(1).BorderColor(d.LibreHoy < 0 ? Rojo : Verde).Padding(14).Column(a =>
+                        // ───── 4. El cierre ─────
+                        //
+                        // Neutral a propósito: las dos puntas, lo que falta cobrar y lo que falta
+                        // pagar, y cómo queda la foto. Lo pendiente de cobrar son reservas con la
+                        // seña puesta, no deudas dudosas: descontar sólo lo que se debe e ignorar
+                        // lo que se va a cobrar daría una foto falsa y asustaría de más.
+                        c.Item().PaddingTop(18).Background("#E8F0E6").Border(1).BorderColor(Verde)
+                            .Padding(14).Column(a =>
                         {
-                            a.Item().Text("Cuánto se puede repartir de verdad")
-                                .FontSize(11).Bold().FontColor(d.LibreHoy < 0 ? Rojo : Verde);
+                            a.Item().Text("Cómo cerró el mes").FontSize(11).Bold().FontColor(Verde);
                             a.Item().PaddingTop(6).Text(
-                                $"Caja de hoy {Money(d.CajaHoy)} − todo lo que ya se debe {Money(d.FaltaPagar)} = " +
-                                $"{Money(d.LibreHoy)}")
-                                .FontSize(10);
+                                $"{d.MesTexto} dejó {Money(d.Ganancia)} de ganancia.")
+                                .FontSize(11).Bold();
                             a.Item().PaddingTop(6).Text(
-                                d.LibreHoy < 0
-                                ? "La plata que hay HOY no alcanza para cubrir lo que ya se debe: el resto depende de " +
-                                  "cobrar los saldos pendientes. No conviene repartir sobre la ganancia del mes."
-                                : "Ésta es la plata libre aunque no se cobrara un peso más. Repartir por encima de " +
-                                  "este número es usar plata que ya tiene dueño.")
-                                .FontSize(9).FontColor(Gris);
+                                $"Además, de las salidas ya vendidas quedan {Money(d.FaltaCobrar)} por cobrar y " +
+                                $"{Money(d.FaltaPagar)} por pagar, que se van a ir moviendo en los próximos meses. " +
+                                $"Contando las dos puntas, la plata de Wamani queda en {Money(d.Proyectado)}.")
+                                .FontSize(9.5f).FontColor(Gris);
                         });
 
                         // ───── Pie ─────

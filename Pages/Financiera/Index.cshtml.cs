@@ -76,13 +76,18 @@ public class IndexModel : PageModel
                                    + (Ok(r.SaldoFecha) ? r.SaldoMonto ?? 0 : 0))
                  + extras.Where(e => Ok(e.Fecha)).Sum(e => e.Monto);
         }
-        decimal SalioEn(DateTime m)
+        decimal PagadoEn(DateTime m)
         {
             var f0 = m; var f1 = m.AddMonths(1);
             bool Ok(DateTime? f) => f is DateTime x && x.Date >= f0 && x.Date < f1;
             return ops.Where(o => Ok(o.FechaPago)).Sum(o => o.Precio)
-                 + provs.Sum(x => (Ok(x.FechaSena) ? x.Sena : 0) + (Ok(x.FechaSaldo) ? x.Saldo : 0))
-                 + gastosEmp.Where(g => Ok(g.Fecha)).Sum(g => g.Monto);
+                 + provs.Sum(x => (Ok(x.FechaSena) ? x.Sena : 0) + (Ok(x.FechaSaldo) ? x.Saldo : 0));
+        }
+        decimal EmpresaEn(DateTime m)
+        {
+            var f0 = m; var f1 = m.AddMonths(1);
+            bool Ok(DateTime f) => f.Date >= f0 && f.Date < f1;
+            return gastosEmp.Where(g => Ok(g.Fecha)).Sum(g => g.Monto);
         }
 
         // El primer mes con plata, de cualquier lado.
@@ -112,13 +117,15 @@ public class IndexModel : PageModel
                 var nombre = cursor.ToString("MMMM yyyy", ci2);
                 nombre = char.ToUpper(nombre[0]) + nombre[1..];
                 var entro = EntroEn(cursor);
-                var salio = SalioEn(cursor);
-                acum += entro - salio;
+                var pagado = PagadoEn(cursor);
+                var empresa = EmpresaEn(cursor);
+                acum += entro - pagado - empresa;
                 d.Historia.Add(new Wamani.Reservas.Services.CierrePdf.Datos.LineaMes
                 {
                     Nombre = nombre,
                     Entro = entro,
-                    Salio = salio,
+                    Pagado = pagado,
+                    Empresa = empresa,
                     Acumulado = acum,
                     EsEsteMes = cursor == desde
                 });

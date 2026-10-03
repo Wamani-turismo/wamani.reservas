@@ -57,13 +57,18 @@ public static class CierrePdf
         // No se muestran los meses POSTERIORES al del informe, aunque ya tengan plata
         // cargada (siempre hay señas cobradas de salidas que vienen): el informe es la
         // foto hasta ese mes y meterle un mes a medio empezar haría ruido.
+        // Las columnas van separadas igual que en el punto 1 y que en la pantalla Anual:
+        // lo pagado de las salidas por un lado y los gastos de la empresa por otro. Si se
+        // juntaran en un solo "salió", los números no cuadrarían contra ninguna otra
+        // pantalla del sistema.
         public class LineaMes
         {
             public string Nombre { get; set; } = "";
             public decimal Entro { get; set; }
-            public decimal Salio { get; set; }
-            public decimal Ganancia => Entro - Salio;
-            public decimal Acumulado { get; set; }    // la suma de las ganancias hasta este mes
+            public decimal Pagado { get; set; }      // proveedores y gastos de las salidas
+            public decimal Empresa { get; set; }     // publicidad, suscripciones, botiquín…
+            public decimal Ganancia => Entro - Pagado - Empresa;
+            public decimal Acumulado { get; set; }   // la suma de las ganancias hasta este mes
             public bool EsEsteMes { get; set; }
         }
         public List<LineaMes> Historia { get; set; } = new();
@@ -149,8 +154,9 @@ public static class CierrePdf
                             c.Item().PaddingTop(22);
                             Titulo(c, "2 · Mes a mes — cómo viene el año");
                             c.Item().PaddingTop(4).Text(
-                                "Cada mes con su ganancia, y la columna acumulada sumando todos los meses " +
-                                "anteriores. Así se ve si " + d.MesTexto.ToLower() + " fue mejor o peor que lo que venía.")
+                                "Cada mes con la misma cuenta del punto 1 — lo que entró, lo pagado de las " +
+                                "salidas, los gastos de la empresa — y al final la columna que va acumulando. " +
+                                "Así se ve si " + d.MesTexto.ToLower() + " fue mejor o peor que lo que venía.")
                                 .FontSize(9).FontColor(Gris);
 
                             c.Item().PaddingTop(10).Table(t =>
@@ -158,22 +164,24 @@ public static class CierrePdf
                                 t.ColumnsDefinition(cd =>
                                 {
                                     cd.RelativeColumn();        // mes
-                                    cd.ConstantColumn(95);      // entró
-                                    cd.ConstantColumn(95);      // salió
-                                    cd.ConstantColumn(95);      // ganancia
-                                    cd.ConstantColumn(100);     // acumulado
+                                    cd.ConstantColumn(88);      // entró
+                                    cd.ConstantColumn(88);      // pagado de las salidas
+                                    cd.ConstantColumn(80);      // gastos de empresa
+                                    cd.ConstantColumn(88);      // ganancia
+                                    cd.ConstantColumn(95);      // acumulado
                                 });
 
-                                Encabezado(t, "Mes", "Entró", "Salió", "Ganancia", "Acumulado");
+                                Encabezado(t, "Mes", "Entró", "Pagado", "Empresa", "Ganancia", "Acumulado");
 
                                 foreach (var m in d.Historia)
-                                    FilaMes(t, m.Nombre, Money(m.Entro), Money(m.Salio),
+                                    FilaMes(t, m.Nombre, Money(m.Entro), Money(m.Pagado), Money(m.Empresa),
                                         Money(m.Ganancia), Money(m.Acumulado),
                                         m.EsEsteMes, m.Ganancia < 0);
 
                                 FilaMes(t, "ACUMULADO",
                                     Money(d.Historia.Sum(x => x.Entro)),
-                                    Money(d.Historia.Sum(x => x.Salio)),
+                                    Money(d.Historia.Sum(x => x.Pagado)),
+                                    Money(d.Historia.Sum(x => x.Empresa)),
                                     "", Money(d.AcumuladoTotal),
                                     false, d.AcumuladoTotal < 0, total: true);
                             });
@@ -282,8 +290,9 @@ public static class CierrePdf
 
     // Una fila de la tabla mes a mes. El mes del informe va resaltado para encontrarlo
     // de un saque entre los demás.
-    private static void FilaMes(TableDescriptor t, string mes, string entro, string salio,
-        string ganancia, string acumulado, bool destacado, bool enRojo, bool total = false)
+    private static void FilaMes(TableDescriptor t, string mes, string entro, string pagado,
+        string empresa, string ganancia, string acumulado, bool destacado, bool enRojo,
+        bool total = false)
     {
         var fondo = total ? "#EDE7D8" : (destacado ? "#E8F0E6" : Crema);
         var colorGan = enRojo ? Rojo : Verde;
@@ -300,19 +309,21 @@ public static class CierrePdf
         // Bold() no acepta un booleano: cada caso va por separado.
         if (total || destacado)
         {
-            Celda(false).Text(mes).FontSize(9.5f).Bold();
-            Celda(true).Text(entro).FontSize(9.5f).Bold();
-            Celda(true).Text(salio).FontSize(9.5f).Bold().FontColor(Rojo);
-            Celda(true).Text(ganancia).FontSize(9.5f).Bold().FontColor(colorGan);
-            Celda(true).Text(acumulado).FontSize(10).Bold().FontColor(colorGan);
+            Celda(false).Text(mes).FontSize(9).Bold();
+            Celda(true).Text(entro).FontSize(9).Bold();
+            Celda(true).Text(pagado).FontSize(9).Bold().FontColor(Rojo);
+            Celda(true).Text(empresa).FontSize(9).Bold().FontColor(Rojo);
+            Celda(true).Text(ganancia).FontSize(9).Bold().FontColor(colorGan);
+            Celda(true).Text(acumulado).FontSize(9.5f).Bold().FontColor(colorGan);
         }
         else
         {
-            Celda(false).Text(mes).FontSize(9);
-            Celda(true).Text(entro).FontSize(9);
-            Celda(true).Text(salio).FontSize(9).FontColor(Rojo);
-            Celda(true).Text(ganancia).FontSize(9).FontColor(colorGan);
-            Celda(true).Text(acumulado).FontSize(9).Bold().FontColor(Tinta);
+            Celda(false).Text(mes).FontSize(8.5f);
+            Celda(true).Text(entro).FontSize(8.5f);
+            Celda(true).Text(pagado).FontSize(8.5f).FontColor(Rojo);
+            Celda(true).Text(empresa).FontSize(8.5f).FontColor(Rojo);
+            Celda(true).Text(ganancia).FontSize(8.5f).FontColor(colorGan);
+            Celda(true).Text(acumulado).FontSize(8.5f).Bold().FontColor(Tinta);
         }
     }
 

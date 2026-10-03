@@ -317,7 +317,12 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
         <div><dt>Base de operaciones</dt><dd>San Salvador de Jujuy, Argentina</dd></div>
         <div><dt>Qué operamos</dt><dd>Excursiones de un día y travesías de 2 a 5 días en Yungas, Quebrada, Valle y Puna</dd></div>
         <div><dt>Cómo trabajamos</dt><dd>Grupos reducidos, con guías locales propios</dd></div>
-        <div><dt>Referencias</dt><dd><a href="https://www.google.com/maps?cid=3490477195889430940" target="_blank" rel="noopener">5,0 en Google con 13 opiniones</a></dd></div>
+        <!-- El puntaje y la cantidad de opiniones salen del sistema (Web → Contenido). Los
+             números van en su propio <span> a propósito: el traductor cambia textos sueltos
+             buscándolos en el diccionario, así que si el número estuviera adentro de la
+             frase, cada vez que cambiara habría que tocar también las tres traducciones.
+             Lo que está escrito acá es el respaldo por si el sistema no responde. -->
+        <div><dt>Referencias</dt><dd><a href="https://www.google.com/maps?cid=3490477195889430940" target="_blank" rel="noopener"><span id="g-puntaje">5,0</span> ★ · <span id="g-cant">19</span> <span>opiniones en Google</span></a></dd></div>
         <div><dt>Sitio</dt><dd><a href="/" target="_blank" rel="noopener">wamaniturismo.com</a></dd></div>
       </dl>
       <p class="ficha-pie">Razón social, CUIT, legajo y pólizas se envían junto con el tarifario.</p>
@@ -521,6 +526,11 @@ var MSG_AGENCIA = "¡Hola! Soy una agencia de viajes, estaba viendo la página d
 document.getElementById("wpp-agencia").href = wpp(MSG_AGENCIA);
 document.getElementById("wsp-flotante").href = wpp(MSG_AGENCIA);
 document.getElementById("mail-texto").textContent = MAIL;
+
+/* Las opiniones de Google, desde el sistema. Si el sistema no contesta queda lo que
+   está escrito en el HTML, que es mejor que mostrar un número en blanco. */
+if (D.googlePuntaje) document.getElementById("g-puntaje").textContent = D.googlePuntaje;
+if (D.googleOpiniones) document.getElementById("g-cant").textContent = D.googleOpiniones;
 /* OJO: acá había una línea que le ponía el mailto a un botón "mail-agencia" que YA NO
    EXISTE (ese botón pasó a abrir el formulario). Al no encontrarlo, el navegador cortaba
    el script justo en este punto y NADA de lo que sigue llegaba a correr: por eso el

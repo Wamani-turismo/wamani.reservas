@@ -198,7 +198,9 @@ en: {
     "Cómo trabajamos": "How we work",
     "Grupos reducidos, con guías locales propios": "Small groups, with our own local guides",
     "Referencias": "References",
-    "5,0 en Google con 13 opiniones": "5.0 on Google from 13 reviews",
+    /* El puntaje y la cantidad salen del sistema y van aparte, así este texto no cambia
+       nunca aunque lleguen opiniones nuevas. */
+    "opiniones en Google": "reviews on Google",
     "Sitio": "Website",
     "Razón social, CUIT, legajo y pólizas se envían junto con el tarifario.": "Registered company name, tax ID, licence number and insurance policies are sent together with the rate sheet.",
     "← Volver": "← Back",
@@ -701,7 +703,7 @@ fr: {
     "Cómo trabajamos": "Comment nous travaillons",
     "Grupos reducidos, con guías locales propios": "Petits groupes, avec nos propres guides locaux",
     "Referencias": "Références",
-    "5,0 en Google con 13 opiniones": "5,0 sur Google avec 13 avis",
+    "opiniones en Google": "avis sur Google",
     "Sitio": "Site",
     "Razón social, CUIT, legajo y pólizas se envían junto con el tarifario.": "La raison sociale, le numéro fiscal, le numéro de licence et les polices d'assurance sont envoyés avec la grille tarifaire.",
     "← Volver": "← Retour",
@@ -1197,7 +1199,7 @@ pt: {
     "Cómo trabajamos": "Como trabalhamos",
     "Grupos reducidos, con guías locales propios": "Grupos reduzidos, com guias locais próprios",
     "Referencias": "Referências",
-    "5,0 en Google con 13 opiniones": "5,0 no Google com 13 avaliações",
+    "opiniones en Google": "avaliações no Google",
     "Sitio": "Site",
     "Razón social, CUIT, legajo y pólizas se envían junto con el tarifario.": "Razão social, CUIT, registro e apólices são enviados junto com a tabela de tarifas.",
     "← Volver": "← Voltar",

@@ -36,6 +36,8 @@ public class ContenidoModel : PageModel
             actual.Linktree = (Datos.Linktree ?? "").Trim();
             actual.Email = (Datos.Email ?? "").Trim();
             actual.Ubicacion = (Datos.Ubicacion ?? "").Trim();
+            actual.GooglePuntaje = (Datos.GooglePuntaje ?? "").Trim();
+            actual.GoogleOpiniones = Datos.GoogleOpiniones;
             actual.HeroTexto = Datos.HeroTexto ?? "";
             actual.Quienes1 = Datos.Quienes1 ?? "";
             actual.Quienes2 = Datos.Quienes2 ?? "";

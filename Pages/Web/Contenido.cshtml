@@ -50,6 +50,23 @@
         <input class="input" asp-for="Datos.Ubicacion" />
     </div>
 
+    <h2 class="form-sec">Opiniones de Google</h2>
+    <div class="grid2">
+        <div class="campo">
+            <label asp-for="Datos.GooglePuntaje"></label>
+            <input class="input" asp-for="Datos.GooglePuntaje" placeholder="5,0" />
+        </div>
+        <div class="campo">
+            <label asp-for="Datos.GoogleOpiniones"></label>
+            <input class="input" type="number" min="0" asp-for="Datos.GoogleOpiniones" />
+        </div>
+    </div>
+    <small>
+        Es la referencia que ven las agencias en la propuesta comercial (Receptivo).
+        Cuando entren opiniones nuevas en Google, cambiá el número acá y la página se
+        actualiza sola. <a href="https://www.google.com/maps?cid=3490477195889430940" target="_blank" rel="noopener">Ver el perfil de Google ↗</a>
+    </small>
+
     <h2 class="form-sec">Textos de la página</h2>
     <div class="campo">
         <label asp-for="Datos.HeroTexto"></label>

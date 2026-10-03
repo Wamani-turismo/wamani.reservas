@@ -31,6 +31,16 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Ubicación (texto)")]
         public string Ubicacion { get; set; } = "San Salvador de Jujuy, Argentina";
 
+        // Las opiniones de Google que se muestran como referencia en la propuesta para
+        // agencias (/receptivo). Estaban escritas a mano en el código: cuando llegaban
+        // opiniones nuevas el número quedaba viejo y había que tocar cuatro archivos para
+        // cambiarlo. Ahora se edita acá y la página lo lee.
+        [Display(Name = "Puntaje en Google (ej: 5,0)")]
+        public string GooglePuntaje { get; set; } = "5,0";
+
+        [Display(Name = "Cantidad de opiniones en Google")]
+        public int GoogleOpiniones { get; set; } = 19;
+
         [Display(Name = "Frase del inicio (debajo del nombre WAMANI)")]
         public string HeroTexto { get; set; } =
             "Conocemos los caminos secretos de la Quebrada, la Puna y la selva de las Yungas. Vení a descubrirlos con nosotros.";

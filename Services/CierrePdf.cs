@@ -92,6 +92,22 @@ public static class CierrePdf
 
         // --- El fondo, sólo como dato ---
         public decimal FondoDolares { get; set; }
+
+        // --- El control de caja ---
+        //
+        // La plata contada de verdad en el banco contra lo que decía el sistema. Es el único
+        // número del informe que no sale del sistema mismo, así que es el que dice si hay
+        // que creerle al resto. Si no se hizo ningún control, no se muestra nada: inventar
+        // un "cuadra" que nadie verificó sería peor que no decir nada.
+        public bool HayArqueo { get; set; }
+        public DateTime ArqueoFecha { get; set; }
+        public decimal ArqueoReal { get; set; }
+        public decimal ArqueoSistema { get; set; }
+        public decimal ArqueoDiferencia { get; set; }
+        public string ArqueoMotivo { get; set; } = "";
+        public bool ArqueoAjustado { get; set; }
+        public string ArqueoEtiqueta =>
+            ArqueoDiferencia == 0 ? "cuadra" : (ArqueoDiferencia > 0 ? "sobrante" : "faltante");
     }
 
     public static byte[] Generar(Datos d, string rutaLogo)
@@ -232,6 +248,39 @@ public static class CierrePdf
                             Renglon(t, "SI SE COBRA Y SE PAGA TODO, QUEDA", Money(d.Proyectado), true,
                                 d.Proyectado < 0 ? Rojo : Verde);
                         });
+
+                        // ───── El control de caja ─────
+                        //
+                        // Va pegado a los compromisos porque desmiente o confirma el primer
+                        // renglón de esa tabla: la plata en caja. Todo lo demás del informe
+                        // sale del sistema; esto sale de haber contado el banco.
+                        if (d.HayArqueo)
+                        {
+                            var cuadra = d.ArqueoDiferencia == 0;
+                            var colorArq = cuadra ? Verde : (d.ArqueoDiferencia > 0 ? Verde : Rojo);
+                            c.Item().PaddingTop(14).Background("#F7F2E4").Border(1).BorderColor(Dorado)
+                                .Padding(12).Column(a =>
+                            {
+                                a.Item().Text("Control de caja · " + d.ArqueoFecha.ToString("dd/MM/yyyy"))
+                                    .FontSize(10).Bold().FontColor(VerdeOscuro);
+                                a.Item().PaddingTop(5).Text(
+                                    $"En la cuenta había {Money(d.ArqueoReal)} de verdad. El sistema decía " +
+                                    $"{Money(d.ArqueoSistema)}.")
+                                    .FontSize(9.5f);
+                                if (cuadra)
+                                    a.Item().PaddingTop(3).Text("Cuadra exacto.").FontSize(9.5f).Bold().FontColor(Verde);
+                                else
+                                    a.Item().PaddingTop(3).Text(
+                                        $"{char.ToUpper(d.ArqueoEtiqueta[0])}{d.ArqueoEtiqueta[1..]} de " +
+                                        $"{Money(Math.Abs(d.ArqueoDiferencia))} · {d.ArqueoMotivo}.")
+                                        .FontSize(9.5f).Bold().FontColor(colorArq);
+                                if (!cuadra)
+                                    a.Item().PaddingTop(3).Text(d.ArqueoAjustado
+                                        ? "Ya se acomodó la caja: la diferencia está cargada y los números de este informe la incluyen."
+                                        : "Todavía NO se acomodó la caja: los números de este informe no incluyen esta diferencia.")
+                                        .FontSize(8.5f).FontColor(Gris);
+                            });
+                        }
 
                         // ───── 5. El cierre ─────
                         //

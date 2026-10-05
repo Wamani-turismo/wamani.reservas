@@ -1,0 +1,184 @@
+@page
+@model Wamani.Reservas.Pages.Caja.ArqueoModel
+@{
+    ViewData["Title"] = "Control de caja";
+    var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
+    string Money(decimal m) => "$ " + m.ToString("N0", ci);
+    string ConSigno(decimal m) => (m > 0 ? "+ " : (m < 0 ? "− " : "")) + "$ " + Math.Abs(m).ToString("N0", ci);
+    var u = Model.Ultimo;
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Control de caja</h1>
+        <p class="subtitle" style="margin:0">
+            Contá la plata que hay de verdad en Mercado Pago y comparala con lo que dice el
+            sistema. La diferencia es un dato: anotala y, si sabés de dónde viene, acomodá la caja.
+        </p>
+    </div>
+    <a class="btn btn-ghost" asp-page="/Caja/Index">💰 Volver a la caja</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Aviso))
+{
+    <div class="aviso-ok">@Model.Aviso</div>
+}
+
+<div class="fin-cards">
+    <div class="fin-card">
+        <div class="fin-label">Lo que dice el sistema hoy</div>
+        <div class="fin-val">@Money(Model.CajaOperativaHoy)</div>
+        <div class="fin-label" style="margin-top:4px">caja operativa</div>
+    </div>
+    @if (u is not null)
+    {
+        var colorU = u.Cuadra ? "var(--accent)" : (u.EsSobrante ? "var(--ok)" : "var(--warn)");
+        <div class="fin-card">
+            <div class="fin-label">Último control · @u.Fecha.ToString("dd/MM/yy")</div>
+            <div class="fin-val">@Money(u.SaldoReal)</div>
+            <div class="fin-label" style="margin-top:4px">había en la cuenta</div>
+        </div>
+        <div class="fin-card fin-card-net">
+            <div class="fin-label">@u.Etiqueta del último control</div>
+            <div class="fin-val" style="color:@colorU">@ConSigno(u.Diferencia)</div>
+            <div class="fin-label" style="margin-top:4px">
+                @u.Motivo@(u.Ajustado ? " · ya acomodado" : "")
+            </div>
+        </div>
+    }
+</div>
+
+<div class="card" style="margin-top:12px">
+    <p class="hint" style="margin:0">
+        <strong>Cómo leerlo.</strong>
+        Un <strong>sobrante</strong> es que hay más plata que la que el sistema dice: casi
+        siempre es plata que entró y no se anotó. El caso más común son los
+        <strong>rendimientos de Mercado Pago</strong>, que paga un porcentaje por tener la
+        plata en la cuenta remunerada: eso es ganancia de verdad de Wamani.
+        Un <strong>faltante</strong> es al revés, y casi siempre es un gasto que se pagó y
+        quedó sin cargar; antes de ajustar, conviene buscarlo.
+    </p>
+    <p class="hint" style="margin:10px 0 0">
+        Si tildás <strong>acomodar la caja</strong>, el sistema carga solo el ingreso (si sobró)
+        o el gasto (si faltó) por el monto de la diferencia, y a partir de ahí la caja coincide
+        con el banco. Ese movimiento queda atado a este control: si borrás el control, se borra
+        también el ajuste.
+    </p>
+</div>
+
+<!-- Cargar un control -->
+<div class="card" style="margin-top:12px">
+    <h2>@(Model.Editando ? "Editar el control" : "Cargar un control")</h2>
+    <form method="post" enctype="multipart/form-data" asp-page-handler="Agregar">
+        <input type="hidden" asp-for="NuevoId" />
+        <div class="form-grid">
+            <div class="field"><label>Fecha del control</label><input asp-for="NuevoFecha" type="date" /></div>
+            <div class="field">
+                <label>Lo que hay de verdad</label>
+                <input asp-for="NuevoSaldoReal" type="number" step="0.01" min="0" placeholder="Lo que muestra Mercado Pago" />
+            </div>
+            <div class="field">
+                <label>Lo que decía el sistema</label>
+                <input asp-for="NuevoSaldoSistema" type="number" step="0.01" />
+            </div>
+            <div class="field">
+                <label>De dónde viene</label>
+                <select asp-for="NuevoMotivo">
+                    @foreach (var m in Wamani.Reservas.Models.ArqueoCaja.Motivos)
+                    {
+                        <option value="@m">@m</option>
+                    }
+                </select>
+            </div>
+            <div class="field full"><label>Nota (opcional)</label><input asp-for="NuevoNota" placeholder="Ej: son los intereses de la cuenta remunerada de agosto y septiembre" /></div>
+            <div class="field full">
+                <label class="check-linea">
+                    <input asp-for="NuevoAjustar" type="checkbox" />
+                    Acomodar la caja con esta diferencia
+                </label>
+                <div class="hint">
+                    Carga el ingreso o el gasto que hace falta para que el sistema coincida con
+                    el banco. Si no estás seguro de dónde viene la plata, dejalo sin tildar:
+                    el control queda anotado igual.
+                </div>
+            </div>
+            <div class="field"><label>Comprobante (opcional)</label><input asp-for="NuevoComprobante" type="file" accept="image/*,.pdf" multiple /></div>
+        </div>
+        <div class="acciones-form" style="margin-top:12px">
+            <button type="submit" class="btn btn-primary">
+                @(Model.Editando ? "💾 Guardar cambios" : "+ Cargar control")
+            </button>
+            @if (Model.Editando)
+            {
+                <a class="btn btn-ghost" asp-page="/Caja/Arqueo">Cancelar</a>
+            }
+        </div>
+    </form>
+</div>
+
+<!-- Los controles que se hicieron -->
+<div class="table-wrap" style="margin-top:18px">
+    <table class="tabla">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th class="num">Había de verdad</th>
+                <th class="num">Decía el sistema</th>
+                <th class="num">Diferencia</th>
+                <th>De dónde viene</th>
+                <th>Comprobante</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (Model.Lista.Count == 0)
+        {
+            <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px">
+                Todavía no se hizo ningún control de caja.
+            </td></tr>
+        }
+        @foreach (var a in Model.Lista)
+        {
+            var color = a.Cuadra ? "var(--ink-soft)" : (a.EsSobrante ? "var(--ok)" : "var(--warn)");
+            <tr>
+                <td data-label="Fecha">@a.Fecha.ToString("dd/MM/yy")</td>
+                <td class="num" data-label="Había de verdad">@Money(a.SaldoReal)</td>
+                <td class="num" data-label="Decía el sistema">@Money(a.SaldoSistema)</td>
+                <td class="num" data-label="Diferencia">
+                    <strong style="color:@color">@ConSigno(a.Diferencia)</strong>
+                    <div class="cliente-sub">@a.Etiqueta</div>
+                </td>
+                <td data-label="De dónde viene">
+                    @a.Motivo
+                    @if (a.Ajustado)
+                    {
+                        <div><span class="pill pill-ok">caja acomodada</span></div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(a.Nota))
+                    {
+                        <div class="cliente-sub">@a.Nota</div>
+                    }
+                </td>
+                <td data-label="Comprobante">
+                    @if (!string.IsNullOrEmpty(a.Comprobante))
+                    {
+                        <partial name="_Adjuntos" model="@a.Comprobante" />
+                    }
+                    else
+                    {
+                        <span class="cliente-sub">—</span>
+                    }
+                </td>
+                <td class="acciones">
+                    <a class="btn-mini btn-mini-ghost" asp-page="/Caja/Arqueo" asp-route-editar="@a.Id"
+                       title="Editar este control">✏️</a>
+                    <form method="post" asp-page-handler="Eliminar" asp-route-id="@a.Id" style="display:inline">
+                        <button type="submit" class="btn-mini btn-mini-danger" title="Borrar"
+                                onclick="return confirm('¿Borrar el control? Si había acomodado la caja, ese movimiento también se borra.');">🗑</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

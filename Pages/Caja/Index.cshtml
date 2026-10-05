@@ -11,6 +11,7 @@
         <h1>Caja y patrimonio</h1>
         <p class="subtitle" style="margin:0">Lo que generó la empresa, más lo que aportaron los socios, menos lo que retiraron.</p>
     </div>
+    <a class="btn btn-ghost" asp-page="/Caja/Arqueo">🧮 Control de caja</a>
 </div>
 
 @if (!string.IsNullOrEmpty(Model.Aviso))
@@ -78,6 +79,45 @@
         <strong style="color:var(--accent)">@Money(Model.Patrimonio)</strong>.
     </p>
 </div>
+
+@* El último control de caja. Todos estos números son lo que el sistema CREE que hay: el
+   control es lo que se contó de verdad en el banco, y es el único que puede desmentirlos. *@
+@if (Model.UltimoArqueo is not null)
+{
+    var ua = Model.UltimoArqueo;
+    var colorA = ua.Cuadra ? "var(--accent)" : (ua.EsSobrante ? "var(--ok)" : "var(--warn)");
+    var signoA = (ua.Diferencia > 0 ? "+ " : (ua.Diferencia < 0 ? "− " : "")) + "$ " + Math.Abs(ua.Diferencia).ToString("N0", ci);
+    <div class="card" style="margin-top:12px">
+        <p style="margin:0;color:var(--ink-soft)">
+            <strong>Último control de caja (@ua.Fecha.ToString("dd/MM/yy")):</strong>
+            había @Money(ua.SaldoReal) de verdad contra @Money(ua.SaldoSistema) del sistema
+            → <strong style="color:@colorA">@ua.Etiqueta de @signoA</strong>.
+            @if (!ua.Cuadra)
+            {
+                <text>Viene de: @ua.Motivo.</text>
+                @if (ua.Ajustado)
+                {
+                    <text> Ya se acomodó la caja, así que los números de arriba lo incluyen.</text>
+                }
+                else
+                {
+                    <text> <strong>Todavía no se acomodó</strong>: los números de arriba no lo tienen en cuenta.</text>
+                }
+            }
+            <a asp-page="/Caja/Arqueo">Ver los controles</a>
+        </p>
+    </div>
+}
+else
+{
+    <div class="card" style="margin-top:12px">
+        <p style="margin:0;color:var(--ink-soft)">
+            Todavía no se hizo ningún <a asp-page="/Caja/Arqueo">control de caja</a>. Conviene
+            hacer uno al cerrar cada mes: se cuenta la plata que hay de verdad en Mercado Pago
+            y se compara con lo que dice el sistema.
+        </p>
+    </div>
+}
 
 <!-- ============ APORTES / INVERSIONES ============ -->
 <div class="card" style="margin-top:18px">

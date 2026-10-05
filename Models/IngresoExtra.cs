@@ -34,7 +34,10 @@ namespace Wamani.Reservas.Models
 
         public string? Comprobante { get; set; }
 
+        // "Rendimientos" son los intereses que paga Mercado Pago por tener la plata en la
+        // cuenta remunerada. Es plata ganada de verdad, no un ajuste: suma a la ganancia del
+        // mes como cualquier otro ingreso. El control de caja los carga con este motivo.
         public static readonly string[] Motivos =
-            { "Comisión", "Alquiler de auto", "Hospedaje", "Servicio suelto", "Venta", "Otro" };
+            { "Comisión", "Rendimientos", "Alquiler de auto", "Hospedaje", "Servicio suelto", "Venta", "Otro" };
     }
 }

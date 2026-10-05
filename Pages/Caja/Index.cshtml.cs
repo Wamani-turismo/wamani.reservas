@@ -44,6 +44,9 @@ public class IndexModel : PageModel
     // Lo que queda en el día a día: la caja de siempre menos lo que se mandó al fondo.
     public decimal CajaOperativa => Caja + AportesTotal - RetirosTotal - MandadoAlFondo;
 
+    // El último control de caja (ver Pages/Caja/Arqueo.cshtml). Puede no haber ninguno.
+    public Models.ArqueoCaja? UltimoArqueo { get; set; }
+
     // Form aportes
     [BindProperty] public DateTime ApFecha { get; set; } = DateTime.Today;
     [BindProperty] public string? ApQuien { get; set; }
@@ -62,28 +65,16 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        var reservas = await _db.Reservas.ToListAsync();
-        // Lo cobrado por reservas + los ingresos extra (comisiones, alquileres, etc.)
-        Ingresos = reservas.Sum(r => (r.SenaMonto ?? 0) + (r.SaldoMonto ?? 0))
-                 + (await _db.IngresosExtra.ToListAsync()).Sum(e => e.Monto);
-
-        // OJO: acá sólo cuenta la plata que REALMENTE salió. Un gasto del operativo sin
-        // FechaPago es una estimación copiada de la plantilla de la excursión (todavía no
-        // se compró ni se pagó), así que no puede restar de la caja. Igual con la seña y
-        // el saldo de cada proveedor: sólo restan si tienen su fecha de pago cargada.
-        var egGastos = (await _db.OperativoGastos.ToListAsync())
-            .Where(o => o.FechaPago != null)
-            .Sum(o => o.Precio);
-        var egProv = (await _db.OperativoProveedores.ToListAsync())
-            .Sum(p => (p.FechaSena != null ? p.Sena : 0) + (p.FechaSaldo != null ? p.Saldo : 0));
-        var egEmpresa = (await _db.GastosEmpresa.ToListAsync()).Sum(g => g.Monto);
-        Egresos = egGastos + egProv + egEmpresa;
+        // La cuenta de la caja vive en Services/CajaCalc.cs: la hacen igual esta pantalla,
+        // la Financiera y el control de caja, así que no puede estar copiada tres veces.
+        var foto = await Wamani.Reservas.Services.CajaCalc.CalcularAsync(_db);
+        Ingresos = foto.Ingresos;
+        Egresos = foto.Egresos;
+        AportesTotal = foto.Aportes;
+        RetirosTotal = foto.Retiros;
 
         Aportes = await _db.Aportes.OrderByDescending(a => a.Fecha).ToListAsync();
-        AportesTotal = Aportes.Sum(a => a.Monto);
-
         Retiros = await _db.Retiros.OrderByDescending(r => r.Fecha).ToListAsync();
-        RetirosTotal = Retiros.Sum(r => r.Monto);
 
         // Desglose del patrimonio: cuánto es de los socios y cuánto está apartado en el fondo
         var hoy = DateTime.Today;
@@ -99,8 +90,13 @@ public class IndexModel : PageModel
         var movs = await _db.MovimientosFondo.ToListAsync();
         FondoDolares = movs.Sum(m => m.SignoDolares);
         FondoPesos = movs.Sum(m => m.SignoPesos);
-        MandadoAlFondo = movs.Where(m => m.SaleDeLaCaja).Sum(m => m.Pesos);
+        MandadoAlFondo = foto.MandadoAlFondo;
         GastadoDelFondo = movs.Where(m => m.Tipo == Models.MovimientoFondo.Gasto).Sum(m => m.Pesos);
+
+        // El último control de caja: si la plata contada no coincidía con el sistema, acá se
+        // ve de un saque, porque es el número que hay que mirar antes de creerle a la caja.
+        UltimoArqueo = await _db.ArqueosCaja
+            .OrderByDescending(a => a.Fecha).ThenByDescending(a => a.Id).FirstOrDefaultAsync();
     }
 
     // Guarda uno o varios comprobantes conservando el nombre original

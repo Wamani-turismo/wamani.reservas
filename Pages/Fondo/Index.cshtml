@@ -45,7 +45,8 @@
     </div>
     <div class="fin-card">
         <div class="fin-label">Lo gastado del fondo</div>
-        <div class="fin-val" style="color:var(--warn)">@Money(Model.Gastado)</div>
+        <div class="fin-val" style="color:var(--warn)">@Usd(Model.GastadoDolares)</div>
+        <div class="fin-label" style="margin-top:4px">@Money(Model.Gastado) al cambio de cada día</div>
     </div>
 </div>
 
@@ -183,11 +184,23 @@
         </tbody>
         @if (Model.Lista.Count > 0)
         {
+            @* Dos renglones a propósito: el saldo contesta "cuánto queda" y el gastado
+               contesta "cuánto se usó", que es la otra mitad de la pregunta. Los pesos del
+               gastado son la suma de cada gasto al cambio del día en que se hizo. *@
             <tfoot>
                 <tr>
-                    <td colspan="3"><strong>Saldo del fondo</strong></td>
+                    <td colspan="3"><strong>Queda en el fondo</strong></td>
                     <td class="num"><strong style="color:var(--accent)">@Usd(Model.SaldoDolares)</strong></td>
                     <td class="num"><strong>@Money(Model.SaldoPesos)</strong></td>
+                    <td colspan="3"></td>
+                </tr>
+                <tr>
+                    <td colspan="3">
+                        <strong>Se gastó del fondo</strong>
+                        <div class="cliente-sub">al cambio de cada día</div>
+                    </td>
+                    <td class="num"><strong style="color:var(--warn)">@Usd(Model.GastadoDolares)</strong></td>
+                    <td class="num"><strong style="color:var(--warn)">@Money(Model.Gastado)</strong></td>
                     <td colspan="3"></td>
                 </tr>
             </tfoot>

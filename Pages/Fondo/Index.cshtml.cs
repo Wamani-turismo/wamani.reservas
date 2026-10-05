@@ -22,6 +22,13 @@ public class IndexModel : PageModel
     public decimal Gastado { get; set; }           // en pesos, lo que salió del fondo
     public decimal Aportado { get; set; }          // en pesos, lo que pusieron los socios
 
+    // Lo gastado también en dólares: el fondo vive en dólares, así que es el número que
+    // manda. En pesos es la suma de cada gasto al cambio del día en que se hizo, que no es
+    // lo mismo que esos dólares valuados hoy.
+    public decimal GastadoDolares { get; set; }
+    public decimal EntroDesdeCajaDolares { get; set; }
+    public decimal AportadoDolares { get; set; }
+
     // A cuánto estaba el dólar la última vez que se cargó algo. Sirve para proponerlo en el
     // formulario y para mostrar cuánto valen hoy los dólares del fondo.
     public decimal UltimoTipoCambio { get; set; }
@@ -72,6 +79,10 @@ public class IndexModel : PageModel
         EntroDesdeCaja = Lista.Where(m => m.SaleDeLaCaja).Sum(m => m.Pesos);
         Gastado = Lista.Where(m => m.Tipo == MovimientoFondo.Gasto).Sum(m => m.Pesos);
         Aportado = Lista.Where(m => m.Tipo == MovimientoFondo.Aporte).Sum(m => m.Pesos);
+
+        GastadoDolares = Lista.Where(m => m.Tipo == MovimientoFondo.Gasto).Sum(m => m.Dolares);
+        EntroDesdeCajaDolares = Lista.Where(m => m.SaleDeLaCaja).Sum(m => m.Dolares);
+        AportadoDolares = Lista.Where(m => m.Tipo == MovimientoFondo.Aporte).Sum(m => m.Dolares);
 
         UltimoTipoCambio = Lista.Where(m => m.TipoCambio > 0)
             .OrderByDescending(m => m.Fecha).ThenByDescending(m => m.Id)

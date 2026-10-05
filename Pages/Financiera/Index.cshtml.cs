@@ -140,15 +140,10 @@ public class IndexModel : PageModel
             .Select(a => (a.Quien ?? "", a.Monto)).ToList();
 
         // ---- Compromisos: igual que la pantalla de Compromisos ----
-        var ingresosHist = reservas.Sum(r => (r.SenaMonto ?? 0) + (r.SaldoMonto ?? 0)) + extras.Sum(e => e.Monto);
-        var egHist = ops.Where(o => o.FechaPago != null).Sum(o => o.Precio)
-                   + provs.Sum(x => (x.FechaSena != null ? x.Sena : 0) + (x.FechaSaldo != null ? x.Saldo : 0))
-                   + gastosEmp.Sum(g => g.Monto);
-        var aportesHist = (await _db.Aportes.ToListAsync()).Sum(a => a.Monto);
-        var retirosHist = (await _db.Retiros.ToListAsync()).Sum(r => r.Monto);
+        // La misma cuenta que la pantalla de Caja, de un solo lado (Services/CajaCalc.cs).
+        var foto = await Wamani.Reservas.Services.CajaCalc.CalcularAsync(_db);
         var movsFondo = await _db.MovimientosFondo.ToListAsync();
-        var alFondo = movsFondo.Where(m => m.SaleDeLaCaja).Sum(m => m.Pesos);
-        d.CajaHoy = ingresosHist - egHist + aportesHist - retirosHist - alFondo;
+        d.CajaHoy = foto.CajaOperativa;
 
         // Las "Reservas Históricas" no son deuda de nadie: ver Pages/Compromisos.
         var cobrables = reservas.Where(r => r.NombreCliente != Reserva.NombreHistorica && r.Pendiente() > 0).ToList();
@@ -167,6 +162,22 @@ public class IndexModel : PageModel
             .Sum(x => x.Pendiente());
 
         d.FondoDolares = movsFondo.Sum(m => m.SignoDolares);
+
+        // El último control de caja hecho hasta el final del mes del informe. Si se hizo uno
+        // después, no va: el informe es la foto hasta ese mes y meter un control posterior
+        // haría pensar que la diferencia ya estaba cuando se cerró.
+        var arqueo = await _db.ArqueosCaja.Where(a => a.Fecha < hasta)
+            .OrderByDescending(a => a.Fecha).ThenByDescending(a => a.Id).FirstOrDefaultAsync();
+        if (arqueo is not null)
+        {
+            d.HayArqueo = true;
+            d.ArqueoFecha = arqueo.Fecha;
+            d.ArqueoReal = arqueo.SaldoReal;
+            d.ArqueoSistema = arqueo.SaldoSistema;
+            d.ArqueoDiferencia = arqueo.Diferencia;
+            d.ArqueoMotivo = arqueo.Motivo;
+            d.ArqueoAjustado = arqueo.Ajustado;
+        }
 
         var logo = Path.Combine(_env.WebRootPath, "logo", "logo-pdf.png");
         var pdf = Wamani.Reservas.Services.CierrePdf.Generar(d, logo);

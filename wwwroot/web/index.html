@@ -1622,7 +1622,12 @@ if ((location.hash || "") === "#experiencias") {
     window.addEventListener("touchstart", frenar, { once: true, passive: true });
     (function ir() {
       if (corte) return;
-      var y = s.getBoundingClientRect().top + window.scrollY;
+      // El menú de arriba es fijo y tapa lo primero de la sección: hay que dejarle
+      // su altura de aire, si no el título queda cortado por la mitad.
+      var menu = document.querySelector("header");
+      var aire = (menu ? menu.getBoundingClientRect().height : 0) + 14;
+      var y = s.getBoundingClientRect().top + window.scrollY - aire;
+      if (y < 0) y = 0;
       if (Math.abs(window.scrollY - y) > 4) window.scrollTo(0, y);
       if (Date.now() < hasta) setTimeout(ir, 80);
     })();

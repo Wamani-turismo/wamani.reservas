@@ -1,0 +1,181 @@
+/* ════════════════════════════════════════════════════════════════════
+   Hoja de estilo de las páginas de excursión (landings).
+   Las variables son LAS MISMAS de /web/index.html: si algún día cambia
+   la paleta de la home, se cambia acá igual y las dos siguen iguales.
+   ════════════════════════════════════════════════════════════════════ */
+:root{
+  --fondo:#131c18;
+  --panel:#1c2a24;
+  --verde:#22332f;
+  --dorado:#d8c096;
+  --coral:#d2673a;
+  --coral-oscuro:#b5502a;
+  --texto:#ece5d4;
+  --texto-suave:rgba(236,229,212,.72);
+  --linea:rgba(216,192,150,.18);
+  --sombra:0 14px 40px rgba(0,0,0,.45);
+  --radio:22px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--fondo);color:var(--texto);
+  font-family:'Quicksand',system-ui,-apple-system,sans-serif;
+  font-size:17px;line-height:1.75;-webkit-font-smoothing:antialiased;
+  padding-bottom:84px; /* lugar para la barra fija del celular */
+}
+h1,h2,h3{font-family:'Playfair Display',Georgia,serif;font-weight:600;line-height:1.2}
+a{color:var(--dorado)}
+img{display:block;max-width:100%}
+.env{max-width:860px;margin:0 auto;padding:0 20px}
+
+/* ── Barra de arriba ─────────────────────────────────────────────── */
+.barra{
+  position:sticky;top:0;z-index:40;
+  background:rgba(19,28,24,.92);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--linea);
+}
+.barra .env{display:flex;align-items:center;justify-content:space-between;gap:14px;height:62px}
+.barra img{height:34px;width:auto}
+.volver{font-size:14px;color:var(--texto-suave);text-decoration:none;font-weight:600}
+.volver:hover{color:var(--dorado)}
+
+/* ── Portada ─────────────────────────────────────────────────────── */
+.portada{position:relative;min-height:62vh;display:flex;align-items:flex-end;overflow:hidden}
+.portada>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.portada::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(19,28,24,.25) 0%,rgba(19,28,24,.6) 55%,var(--fondo) 100%);
+}
+.portada .env{position:relative;z-index:2;padding-top:70px;padding-bottom:34px}
+.chip{
+  display:inline-block;font-size:12.5px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--dorado);
+  border:1px solid var(--linea);border-radius:999px;padding:5px 14px;margin-bottom:16px;
+  background:rgba(19,28,24,.5)
+}
+.portada h1{font-size:clamp(2rem,6.2vw,3.3rem);margin-bottom:14px}
+.bajada{font-size:clamp(1rem,2.4vw,1.2rem);color:var(--texto-suave);max-width:60ch}
+
+/* ── Datos duros ─────────────────────────────────────────────────── */
+.datos{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));
+  gap:12px;margin:30px 0 10px
+}
+/* El rótulo va ARRIBA y el valor abajo, para que no se confunda nunca
+   la duración con la hora de inicio. */
+.dato{
+  background:var(--panel);border:1px solid var(--linea);border-radius:16px;
+  padding:14px 16px;text-align:center
+}
+.dato span{
+  display:block;font-size:11.5px;color:var(--texto-suave);
+  letter-spacing:.11em;text-transform:uppercase;font-weight:700;margin-bottom:4px
+}
+.dato b{display:block;font-size:1.05rem;color:var(--dorado);font-weight:700;line-height:1.3}
+.dato em{display:block;font-style:normal;font-size:12.5px;color:var(--texto-suave);margin-top:2px}
+
+/* ── Secciones ───────────────────────────────────────────────────── */
+section{padding:46px 0 0}
+section h2{
+  font-size:clamp(1.5rem,4vw,2rem);color:var(--dorado);margin-bottom:8px;
+  display:flex;align-items:center;gap:12px
+}
+section h2::after{content:'';flex:1;height:1px;background:var(--linea)}
+.intro p+p{margin-top:16px}
+
+/* ── Itinerario: línea de tiempo ─────────────────────────────────── */
+.ruta{margin-top:26px;position:relative;padding-left:30px}
+.ruta::before{content:'';position:absolute;left:7px;top:10px;bottom:16px;width:2px;background:var(--linea)}
+.paso{position:relative;margin-bottom:10px}
+.paso::before{
+  content:'';position:absolute;left:-29px;top:19px;width:16px;height:16px;border-radius:50%;
+  background:var(--fondo);border:2px solid var(--dorado)
+}
+.paso>summary{
+  cursor:pointer;list-style:none;padding:10px 0;
+  font-family:'Playfair Display',Georgia,serif;font-size:1.18rem;font-weight:600
+}
+.paso>summary::-webkit-details-marker{display:none}
+.paso>summary::after{content:' +';color:var(--coral);font-family:'Quicksand',sans-serif;font-weight:700}
+.paso[open]>summary::after{content:' −'}
+.paso .dur{display:block;font-family:'Quicksand',sans-serif;font-size:12.5px;font-weight:600;
+  color:var(--texto-suave);letter-spacing:.05em;text-transform:uppercase}
+.paso .cuerpo{padding:0 0 16px}
+.paso .cuerpo p+p{margin-top:12px}
+.paso .cuerpo ul{margin:12px 0 0 20px}
+
+/* ── Cajas (incluye / no incluye / llevar) ───────────────────────── */
+.cajas{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:18px;margin-top:26px}
+.caja{background:var(--panel);border:1px solid var(--linea);border-radius:var(--radio);padding:24px 26px}
+.caja h3{font-size:1.18rem;color:var(--dorado);margin-bottom:14px}
+.caja ul{list-style:none}
+.caja li{padding-left:26px;position:relative;margin-bottom:9px;font-size:15.5px;line-height:1.6}
+.caja li::before{position:absolute;left:0;top:0;font-weight:700}
+.caja.si li::before{content:'✓';color:var(--dorado)}
+.caja.no li::before{content:'✕';color:var(--coral)}
+.caja.llevar li::before{content:'·';color:var(--dorado);font-size:22px;line-height:1.1}
+
+/* ── Destacado (la merienda gourmet) ─────────────────────────────── */
+.destacado{
+  margin-top:26px;background:rgba(216,192,150,.08);border:1px solid var(--linea);
+  border-left:4px solid var(--dorado);border-radius:16px;padding:24px 28px
+}
+.destacado h3{font-family:'Playfair Display',Georgia,serif;font-size:1.32rem;
+  color:var(--dorado);margin-bottom:8px}
+.destacado p{font-size:16px;color:var(--texto)}
+
+/* ── Preguntas ───────────────────────────────────────────────────── */
+.faq{margin-top:22px;border-top:1px solid var(--linea)}
+.faq details{border-bottom:1px solid var(--linea)}
+.faq summary{
+  cursor:pointer;list-style:none;padding:18px 36px 18px 0;position:relative;
+  font-weight:700;font-size:16.5px
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{
+  content:'+';position:absolute;right:6px;top:16px;color:var(--coral);font-size:22px;font-weight:700
+}
+.faq details[open] summary::after{content:'−'}
+.faq .r{padding:0 0 20px;color:var(--texto-suave);font-size:16px}
+
+/* ── Condiciones ─────────────────────────────────────────────────── */
+.cond{
+  margin-top:26px;background:var(--verde);border:1px solid var(--linea);
+  border-radius:var(--radio);padding:26px 28px
+}
+.cond ul{list-style:none;margin-top:6px}
+.cond li{padding-left:22px;position:relative;margin-bottom:10px;font-size:15.5px}
+.cond li::before{content:'→';position:absolute;left:0;color:var(--dorado)}
+
+/* ── Cierre ──────────────────────────────────────────────────────── */
+.cierre{text-align:center;padding:58px 0 46px}
+.cierre h2{justify-content:center}
+.cierre h2::after{display:none}
+.cierre p{color:var(--texto-suave);max-width:52ch;margin:0 auto 26px}
+.btn{
+  display:inline-block;background:var(--coral);color:#fff;text-decoration:none;
+  font-weight:700;font-size:16.5px;padding:16px 34px;border-radius:999px;
+  box-shadow:var(--sombra);transition:background .2s,transform .2s
+}
+.btn:hover{background:var(--coral-oscuro);transform:translateY(-2px)}
+.otras{margin-top:36px;font-size:15px;color:var(--texto-suave)}
+.otras a{text-decoration:none;border-bottom:1px solid var(--linea)}
+footer{border-top:1px solid var(--linea);padding:28px 0;text-align:center;
+  font-size:13.5px;color:var(--texto-suave)}
+
+/* ── Barra fija de WhatsApp (celular) ────────────────────────────── */
+.fija{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;
+  background:rgba(19,28,24,.95);backdrop-filter:blur(10px);
+  border-top:1px solid var(--linea);padding:12px 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:14px
+}
+.fija .q{font-size:13.5px;color:var(--texto-suave);line-height:1.35}
+.fija .btn{padding:13px 24px;font-size:15px;white-space:nowrap;box-shadow:none}
+@media(min-width:860px){body{padding-bottom:0}.fija{display:none}}
+@media(max-width:560px){
+  .portada{min-height:56vh}
+  .caja,.cond,.aviso{padding:20px}
+  section{padding-top:38px}
+}

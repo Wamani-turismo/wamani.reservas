@@ -1607,16 +1607,29 @@ window.addEventListener("hashchange", abrirDesdeLaDireccion);
 
 /* ═══ Volver desde la ficha de una excursión ═══
    El que estaba mirando excursiones y vuelve, quiere seguir mirando excursiones.
-   Por eso la ficha enlaza a /web/#experiencias. Las tarjetas se dibujan con
-   JavaScript, así que cuando el navegador salta al ancla la sección todavía puede
-   estar a otra altura: se reubica una vez más cuando ya está todo pintado. */
+   Por eso la ficha enlaza a /#experiencias.
+   Hay que insistir un rato en vez de bajar una sola vez: las tarjetas se dibujan con
+   JavaScript y la sección se va corriendo de lugar mientras se arman, así que una
+   sola bajada cae en el lugar equivocado. Se corta sola al llegar, a los 800 ms, o
+   apenas la persona toca la rueda: si ya se está moviendo ella, manda ella. */
 if ((location.hash || "") === "#experiencias") {
-  window.addEventListener("load", function () {
-    setTimeout(function () {
-      var s = document.getElementById("experiencias");
-      if (s) s.scrollIntoView({ block: "start" });
-    }, 80);
-  });
+  var irAExperiencias = function () {
+    var s = document.getElementById("experiencias");
+    if (!s) return;
+    var hasta = Date.now() + 800, corte = false;
+    function frenar() { corte = true; }
+    window.addEventListener("wheel", frenar, { once: true, passive: true });
+    window.addEventListener("touchstart", frenar, { once: true, passive: true });
+    (function ir() {
+      if (corte) return;
+      var y = s.getBoundingClientRect().top + window.scrollY;
+      if (Math.abs(window.scrollY - y) > 4) window.scrollTo(0, y);
+      if (Date.now() < hasta) setTimeout(ir, 80);
+    })();
+  };
+  // Si la página ya terminó de cargar, el evento "load" no vuelve a dispararse.
+  if (document.readyState === "complete") irAExperiencias();
+  else window.addEventListener("load", irAExperiencias);
 }
 
 /* ═══ Formulario de contacto ═══

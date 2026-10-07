@@ -1541,7 +1541,7 @@ li{margin:7px 0}
 <body>
 <!-- Vuelve directo a las experiencias, no al principio de la home: el visitante
      estaba mirando excursiones y quiere seguir mirando excursiones. -->
-<nav class="barra"><a href="/web/#experiencias">← Volver a todas las experiencias</a></nav>
+<nav class="barra"><a href="/#experiencias">← Volver a todas las experiencias</a></nav>
 <div class="tapa">
   <img src="{{Esc(foto)}}" alt="{{Esc(e.Nombre)}}">
 </div>

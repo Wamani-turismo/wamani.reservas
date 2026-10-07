@@ -91,6 +91,12 @@ h1,h2,h3{font-family:'Playfair Display',serif;font-weight:600;line-height:1.2}
 .btn-coral:hover{background:var(--coral-oscuro)}
 .btn-borde{background:rgba(255,255,255,.08);color:#fff;border:1.5px solid rgba(216,192,150,.55);backdrop-filter:blur(4px)}
 .btn-borde:hover{background:rgba(216,192,150,.18)}
+/* "Ver la info completa": lleva a la página propia de la excursión. Va en dorado
+   lleno para que se distinga de "Seguir explorando", que antes era igual de borde
+   y las dos se confundían. El de WhatsApp sigue siendo el coral, que es el que
+   convierte. */
+.btn-info{background:var(--dorado);color:#1b2420;border:1.5px solid var(--dorado);font-weight:700}
+.btn-info:hover{background:#e6d2ad;border-color:#e6d2ad}
 .btn-chico{padding:.55rem 1.2rem;font-size:.9rem}
 
 /* "Soy agencia": el atajo del otro público.
@@ -1356,7 +1362,7 @@ function abrirGuia(id, delHistorial){
         // preguntas frecuentes. El pop-up no la nombraba: existían pero no había forma
         // de llegar desde acá, y el visitante que quería leer más se quedaba con esto.
         // También le da a Google un camino desde la portada hacia las fichas.
-        (g.w ? '<a class="btn btn-borde" href="/excursiones/' + encodeURIComponent(g.w) + '">Ver la página completa</a>' : '') +
+        (g.w ? '<a class="btn btn-info" href="/excursiones/' + encodeURIComponent(g.w) + '">📄 Ver la info completa</a>' : '') +
         '<button class="btn btn-borde" onclick="cerrarGuia()">Seguir explorando</button>' +
       '</div>' +
     '</div>';
@@ -1598,6 +1604,20 @@ function abrirDesdeLaDireccion(){
 }
 abrirDesdeLaDireccion();
 window.addEventListener("hashchange", abrirDesdeLaDireccion);
+
+/* ═══ Volver desde la ficha de una excursión ═══
+   El que estaba mirando excursiones y vuelve, quiere seguir mirando excursiones.
+   Por eso la ficha enlaza a /web/#experiencias. Las tarjetas se dibujan con
+   JavaScript, así que cuando el navegador salta al ancla la sección todavía puede
+   estar a otra altura: se reubica una vez más cuando ya está todo pintado. */
+if ((location.hash || "") === "#experiencias") {
+  window.addEventListener("load", function () {
+    setTimeout(function () {
+      var s = document.getElementById("experiencias");
+      if (s) s.scrollIntoView({ block: "start" });
+    }, 80);
+  });
+}
 
 /* ═══ Formulario de contacto ═══
    Se abre al tocar el mail. La consulta le llega a Wamani y queda guardada en el sistema,

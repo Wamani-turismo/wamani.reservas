@@ -1486,17 +1486,21 @@ a{color:var(--dorado)}
 .barra{padding:18px 22px;border-bottom:1px solid var(--linea)}
 .barra a{color:var(--dorado);text-decoration:none;font-weight:600;font-size:.95rem}
 .envoltorio{max-width:820px;margin:0 auto;padding:0 22px 70px}
-/* La foto de portada se muestra ENTERA: varias de las fotos cargadas son verticales
-   (1080x1920 y parecidas) y recortarlas a un recuadro apaisado les corta media imagen.
-   Los costados se rellenan con una copia borrosa de la misma foto. */
-.tapa{position:relative;overflow:hidden;border-radius:18px;margin:26px 0 22px;
-      height:clamp(210px,42vw,400px);background:#0d1512}
-.tapa::before{content:"";position:absolute;inset:-8%;background-image:var(--f);
-      background-size:cover;background-position:center;filter:blur(26px);opacity:.5}
-.tapa img{position:relative;width:100%;height:100%;object-fit:contain;display:block}
-/* En el celular la portada pasa a ser cuadrada: con la altura de 210 px una foto
-   vertical entraba a unos 118 px de ancho y no se veía nada. */
-@media (max-width:560px){ .tapa{height:auto;aspect-ratio:1/1} }
+/* PORTADA A LO ANCHO.
+   Antes la foto entraba entera dentro de un recuadro angosto y los costados se
+   rellenaban con una copia borrosa: quedaba flotando, chiquita y con dos franjas
+   grises al costado. Ahora va de borde a borde y llena todo el ancho de la pantalla.
+   Se recorta arriba y abajo (object-fit:cover) y se encuadra por el centro, que es
+   donde está el motivo en todas las fotos que usamos. */
+.tapa{position:relative;overflow:hidden;width:100%;
+      height:clamp(260px,46vw,520px);background:#0d1512}
+.tapa img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+/* Un velo apenas perceptible arriba y abajo: despega la portada de la barra de
+   navegación y del fondo, sin tapar la foto. */
+.tapa::after{content:"";position:absolute;inset:0;pointer-events:none;
+      background:linear-gradient(180deg,rgba(13,21,18,.30),rgba(13,21,18,0) 34%,rgba(13,21,18,.45))}
+/* En el celular un poco más alta en proporción, para que la foto respire. */
+@media (max-width:560px){ .tapa{height:62vw} }
 h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,5vw,2.7rem);line-height:1.15;margin-bottom:14px}
 h2{font-family:'Playfair Display',Georgia,serif;font-size:1.35rem;color:var(--dorado);margin:32px 0 10px}
 .chip{display:inline-block;background:var(--verde);border:1px solid var(--linea);color:var(--dorado);
@@ -1535,11 +1539,13 @@ li{margin:7px 0}
 </style>
 </head>
 <body>
-<nav class="barra"><a href="/">← Wamani Turismo · todas las experiencias</a></nav>
+<!-- Vuelve directo a las experiencias, no al principio de la home: el visitante
+     estaba mirando excursiones y quiere seguir mirando excursiones. -->
+<nav class="barra"><a href="/web/#experiencias">← Volver a todas las experiencias</a></nav>
+<div class="tapa">
+  <img src="{{Esc(foto)}}" alt="{{Esc(e.Nombre)}}">
+</div>
 <div class="envoltorio">
-  <div class="tapa" style="--f:url('{{Esc(foto)}}')">
-    <img src="{{Esc(foto)}}" alt="{{Esc(e.Nombre)}}">
-  </div>
   <span class="chip">{{Esc(e.Chip)}}</span>
   <h1>{{Esc(e.Nombre)}}</h1>
   <p class="resumen">{{Esc(resumen)}}</p>

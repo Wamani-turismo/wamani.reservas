@@ -742,6 +742,19 @@ using (var scope = app.Services.CreateScope())
             ("especial-finca-la-fe",                "sube-401e5ca0e8224ef8ba344f19371f5c32.webp", "finca-la-fe.webp"),
             ("especial-the-canuto-glamping",        "sube-b4eb5b1749cd4700835d226db0492ffa.jpeg", "canuto-domo.jpg"),
         };
+        // Cinco excursiones tenían una foto subida desde el panel (los archivos
+        // "sube-…"), distinta de la del seed, así que la lista de arriba no las tocaba.
+        // Estas tres se cambian igual porque la foto nueva la eligió y la mandó él
+        // mirándola: la del tríptico para Salinas, el rayo del angosto para Santuyoc y
+        // la del grupo en la cumbre para Tilcara. Se vuelven a guardar con el valor
+        // exacto que tenían, así tampoco se repite en el próximo despliegue.
+        nuevasFotos = nuevasFotos.Concat(new (string, string, string)[]
+        {
+            ("atardecer-en-las-salinas",            "sube-23aa033d1ed648c695e1b807682fc531.webp", "salinas-piletones.jpg"),
+            ("cascada-santuyoc-y-angosto-de-jaire", "sube-32bf0def6e0547cd92dce36ebb5da904.webp", "santuyoc-angosto.jpg"),
+            ("tilcara-calilegua",                   "sube-a19c231cac9444f1a48c8344af6a62f5.webp", "tilcara-grupo.jpg"),
+        }).ToArray();
+
         var cambio = false;
         foreach (var (cl, vieja, nueva) in nuevasFotos)
         {

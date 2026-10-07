@@ -697,6 +697,64 @@ using (var scope = app.Services.CreateScope())
     // Carga el contenido actual de la landing la primera vez (si está vacío)
     Wamani.Reservas.Services.SeedWeb.Ejecutar(db);
 
+    // ---- El cupo pasa de "2 a 15" a "2 a 12" ----
+    //
+    // Se decidió bajar el máximo a 12 por salida. El texto del cupo no es un número
+    // en una columna: viaja escrito adentro de "Datos", el bloque que se edita a mano
+    // desde el panel. Cambiarlo en el seed no alcanza, porque el seed sólo corre
+    // cuando la tabla está vacía y estas excursiones ya estaban cargadas hace meses.
+    // Por eso se reemplaza acá, sobre lo que ya hay guardado.
+    //
+    // Se agrega además la aclaración de que los grupos más grandes se consultan: no
+    // queremos perder al que viene con un contingente de veinte.
+    //
+    // Es un reemplazo de texto puntual y se ejecuta una sola vez en los hechos: después
+    // del primer arranque ya no queda ningún "2 a 15" que tocar. Si alguien vuelve a
+    // escribir "2 a 15" desde el panel, el próximo despliegue se lo corrige.
+    {
+        var conCupoViejo = db.ExcursionesWeb.Where(x => x.Datos != null && x.Datos.Contains("2 a 15")).ToList();
+        foreach (var ex in conCupoViejo)
+            ex.Datos = ex.Datos!
+                .Replace("2 a 15 personas", "2 a 12 personas · grupos más grandes, consultar")
+                .Replace("2 a 15", "2 a 12 (grupos más grandes, consultar)");
+        if (conCupoViejo.Count > 0) db.SaveChanges();
+    }
+
+    // ---- Las fotos de portada que eligió Lautaro ----
+    //
+    // Se revisaron una por una y se cambiaron siete. El cambio se hace sólo si la
+    // excursión TODAVÍA tiene la foto anterior: así nunca pisa una que se suba después
+    // desde el panel, y no se repite en el próximo despliegue (una vez cambiada, ya no
+    // coincide con la vieja y la línea no hace nada).
+    //
+    // Las dos de Selecta tenían una foto subida desde el panel; se reemplazan por las
+    // que mandó él, que son mejores.
+    {
+        var nuevasFotos = new (string Clave, string Vieja, string Nueva)[]
+        {
+            ("atardecer-en-las-salinas",            "salinas-1.webp",   "salinas-piletones.jpg"),
+            ("recorriendo-la-quebrada",             "quebrada-1.webp",  "quebrada-2.webp"),
+            ("ruta-de-lagunas-y-termas",            "lagunas-2.webp",   "lagunas-1.webp"),
+            ("cascada-santuyoc-y-angosto-de-jaire", "santuyoc-3.webp",  "santuyoc-angosto.jpg"),
+            ("conociendo-las-yungas",               "yungas-1.webp",    "hero-yungas2.webp"),
+            ("tilcara-calilegua",                   "tilcara-2.webp",   "tilcara-grupo.jpg"),
+            ("iruya-nazareno",                      "iruya-2.webp",     "iruya-1.webp"),
+            ("especial-finca-la-fe",                "sube-401e5ca0e8224ef8ba344f19371f5c32.webp", "finca-la-fe.webp"),
+            ("especial-the-canuto-glamping",        "sube-b4eb5b1749cd4700835d226db0492ffa.jpeg", "canuto-domo.jpg"),
+        };
+        var cambio = false;
+        foreach (var (cl, vieja, nueva) in nuevasFotos)
+        {
+            var ex = db.ExcursionesWeb.FirstOrDefault(x => x.Clave == cl);
+            if (ex == null) continue;
+            var actual = (ex.Foto ?? "").Replace("/web/img/", "").Trim();
+            if (actual != vieja) continue;      // ya la cambiaron, o es otra: no se toca
+            ex.Foto = nueva;
+            cambio = true;
+        }
+        if (cambio) db.SaveChanges();
+    }
+
     // ---- Los testimonios de ejemplo pasan a ser reseñas REALES de Google ----
     //
     // Cuando se armó la web quedaron tres testimonios inventados, firmados "María —
@@ -1138,12 +1196,63 @@ app.MapGet("/web/contenido.js", (AppDbContext db) =>
 //  NO reemplazan a la web: son la puerta de entrada desde el buscador. El visitante
 //  lee, y de ahí va a WhatsApp o a la web completa.
 // ═══════════════════════════════════════════════════════════════════════
-app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db) =>
+app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext ctx) =>
 {
     var e = db.ExcursionesWeb.FirstOrDefault(x => x.Activa && x.Clave == clave);
-    // Si la clave no existe (o la excursión se dio de baja), al inicio de la web.
-    // Mejor eso que un 404 feo para alguien que llegó de Google con un link viejo.
-    if (e == null) return Results.Redirect("/", permanent: false);
+
+    // Si la clave no existe (o la excursión se dio de baja), antes mandábamos al inicio
+    // para no darle un 404 feo a alguien que llegó de Google con un link viejo. El
+    // problema es que para Google eso es un "soft 404": pide una dirección que no
+    // existe y el servidor le contesta "todo bien" (200) con la portada. Así termina
+    // indexando direcciones inventadas y repartiendo la autoridad del sitio entre
+    // copias de la home.
+    //
+    // Ahora se contesta 404 de verdad, pero con una página linda que ofrece la salida:
+    // el visitante ve las experiencias que SÍ existen en vez de un cartel del servidor.
+    if (e == null)
+    {
+        var vivas = db.ExcursionesWeb.Where(x => x.Activa && x.Clave != "")
+                      .OrderBy(x => x.Orden).Select(x => new { x.Clave, x.Nombre }).ToList();
+        var lista = string.Concat(vivas.Select(o =>
+            "<a href=\"/excursiones/" + Uri.EscapeDataString(o.Clave) + "\">" + Esc(o.Nombre) + "</a>"));
+        var sinNada = $$"""
+<!DOCTYPE html>
+<html lang="es-AR"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,follow">
+<title>Esa página no existe | Wamani Turismo</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#131c18;color:#ece5d4;font-family:'Quicksand',sans-serif;line-height:1.7;
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 24px}
+.caja{max-width:620px;text-align:center}
+h1{font-family:'Playfair Display',serif;font-size:2.1rem;color:#d8c096;margin-bottom:14px}
+p{color:rgba(236,229,212,.72);margin-bottom:28px}
+.lista{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:32px}
+.lista a{color:#ece5d4;text-decoration:none;font-size:14.5px;font-weight:600;
+  border:1px solid rgba(216,192,150,.25);border-radius:999px;padding:9px 17px;
+  transition:border-color .2s,color .2s}
+.lista a:hover{border-color:#d8c096;color:#d8c096}
+.btn{display:inline-block;background:#d2673a;color:#fff;text-decoration:none;font-weight:700;
+  padding:15px 32px;border-radius:999px}
+</style></head>
+<body><div class="caja">
+  <h1>Esa página no existe</h1>
+  <p>Puede que el enlace esté viejo o que la experiencia ya no esté publicada.
+     Estas son las que sí podés hacer con nosotros hoy:</p>
+  <div class="lista">{{lista}}</div>
+  <a class="btn" href="/">Ir al inicio</a>
+</div></body></html>
+""";
+        // El código se pone sobre la respuesta y el contenido se devuelve sin tocarlo:
+        // Results.Content sin código propio no lo pisa.
+        ctx.Response.StatusCode = StatusCodes.Status404NotFound;
+        return Results.Content(sinNada, "text/html; charset=utf-8");
+    }
 
     var c = db.ContenidoWeb.FirstOrDefault() ?? new Wamani.Reservas.Models.ContenidoWeb();
     var wpp = string.IsNullOrWhiteSpace(c.Whatsapp) ? "5491178898516" : c.Whatsapp;
@@ -1258,6 +1367,71 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db) =>
     var otrasBloque = otras.Count == 0 ? "" :
         "<h2>Otras experiencias</h2><div class=\"otras\">" + otrasHtml + "</div>";
 
+    // ═══════════════════════════════════════════════════════════════════
+    //  Las preguntas frecuentes.
+    //
+    //  Es lo que más rinde de toda la página y lo único que los documentos de cada
+    //  excursión no tenían. Google las levanta y las muestra como respuesta directa
+    //  en el buscador, desplegables, ocupando el doble de alto que un resultado común.
+    //
+    //  Se arman solas con lo que ya está cargado (la duración, la salida, el plazo de
+    //  pago) más las reglas de la casa, que son iguales para todas. Nadie tiene que
+    //  escribirlas excursión por excursión.
+    // ═══════════════════════════════════════════════════════════════════
+    // Los emojis van como texto y no como carácter: 🕐, 🚌 y 🗓 están fuera del rango
+    // básico de Unicode y en C# no entran en un literal de un solo carácter.
+    var duracion = datos.FirstOrDefault(d => d.Contains("🕐") || d.Contains("🗓")) ?? "";
+    duracion = duracion.Replace("🕐", "").Replace("🗓️", "").Replace("🗓", "").Trim();
+    var salida = datos.FirstOrDefault(d => d.Contains("🚌")) ?? "";
+    salida = salida.Replace("🚌", "").Trim();
+
+    // Qué comida está incluida. Es la única respuesta que cambia según el producto:
+    // en las excursiones los snacks son del traslado; en Humahuaca – Yungas, sólo los
+    // del traslado del primer día; en las otras dos travesías se acompaña con snacks
+    // y frutas de punta a punta.
+    var comida = !e.EsTravesia
+        ? "Durante el traslado te acompañamos con snacks y refrigerios. Las comidas principales no están incluidas salvo que se aclare en «Qué incluye»."
+        : e.Clave == "humahuaca-yungas"
+            ? "Te acompañamos con snacks durante el traslado del primer día. El resto de las comidas es el que figura en «Qué incluye»."
+            : "Durante toda la travesía te acompañamos con snacks y frutas. Las comidas principales son las que figuran en «Qué incluye».";
+
+    var preguntas = new List<(string P, string R)>();
+    if (duracion != "")
+        preguntas.Add(($"¿Cuánto dura {(e.EsTravesia ? "la travesía" : "la excursión")}?",
+            $"{duracion}." + (salida != "" ? $" El inicio es: {salida}." : "")));
+    preguntas.Add(("¿Desde dónde sale?",
+        (salida != "" ? $"El inicio es {salida.ToLowerInvariant()}: " : "El inicio es desde San Salvador de Jujuy: ") +
+        "pasamos a buscarte por tu alojamiento o coordinamos un punto de encuentro céntrico al confirmar la reserva. " +
+        "También podemos iniciar desde otro punto de la provincia, como Purmamarca, Tilcara o Humahuaca: tiene un costo adicional según el lugar y el horario, así que escribinos y lo charlamos."));
+    preguntas.Add(("¿Sale todos los días?",
+        "Salimos con un mínimo de 2 personas, así que en cuanto nos lo pidas armamos la salida. Escribinos con los días que tenés en Jujuy y la coordinamos."));
+    preguntas.Add(("¿Qué comidas están incluidas?", comida));
+    preguntas.Add(("¿Qué pasa si llueve?",
+        "La salida no se suspende por lluvia. Si por una causa de fuerza mayor ajena a nosotros no pudiera realizarse — un corte o cierre de la ruta, una alerta meteorológica de las autoridades, un bloqueo o un evento de la naturaleza —, la fecha se reprograma para una nueva a coordinar entre las partes. En ese caso no se realizan devoluciones."));
+    preguntas.Add(("¿Cómo se reserva?",
+        $"Con una seña del 50 % del valor total. El 50 % restante se abona hasta {plazo} días antes de la fecha. Si cancelás, la seña no es reembolsable. El valor te lo pasamos por WhatsApp."));
+
+    var faqBloque = "<h2>Preguntas frecuentes</h2><div class=\"faq\">" +
+        string.Concat(preguntas.Select(q =>
+            "<details><summary>" + Esc(q.P) + "</summary><div class=\"faq-r\">" + Esc(q.R) + "</div></details>")) +
+        "</div>";
+
+    // Las mismas preguntas, en el formato que entiende Google.
+    var faqLd = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>
+    {
+        ["@context"] = "https://schema.org",
+        ["@type"] = "FAQPage",
+        ["mainEntity"] = preguntas.Select(q => (object)new Dictionary<string, object>
+        {
+            ["@type"] = "Question",
+            ["name"] = q.P,
+            ["acceptedAnswer"] = new Dictionary<string, object> { ["@type"] = "Answer", ["text"] = q.R }
+        }).ToArray()
+    }, new System.Text.Json.JsonSerializerOptions
+    {
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    });
+
     var html = $$"""
 <!DOCTYPE html>
 <html lang="es-AR">
@@ -1285,6 +1459,7 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db) =>
 </script>
 <script type="application/ld+json">{{ficha}}</script>
 <script type="application/ld+json">{{migas}}</script>
+<script type="application/ld+json">{{faqLd}}</script>
 <style>
 :root{
   --fondo:#131c18; --panel:#1c2a24; --verde:#22332f; --dorado:#d8c096;
@@ -1320,6 +1495,17 @@ ul{padding-left:22px}
 li{margin:7px 0}
 .condiciones{background:var(--panel);border:1px solid var(--linea);border-radius:16px;
              padding:18px 20px;margin-top:30px;font-size:.95rem;color:var(--texto-suave)}
+/* Las preguntas frecuentes. Se abren al tocarlas, pero el texto está siempre en el
+   código: Google lo lee igual aunque se vea plegado. */
+.faq{border-top:1px solid var(--linea);margin-top:14px}
+.faq details{border-bottom:1px solid var(--linea)}
+.faq summary{cursor:pointer;list-style:none;padding:16px 34px 16px 0;position:relative;
+             font-weight:700}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:'+';position:absolute;right:6px;top:13px;color:var(--coral);
+                    font-size:21px;font-weight:700}
+.faq details[open] summary::after{content:'\2212'}
+.faq-r{padding:0 0 18px;color:var(--texto-suave);font-size:.97rem}
 .acciones{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
 .btn{display:inline-block;padding:14px 26px;border-radius:14px;text-decoration:none;font-weight:700}
 .btn-coral{background:var(--coral);color:#fff}
@@ -1348,6 +1534,7 @@ li{margin:7px 0}
   {{Bloque("Itinerario", Items(e.Itinerario))}}
   {{Bloque("Qué incluye", Items(e.Incluye))}}
   {{llevar}}
+  {{faqBloque}}
   <div class="condiciones">
     Se reserva con una seña del 50 % y el saldo se abona hasta {{plazo}} días antes de
     realizar la {{tipo}}. En caso de cancelar, se retendrá la totalidad de la seña.

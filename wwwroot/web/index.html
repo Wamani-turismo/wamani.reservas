@@ -1352,6 +1352,11 @@ function abrirGuia(id, delHistorial){
         : 'Se reserva con una seña del 50% y el saldo se abona hasta 4 días antes de realizar la excursión. En caso de cancelar, se retendrá la totalidad de la seña.') + '</p>' +
       '<div class="mg-cta">' +
         '<a class="btn btn-coral" target="_blank" rel="noopener" href="https://wa.me/' + NUMERO_WHATSAPP + '?text=' + encodeURIComponent(msg) + '">💬 Consultar por WhatsApp</a>' +
+        // Cada experiencia tiene además su propia página, con dirección propia y
+        // preguntas frecuentes. El pop-up no la nombraba: existían pero no había forma
+        // de llegar desde acá, y el visitante que quería leer más se quedaba con esto.
+        // También le da a Google un camino desde la portada hacia las fichas.
+        (g.w ? '<a class="btn btn-borde" href="/excursiones/' + encodeURIComponent(g.w) + '">Ver la página completa</a>' : '') +
         '<button class="btn btn-borde" onclick="cerrarGuia()">Seguir explorando</button>' +
       '</div>' +
     '</div>';

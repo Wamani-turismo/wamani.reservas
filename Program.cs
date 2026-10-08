@@ -1252,8 +1252,15 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
 .lista a:hover{border-color:#d8c096;color:#d8c096}
 .btn{display:inline-block;background:#d2673a;color:#fff;text-decoration:none;font-weight:700;
   padding:15px 32px;border-radius:999px}
+/* La barra de volver también acá: sin ella, el que caía en esta página por un enlace
+   viejo no tenía de dónde agarrarse arriba. Era el único lugar del sitio sin salida. */
+.barra{position:fixed;top:0;left:0;right:0;padding:18px 22px;background:#131c18;
+  border-bottom:1px solid rgba(216,192,150,.18);text-align:left}
+.barra a{color:#d8c096;text-decoration:none;font-weight:600;font-size:.95rem}
 </style></head>
-<body><div class="caja">
+<body>
+<nav class="barra"><a href="/#experiencias">← Volver a todas las experiencias</a></nav>
+<div class="caja">
   <h1>Esa página no existe</h1>
   <p>Puede que el enlace esté viejo o que la experiencia ya no esté publicada.
      Estas son las que sí podés hacer con nosotros hoy:</p>
@@ -1301,6 +1308,29 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
         ? "/logo/wamani-icono-512.png"
         : (e.Foto.StartsWith("http") || e.Foto.StartsWith("/")) ? e.Foto : "/web/img/" + e.Foto;
     var fotoAbs = foto.StartsWith("http") ? foto : "https://wamaniturismo.com" + foto;
+
+    // Las otras fotos cargadas desde el panel, sin repetir la de portada. Con ellas se
+    // arma la portada partida en dos (queda mucho mejor con las fotos verticales, que
+    // a lo ancho se recortan media imagen) y, si sobran, se intercalan mientras se lee.
+    string Ruta(string f) => (f.StartsWith("http") || f.StartsWith("/")) ? f : "/web/img/" + f;
+    var galeria = (e.Fotos ?? "")
+        .Replace("\r", "").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Select(Ruta)
+        .Where(f => f != foto)
+        .ToList();
+
+    // Portada: una sola foto, o dos mitades cuando hay con qué.
+    var tapa = galeria.Count > 0
+        ? $"""<div class="tapa doble"><img src="{Esc(foto)}" alt="{Esc(e.Nombre)}"><img src="{Esc(galeria[0])}" alt="{Esc(e.Nombre)}"></div>"""
+        : $"""<div class="tapa"><img src="{Esc(foto)}" alt="{Esc(e.Nombre)}"></div>""";
+
+    // Las que sobran se van intercalando a lo largo de la página, para que leer no sea
+    // un paredón de texto. Hoy casi todas las excursiones tienen una sola foto cargada:
+    // cuando se suban más desde el panel, aparecen solas acá.
+    var sueltas = galeria.Skip(1).ToList();
+    string FotoSuelta(int i) => i < sueltas.Count
+        ? $"""<figure class="foto-larga"><img src="{Esc(sueltas[i])}" alt="{Esc(e.Nombre)}" loading="lazy"></figure>"""
+        : "";
     // El título de la pestaña y del resultado de Google. Se le agrega "Jujuy" porque
     // casi nadie busca el nombre pelado: busca el lugar.
     // Se corta cerca de los 60 caracteres en el resultado de Google, así que el agregado
@@ -1499,8 +1529,39 @@ a{color:var(--dorado)}
    navegación y del fondo, sin tapar la foto. */
 .tapa::after{content:"";position:absolute;inset:0;pointer-events:none;
       background:linear-gradient(180deg,rgba(13,21,18,.30),rgba(13,21,18,0) 34%,rgba(13,21,18,.45))}
-/* En el celular un poco más alta en proporción, para que la foto respire. */
-@media (max-width:560px){ .tapa{height:62vw} }
+/* Portada partida en dos cuando hay una segunda foto cargada. Es lo que salva a las
+   fotos verticales: a lo ancho se les recorta media imagen, y de a dos entran casi
+   enteras y se ven las dos cosas (el angosto y la cascada, por ejemplo). */
+.tapa.doble{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.tapa.doble img{height:100%}
+/* En el celular un poco más alta en proporción, para que la foto respire. Y la
+   portada doble vuelve a una sola foto: dos mitades en una pantalla angosta quedan
+   como dos tiritas donde no se ve nada. */
+@media (max-width:560px){
+  .tapa{height:62vw}
+  .tapa.doble{grid-template-columns:1fr}
+  .tapa.doble img:nth-child(2){display:none}
+}
+/* Las fotos que se van intercalando mientras se lee. Van a todo el ancho del texto. */
+.foto-larga{margin:26px 0;border-radius:16px;overflow:hidden;background:#0d1512}
+.foto-larga img{width:100%;height:clamp(200px,34vw,340px);object-fit:cover;display:block}
+
+/* ── El menú del sitio, igual que en la portada ──────────────────────────
+   La ficha estaba suelta: sin menú no se podía ir al mapa, al blog ni a contacto
+   sin volver primero a la home. */
+.menu{position:sticky;top:0;z-index:20;background:rgba(19,28,24,.94);backdrop-filter:blur(8px);
+      border-bottom:1px solid var(--linea)}
+.menu-in{max-width:1180px;margin:0 auto;padding:11px 22px;display:flex;align-items:center;gap:18px}
+.menu-logo{height:30px;width:auto;flex:0 0 auto}
+.menu-links{display:flex;gap:17px;flex-wrap:wrap;flex:1 1 auto}
+.menu-links a{color:var(--texto);text-decoration:none;font-size:.92rem;font-weight:600;opacity:.9}
+.menu-links a:hover{color:var(--dorado);opacity:1}
+.menu-cta{background:var(--coral);color:#fff;text-decoration:none;font-weight:700;
+      padding:9px 20px;border-radius:999px;font-size:.9rem;white-space:nowrap}
+@media (max-width:760px){
+  .menu-links{display:none}
+  .menu-in{justify-content:space-between}
+}
 h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,5vw,2.7rem);line-height:1.15;margin-bottom:14px}
 h2{font-family:'Playfair Display',Georgia,serif;font-size:1.35rem;color:var(--dorado);margin:32px 0 10px}
 .chip{display:inline-block;background:var(--verde);border:1px solid var(--linea);color:var(--dorado);
@@ -1539,20 +1600,35 @@ li{margin:7px 0}
 </style>
 </head>
 <body>
+<!-- El mismo menú que la portada: la ficha ya no es una página suelta. -->
+<header class="menu">
+  <div class="menu-in">
+    <a href="/" aria-label="Wamani Turismo — inicio"><img class="menu-logo" src="/web/img/logo-completo.webp" alt="Wamani Turismo"></a>
+    <nav class="menu-links">
+      <a href="/#experiencias">Experiencias</a>
+      <a href="/#mapa">Mapa</a>
+      <a href="/#porque">Quiénes somos</a>
+      <a href="/blog/">Blog</a>
+      <a href="/#contacto">Contacto</a>
+    </nav>
+    <a class="menu-cta" href="https://wa.me/{{Esc(wpp)}}?text={{msg}}" target="_blank" rel="noopener">Reservá ahora</a>
+  </div>
+</header>
 <!-- Vuelve directo a las experiencias, no al principio de la home: el visitante
      estaba mirando excursiones y quiere seguir mirando excursiones. -->
 <nav class="barra"><a href="/#experiencias">← Volver a todas las experiencias</a></nav>
-<div class="tapa">
-  <img src="{{Esc(foto)}}" alt="{{Esc(e.Nombre)}}">
-</div>
+{{tapa}}
 <div class="envoltorio">
   <span class="chip">{{Esc(e.Chip)}}</span>
   <h1>{{Esc(e.Nombre)}}</h1>
   <p class="resumen">{{Esc(resumen)}}</p>
   <div class="datos">{{chips}}</div>
   {{Bloque("Itinerario", Items(e.Itinerario))}}
+  {{FotoSuelta(0)}}
   {{Bloque("Qué incluye", Items(e.Incluye))}}
+  {{FotoSuelta(1)}}
   {{llevar}}
+  {{FotoSuelta(2)}}
   {{faqBloque}}
   <div class="condiciones">
     Se reserva con una seña del 50 % y el saldo se abona hasta {{plazo}} días antes de

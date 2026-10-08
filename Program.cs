@@ -1309,37 +1309,6 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
         : (e.Foto.StartsWith("http") || e.Foto.StartsWith("/")) ? e.Foto : "/web/img/" + e.Foto;
     var fotoAbs = foto.StartsWith("http") ? foto : "https://wamaniturismo.com" + foto;
 
-    // ── EL COLOR DE CADA EXPERIENCIA ──────────────────────────────────────────
-    // Cada excursión tiene su color cargado (el mismo que tiñe su tarjeta en la portada
-    // y con el que se hicieron los PDF). La ficha lo usa en los títulos, el chip y los
-    // detalles, así que cada una se siente suya y no todas iguales.
-    //
-    // Las Wamani Selecta quedan en el dorado sobre negro: es su distintivo, el mismo
-    // criterio con el que se hicieron sus PDF más oscuros.
-    //
-    // Los colores guardados son oscuros (están pensados para teñir una tarjeta con la
-    // foto encima). Sobre el fondo verde casi negro de la ficha no se leerían, así que
-    // se aclaran hasta que contrasten. No se inventa un color: es el mismo, más claro.
-    string Acento(string rgb)
-    {
-        var p = (rgb ?? "").Split(',');
-        if (p.Length != 3 || !int.TryParse(p[0].Trim(), out var r)
-            || !int.TryParse(p[1].Trim(), out var g) || !int.TryParse(p[2].Trim(), out var b))
-            return "#d8c096";
-        // Se sube el brillo hasta que el más alto de los tres llegue a 215: mantiene el
-        // tono y la saturación, sólo lo levanta para que se lea sobre el fondo oscuro.
-        var alto = Math.Max(r, Math.Max(g, b));
-        if (alto < 215 && alto > 0)
-        {
-            var f = 215.0 / alto;
-            r = Math.Min(255, (int)(r * f));
-            g = Math.Min(255, (int)(g * f));
-            b = Math.Min(255, (int)(b * f));
-        }
-        return $"#{r:x2}{g:x2}{b:x2}";
-    }
-    var acento = e.EsSelecta ? "#d8c096" : Acento(e.Color);
-
     // Las otras fotos cargadas desde el panel, sin repetir la de portada. Con ellas se
     // arma la portada partida en dos (queda mucho mejor con las fotos verticales, que
     // a lo ancho se recortan media imagen) y, si sobran, se intercalan mientras se lee.
@@ -1539,15 +1508,13 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
   --fondo:#131c18; --panel:#1c2a24; --verde:#22332f; --dorado:#d8c096;
   --coral:#d2673a; --texto:#ece5d4; --texto-suave:rgba(236,229,212,.72);
   --linea:rgba(216,192,150,.18);
-  /* El color propio de esta experiencia. El dorado queda para las Wamani Selecta. */
-  --acento:{{acento}};
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--fondo);color:var(--texto);font-family:Quicksand,system-ui,sans-serif;line-height:1.65}
 img{max-width:100%;display:block}
-a{color:var(--acento)}
+a{color:var(--dorado)}
 .barra{padding:18px 22px;border-bottom:1px solid var(--linea)}
-.barra a{color:var(--acento);text-decoration:none;font-weight:600;font-size:.95rem}
+.barra a{color:var(--dorado);text-decoration:none;font-weight:600;font-size:.95rem}
 .envoltorio{max-width:820px;margin:0 auto;padding:0 22px 70px}
 /* PORTADA A LO ANCHO.
    Antes la foto entraba entera dentro de un recuadro angosto y los costados se
@@ -1588,7 +1555,7 @@ a{color:var(--acento)}
 .menu-logo{height:30px;width:auto;flex:0 0 auto}
 .menu-links{display:flex;gap:17px;flex-wrap:wrap;flex:1 1 auto}
 .menu-links a{color:var(--texto);text-decoration:none;font-size:.92rem;font-weight:600;opacity:.9}
-.menu-links a:hover{color:var(--acento);opacity:1}
+.menu-links a:hover{color:var(--dorado);opacity:1}
 .menu-cta{background:var(--coral);color:#fff;text-decoration:none;font-weight:700;
       padding:9px 20px;border-radius:999px;font-size:.9rem;white-space:nowrap}
 @media (max-width:760px){
@@ -1596,8 +1563,8 @@ a{color:var(--acento)}
   .menu-in{justify-content:space-between}
 }
 h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,5vw,2.7rem);line-height:1.15;margin-bottom:14px}
-h2{font-family:'Playfair Display',Georgia,serif;font-size:1.35rem;color:var(--acento);margin:32px 0 10px}
-.chip{display:inline-block;background:var(--verde);border:1px solid var(--linea);color:var(--acento);
+h2{font-family:'Playfair Display',Georgia,serif;font-size:1.35rem;color:var(--dorado);margin:32px 0 10px}
+.chip{display:inline-block;background:var(--verde);border:1px solid var(--linea);color:var(--dorado);
       padding:5px 14px;border-radius:999px;font-size:.82rem;font-weight:600;margin-bottom:16px}
 .resumen{font-size:1.1rem;color:var(--texto-suave)}
 .datos{display:flex;flex-wrap:wrap;gap:9px;margin:20px 0}
@@ -1627,7 +1594,7 @@ li{margin:7px 0}
 .otras{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:14px}
 .otra{display:flex;flex-direction:column;gap:3px;padding:13px 16px;border-radius:14px;
       background:var(--panel);border:1px solid var(--linea);text-decoration:none}
-.otra:hover{border-color:var(--acento)}
+.otra:hover{border-color:var(--dorado)}
 .otra-n{color:var(--texto);font-weight:600;line-height:1.3}
 .otra-c{color:var(--texto-suave);font-size:.82rem}
 </style>

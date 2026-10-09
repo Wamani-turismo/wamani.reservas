@@ -1304,6 +1304,24 @@ arrancarAuto();
 ["pointerenter","touchstart"].forEach(ev => carrusel.addEventListener(ev, frenarAuto, {passive:true}));
 carrusel.addEventListener("pointerleave", function(){ if (!autoCar) arrancarAuto(); });
 
+/* ═══ El color de cada experiencia ═══
+   Sacado del folleto en PDF de cada excursión (carpeta NUEVOS), para que la
+   ficha de la web y el PDF impreso sean la misma pieza. Primer color: el fondo.
+   Segundo: el acento de los títulos y el chip.
+   Las Wamani Selecta NO van acá a propósito: quedan oscuras, como se decidió. */
+const COLORES_FICHA = {
+  "recorriendo-la-quebrada":            ["#3a1518", "#eba63a"],  // rojo noche + cielo
+  "atardecer-en-las-salinas":           ["#1b1c44", "#f54302"],  // índigo + fuego
+  "cascada-santuyoc-y-angosto-de-jaire":["#2b2610", "#df903e"],  // mostaza + oro
+  "termas-de-jordan":                   ["#0d2a26", "#38a89a"],  // verde agua + turquesa
+  "ruta-de-lagunas-y-termas":           ["#0f2a37", "#2d82ab"],  // celeste noche
+  "conociendo-las-yungas":              ["#1f2c1a", "#ea8c23"],  // verde selva
+  "yungas-express":                     ["#1f2c1a", "#ea8c23"],  // verde selva
+  "humahuaca-yungas":                   ["#2b1727", "#e57b27"],  // vino + naranja
+  "tilcara-calilegua":                  ["#3a1a10", "#e8a33a"],  // tierra + oro
+  "iruya-nazareno":                     ["#4a1712", "#ef7f3c"]   // rojo noche + naranja
+};
+
 /* ═══ Modal de guía ═══ */
 const modalFondo = document.getElementById("modal-fondo");
 const modalCont = document.getElementById("modal-contenido");
@@ -1372,6 +1390,22 @@ function abrirGuia(id, delHistorial){
   // quedado el scroll y, al volver a entrar, arrancaba por la mitad del itinerario.
   const hoja = modalFondo.querySelector(".modal-guia");
   if (hoja) hoja.scrollTop = 0;
+
+  // ═══ El color de la experiencia ═══
+  // Se pisan, SÓLO dentro del modal, las dos variables que ya usa: --panel para
+  // el fondo y --dorado para el acento. El resto del sitio no se entera.
+  // Si la experiencia no está en la lista (las Selecta), se limpian y vuelve el
+  // color oscuro de siempre.
+  if (hoja) {
+    const col = COLORES_FICHA[g.w || id];
+    if (col) {
+      hoja.style.setProperty("--panel", col[0]);
+      hoja.style.setProperty("--dorado", col[1]);
+    } else {
+      hoja.style.removeProperty("--panel");
+      hoja.style.removeProperty("--dorado");
+    }
+  }
   // Puntitos de la galería: se marcan según la foto que se está viendo
   const gal = document.getElementById("mg-galeria");
   const dots = modalCont.querySelectorAll(".mg-dots span");

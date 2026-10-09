@@ -1335,6 +1335,29 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
     // casi nadie busca el nombre pelado: busca el lugar.
     // Se corta cerca de los 60 caracteres en el resultado de Google, así que el agregado
     // es corto: la palabra que describe qué es, y el lugar.
+    // ═══ El color de la ficha ═══
+    // Cada excursión y cada travesía se pinta con los dos tonos de SU folleto en
+    // PDF, para que la página y el PDF impreso sean la misma pieza. Primero el
+    // fondo, después el panel (el escalón más claro, el de las tarjetas).
+    // Las Wamani Selecta NO están en la lista a propósito: van siempre con el
+    // verde oscuro de siempre, que es parte de lo que las distingue.
+    var paletas = new Dictionary<string, (string fondo, string panel)>
+    {
+        ["recorriendo-la-quebrada"]             = ("#3a1518", "#5a2a22"),
+        ["atardecer-en-las-salinas"]            = ("#1b1c44", "#303169"),
+        ["cascada-santuyoc-y-angosto-de-jaire"] = ("#2b2610", "#50461c"),
+        ["termas-de-jordan"]                    = ("#0d2a26", "#15463f"),
+        ["ruta-de-lagunas-y-termas"]            = ("#0f2a37", "#1d4a5e"),
+        ["conociendo-las-yungas"]               = ("#1f2c1a", "#33452b"),
+        ["yungas-express"]                      = ("#1f2c1a", "#33452b"),
+        ["humahuaca-yungas"]                    = ("#2b1727", "#3e2a39"),
+        ["tilcara-calilegua"]                   = ("#3a1a10", "#1e3a24"),
+        ["iruya-nazareno"]                      = ("#4a1712", "#33304a"),
+    };
+    var colFondo = "#131c18";
+    var colPanel = "#1c2a24";
+    if (paletas.TryGetValue(e.Clave ?? "", out var pal)) { colFondo = pal.fondo; colPanel = pal.panel; }
+
     var queEs = e.EsTravesia ? " — Travesía en Jujuy" : " — Excursión en Jujuy";
     var titulo = e.Nombre + (e.Nombre.Contains("Jujuy", StringComparison.OrdinalIgnoreCase)
         ? "" : queEs) + " | Wamani Turismo";
@@ -1505,7 +1528,7 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
 <script type="application/ld+json">{{faqLd}}</script>
 <style>
 :root{
-  --fondo:#131c18; --panel:#1c2a24; --verde:#22332f; --dorado:#d8c096;
+  --fondo:{{colFondo}}; --panel:{{colPanel}}; --verde:#22332f; --dorado:#d8c096;
   --coral:#d2673a; --texto:#ece5d4; --texto-suave:rgba(236,229,212,.72);
   --linea:rgba(216,192,150,.18);
 }

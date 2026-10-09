@@ -1396,15 +1396,12 @@ function abrirGuia(id, delHistorial){
   // el fondo y --dorado para el acento. El resto del sitio no se entera.
   // Si la experiencia no está en la lista (las Selecta), se limpian y vuelve el
   // color oscuro de siempre.
+  // Sólo el fondo. El acento (--dorado) NO se toca: es el crema de todos los
+  // botones del sitio y tiene que seguir siendo igual en todas las fichas.
   if (hoja) {
     const col = COLORES_FICHA[g.w || id];
-    if (col) {
-      hoja.style.setProperty("--panel", col[0]);
-      hoja.style.setProperty("--dorado", col[1]);
-    } else {
-      hoja.style.removeProperty("--panel");
-      hoja.style.removeProperty("--dorado");
-    }
+    if (col) hoja.style.setProperty("--panel", col[0]);
+    else     hoja.style.removeProperty("--panel");
   }
   // Puntitos de la galería: se marcan según la foto que se está viendo
   const gal = document.getElementById("mg-galeria");

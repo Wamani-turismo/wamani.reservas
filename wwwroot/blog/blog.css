@@ -23,6 +23,13 @@ body[data-zona="quebrada"]{ --hondo:#3a1a10; --acento:#e2673a; }
 body[data-zona="puna"]    { --hondo:#33304a; --acento:#6f9dc4; }
 body[data-zona="valle"]   { --hondo:#48471f; --acento:#c9b03c; }
 
+/* Las tarjetas del índice llevan el color de SU zona, no el del <body>.
+   Una nota nueva sólo necesita data-zona en su <a class="tarjeta">. */
+.tarjeta[data-zona="yungas"]  { --hondo:#1e3a24; --acento:#7ba83c; --tinte:#eff4e6; --linea-zona:#dbe5cb }
+.tarjeta[data-zona="quebrada"]{ --hondo:#3a1a10; --acento:#e2673a; --tinte:#fbeee4; --linea-zona:#eedbc9 }
+.tarjeta[data-zona="puna"]    { --hondo:#33304a; --acento:#6f9dc4; --tinte:#edf1f8; --linea-zona:#d8e0ee }
+.tarjeta[data-zona="valle"]   { --hondo:#48471f; --acento:#c9b03c; --tinte:#f6f2e0; --linea-zona:#e6dfc1 }
+
 *{ box-sizing:border-box }
 html{ scroll-behavior:smooth }
 body{
@@ -126,7 +133,8 @@ figcaption{ color:var(--tinta-2); font-size:14.5px; margin-top:9px; font-style:i
 .lista{ max-width:760px; margin:0 auto; padding:14px 20px 40px; display:grid; gap:18px }
 .tarjeta{
   display:grid; grid-template-columns:150px 1fr; gap:16px; align-items:center;
-  background:#fff; border:1px solid var(--linea); border-radius:12px;
+  background:var(--tinte,#fff); border:1px solid var(--linea-zona,var(--linea));
+  border-left:5px solid var(--acento); border-radius:12px;
   overflow:hidden; text-decoration:none; color:inherit;
 }
 .tarjeta img{ width:100%; height:100%; min-height:112px; object-fit:cover }

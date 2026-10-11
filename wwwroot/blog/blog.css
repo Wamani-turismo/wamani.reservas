@@ -7,6 +7,10 @@
    misma paleta de los folletos de excursión: yungas verde, quebrada
    tierra y ocre, puna celeste y blanco de las salinas, valle verde agua.
    Se elige poniendo data-zona="yungas" en el <body>. Nada más.
+
+   Las notas que NO son de una región sino de algo que pasa en varias —el
+   carnaval, una fiesta— usan data-zona="fiesta", que toma el vino del manual
+   de marca. Si no, dos notas de la misma zona quedan idénticas en el índice.
    ═══════════════════════════════════════════════════════════════════ */
 :root{
   --tinta:      #2a2620;
@@ -22,6 +26,7 @@ body[data-zona="yungas"]  { --hondo:#1e3a24; --acento:#7ba83c; }
 body[data-zona="quebrada"]{ --hondo:#3a1a10; --acento:#e2673a; }
 body[data-zona="puna"]    { --hondo:#33304a; --acento:#6f9dc4; }
 body[data-zona="valle"]   { --hondo:#14453f; --acento:#4bb3a0; }
+body[data-zona="fiesta"]  { --hondo:#59304b; --acento:#d4609a; }
 
 /* Las tarjetas del índice llevan el color de SU zona, no el del <body>.
    Una nota nueva sólo necesita data-zona en su <a class="tarjeta">. */
@@ -29,6 +34,7 @@ body[data-zona="valle"]   { --hondo:#14453f; --acento:#4bb3a0; }
 .tarjeta[data-zona="quebrada"]{ --hondo:#3a1a10; --acento:#e2673a; --tinte:#f9e6d7; --tinte-hover:#f2cdaf; --linea-zona:#ecd0ba }
 .tarjeta[data-zona="puna"]    { --hondo:#33304a; --acento:#6f9dc4; --tinte:#e6ecf7; --tinte-hover:#c9d8ee; --linea-zona:#d2dcee }
 .tarjeta[data-zona="valle"]   { --hondo:#14453f; --acento:#4bb3a0; --tinte:#e2f0ed; --tinte-hover:#bcded5; --linea-zona:#c4e0d8 }
+.tarjeta[data-zona="fiesta"]  { --hondo:#59304b; --acento:#d4609a; --tinte:#f7e6ef; --tinte-hover:#f0d2e3; --linea-zona:#ead0de }
 
 *{ box-sizing:border-box }
 html{ scroll-behavior:smooth }

@@ -1388,6 +1388,29 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
     durTxt = char.ToLower(durTxt[0]) + durTxt.Substring(1);
     var subtitulo = (esTrav ? "Travesía" : "Excursión") + " de " + durTxt +
         " en " + zona + ", Argentina";
+    // Subtítulos escritos a mano, uno por experiencia. Un texto propio por página
+    // rinde más en Google que la misma fórmula repetida trece veces, y además deja
+    // decir el nombre del lugar que la gente realmente busca (Salinas Grandes,
+    // Lagunas de Yala, Cascada Santuyoc) y no sólo el nombre de la excursión.
+    // Si mañana se da de alta una experiencia nueva desde el panel y no figura acá,
+    // cae sola en la frase automática de arriba: la página nunca queda sin subtítulo.
+    var subManual = new Dictionary<string, string>
+    {
+        ["conociendo-las-yungas"]              = "Excursión de 3 días de trekking por las Yungas de Jujuy",
+        ["cascada-santuyoc-y-angosto-de-jaire"]= "Excursión de día completo a la Cascada Santuyoc, Valle de Jujuy",
+        ["recorriendo-la-quebrada"]            = "Excursión de día completo por la Quebrada de Humahuaca, Jujuy",
+        ["termas-de-jordan"]                   = "Excursión de día completo a las Termas del Río Jordán, Jujuy",
+        ["ruta-de-lagunas-y-termas"]           = "Excursión de día completo a las Lagunas de Yala y Termas de Reyes",
+        ["humahuaca-yungas"]                   = "Travesía de 5 días de la Quebrada de Humahuaca a las Yungas",
+        ["atardecer-en-las-salinas"]           = "Excursión de día completo a las Salinas Grandes y la Quebrada",
+        ["yungas-express"]                     = "Excursión de 2 días y 1 noche por las Yungas de Jujuy",
+        ["tilcara-calilegua"]                  = "Travesía de trekking de 5 días y 65 km, de Tilcara a Calilegua",
+        ["especial-the-canuto-glamping"]       = "Escapada de 3 días con glamping en las Yungas de Jujuy",
+        ["especial-ecolodge-de-la-selva"]      = "Escapada de 3 días con ecolodge en la selva de Jujuy",
+        ["iruya-nazareno"]                     = "Travesía de trekking de 5 días por Iruya y Nazareno, Salta",
+        ["especial-finca-la-fe"]               = "Escapada de 4 días a las Termas del Río Jordán, Jujuy",
+    };
+    if (subManual.TryGetValue(e.Clave ?? "", out var subPropio)) subtitulo = subPropio;
     var h2Itinerario = "Itinerario de " + art + " " + e.Nombre;
     var h2Incluye    = "Qué incluye " + art;
     var h2Llevar     = "Qué llevar a " + (esTrav ? "una travesía" : "una excursión") + " en " + zona;

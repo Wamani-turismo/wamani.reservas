@@ -1297,8 +1297,8 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
         var ls = Lineas(s);
         return ls.Length == 0 ? "" : string.Concat(ls.Select(x => "<li>" + Esc(x) + "</li>"));
     }
-    string Bloque(string titulo, string html) =>
-        string.IsNullOrEmpty(html) ? "" : $"<h2>{Esc(titulo)}</h2><ul>{html}</ul>";
+    string Bloque(string tituloHtml, string html) =>
+        string.IsNullOrEmpty(html) ? "" : $"<h2>{tituloHtml}</h2><ul>{html}</ul>";
 
     var url = "https://wamaniturismo.com/excursiones/" + Uri.EscapeDataString(e.Clave);
     // La base guarda SOLO el nombre del archivo ("iruya-2.webp"); las fotos se sirven en
@@ -1418,10 +1418,11 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
         ["especial-finca-la-fe"]               = "Escapada de 4 días a las Termas del Río Jordán, Jujuy",
     };
     if (subManual.TryGetValue(e.Clave ?? "", out var subPropio)) subtitulo = subPropio;
-    var h2Itinerario = "Itinerario de " + art + " " + e.Nombre;
+    var nomSpan      = " <span class=\"h2-nom\">" + Esc(e.Nombre) + "</span>";
+    var h2Itinerario = "Itinerario de " + art + nomSpan;
     var h2Incluye    = "Qué incluye " + art;
     var h2Llevar     = "Qué llevar a " + (esTrav ? "una travesía" : "una excursión") + " en " + zona;
-    var h2Faq        = "Preguntas frecuentes sobre " + art + " " + e.Nombre;
+    var h2Faq        = "Preguntas frecuentes sobre " + art + nomSpan;
     var h2Otras      = "Otras excursiones y travesías en Jujuy";
     var llevar = string.IsNullOrWhiteSpace(e.Llevar)
         ? "" : "<h2>" + Esc(h2Llevar) + "</h2><p class='resumen'>" + Esc(e.Llevar) + "</p>";
@@ -1530,7 +1531,7 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
     preguntas.Add(("¿Cómo se reserva?",
         $"Con una seña del 50 % del valor total. El 50 % restante se abona hasta {plazo} días antes de la fecha. Si cancelás, la seña no es reembolsable. El valor te lo pasamos por WhatsApp."));
 
-    var faqBloque = "<h2>" + Esc(h2Faq) + "</h2><div class=\"faq\">" +
+    var faqBloque = "<h2>" + h2Faq + "</h2><div class=\"faq\">" +
         string.Concat(preguntas.Select(q =>
             "<details><summary>" + Esc(q.P) + "</summary><div class=\"faq-r\">" + Esc(q.R) + "</div></details>")) +
         "</div>";
@@ -1634,6 +1635,20 @@ a{color:var(--dorado)}
 .menu-links a:hover{color:var(--dorado);opacity:1}
 .menu-cta{background:var(--coral);color:#fff;text-decoration:none;font-weight:700;
       padding:9px 20px;border-radius:999px;font-size:.9rem;white-space:nowrap}
+/* Selector de idioma, igual que en la portada. Hasta ahora la ficha estaba fija en
+   castellano: el que entraba a la home en inglés y tocaba una experiencia caía en una
+   página que no podía leer, justo en la que vende. El globito en vez de la palabra
+   "Idioma" (o una bandera: una bandera es un país, no un idioma). */
+.sel-idioma{display:flex;align-items:center;gap:1px;flex-shrink:0}
+.sel-idioma .ico-idioma{width:16px;height:16px;flex-shrink:0;margin-right:5px;
+  fill:none;stroke:var(--dorado);stroke-width:1.6;stroke-linecap:round;opacity:.75}
+.sel-idioma button{background:none;border:none;cursor:pointer;color:var(--texto-suave);
+  font-family:'Quicksand',sans-serif;font-weight:700;font-size:.8rem;letter-spacing:.05em;
+  padding:.34rem .46rem;border-radius:8px;line-height:1;transition:color .2s ease,background .2s ease}
+.sel-idioma button + button{border-left:1px solid var(--linea)}
+.sel-idioma button:hover{color:var(--dorado)}
+.sel-idioma button.on{color:var(--dorado);background:rgba(216,192,150,.14)}
+@media (max-width:760px){.sel-idioma button{padding:.3rem .34rem;font-size:.74rem}}
 @media (max-width:760px){
   .menu-links{display:none}
   .menu-in{justify-content:space-between}
@@ -1693,6 +1708,15 @@ li{margin:7px 0}
       <a href="/blog/">Blog</a>
       <a href="/#contacto">Contacto</a>
     </nav>
+    <div class="sel-idioma" role="group" aria-label="Idioma">
+      <svg class="ico-idioma" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><ellipse cx="12" cy="12" rx="4" ry="9"/>
+      </svg>
+      <button type="button" data-lang="es" onclick="WamaniIdioma.cambiar('es')">ES</button>
+      <button type="button" data-lang="en" onclick="WamaniIdioma.cambiar('en')">EN</button>
+      <button type="button" data-lang="fr" onclick="WamaniIdioma.cambiar('fr')">FR</button>
+      <button type="button" data-lang="pt" onclick="WamaniIdioma.cambiar('pt')">PT</button>
+    </div>
     <a class="menu-cta" href="https://wa.me/{{Esc(wpp)}}?text={{msg}}" target="_blank" rel="noopener">Reservá ahora</a>
   </div>
 </header>
@@ -1736,6 +1760,12 @@ li{margin:7px 0}
       gtag('event','clic_whatsapp',{ desde:'ficha', excursion:this.dataset.excursion }); } catch(e){}
   });
 </script>
+<!-- Traducción a inglés, francés y portugués. Son los MISMOS dos archivos que usa la
+     portada, así que el contenido de las excursiones (resumen, itinerario, qué incluye,
+     qué llevar) ya está traducido: no hubo que duplicar nada. Si falta un texto, ese
+     queda en castellano; nunca vacío ni roto. -->
+<script src="/web/idiomas-textos.js"></script>
+<script src="/web/idiomas.js"></script>
 </body>
 </html>
 """;

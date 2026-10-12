@@ -39,6 +39,40 @@ en: {
   },
 
   textos: {
+    /* ── Fichas de excursión (/excursiones/...) ── */
+    "Itinerario de la excursión": "Itinerary of the tour",
+    "Itinerario de la travesía": "Itinerary of the trek",
+    "Qué incluye la excursión": "What the tour includes",
+    "Qué incluye la travesía": "What the trek includes",
+    "Qué llevar a una excursión en Jujuy": "What to bring on a tour in Jujuy",
+    "Qué llevar a una travesía en Jujuy": "What to bring on a trek in Jujuy",
+    "Qué llevar a una travesía en Salta": "What to bring on a trek in Salta",
+    "Preguntas frecuentes sobre la excursión": "Frequently asked questions about the tour",
+    "Preguntas frecuentes sobre la travesía": "Frequently asked questions about the trek",
+    "Otras excursiones y travesías en Jujuy": "Other tours and treks in Jujuy",
+    "Volver a todas las experiencias": "Back to all experiences",
+    "Ver todas las experiencias": "See all experiences",
+    "¿Desde dónde sale?": "Where does it start?",
+    "¿Sale todos los días?": "Does it run every day?",
+    "¿Qué comidas están incluidas?": "Which meals are included?",
+    "¿Qué pasa si llueve?": "What if it rains?",
+    "¿Cómo se reserva?": "How do I book?",
+    "Salimos con un mínimo de 2 personas, así que en cuanto nos lo pidas armamos la salida. Escribinos con los días que tenés en Jujuy y la coordinamos.": "We run with a minimum of 2 people, so as soon as you ask we set the departure up. Write to us with the days you have in Jujuy and we'll arrange it.",
+    "La salida no se suspende por lluvia. Si por una causa de fuerza mayor ajena a nosotros no pudiera realizarse — un corte o cierre de la ruta, una alerta meteorológica de las autoridades, un bloqueo o un evento de la naturaleza —, la fecha se reprograma para una nueva a coordinar entre las partes. En ese caso no se realizan devoluciones.": "The departure is not called off because of rain. If it cannot go ahead for reasons beyond our control — a road cut or closure, an official weather alert, a roadblock or a natural event — the date is moved to a new one agreed between the parties. In that case no refunds are given.",
+    /* Los subtítulos bajo el nombre de cada experiencia */
+    "Excursión de 3 días de trekking por las Yungas de Jujuy": "3-day trekking tour through the Yungas of Jujuy",
+    "Excursión de día completo a la Cascada Santuyoc, Valle de Jujuy": "Full-day tour to the Santuyoc Waterfall, Jujuy Valley",
+    "Excursión de día completo por la Quebrada de Humahuaca, Jujuy": "Full-day tour of the Quebrada de Humahuaca, Jujuy",
+    "Excursión de día completo a las Termas del Río Jordán, Jujuy": "Full-day tour to the Río Jordán hot springs, Jujuy",
+    "Excursión de día completo a las Lagunas de Yala y Termas de Reyes": "Full-day tour to the Yala Lagoons and Termas de Reyes",
+    "Travesía de 5 días de la Quebrada de Humahuaca a las Yungas": "5-day trek from the Quebrada de Humahuaca to the Yungas",
+    "Excursión de día completo a las Salinas Grandes y la Quebrada": "Full-day tour to Salinas Grandes and the Quebrada",
+    "Excursión de 2 días y 1 noche por las Yungas de Jujuy": "2-day, 1-night tour through the Yungas of Jujuy",
+    "Travesía de trekking de 5 días y 65 km, de Tilcara a Calilegua": "5-day, 65 km trek from Tilcara to Calilegua",
+    "Escapada de 3 días con glamping en las Yungas de Jujuy": "3-day glamping escape in the Yungas of Jujuy",
+    "Escapada de 3 días con ecolodge en la selva de Jujuy": "3-day ecolodge escape in the rainforest of Jujuy",
+    "Travesía de trekking de 5 días por Iruya y Nazareno, Salta": "5-day trek through Iruya and Nazareno, Salta",
+    "Escapada de 4 días a las Termas del Río Jordán, Jujuy": "4-day escape to the Río Jordán hot springs, Jujuy",
     /* ── Wamani Selecta: las tres experiencias "Especial" ─────────────────
        Finca la Fé, The Canuto Glamping y EcoLodge de la Selva. Se cargaron
        después de las traducciones y se veían enteras en castellano en los
@@ -544,6 +578,40 @@ fr: {
   },
 
   textos: {
+    /* ── Fichas de excursión (/excursiones/...) ── */
+    "Itinerario de la excursión": "Itinéraire de l'excursion",
+    "Itinerario de la travesía": "Itinéraire de la traversée",
+    "Qué incluye la excursión": "Ce que comprend l'excursion",
+    "Qué incluye la travesía": "Ce que comprend la traversée",
+    "Qué llevar a una excursión en Jujuy": "Quoi emporter pour une excursion à Jujuy",
+    "Qué llevar a una travesía en Jujuy": "Quoi emporter pour une traversée à Jujuy",
+    "Qué llevar a una travesía en Salta": "Quoi emporter pour une traversée à Salta",
+    "Preguntas frecuentes sobre la excursión": "Questions fréquentes sur l'excursion",
+    "Preguntas frecuentes sobre la travesía": "Questions fréquentes sur la traversée",
+    "Otras excursiones y travesías en Jujuy": "Autres excursions et traversées à Jujuy",
+    "Volver a todas las experiencias": "Retour à toutes les expériences",
+    "Ver todas las experiencias": "Voir toutes les expériences",
+    "¿Desde dónde sale?": "D'où part-elle ?",
+    "¿Sale todos los días?": "Part-elle tous les jours ?",
+    "¿Qué comidas están incluidas?": "Quels repas sont inclus ?",
+    "¿Qué pasa si llueve?": "Que se passe-t-il s'il pleut ?",
+    "¿Cómo se reserva?": "Comment réserver ?",
+    "Salimos con un mínimo de 2 personas, así que en cuanto nos lo pidas armamos la salida. Escribinos con los días que tenés en Jujuy y la coordinamos.": "Nous partons à partir de 2 personnes : dès que vous nous le demandez, nous organisons le départ. Écrivez-nous avec les jours dont vous disposez à Jujuy et nous nous en occupons.",
+    "La salida no se suspende por lluvia. Si por una causa de fuerza mayor ajena a nosotros no pudiera realizarse — un corte o cierre de la ruta, una alerta meteorológica de las autoridades, un bloqueo o un evento de la naturaleza —, la fecha se reprograma para una nueva a coordinar entre las partes. En ese caso no se realizan devoluciones.": "Le départ n'est pas annulé en cas de pluie. S'il ne pouvait avoir lieu pour un cas de force majeure indépendant de notre volonté — coupure ou fermeture de la route, alerte météo des autorités, blocage ou événement naturel —, la date est reportée à une nouvelle date convenue entre les parties. Dans ce cas, aucun remboursement n'est effectué.",
+    /* Los subtítulos bajo el nombre de cada experiencia */
+    "Excursión de 3 días de trekking por las Yungas de Jujuy": "Excursion de 3 jours de trekking dans les Yungas de Jujuy",
+    "Excursión de día completo a la Cascada Santuyoc, Valle de Jujuy": "Excursion d'une journée à la cascade de Santuyoc, vallée de Jujuy",
+    "Excursión de día completo por la Quebrada de Humahuaca, Jujuy": "Excursion d'une journée dans la Quebrada de Humahuaca, Jujuy",
+    "Excursión de día completo a las Termas del Río Jordán, Jujuy": "Excursion d'une journée aux thermes du Río Jordán, Jujuy",
+    "Excursión de día completo a las Lagunas de Yala y Termas de Reyes": "Excursion d'une journée aux lagunes de Yala et aux thermes de Reyes",
+    "Travesía de 5 días de la Quebrada de Humahuaca a las Yungas": "Traversée de 5 jours de la Quebrada de Humahuaca aux Yungas",
+    "Excursión de día completo a las Salinas Grandes y la Quebrada": "Excursion d'une journée aux Salinas Grandes et à la Quebrada",
+    "Excursión de 2 días y 1 noche por las Yungas de Jujuy": "Excursion de 2 jours et 1 nuit dans les Yungas de Jujuy",
+    "Travesía de trekking de 5 días y 65 km, de Tilcara a Calilegua": "Traversée de trekking de 5 jours et 65 km, de Tilcara à Calilegua",
+    "Escapada de 3 días con glamping en las Yungas de Jujuy": "Escapade de 3 jours en glamping dans les Yungas de Jujuy",
+    "Escapada de 3 días con ecolodge en la selva de Jujuy": "Escapade de 3 jours en écolodge dans la forêt de Jujuy",
+    "Travesía de trekking de 5 días por Iruya y Nazareno, Salta": "Traversée de trekking de 5 jours par Iruya et Nazareno, Salta",
+    "Escapada de 4 días a las Termas del Río Jordán, Jujuy": "Escapade de 4 jours aux thermes du Río Jordán, Jujuy",
     /* ── Wamani Selecta: las tres experiencias "Especial" ─────────────────
        Finca la Fé, The Canuto Glamping y EcoLodge de la Selva. Se cargaron
        después de las traducciones y se veían enteras en castellano en los
@@ -1040,6 +1108,40 @@ pt: {
   },
 
   textos: {
+    /* ── Fichas de excursión (/excursiones/...) ── */
+    "Itinerario de la excursión": "Itinerário da excursão",
+    "Itinerario de la travesía": "Itinerário da travessia",
+    "Qué incluye la excursión": "O que a excursão inclui",
+    "Qué incluye la travesía": "O que a travessia inclui",
+    "Qué llevar a una excursión en Jujuy": "O que levar para uma excursão em Jujuy",
+    "Qué llevar a una travesía en Jujuy": "O que levar para uma travessia em Jujuy",
+    "Qué llevar a una travesía en Salta": "O que levar para uma travessia em Salta",
+    "Preguntas frecuentes sobre la excursión": "Perguntas frequentes sobre a excursão",
+    "Preguntas frecuentes sobre la travesía": "Perguntas frequentes sobre a travessia",
+    "Otras excursiones y travesías en Jujuy": "Outras excursões e travessias em Jujuy",
+    "Volver a todas las experiencias": "Voltar a todas as experiências",
+    "Ver todas las experiencias": "Ver todas as experiências",
+    "¿Desde dónde sale?": "De onde sai?",
+    "¿Sale todos los días?": "Sai todos os dias?",
+    "¿Qué comidas están incluidas?": "Quais refeições estão incluídas?",
+    "¿Qué pasa si llueve?": "E se chover?",
+    "¿Cómo se reserva?": "Como se reserva?",
+    "Salimos con un mínimo de 2 personas, así que en cuanto nos lo pidas armamos la salida. Escribinos con los días que tenés en Jujuy y la coordinamos.": "Saímos com um mínimo de 2 pessoas, então assim que você pedir organizamos a saída. Escreva para nós com os dias que você tem em Jujuy e combinamos.",
+    "La salida no se suspende por lluvia. Si por una causa de fuerza mayor ajena a nosotros no pudiera realizarse — un corte o cierre de la ruta, una alerta meteorológica de las autoridades, un bloqueo o un evento de la naturaleza —, la fecha se reprograma para una nueva a coordinar entre las partes. En ese caso no se realizan devoluciones.": "A saída não é suspensa por chuva. Se por um motivo de força maior alheio a nós não puder ser realizada — um corte ou fechamento da estrada, um alerta meteorológico das autoridades, um bloqueio ou um evento da natureza —, a data é remarcada para uma nova a combinar entre as partes. Nesse caso não há devoluções.",
+    /* Los subtítulos bajo el nombre de cada experiencia */
+    "Excursión de 3 días de trekking por las Yungas de Jujuy": "Excursão de 3 dias de trekking pelas Yungas de Jujuy",
+    "Excursión de día completo a la Cascada Santuyoc, Valle de Jujuy": "Excursão de dia inteiro à Cachoeira Santuyoc, Vale de Jujuy",
+    "Excursión de día completo por la Quebrada de Humahuaca, Jujuy": "Excursão de dia inteiro pela Quebrada de Humahuaca, Jujuy",
+    "Excursión de día completo a las Termas del Río Jordán, Jujuy": "Excursão de dia inteiro às Termas do Rio Jordán, Jujuy",
+    "Excursión de día completo a las Lagunas de Yala y Termas de Reyes": "Excursão de dia inteiro às Lagoas de Yala e Termas de Reyes",
+    "Travesía de 5 días de la Quebrada de Humahuaca a las Yungas": "Travessia de 5 dias da Quebrada de Humahuaca às Yungas",
+    "Excursión de día completo a las Salinas Grandes y la Quebrada": "Excursão de dia inteiro às Salinas Grandes e à Quebrada",
+    "Excursión de 2 días y 1 noche por las Yungas de Jujuy": "Excursão de 2 dias e 1 noite pelas Yungas de Jujuy",
+    "Travesía de trekking de 5 días y 65 km, de Tilcara a Calilegua": "Travessia de trekking de 5 dias e 65 km, de Tilcara a Calilegua",
+    "Escapada de 3 días con glamping en las Yungas de Jujuy": "Escapada de 3 dias com glamping nas Yungas de Jujuy",
+    "Escapada de 3 días con ecolodge en la selva de Jujuy": "Escapada de 3 dias com ecolodge na selva de Jujuy",
+    "Travesía de trekking de 5 días por Iruya y Nazareno, Salta": "Travessia de trekking de 5 dias por Iruya e Nazareno, Salta",
+    "Escapada de 4 días a las Termas del Río Jordán, Jujuy": "Escapada de 4 dias às Termas do Rio Jordán, Jujuy",
     /* ── Wamani Selecta: las tres experiencias "Especial" ─────────────────
        Finca la Fé, The Canuto Glamping y EcoLodge de la Selva. Se cargaron
        después de las traducciones y se veían enteras en castellano en los

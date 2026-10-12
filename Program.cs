@@ -1319,15 +1319,15 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
         .Where(f => f != foto)
         .ToList();
 
-    // Portada: una sola foto, o dos mitades cuando hay con qué.
-    var tapa = galeria.Count > 0
-        ? $"""<div class="tapa doble"><img src="{Esc(foto)}" alt="{Esc(e.Nombre)}"><img src="{Esc(galeria[0])}" alt="{Esc(e.Nombre)}"></div>"""
-        : $"""<div class="tapa"><img src="{Esc(foto)}" alt="{Esc(e.Nombre)}"></div>""";
+    // Portada: UNA sola foto, entera y a todo el ancho. Nunca dos partidas al medio
+    // y nunca recortada: la foto se eligió por lo que muestra y el recorte se lleva
+    // justo eso. Si hay más fotos cargadas, van más abajo, de a una.
+    var tapa = $"""<div class="tapa"><img src="{Esc(foto)}" alt="{Esc(e.Nombre)}"></div>""";
 
     // Las que sobran se van intercalando a lo largo de la página, para que leer no sea
     // un paredón de texto. Hoy casi todas las excursiones tienen una sola foto cargada:
     // cuando se suban más desde el panel, aparecen solas acá.
-    var sueltas = galeria.Skip(1).ToList();
+    var sueltas = galeria.ToList();
     string FotoSuelta(int i) => i < sueltas.Count
         ? $"""<figure class="foto-larga"><img src="{Esc(sueltas[i])}" alt="{Esc(e.Nombre)}" loading="lazy"></figure>"""
         : "";
@@ -1597,31 +1597,24 @@ a{color:var(--dorado)}
    Antes la foto entraba entera dentro de un recuadro angosto y los costados se
    rellenaban con una copia borrosa: quedaba flotando, chiquita y con dos franjas
    grises al costado. Ahora va de borde a borde y llena todo el ancho de la pantalla.
-   Se recorta arriba y abajo (object-fit:cover) y se encuadra por el centro, que es
-   donde está el motivo en todas las fotos que usamos. */
-.tapa{position:relative;overflow:hidden;width:100%;
-      height:clamp(260px,46vw,520px);background:#0d1512}
-.tapa img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+   Y va entera: el alto lo decide la foto, no el diseño. */
+.tapa{position:relative;width:100%;background:#0d1512;line-height:0}
+/* ENTERA, nunca recortada. Antes tenía un alto fijo con object-fit:cover y se
+   comía la mitad de la foto. Ahora manda la foto: ocupa todo el ancho y el alto
+   sale solo. */
+.tapa img{display:block;width:100%;height:auto}
+/* Las verticales son el único caso que no puede ir a todo el ancho: a 1400 px de
+   pantalla una foto 9:16 mediría más de dos metros de alto. Se centran con un
+   ancho razonable, pero tampoco se recortan. La clase la pone el JS de más abajo
+   cuando la foto termina de cargar y se sabe cómo es. */
+.tapa.alta img{max-width:min(100%,560px);margin:0 auto}
 /* Un velo apenas perceptible arriba y abajo: despega la portada de la barra de
    navegación y del fondo, sin tapar la foto. */
 .tapa::after{content:"";position:absolute;inset:0;pointer-events:none;
       background:linear-gradient(180deg,rgba(13,21,18,.30),rgba(13,21,18,0) 34%,rgba(13,21,18,.45))}
-/* Portada partida en dos cuando hay una segunda foto cargada. Es lo que salva a las
-   fotos verticales: a lo ancho se les recorta media imagen, y de a dos entran casi
-   enteras y se ven las dos cosas (el angosto y la cascada, por ejemplo). */
-.tapa.doble{display:grid;grid-template-columns:1fr 1fr;gap:3px}
-.tapa.doble img{height:100%}
-/* En el celular un poco más alta en proporción, para que la foto respire. Y la
-   portada doble vuelve a una sola foto: dos mitades en una pantalla angosta quedan
-   como dos tiritas donde no se ve nada. */
-@media (max-width:560px){
-  .tapa{height:62vw}
-  .tapa.doble{grid-template-columns:1fr}
-  .tapa.doble img:nth-child(2){display:none}
-}
-/* Las fotos que se van intercalando mientras se lee. Van a todo el ancho del texto. */
-.foto-larga{margin:26px 0;border-radius:16px;overflow:hidden;background:#0d1512}
-.foto-larga img{width:100%;height:clamp(200px,34vw,340px);object-fit:cover;display:block}
+/* Las fotos que se van intercalando mientras se lee. También enteras. */
+.foto-larga{margin:26px 0;border-radius:16px;overflow:hidden;background:#0d1512;line-height:0}
+.foto-larga img{display:block;width:100%;height:auto}
 
 /* ── El menú del sitio, igual que en la portada ──────────────────────────
    La ficha estaba suelta: sin menú no se podía ir al mapa, al blog ni a contacto
@@ -1757,6 +1750,18 @@ li{margin:7px 0}
   // páginas aparezcan en Analytics junto a las otras y con el nombre de la excursión.
   // El nombre viaja en un atributo (y no escrito acá adentro) para que un apóstrofo
   // en el nombre no rompa el script.
+
+  // Una foto vertical a todo el ancho mide un disparate de alto. No se recorta
+  // (eso no se hace acá): se le pone un ancho sensato y se centra. Hay que esperar
+  // a que cargue para saber cómo es, y contemplar que ya esté en la caché.
+  (function(){
+    var im = document.querySelector('.tapa img');
+    if (!im) return;
+    var ver = function(){
+      if (im.naturalHeight > im.naturalWidth) im.parentNode.classList.add('alta');
+    };
+    if (im.complete && im.naturalWidth) ver(); else im.addEventListener('load', ver);
+  })();
   document.getElementById('wpp').addEventListener('click', function(){
     try { if (typeof gtag === 'function')
       gtag('event','clic_whatsapp',{ desde:'ficha', excursion:this.dataset.excursion }); } catch(e){}

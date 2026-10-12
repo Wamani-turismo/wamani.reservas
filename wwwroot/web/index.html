@@ -284,7 +284,7 @@ section{padding:3.4rem 0}
 /* El menú de arriba es fijo. Sin esto, al tocar "Experiencias" el ancla deja el
    encabezado debajo de la barra y la sección arranca cortada: no se llegan a ver
    ni "Elegí tu aventura" ni el título. */
-#experiencias{scroll-margin-top:84px}
+#inicio,#experiencias,#mapa,#porque,#videos,#contacto{scroll-margin-top:84px}
 #experiencias .encabezado-seccion p{font-size:.94rem}
 /* "Jujuy a tu medida" entre los filtros. NO lleva la clase .filtro a propósito:
    esa clase la toma el JS que filtra el carrusel, y esto no filtra nada, lleva a
@@ -1693,9 +1693,15 @@ window.addEventListener("hashchange", abrirDesdeLaDireccion);
    JavaScript y la sección se va corriendo de lugar mientras se arman, así que una
    sola bajada cae en el lugar equivocado. Se corta sola al llegar, a los 2,5 s, o
    apenas la persona toca la rueda: si ya se está moviendo ella, manda ella. */
-if ((location.hash || "") === "#experiencias") {
-  var irAExperiencias = function () {
-    var s = document.getElementById("experiencias");
+/* Las secciones a las que llevan el menú y las fichas. Antes esto valía sólo para
+   #experiencias y por eso "Mapa" o "Quiénes somos" desde una ficha parecían no ir a
+   ningún lado: llegaban a la portada, pero el navegador calculaba el punto antes de
+   que terminaran de dibujarse las tarjetas y aterrizaba en cualquier parte. */
+var ANCLAS = ["inicio","experiencias","mapa","porque","videos","contacto"];
+var anclaInicial = (location.hash || "").replace("#", "");
+if (ANCLAS.indexOf(anclaInicial) >= 0) {
+  var irAlAncla = function () {
+    var s = document.getElementById(anclaInicial);
     if (!s) return;
     var hasta = Date.now() + 2500, corte = false;
     function frenar() { corte = true; }
@@ -1714,8 +1720,8 @@ if ((location.hash || "") === "#experiencias") {
     })();
   };
   // Si la página ya terminó de cargar, el evento "load" no vuelve a dispararse.
-  if (document.readyState === "complete") irAExperiencias();
-  else window.addEventListener("load", irAExperiencias);
+  if (document.readyState === "complete") irAlAncla();
+  else window.addEventListener("load", irAlAncla);
 }
 
 /* ═══ Formulario de contacto ═══

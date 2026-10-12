@@ -76,16 +76,22 @@ h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:b
 }
 
 /* ── portada ── */
-/* La portada se muestra lo más entera posible: la foto son las llamas y recortarla
-   de más se lleva puesto justo lo que hay que ver. Sólo se recorta cuando la
-   pantalla es muy alta. */
-.hero{position:relative;aspect-ratio:1920/1254;max-height:76vh;min-height:340px;
-  display:flex;align-items:flex-end;overflow:hidden}
-.hero>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.hero::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(to top,rgba(20,19,20,.93) 4%,rgba(20,19,20,.55) 42%,rgba(20,19,20,.1) 78%)}
-.hero .cont{position:relative;z-index:2;width:100%;max-width:860px;margin:0 auto;
-  padding:0 22px 44px;}
+/* La portada va ENTERA y a todo el ancho. Nada de recortarla: la foto son las
+   llamas y cualquier recorte se lleva puesto justo lo que hay que ver. El título
+   se apoya sobre el pie de la foto, que es donde el velo la oscurece. */
+.hero{position:relative}
+.hero>img{display:block;width:100%;height:auto}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to top,rgba(20,19,20,.93) 2%,rgba(20,19,20,.5) 30%,rgba(20,19,20,0) 62%)}
+.hero .cont{position:absolute;left:0;right:0;bottom:0;z-index:2;max-width:860px;margin:0 auto;
+  padding:0 22px 40px;}
+/* En pantallas angostas la foto queda bajita y el título no entra encima sin
+   taparla: ahí el texto baja y se apoya en el fondo de la página. */
+@media (max-width:620px){
+  .hero::after{display:none}
+  .hero .cont{position:static;padding:20px 22px 4px}
+  .hero .baja{text-shadow:none}
+}
 .hero h1{font-size:clamp(2.6rem,9vw,4.4rem);color:#fff;line-height:1.02;letter-spacing:-.01em}
 .hero .baja{color:#eceae4;opacity:.95;max-width:34ch;margin-top:16px;font-size:1.06rem;
   text-shadow:0 1px 14px rgba(14,12,11,.6)}

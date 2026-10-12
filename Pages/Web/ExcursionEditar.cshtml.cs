@@ -26,6 +26,12 @@ public class ExcursionEditarModel : PageModel
     [BindProperty]
     public List<string>? Quitar { get; set; }
 
+    // Cuál de las fotos de la galería pasa a ser la portada. El panel sólo dejaba
+    // poner portada subiendo un archivo nuevo: para usar una que ya estaba había que
+    // volver a subirla, y quedaba repetida.
+    [BindProperty]
+    public string? Portada { get; set; }
+
     public bool EsNueva => Ex.Id == 0;
 
     // Lista de fotos adicionales ya guardadas (para mostrarlas en el form)
@@ -119,6 +125,16 @@ public class ExcursionEditarModel : PageModel
                 .ToList();
             if (Quitar != null) lista = lista.Where(x => !Quitar.Contains(x)).ToList();
             lista.AddRange(subidas);
+
+            // Usar de portada: la que estaba sale de portada y baja a la galería, y la
+            // elegida sube. Así nunca queda una foto repetida arriba y abajo.
+            if (!string.IsNullOrWhiteSpace(Portada) && Portada != actual.Foto)
+            {
+                var antes = actual.Foto;
+                actual.Foto = Portada;
+                lista = lista.Where(x => x != Portada).ToList();
+                if (!string.IsNullOrWhiteSpace(antes) && !lista.Contains(antes)) lista.Insert(0, antes);
+            }
             actual.Fotos = string.Join("\n", lista);
         }
         await _db.SaveChangesAsync();

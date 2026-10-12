@@ -1359,8 +1359,15 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
     if (paletas.TryGetValue(e.Clave ?? "", out var pal)) { colFondo = pal.fondo; colPanel = pal.panel; }
 
     var queEs = e.EsTravesia ? " — Travesía en Jujuy" : " — Excursión en Jujuy";
-    var titulo = e.Nombre + (e.Nombre.Contains("Jujuy", StringComparison.OrdinalIgnoreCase)
-        ? "" : queEs) + " | Wamani Turismo";
+    var tituloBase = e.Nombre + (e.Nombre.Contains("Jujuy", StringComparison.OrdinalIgnoreCase)
+        ? "" : queEs);
+    // Google corta el título cerca de los 60 caracteres. Con un nombre largo como
+    // "Cascada Santuyoc y Angosto de Jaire", sumarle " | Wamani Turismo" daba 73 y el
+    // resultado salía cortado justo en la parte útil. Cuando no entra, se saca la
+    // marca: lo que no puede faltar es el nombre y la palabra que la gente busca.
+    var titulo = (tituloBase + " | Wamani Turismo").Length <= 60
+        ? tituloBase + " | Wamani Turismo"
+        : tituloBase;
     // Descripción para el resultado de Google: Google recorta cerca de 160 caracteres.
     var resumen = (e.Resumen ?? "").Trim();
     var desc = resumen.Length > 155 ? resumen.Substring(0, 152).TrimEnd() + "…" : resumen;

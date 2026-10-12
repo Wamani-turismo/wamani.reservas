@@ -281,6 +281,21 @@ section{padding:3.4rem 0}
 }
 .filtro:hover{border-color:var(--dorado)}
 .filtro.activo{background:var(--dorado);color:#1c2a24;border-color:var(--dorado)}
+/* El menú de arriba es fijo. Sin esto, al tocar "Experiencias" el ancla deja el
+   encabezado debajo de la barra y la sección arranca cortada: no se llegan a ver
+   ni "Elegí tu aventura" ni el título. */
+#experiencias{scroll-margin-top:84px}
+#experiencias .encabezado-seccion p{font-size:.94rem}
+/* "Jujuy a tu medida" entre los filtros. NO lleva la clase .filtro a propósito:
+   esa clase la toma el JS que filtra el carrusel, y esto no filtra nada, lleva a
+   otra página. La flecha es la que avisa que se sale de acá. */
+.filtro-link{
+  display:inline-flex;align-items:center;gap:.35rem;text-decoration:none;
+  border:1.5px solid rgba(216,192,150,.55);background:rgba(216,192,150,.07);
+  color:var(--dorado);border-radius:999px;padding:.45rem 1.15rem;
+  font-family:'Quicksand',sans-serif;font-weight:700;font-size:.88rem;transition:.2s;
+}
+.filtro-link:hover{background:var(--dorado);color:#1c2a24;border-color:var(--dorado)}
 
 .carrusel-marco{position:relative}
 .carrusel{
@@ -843,11 +858,12 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
       <h2>Excursiones y travesías que <em>pocos conocen</em></h2>
       <p>Tocá una tarjeta y se abre la guía completa: itinerario, qué incluye y qué llevar.</p>
     </div>
-    <div class="filtros" role="tablist">
+    <div class="filtros">
       <button class="filtro activo" data-f="todas">Todas</button>
       <button class="filtro" data-f="dia">Excursiones</button>
       <button class="filtro" data-f="trav">Travesías</button>
       <button class="filtro filtro-selecta" data-f="selecta">✦ Wamani Selecta</button>
+      <a class="filtro-link" href="/a-medida/">Jujuy a tu medida <span aria-hidden="true">→</span></a>
     </div>
     <div class="carrusel-marco">
       <button class="flecha-car izq" aria-label="Anterior" onclick="moverCarrusel(-1)">‹</button>

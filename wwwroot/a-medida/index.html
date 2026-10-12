@@ -76,7 +76,11 @@ h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:b
 }
 
 /* ── portada ── */
-.hero{position:relative;min-height:min(78vh,560px);display:flex;align-items:flex-end;overflow:hidden}
+/* La portada se muestra lo más entera posible: la foto son las llamas y recortarla
+   de más se lleva puesto justo lo que hay que ver. Sólo se recorta cuando la
+   pantalla es muy alta. */
+.hero{position:relative;aspect-ratio:1920/1254;max-height:76vh;min-height:340px;
+  display:flex;align-items:flex-end;overflow:hidden}
 .hero>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .hero::after{content:"";position:absolute;inset:0;
   background:linear-gradient(to top,rgba(20,19,20,.93) 4%,rgba(20,19,20,.55) 42%,rgba(20,19,20,.1) 78%)}
@@ -106,9 +110,12 @@ h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:b
 
 /* ── las cuatro regiones ── */
 .region{--c:#444;--a:#aaa}
-.region>img{width:100%;height:clamp(180px,34vw,290px);object-fit:cover}
-.region .filete{height:3px;background:var(--a)}
-.region .cuerpo{background:var(--c);padding-block:32px 34px}
+/* ALTO AUTOMÁTICO, no recortada: cada foto trae el degradado grabado en el pixel
+   y termina justo en el color de su región. Si se le fija un alto y se recorta,
+   se pierde el final del degradado y la foto choca de golpe contra el bloque de
+   color. Por eso tampoco hay ya una línea entre la foto y el texto. */
+.region>img{width:100%;height:auto}
+.region .cuerpo{background:var(--c);padding-block:26px 34px}
 .region .enc{display:flex;align-items:baseline;gap:14px;margin-bottom:6px;flex-wrap:wrap}
 .region h2{font-size:clamp(1.9rem,6vw,2.5rem);color:#fff;text-transform:uppercase;letter-spacing:.02em}
 .region .num{font-family:var(--display);font-size:1.05rem;color:var(--a);font-style:italic}
@@ -127,7 +134,9 @@ h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:b
 .v{--c:#3e3d1a;--a:#c9b03c}
 
 /* ── Jujuy entre Copas ── */
-.copas{background:#3a1730;padding-block:44px 42px}
+.copas{background:#3a1730}
+.copas>img{width:100%;height:auto}
+.copas .cuerpo{padding-block:26px 42px}
 .copas h2{font-size:clamp(1.7rem,5vw,2.2rem);color:#fff;margin:6px 0 10px}
 .copas .frase{font-family:var(--display);font-style:italic;font-size:clamp(1.05rem,3.2vw,1.25rem);
   color:#e3b7d2;margin-bottom:16px}
@@ -206,7 +215,6 @@ h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:b
 
 <section class="region q">
   <img src="img/quebrada.jpg" alt="Cerros de colores de la Quebrada de Humahuaca, Jujuy" loading="lazy">
-  <div class="filete"></div>
   <div class="cuerpo"><div class="wrap">
     <div class="enc"><h2>Quebrada</h2><span class="num">uno</span></div>
     <p class="frase">El Jujuy que ya viste en fotos, y todo lo que las fotos no cuentan.</p>
@@ -218,7 +226,6 @@ h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:b
 
 <section class="region p">
   <img src="img/puna.jpg" alt="Horizonte de la Puna jujeña por encima de los 3.500 metros" loading="lazy">
-  <div class="filete"></div>
   <div class="cuerpo"><div class="wrap">
     <div class="enc"><h2>Puna</h2><span class="num">dos</span></div>
     <p class="frase">El silencio más grande que vas a escuchar en tu vida.</p>
@@ -230,7 +237,6 @@ h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:b
 
 <section class="region y">
   <img src="img/yungas.jpg" alt="Selva de montaña de las Yungas de Jujuy con niebla entre los árboles" loading="lazy">
-  <div class="filete"></div>
   <div class="cuerpo"><div class="wrap">
     <div class="enc"><h2>Yungas</h2><span class="num">tres</span></div>
     <p class="frase">La selva que nadie espera encontrar en Jujuy.</p>
@@ -242,7 +248,6 @@ h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:b
 
 <section class="region v">
   <img src="img/valles.jpg" alt="Bosques y campo abierto de los Valles de Jujuy" loading="lazy">
-  <div class="filete"></div>
   <div class="cuerpo"><div class="wrap">
     <div class="enc"><h2>Valles</h2><span class="num">cuatro</span></div>
     <p class="frase">La región que casi nadie tiene en el plan y a todos les termina gustando.</p>
@@ -252,14 +257,16 @@ h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:b
   </div></div>
 </section>
 
-<section class="copas"><div class="wrap">
+<section class="copas">
+  <img src="img/copas.jpg" alt="Viñedo de altura en Jujuy, con los cerros detrás" loading="lazy">
+  <div class="cuerpo"><div class="wrap">
   <span class="lab">Lo nuevo de Wamani</span>
   <h2>Jujuy entre Copas</h2>
   <p class="frase">Nuestra ruta del vino, en una provincia donde la vid crece donde casi nada crece.</p>
   <p>En Jujuy se hace vino a alturas en las que la mayoría de los cultivos no prosperan. Esa pelea contra el clima, la altura y el sol es la que le da a estos vinos un carácter que no tiene ningún otro vino argentino, y es también lo que convirtió a la provincia en uno de los destinos enológicos que más crece del país.</p>
   <p>Armamos recorridos por bodegas de distintas zonas, con cata, maridaje y charla con quienes hacen el vino. De medio día o de varias jornadas, según cuánto quieras entrar en el tema. <b>Pasamos a buscarte y te dejamos de nuevo en tu alojamiento.</b></p>
   <p>Es la mejor opción si ya conocés Jujuy y querés una entrada distinta, y también si viajás por el vino y no sabías que acá también se hace.</p>
-</div></section>
+</div></div></section>
 
 <section class="wrap selecta">
   <div class="enc"><h2>Wamani Selecta</h2><span class="lab">Experiencias exclusivas</span></div>
@@ -304,7 +311,7 @@ h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:b
    al leer la consulta, se sabe que la persona llegó por esta página y no por la
    portada. Es la única forma de medir si "a medida" trae gente o no. */
 (function(){
-  var msg = encodeURIComponent("¡Hola! Vi la página de Jujuy a tu medida y quiero armar mi viaje.");
+  var msg = encodeURIComponent("¡Hola! Quiero armar mi viaje a Jujuy y me gustaría que me ayuden a planificarlo.");
   ["wpp-arriba","wpp-abajo"].forEach(function(id){
     var a = document.getElementById(id);
     if (a) a.href = "https://wa.me/5491178898516?text=" + msg;

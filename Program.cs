@@ -1370,8 +1370,31 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
     // leer el WhatsApp, si la consulta salió de estas páginas nuevas o del sitio de siempre.
     var msg = Uri.EscapeDataString("¡Hola! Estuve viendo la página de " + e.Nombre + " y quiero consultar.");
 
+
+    // ── SEO de los encabezados ────────────────────────────────────────────────
+    // El nombre propio ("Conociendo las Yungas") no es lo que la gente escribe en
+    // Google: escribe "excursion yungas jujuy". Por eso el H1 lleva el nombre y
+    // debajo, en chico, la frase que sí se busca, y cada H2 apunta a una búsqueda
+    // distinta en vez de repetir cinco veces la misma palabra, que es justo lo que
+    // Google penaliza.
+    // Iruya-Nazareno transcurre en Salta, no en Jujuy: la zona no puede ir fija.
+    var zona = (e.Clave ?? "").Contains("iruya") ? "Salta" : "Jujuy";
+    var esTrav = e.EsTravesia;
+    var art = esTrav ? "la travesía" : "la excursión";
+    // El Chip dice "Travesía · 5 días", "3 días" o "Día completo"; nos quedamos
+    // sólo con la duración para armar la frase.
+    var durTxt = (e.Chip ?? "").Replace("Travesía · ", "").Replace("Travesía", "").Trim();
+    if (durTxt.Length == 0) durTxt = esTrav ? "varios días" : "un día";
+    durTxt = char.ToLower(durTxt[0]) + durTxt.Substring(1);
+    var subtitulo = (esTrav ? "Travesía" : "Excursión") + " de " + durTxt +
+        " en " + zona + ", Argentina";
+    var h2Itinerario = "Itinerario de " + art + " " + e.Nombre;
+    var h2Incluye    = "Qué incluye " + art;
+    var h2Llevar     = "Qué llevar a " + (esTrav ? "una travesía" : "una excursión") + " en " + zona;
+    var h2Faq        = "Preguntas frecuentes sobre " + art + " " + e.Nombre;
+    var h2Otras      = "Otras excursiones y travesías en Jujuy";
     var llevar = string.IsNullOrWhiteSpace(e.Llevar)
-        ? "" : "<h2>Qué llevar</h2><p class='resumen'>" + Esc(e.Llevar) + "</p>";
+        ? "" : "<h2>" + Esc(h2Llevar) + "</h2><p class='resumen'>" + Esc(e.Llevar) + "</p>";
     var datos = Lineas(e.Datos);
     var chips = string.Concat(datos.Select(d => $"<span class=\"dato\">{Esc(d)}</span>"));
     var plazo = e.EsTravesia ? 7 : 4;
@@ -1431,7 +1454,7 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
         "<span class=\"otra-n\">" + Esc(o.Nombre) + "</span>" +
         "<span class=\"otra-c\">" + Esc(o.Chip) + "</span></a>"));
     var otrasBloque = otras.Count == 0 ? "" :
-        "<h2>Otras experiencias</h2><div class=\"otras\">" + otrasHtml + "</div>";
+        "<h2>" + Esc(h2Otras) + "</h2><div class=\"otras\">" + otrasHtml + "</div>";
 
     // ═══════════════════════════════════════════════════════════════════
     //  Las preguntas frecuentes.
@@ -1477,7 +1500,7 @@ p{color:rgba(236,229,212,.72);margin-bottom:28px}
     preguntas.Add(("¿Cómo se reserva?",
         $"Con una seña del 50 % del valor total. El 50 % restante se abona hasta {plazo} días antes de la fecha. Si cancelás, la seña no es reembolsable. El valor te lo pasamos por WhatsApp."));
 
-    var faqBloque = "<h2>Preguntas frecuentes</h2><div class=\"faq\">" +
+    var faqBloque = "<h2>" + Esc(h2Faq) + "</h2><div class=\"faq\">" +
         string.Concat(preguntas.Select(q =>
             "<details><summary>" + Esc(q.P) + "</summary><div class=\"faq-r\">" + Esc(q.R) + "</div></details>")) +
         "</div>";
@@ -1586,6 +1609,12 @@ a{color:var(--dorado)}
   .menu-in{justify-content:space-between}
 }
 h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,5vw,2.7rem);line-height:1.15;margin-bottom:14px}
+/* El H1 lleva el nombre grande y, debajo y en chico, la frase que la gente sí
+   escribe en Google ("Excursión de 3 días en Jujuy"). Es una sola etiqueta h1:
+   el buscador lee todo, el visitante ve el nombre y la aclaración. */
+h1 .h1-sub{display:block;font-family:'Quicksand',system-ui,sans-serif;
+  font-size:.92rem;font-weight:600;letter-spacing:.01em;line-height:1.35;
+  color:var(--dorado);opacity:.72;margin-top:7px;text-transform:none}
 h2{font-family:'Playfair Display',Georgia,serif;font-size:1.35rem;color:var(--dorado);margin:32px 0 10px}
 .chip{display:inline-block;background:var(--verde);border:1px solid var(--linea);color:var(--dorado);
       padding:5px 14px;border-radius:999px;font-size:.82rem;font-weight:600;margin-bottom:16px}
@@ -1643,12 +1672,12 @@ li{margin:7px 0}
 {{tapa}}
 <div class="envoltorio">
   <span class="chip">{{Esc(e.Chip)}}</span>
-  <h1>{{Esc(e.Nombre)}}</h1>
+  <h1>{{Esc(e.Nombre)}}<span class="h1-sub">{{Esc(subtitulo)}}</span></h1>
   <p class="resumen">{{Esc(resumen)}}</p>
   <div class="datos">{{chips}}</div>
-  {{Bloque("Itinerario", Items(e.Itinerario))}}
+  {{Bloque(h2Itinerario, Items(e.Itinerario))}}
   {{FotoSuelta(0)}}
-  {{Bloque("Qué incluye", Items(e.Incluye))}}
+  {{Bloque(h2Incluye, Items(e.Incluye))}}
   {{FotoSuelta(1)}}
   {{llevar}}
   {{FotoSuelta(2)}}

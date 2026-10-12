@@ -193,6 +193,27 @@ nav.menu a:hover{opacity:1;color:var(--dorado)}
 }
 .hero-inner{max-width:1100px;color:#fff;margin-top:2vh}
 .hero-monte{position:relative;z-index:3;height:52px;width:auto;margin:0 auto 1rem;filter:drop-shadow(0 3px 12px rgba(0,0,0,.5));animation:aparecer .8s ease both}
+/* ── Jujuy a tu medida: la puerta para el que no sabe qué elegir ──
+   Dorada y no coral: el coral es el botón de reservar y no conviene que dos
+   cosas distintas griten lo mismo. Ver el botón "Soy agencia", misma regla. */
+.franja-medida{padding:2.6rem 1.25rem .4rem;display:flex;justify-content:center}
+.medida-cta{display:block;text-align:center;text-decoration:none;max-width:640px;width:100%;
+  padding:1.6rem 1.5rem 1.4rem;border:1px solid var(--dorado);border-radius:20px;
+  background:linear-gradient(180deg,rgba(216,192,150,.08),rgba(216,192,150,.02));
+  transition:border-color .25s ease,transform .25s ease,background .25s ease}
+.medida-cta:hover{transform:translateY(-3px);background:rgba(216,192,150,.13)}
+.medida-cta .mini{display:block;font-size:.72rem;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--dorado);opacity:.85;margin-bottom:.5rem}
+.medida-cta .tit{display:block;font-family:'Playfair Display',Georgia,serif;font-weight:700;
+  font-size:clamp(1.7rem,5.2vw,2.3rem);line-height:1.1;color:var(--texto)}
+.medida-cta .tit em{font-style:italic;font-weight:500;color:var(--dorado)}
+.medida-cta .baja{display:block;color:var(--texto-suave);margin-top:.55rem;font-size:.98rem}
+.medida-cta .flecha{display:inline-block;margin-top:1rem;font-weight:700;font-size:.92rem;
+  color:var(--dorado);letter-spacing:.01em}
+@media (max-width:560px){
+  .franja-medida{padding-top:2rem}
+  .medida-cta{padding:1.3rem 1.1rem 1.2rem}
+}
 .hero-eyebrow{
   position:relative;z-index:3;
   display:block;color:var(--dorado);font-weight:700;letter-spacing:.34em;
@@ -801,6 +822,19 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
   <a class="hero-flecha" href="#experiencias" aria-label="Bajar">▾</a>
 </section>
 
+
+<!-- ═════════════ JUJUY A TU MEDIDA ═════════════
+     Va ANTES del listado a propósito: el que entra sin saber qué elegir se
+     topa primero con la puerta que no lo obliga a elegir nada. El que ya
+     sabe, sigue de largo dos centímetros más abajo. -->
+<section class="franja-medida">
+  <a class="medida-cta" href="/a-medida/">
+    <span class="mini">¿Todavía no sabés qué elegir?</span>
+    <span class="tit">Jujuy <em>a tu medida</em></span>
+    <span class="baja">Contanos cuántos días tenés y te armamos el viaje entero</span>
+    <span class="flecha">Ver cómo lo armamos →</span>
+  </a>
+</section>
 <!-- ═════════════ EXPERIENCIAS (carrusel + modal con guía) ═════════════ -->
 <section id="experiencias" style="padding-top:1rem">
   <div class="contenedor rev">

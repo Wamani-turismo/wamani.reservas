@@ -1802,6 +1802,17 @@ app.MapGet("/sitemap.xml", (AppDbContext db, IWebHostEnvironment env) =>
         sb.AppendLine("  </url>");
     }
 
+    // "Jujuy a tu medida" es una página estática propia (wwwroot/a-medida). Va
+    // aparte de las de arriba porque por ahora existe SOLO en castellano: si se
+    // le declararan las versiones en otros idiomas, Google leería cuatro copias
+    // iguales y terminaría mostrando menos, no más.
+    sb.AppendLine("  <url>");
+    sb.AppendLine($"    <loc>{baseUrl}/a-medida/</loc>");
+    sb.AppendLine($"    <lastmod>{hoy}</lastmod>");
+    sb.AppendLine("    <changefreq>monthly</changefreq>");
+    sb.AppendLine("    <priority>0.9</priority>");
+    sb.AppendLine("  </url>");
+
     // Una entrada por excursión activa.
     foreach (var clave in db.ExcursionesWeb.Where(x => x.Activa).OrderBy(x => x.Orden)
                             .Select(x => x.Clave).ToList())

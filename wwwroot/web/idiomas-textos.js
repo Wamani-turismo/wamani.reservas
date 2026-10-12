@@ -39,6 +39,15 @@ en: {
   },
 
   textos: {
+    "¿Cuánto dura la excursión?": "How long is the tour?",
+    "¿Cuánto dura la travesía?": "How long is the trek?",
+    "Durante el traslado te acompañamos con snacks y refrigerios. Las comidas principales no están incluidas salvo que se aclare en «Qué incluye».": "Snacks and refreshments are provided during the journey. Main meals are not included unless stated under «What the tour includes».",
+    "Te acompañamos con snacks durante el traslado del primer día. El resto de las comidas es el que figura en «Qué incluye».": "Snacks are provided during the first day's journey. All other meals are the ones listed under «What the trek includes».",
+    "Durante toda la travesía te acompañamos con snacks y frutas. Las comidas principales son las que figuran en «Qué incluye».": "Snacks and fruit are provided throughout the trek. Main meals are the ones listed under «What the trek includes».",
+    "Con una seña del 50 % del valor total. El 50 % restante se abona hasta 4 días antes de la fecha. Si cancelás, la seña no es reembolsable. El valor te lo pasamos por WhatsApp.": "With a 50% deposit of the total price. The remaining 50% is paid up to 4 days before the date. If you cancel, the deposit is non-refundable. We send you the price on WhatsApp.",
+    "Con una seña del 50 % del valor total. El 50 % restante se abona hasta 7 días antes de la fecha. Si cancelás, la seña no es reembolsable. El valor te lo pasamos por WhatsApp.": "With a 50% deposit of the total price. The remaining 50% is paid up to 7 days before the date. If you cancel, the deposit is non-refundable. We send you the price on WhatsApp.",
+    "Se reserva con una seña del 50 % y el saldo se abona hasta 4 días antes de realizar la excursión. En caso de cancelar, se retendrá la totalidad de la seña.": "Booking takes a 50% deposit, with the balance paid up to 4 days before the tour. If you cancel, the full deposit is retained.",
+    "Se reserva con una seña del 50 % y el saldo se abona hasta 7 días antes de realizar la travesía. En caso de cancelar, se retendrá la totalidad de la seña.": "Booking takes a 50% deposit, with the balance paid up to 7 days before the trek. If you cancel, the full deposit is retained.",
     /* ── Fichas de excursión (/excursiones/...) ── */
     "Itinerario de la excursión": "Itinerary of the tour",
     "Itinerario de la travesía": "Itinerary of the trek",
@@ -578,6 +587,15 @@ fr: {
   },
 
   textos: {
+    "¿Cuánto dura la excursión?": "Combien de temps dure l'excursion ?",
+    "¿Cuánto dura la travesía?": "Combien de temps dure la traversée ?",
+    "Durante el traslado te acompañamos con snacks y refrigerios. Las comidas principales no están incluidas salvo que se aclare en «Qué incluye».": "Des collations et des rafraîchissements sont fournis pendant le trajet. Les repas principaux ne sont pas inclus, sauf indication contraire dans «Ce que comprend l'excursion».",
+    "Te acompañamos con snacks durante el traslado del primer día. El resto de las comidas es el que figura en «Qué incluye».": "Des collations sont fournies pendant le trajet du premier jour. Les autres repas sont ceux indiqués dans «Ce que comprend la traversée».",
+    "Durante toda la travesía te acompañamos con snacks y frutas. Las comidas principales son las que figuran en «Qué incluye».": "Des collations et des fruits sont fournis tout au long de la traversée. Les repas principaux sont ceux indiqués dans «Ce que comprend la traversée».",
+    "Con una seña del 50 % del valor total. El 50 % restante se abona hasta 4 días antes de la fecha. Si cancelás, la seña no es reembolsable. El valor te lo pasamos por WhatsApp.": "Avec un acompte de 50 % du montant total. Les 50 % restants se règlent jusqu'à 4 jours avant la date. En cas d'annulation, l'acompte n'est pas remboursable. Nous vous communiquons le prix par WhatsApp.",
+    "Con una seña del 50 % del valor total. El 50 % restante se abona hasta 7 días antes de la fecha. Si cancelás, la seña no es reembolsable. El valor te lo pasamos por WhatsApp.": "Avec un acompte de 50 % du montant total. Les 50 % restants se règlent jusqu'à 7 jours avant la date. En cas d'annulation, l'acompte n'est pas remboursable. Nous vous communiquons le prix par WhatsApp.",
+    "Se reserva con una seña del 50 % y el saldo se abona hasta 4 días antes de realizar la excursión. En caso de cancelar, se retendrá la totalidad de la seña.": "La réservation se fait avec un acompte de 50 %, le solde étant réglé jusqu'à 4 jours avant l'excursion. En cas d'annulation, la totalité de l'acompte est retenue.",
+    "Se reserva con una seña del 50 % y el saldo se abona hasta 7 días antes de realizar la travesía. En caso de cancelar, se retendrá la totalidad de la seña.": "La réservation se fait avec un acompte de 50 %, le solde étant réglé jusqu'à 7 jours avant la traversée. En cas d'annulation, la totalité de l'acompte est retenue.",
     /* ── Fichas de excursión (/excursiones/...) ── */
     "Itinerario de la excursión": "Itinéraire de l'excursion",
     "Itinerario de la travesía": "Itinéraire de la traversée",
@@ -1108,6 +1126,15 @@ pt: {
   },
 
   textos: {
+    "¿Cuánto dura la excursión?": "Quanto dura a excursão?",
+    "¿Cuánto dura la travesía?": "Quanto dura a travessia?",
+    "Durante el traslado te acompañamos con snacks y refrigerios. Las comidas principales no están incluidas salvo que se aclare en «Qué incluye».": "Durante o traslado oferecemos lanches e bebidas. As refeições principais não estão incluídas, salvo indicação em «O que a excursão inclui».",
+    "Te acompañamos con snacks durante el traslado del primer día. El resto de las comidas es el que figura en «Qué incluye».": "Oferecemos lanches durante o traslado do primeiro dia. As demais refeições são as indicadas em «O que a travessia inclui».",
+    "Durante toda la travesía te acompañamos con snacks y frutas. Las comidas principales son las que figuran en «Qué incluye».": "Durante toda a travessia oferecemos lanches e frutas. As refeições principais são as indicadas em «O que a travessia inclui».",
+    "Con una seña del 50 % del valor total. El 50 % restante se abona hasta 4 días antes de la fecha. Si cancelás, la seña no es reembolsable. El valor te lo pasamos por WhatsApp.": "Com um sinal de 50 % do valor total. Os 50 % restantes são pagos até 4 dias antes da data. Em caso de cancelamento, o sinal não é reembolsável. Enviamos o valor por WhatsApp.",
+    "Con una seña del 50 % del valor total. El 50 % restante se abona hasta 7 días antes de la fecha. Si cancelás, la seña no es reembolsable. El valor te lo pasamos por WhatsApp.": "Com um sinal de 50 % do valor total. Os 50 % restantes são pagos até 7 dias antes da data. Em caso de cancelamento, o sinal não é reembolsável. Enviamos o valor por WhatsApp.",
+    "Se reserva con una seña del 50 % y el saldo se abona hasta 4 días antes de realizar la excursión. En caso de cancelar, se retendrá la totalidad de la seña.": "Reserva-se com um sinal de 50 % e o saldo é pago até 4 dias antes da excursão. Em caso de cancelamento, retém-se a totalidade do sinal.",
+    "Se reserva con una seña del 50 % y el saldo se abona hasta 7 días antes de realizar la travesía. En caso de cancelar, se retendrá la totalidad de la seña.": "Reserva-se com um sinal de 50 % e o saldo é pago até 7 dias antes da travessia. Em caso de cancelamento, retém-se a totalidade do sinal.",
     /* ── Fichas de excursión (/excursiones/...) ── */
     "Itinerario de la excursión": "Itinerário da excursão",
     "Itinerario de la travesía": "Itinerário da travessia",

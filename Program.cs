@@ -1648,7 +1648,9 @@ a{color:var(--dorado)}
 .sel-idioma button + button{border-left:1px solid var(--linea)}
 .sel-idioma button:hover{color:var(--dorado)}
 .sel-idioma button.on{color:var(--dorado);background:rgba(216,192,150,.14)}
-@media (max-width:760px){.sel-idioma button{padding:.3rem .34rem;font-size:.74rem}}
+@media (max-width:760px){
+  .sel-idioma button{padding:.3rem .34rem;font-size:.74rem}
+}
 @media (max-width:760px){
   .menu-links{display:none}
   .menu-in{justify-content:space-between}

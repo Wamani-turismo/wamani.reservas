@@ -1691,13 +1691,13 @@ window.addEventListener("hashchange", abrirDesdeLaDireccion);
    Por eso la ficha enlaza a /#experiencias.
    Hay que insistir un rato en vez de bajar una sola vez: las tarjetas se dibujan con
    JavaScript y la sección se va corriendo de lugar mientras se arman, así que una
-   sola bajada cae en el lugar equivocado. Se corta sola al llegar, a los 800 ms, o
+   sola bajada cae en el lugar equivocado. Se corta sola al llegar, a los 2,5 s, o
    apenas la persona toca la rueda: si ya se está moviendo ella, manda ella. */
 if ((location.hash || "") === "#experiencias") {
   var irAExperiencias = function () {
     var s = document.getElementById("experiencias");
     if (!s) return;
-    var hasta = Date.now() + 800, corte = false;
+    var hasta = Date.now() + 2500, corte = false;
     function frenar() { corte = true; }
     window.addEventListener("wheel", frenar, { once: true, passive: true });
     window.addEventListener("touchstart", frenar, { once: true, passive: true });

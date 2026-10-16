@@ -113,6 +113,96 @@ else
         }
     </div>
 
+    @* ---------------------------------------------------------------------------
+       SI VA UNA SOLA PERSONA
+       La pregunta de todos los días: alguien quiere viajar solo y hay que decirle un
+       precio. El auto, el chofer-guía, su comida y su seguro salen lo mismo vaya uno
+       o vayan cuatro; lo único que se ahorra la salida es lo que iba a gastar el
+       segundo pasajero. De ahí salen los dos números: lo que CUESTA de verdad llevar
+       a uno (abajo de eso se pierde plata) y el precio SUGERIDO, que es cobrarle lo
+       del mínimo menos ese ahorro: así la salida deja la misma ganancia que si fueran
+       dos y el pasajero solo no paga una comida que nadie se comió.
+       No aparece en La Combi (se vende por butaca), ni en las travesías ni en los
+       viajes a medida: ahí el precio se arma aparte.
+       --------------------------------------------------------------------------- *@
+    @if (Model.MuestraSingle)
+    {
+        <div class="card">
+            <h2>Si va una sola persona</h2>
+            <p class="hint" style="margin-top:0">
+                El auto y el chofer-guía se pagan igual vaya uno o vayan @Model.PersonasPorAuto.
+                Lo único que se ahorra es lo que iba a gastar el segundo pasajero.
+            </p>
+
+            <div class="fin-cards" style="margin-top:14px">
+                <div class="fin-card"><div class="fin-label">Cuesta llevar a uno</div><div class="fin-val" style="color:var(--warn)" id="sgCosto">$ 0</div></div>
+                <div class="fin-card fin-card-net"><div class="fin-label">Precio sugerido</div><div class="fin-val" style="color:var(--accent)" id="sgSugerido">$ 0</div></div>
+                <div class="fin-card"><div class="fin-label">Ganancia</div><div class="fin-val" id="sgGanancia">$ 0</div></div>
+                <div class="fin-card"><div class="fin-label">Descuento</div><div class="fin-val" id="sgDescuento">0%</div></div>
+            </div>
+
+            <div class="aviso-ok" style="margin-top:14px">
+                <span>
+                    Hoy un pasajero solo paga <strong id="sgLleno">$ 0</strong> (como @e.MinimoPersonas).
+                    Cobrándole <strong id="sgSugerido2">$ 0</strong> la salida deja
+                    <strong id="sgGanancia2">$ 0</strong>, prácticamente lo mismo que deja
+                    con @e.MinimoPersonas pasajeros (<span id="sgGananciaMin">$ 0</span>).
+                </span>
+                <div class="hint" style="margin-top:6px">
+                    Abajo de <strong id="sgPiso">$ 0</strong> se pierde plata. Entre ese piso y el
+                    sugerido hay <strong id="sgAire">$ 0</strong> para negociar, pero cada peso de
+                    ahí sale de la ganancia.
+                </div>
+            </div>
+
+            <div class="table-wrap" style="margin-top:16px">
+                <table class="tabla">
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th>Cómo se cuenta</th>
+                            <th class="num">Precio</th>
+                            <th class="num">Con 1 pasajero</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @for (int i = 0; i < Model.Items.Count; i++)
+                    {
+                        <tr>
+                            <td data-label="Concepto">@Model.Items[i].Nombre</td>
+                            <td data-label="Cómo se cuenta"><span class="cliente-sub">@Model.ComoSeCuenta(Model.Items[i])</span></td>
+                            <td class="num" data-label="Precio">@Money(Model.Items[i].Precio)</td>
+                            <td class="num" data-label="Con 1 pasajero" data-single="@i">$ 0</td>
+                        </tr>
+                    }
+                    @for (int i = 0; i < Model.Etapas.Count; i++)
+                    {
+                        <tr>
+                            <td data-label="Concepto">@Model.TituloEtapa(Model.Etapas[i])</td>
+                            <td data-label="Cómo se cuenta"><span class="cliente-sub">@Model.ComoSeCuentaEtapa(Model.Etapas[i])</span></td>
+                            <td class="num" data-label="Precio">@Money(Model.Etapas[i].PrecioPorPersona)</td>
+                            <td class="num" data-label="Con 1 pasajero" data-singleetapa="@i">$ 0</td>
+                        </tr>
+                    }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Total con 1 pasajero</th>
+                            <th></th>
+                            <th></th>
+                            <th class="num" id="sgCostoDetalle">$ 0</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <p class="hint" style="margin-top:10px">
+                ⚠️ Si la salida duerme fuera, el hospedaje por persona está pensado en base doble.
+                Una habitación para uno casi nunca cuesta la mitad: preguntá el precio real antes de cerrar.
+            </p>
+        </div>
+    }
+
     <!-- De dónde sale el costo: los costos sueltos + todo lo que se contrata para el grupo -->
     <div class="card">
         <h2>De dónde sale el costo</h2>
@@ -296,6 +386,40 @@ else
                 r.classList.toggle("activo", parseInt(r.getAttribute("data-pax")) === pax);
             });
         }
+
+        // ---- Si va una sola persona ---------------------------------------------
+        // Usa las MISMAS funciones de arriba con p = 1, así no hay una segunda fórmula
+        // del costo dando vueltas. El ahorro es lo que la salida deja de gastar por no
+        // llevar al segundo pasajero; el sugerido es el precio del mínimo menos ese
+        // ahorro, que es lo que deja la ganancia igual.
+        (function(){
+            if (!document.getElementById("sgCosto")) return;
+            var costo1 = costo(1);
+            var ahorro = costo(MIN) - costo1;
+            var lleno = PRECIO * MIN;
+            var sugerido = lleno - ahorro;
+            var desc = lleno > 0 ? Math.round((1 - sugerido / lleno) * 100) : 0;
+            function set(id, txt){ var n = document.getElementById(id); if (n) n.textContent = txt; }
+            set("sgCosto", money(costo1));
+            set("sgPiso", money(costo1));
+            set("sgSugerido", money(sugerido));
+            set("sgSugerido2", money(sugerido));
+            set("sgGanancia", money(sugerido - costo1));
+            set("sgGanancia2", money(sugerido - costo1));
+            set("sgGananciaMin", money(lleno - costo(MIN)));
+            set("sgLleno", money(lleno));
+            set("sgAire", money(sugerido - costo1));
+            set("sgDescuento", desc + "%");
+            set("sgCostoDetalle", money(costo1));
+            document.querySelectorAll("[data-single]").forEach(function(td){
+                var c = COSTOS[parseInt(td.getAttribute("data-single"))];
+                if (c) td.textContent = money(montoCosto(c, 1));
+            });
+            document.querySelectorAll("[data-singleetapa]").forEach(function(td){
+                var et = ETAPAS[parseInt(td.getAttribute("data-singleetapa"))];
+                if (et) td.textContent = money(montoEtapa(et, 1));
+            });
+        })();
 
         pintar();
     </script>

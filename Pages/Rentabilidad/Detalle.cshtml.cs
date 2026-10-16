@@ -26,6 +26,16 @@ public class DetalleModel : PageModel
     // ¿Hay algo con lo que calcular?
     public bool SinCostos => Items.Count == 0 && Etapas.Count == 0;
 
+    // ¿Mostramos el bloque "si va una sola persona"? Sólo en las excursiones del
+    // catálogo. En La Combi se vende por butaca (el precio del single no existe), en
+    // las travesías el precio se arma aparte, y en los viajes a medida se escribe a
+    // mano en cada reserva. Con mínimo 1 tampoco hace falta: ya es el precio de uno.
+    public bool MuestraSingle =>
+        !SinCostos &&
+        !Excursion.EsCombi && !Excursion.EsTravesia &&
+        !Excursion.EsAMedida && !Excursion.EsPersonalizada &&
+        Excursion.MinimoPersonas >= 2 && Excursion.PrecioPorPersona > 0;
+
     // Cuánta gente hace falta para no perder plata. 0 = no cierra ni con la excursión llena.
     public int ParaEmpatar => Wamani.Reservas.Services.RentabilidadCalc
         .PersonasParaEmpatar(Excursion, Items, Etapas);

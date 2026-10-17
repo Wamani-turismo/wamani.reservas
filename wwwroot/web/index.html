@@ -301,9 +301,13 @@ section{padding:3.4rem 0}
    va a otra página. Abajo y ancho se lee como lo que es, la salida para el
    que ninguna de las cuatro le cierra. */
 .filtro-link-ancho{
-  display:flex;justify-content:center;width:100%;max-width:520px;
+  display:flex;justify-content:center;align-items:center;flex-wrap:wrap;text-align:center;width:100%;max-width:580px;
   margin:-.5rem auto 1.4rem;padding:.6rem 1.15rem;
 }
+/* La bajada al lado de la flecha: misma barra, un tono mas bajo, para que el
+   nombre siga mandando y la frase explique. Si no entra, baja sola a la linea
+   de abajo (flex-wrap) en vez de desbordar. */
+.filtro-link-ancho .fl-sub{font-weight:500;opacity:.78;letter-spacing:.01em}
 
 .carrusel-marco{position:relative}
 .carrusel{
@@ -860,7 +864,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
       <button class="filtro" data-f="trav">Travesías</button>
       <button class="filtro filtro-selecta" data-f="selecta">✦ Wamani Selecta</button>
     </div>
-    <a class="filtro-link filtro-link-ancho" href="/a-medida/">Jujuy a tu medida <span aria-hidden="true">→</span></a>
+    <a class="filtro-link filtro-link-ancho" href="/a-medida/">Jujuy a medida <span aria-hidden="true">→</span> <span class="fl-sub">Recorré la provincia a tu manera</span></a>
     <div class="carrusel-marco">
       <button class="flecha-car izq" aria-label="Anterior" onclick="moverCarrusel(-1)">‹</button>
       <div class="carrusel" id="carrusel"><!-- las tarjetas se generan por JS --></div>

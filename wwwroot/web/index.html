@@ -296,6 +296,14 @@ section{padding:3.4rem 0}
   font-family:'Quicksand',sans-serif;font-weight:700;font-size:.88rem;transition:.2s;
 }
 .filtro-link:hover{background:var(--dorado);color:#1c2a24;border-color:var(--dorado)}
+/* Y debajo de los filtros, a todo lo ancho. Va abajo y no entre los botones
+   porque no es un filtro más: los cuatro de arriba achican la lista, éste se
+   va a otra página. Abajo y ancho se lee como lo que es, la salida para el
+   que ninguna de las cuatro le cierra. */
+.filtro-link-ancho{
+  display:flex;justify-content:center;width:100%;max-width:520px;
+  margin:-.5rem auto 1.4rem;padding:.6rem 1.15rem;
+}
 
 .carrusel-marco{position:relative}
 .carrusel{
@@ -838,18 +846,6 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
 </section>
 
 
-<!-- ═════════════ JUJUY A TU MEDIDA ═════════════
-     Va ANTES del listado a propósito: el que entra sin saber qué elegir se
-     topa primero con la puerta que no lo obliga a elegir nada. El que ya
-     sabe, sigue de largo dos centímetros más abajo. -->
-<section class="franja-medida">
-  <a class="medida-cta" href="/a-medida/">
-    <span class="mini">¿Todavía no sabés qué elegir?</span>
-    <span class="tit">Jujuy <em>a tu medida</em></span>
-    <span class="baja">Contanos cuántos días tenés y te armamos el viaje entero</span>
-    <span class="flecha">Ver cómo lo armamos →</span>
-  </a>
-</section>
 <!-- ═════════════ EXPERIENCIAS (carrusel + modal con guía) ═════════════ -->
 <section id="experiencias" style="padding-top:1rem">
   <div class="contenedor rev">
@@ -863,8 +859,8 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
       <button class="filtro" data-f="dia">Excursiones</button>
       <button class="filtro" data-f="trav">Travesías</button>
       <button class="filtro filtro-selecta" data-f="selecta">✦ Wamani Selecta</button>
-      <a class="filtro-link" href="/a-medida/">Jujuy a tu medida <span aria-hidden="true">→</span></a>
     </div>
+    <a class="filtro-link filtro-link-ancho" href="/a-medida/">Jujuy a tu medida <span aria-hidden="true">→</span></a>
     <div class="carrusel-marco">
       <button class="flecha-car izq" aria-label="Anterior" onclick="moverCarrusel(-1)">‹</button>
       <div class="carrusel" id="carrusel"><!-- las tarjetas se generan por JS --></div>
@@ -872,6 +868,21 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
     </div>
     <p class="pista">✨ Las tarjetas avanzan solas — tocá una para abrir su guía</p>
   </div>
+</section>
+
+<!-- ═════════════ JUJUY A TU MEDIDA ═════════════
+     Va DESPUÉS del listado y antes del mapa, a propósito. Antes estaba arriba
+     de todo, y ahí le preguntaba "¿todavía no sabés qué elegir?" a alguien que
+     recién empezaba a mirar: no había tenido tiempo de no saber. Acá llega
+     después de las trece experiencias, que es cuando la pregunta es de verdad
+     la suya. El texto no se toca: la traducción lo busca por el castellano. -->
+<section class="franja-medida">
+  <a class="medida-cta" href="/a-medida/">
+    <span class="mini">¿Todavía no sabés qué elegir?</span>
+    <span class="tit">Jujuy <em>a tu medida</em></span>
+    <span class="baja">Contanos cuántos días tenés y te armamos el viaje entero</span>
+    <span class="flecha">Ver cómo lo armamos →</span>
+  </a>
 </section>
 
 <!-- ═════════════ MAPA INTERACTIVO DE JUJUY ═════════════ -->

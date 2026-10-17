@@ -105,6 +105,15 @@
         <textarea class="input crece" asp-for="Ex.Resumen" rows="4"></textarea>
     </div>
 
+    @* Lo que ve la gente en el resultado de Google. Va aparte del nombre porque el
+       nombre es como se llama la excursión en toda la web, y acá hace falta algo que
+       entre en 60 caracteres y diga lo que hace clickear. *@
+    <div class="campo">
+        <label asp-for="Ex.TituloSeo"></label>
+        <input class="input" asp-for="Ex.TituloSeo" maxlength="70" placeholder="Ej: Cascada Santuyoc y Angosto de Jaire con almuerzo en glamping" />
+        <small>Es el renglón azul que se ve en Google. Si lo dejás vacío se arma solo con el nombre. Google corta cerca de los 60 caracteres: poné primero lo que la gente busca y después lo que nos diferencia.</small>
+    </div>
+
     <div class="campo">
         <label asp-for="Ex.Datos"></label>
         <textarea class="input crece" asp-for="Ex.Datos" rows="4" placeholder="🕐 10 hs&#10;🚌 Salida 9:00 · SSJ&#10;👥 2 a 12 personas · grupos más grandes, consultar&#10;🥾 Dificultad baja"></textarea>

@@ -64,6 +64,7 @@ public class ExcursionEditarModel : PageModel
         Ex.Foto       = T(Ex.Foto);
         Ex.Fotos      = T(Ex.Fotos);
         Ex.Resumen    = T(Ex.Resumen);
+        Ex.TituloSeo  = T(Ex.TituloSeo);
         Ex.Datos      = T(Ex.Datos);
         Ex.Itinerario = T(Ex.Itinerario);
         Ex.Incluye    = T(Ex.Incluye);
@@ -111,6 +112,7 @@ public class ExcursionEditarModel : PageModel
             actual.EsSelecta = Ex.EsSelecta;
             actual.Color = Ex.Color;
             actual.Resumen = Ex.Resumen;
+            actual.TituloSeo = Ex.TituloSeo;
             actual.Datos = Ex.Datos;
             actual.Itinerario = Ex.Itinerario;
             actual.Incluye = Ex.Incluye;

@@ -95,6 +95,13 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Descripción corta")]
         public string Resumen { get; set; } = "";
 
+        // El titulo que ve la gente en Google. Va aparte del Nombre a proposito: el
+        // nombre es como se llama la excursion en toda la web, y el titulo del buscador
+        // tiene que entrar en 60 caracteres y decir lo que hace clickear (el almuerzo,
+        // el traslado, el hospedaje). Vacio = se arma solo con el nombre, como antes.
+        [Display(Name = "Título para Google (opcional, hasta 60 caracteres)")]
+        public string TituloSeo { get; set; } = "";
+
         // Estos tres se escriben con UN dato por renglón (una línea = un ítem)
         [Display(Name = "Datos (uno por renglón, ej: 🕐 10 hs)")]
         public string Datos { get; set; } = "";

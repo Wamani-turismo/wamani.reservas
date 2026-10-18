@@ -56,6 +56,18 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 builder.Services.AddAuthorization();
+
+// COMPRIMIR TODO LO QUE SE MANDA AL VISITANTE.
+// Hasta ahora el sitio no comprimia nada: el diccionario de traducciones viajaba
+// entero (194 KB) en cada visita y la portada otros 110 KB. Con esto viajan en una
+// fraccion de eso. Se suman a mano los tipos que ASP.NET no comprime por defecto:
+// las tipografias de la marca y los SVG.
+builder.Services.AddResponseCompression(opciones =>
+{
+    opciones.EnableForHttps = true;
+    opciones.MimeTypes = Microsoft.AspNetCore.ResponseCompression.ResponseCompressionDefaults.MimeTypes
+        .Concat(new[] { "application/x-font-ttf", "font/ttf", "font/woff", "image/svg+xml", "application/manifest+json" });
+});
 builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 
 // ---- Que la sesión NO se cierre en cada actualización ----
@@ -899,6 +911,8 @@ app.Use(async (ctx, siguiente) =>
 // Hace que una carpeta (ej. /web/) muestre su index.html automáticamente.
 // Solo afecta a carpetas que TIENEN index.html; la raíz "/" sigue siendo el
 // sistema (no hay index.html en wwwroot), así que no cambia nada del sistema.
+app.UseResponseCompression();
+
 app.UseDefaultFiles();
 
 // Servir archivos estáticos, agregando el tipo del manifiesto de la app (PWA)

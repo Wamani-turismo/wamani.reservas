@@ -1651,6 +1651,35 @@ a{color:var(--dorado)}
 .sel-idioma button + button{border-left:1px solid var(--linea)}
 .sel-idioma button:hover{color:var(--dorado)}
 .sel-idioma button.on{color:var(--dorado);background:rgba(216,192,150,.14)}
+
+/* EN EL TELÉFONO, EL SELECTOR SE PLIEGA.
+   Con los cuatro idiomas a la vista no quedaba lugar para el logo: la cabecera
+   entraba justa y la marca se perdía. En pantalla chica se ve sólo el globito con
+   el idioma actual, y los cuatro se despliegan al tocarlo. En una pantalla grande
+   hay lugar de sobra, así que ahí siguen los cuatro a la vista: al que entra en
+   inglés le conviene ver que su idioma está, sin tener que buscarlo. */
+.sel-idioma{position:relative}
+.idi-toggle{display:none}
+.idi-opciones{display:flex;align-items:center;gap:1px}
+@media (max-width:760px){
+  .idi-toggle{
+    display:inline-flex;align-items:center;gap:5px;background:none;border:none;
+    cursor:pointer;color:var(--dorado);font-family:'Quicksand',sans-serif;
+    font-weight:700;font-size:.8rem;letter-spacing:.05em;padding:.34rem .4rem;
+    border-radius:8px;line-height:1;
+  }
+  .idi-toggle .ico-idioma{margin-right:0}
+  .sel-idioma .idi-opciones{
+    display:none;position:absolute;top:calc(100% + 10px);right:0;z-index:60;
+    flex-direction:column;gap:2px;padding:6px;background:var(--panel);
+    border:1px solid var(--linea);border-radius:12px;
+    box-shadow:0 12px 30px rgba(0,0,0,.5);
+  }
+  .sel-idioma.abierto .idi-opciones{display:flex}
+  .sel-idioma .idi-opciones .ico-idioma{display:none}
+  .sel-idioma .idi-opciones button{padding:.5rem .9rem;font-size:.82rem}
+  .sel-idioma .idi-opciones button + button{border-left:none}
+}
 @media (max-width:760px){
   .sel-idioma button{padding:.3rem .34rem;font-size:.74rem}
 }
@@ -1714,14 +1743,49 @@ li{margin:7px 0}
       <a href="/#contacto">Contacto</a>
     </nav>
     <div class="sel-idioma" role="group" aria-label="Idioma">
-      <svg class="ico-idioma" viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><ellipse cx="12" cy="12" rx="4" ry="9"/>
-      </svg>
-      <button type="button" data-lang="es" onclick="WamaniIdioma.cambiar('es')">ES</button>
-      <button type="button" data-lang="en" onclick="WamaniIdioma.cambiar('en')">EN</button>
-      <button type="button" data-lang="fr" onclick="WamaniIdioma.cambiar('fr')">FR</button>
-      <button type="button" data-lang="pt" onclick="WamaniIdioma.cambiar('pt')">PT</button>
+      <button type="button" class="idi-toggle" aria-label="Elegir idioma" aria-expanded="false"
+              onclick="var s=this.closest('.sel-idioma');var a=s.classList.toggle('abierto');this.setAttribute('aria-expanded',a)">
+        <svg class="ico-idioma" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><ellipse cx="12" cy="12" rx="4" ry="9"/>
+        </svg>
+        <span class="idi-actual">ES</span>
+      </button>
+      <div class="idi-opciones">
+        <svg class="ico-idioma" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><ellipse cx="12" cy="12" rx="4" ry="9"/>
+        </svg>
+        <button type="button" data-lang="es" onclick="WamaniIdioma.cambiar('es')">ES</button>
+        <button type="button" data-lang="en" onclick="WamaniIdioma.cambiar('en')">EN</button>
+        <button type="button" data-lang="fr" onclick="WamaniIdioma.cambiar('fr')">FR</button>
+        <button type="button" data-lang="pt" onclick="WamaniIdioma.cambiar('pt')">PT</button>
+      </div>
     </div>
+    <script>
+      /* El código que se ve plegado (ES, EN...) sale del botón que idiomas.js marca
+         como activo, así que no hay una segunda lista de idiomas que mantener. */
+      (function () {
+        var sel = document.querySelector('.sel-idioma');
+        if (!sel) return;
+        var act = sel.querySelector('.idi-actual');
+        function sinc() {
+          var b = sel.querySelector('.idi-opciones button.on');
+          if (b && act) act.textContent = b.textContent.trim();
+        }
+        sel.addEventListener('click', function (e) {
+          if (e.target.closest('.idi-opciones button')) {
+            sel.classList.remove('abierto');
+            var t = sel.querySelector('.idi-toggle');
+            if (t) t.setAttribute('aria-expanded', 'false');
+            setTimeout(sinc, 60);
+          }
+        });
+        document.addEventListener('click', function (e) {
+          if (!sel.contains(e.target)) sel.classList.remove('abierto');
+        });
+        setTimeout(sinc, 400);
+        sinc();
+      })();
+    </script>
     <a class="menu-cta" href="https://wa.me/{{Esc(wpp)}}?text={{msg}}" target="_blank" rel="noopener">Reservá ahora</a>
   </div>
 </header>

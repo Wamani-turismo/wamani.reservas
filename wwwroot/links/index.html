@@ -12,7 +12,7 @@
      nueva. La etiqueta va en el link de la bio, que es el que trae a la gente. -->
 <meta name="robots" content="index,follow">
 <link rel="icon" href="/favicon.ico">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" href="fuentes/moche-bold.ttf" as="font" type="font/ttf" crossorigin>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-X04DXRSG6H"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -21,74 +21,72 @@
   gtag('config', 'G-X04DXRSG6H');
 </script>
 <style>
+/* LAS LETRAS DE LA MARCA, NO LAS DE LA WEB.
+   HighVoltage Rough y Moche son las del manual (Julieta Cormenzana, 2024). Moche
+   pesa menos que la Quicksand que usa el resto del sitio y encima no hay que ir a
+   buscarla a Google. HighVoltage es pesada y se usa sólo en los rótulos, con
+   font-display:swap para que el texto se lea desde el primer momento. */
+@font-face{font-family:'HighVoltage';src:url('fuentes/highvoltage.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'Moche';src:url('fuentes/moche-regular.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'Moche';src:url('fuentes/moche-bold.ttf') format('truetype');font-weight:700;font-display:swap}
+
 :root{
-  --fondo:#131c18; --panel:#1c2a24; --verde:#22332f;
-  --dorado:#d8c096; --coral:#d2673a;
-  --texto:#ece5d4; --texto-suave:rgba(236,229,212,.72);
-  --linea:rgba(216,192,150,.18);
+  --fondo:#131c18;
+  --tinta:#ece1d3;
+  --suave:rgba(236,225,211,.62);
+  --naranja:#e26c45;
+  --linea:rgba(236,225,211,.16);
+  --display:'HighVoltage',Impact,'Arial Narrow',sans-serif;
+  --texto:'Moche',ui-sans-serif,system-ui,sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--fondo);color:var(--texto);font-family:'Quicksand',sans-serif;
+body{background:var(--fondo);color:var(--tinta);font-family:var(--texto);
      -webkit-font-smoothing:antialiased}
 
-/* La foto va entera y a todo lo ancho. El degradado la funde con el fondo sin
-   dejar hueco, aunque se coma un pedacito de cielo. */
-/* En el telefono la foto ocupa el ancho entero; en una pantalla grande se queda
-   en la misma columna que los botones, para no quedar gigante arriba. Entera y a
-   todo lo ancho de SU lugar, nunca recortada. */
-.tapa{position:relative;line-height:0;max-width:560px;margin:0 auto}
+/* La foto va entera y a todo lo ancho. En el teléfono ocupa toda la pantalla; en
+   una pantalla grande se queda en la misma columna que los botones. */
+.tapa{line-height:0;max-width:560px;margin:0 auto}
 .tapa img{width:100%;height:auto;display:block}
-.tapa::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:62%;
-  background:linear-gradient(180deg,rgba(19,28,24,0) 0%,rgba(19,28,24,.55) 45%,var(--fondo) 100%)}
 
-.cabecera{position:relative;z-index:2;margin-top:-72px;text-align:center;padding:0 20px 4px}
-.cabecera img{height:52px;width:auto;margin:0 auto .5rem;display:block;
-  filter:drop-shadow(0 3px 12px rgba(0,0,0,.6))}
-.cabecera h1{font-family:'Playfair Display',Georgia,serif;font-size:1.65rem;font-weight:700;line-height:1.15}
-.cabecera h1 em{font-style:italic;font-weight:500;color:var(--dorado)}
-.cabecera p{color:var(--texto-suave);font-size:.92rem;margin-top:.45rem}
+.marca{max-width:560px;margin:0 auto;padding:18px 20px 0;text-align:center}
+.marca img{height:60px;width:auto;margin:0 auto 10px;display:block}
+.marca h1{font-family:var(--display);font-size:1.02rem;line-height:1;
+  letter-spacing:.12em;color:var(--suave);font-weight:400}
+.marca .sub{font-weight:400;font-size:.95rem;margin-top:8px;color:var(--suave)}
 
-.cont{max-width:560px;margin:0 auto;padding:18px 20px 34px}
+.cont{max-width:560px;margin:0 auto;padding:4px 20px 34px}
 
-.wsp{display:flex;align-items:center;justify-content:center;gap:.5rem;
-  background:var(--coral);color:#fff;text-decoration:none;font-weight:700;font-size:1rem;
-  border-radius:999px;padding:.95rem 1rem;margin:14px 0 6px;
-  box-shadow:0 10px 26px rgba(210,103,58,.3)}
+.wsp{display:block;text-align:center;background:var(--naranja);color:#fff;
+  text-decoration:none;font-weight:700;font-size:1.02rem;padding:1rem;margin:22px 0 16px;
+  border-radius:4px}
 
-.rotulo{display:flex;align-items:center;gap:.6rem;margin:26px 0 12px;
-  color:var(--dorado);font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase}
-.rotulo::after{content:"";flex:1;height:1px;background:var(--linea)}
+.rot{font-family:var(--display);font-size:1.05rem;color:var(--suave);
+  margin:24px 0 9px;letter-spacing:.02em}
 
-a.item{display:flex;align-items:center;justify-content:space-between;gap:.8rem;
-  text-decoration:none;color:var(--texto);background:var(--panel);
-  border:1px solid var(--linea);border-radius:16px;padding:.85rem 1.05rem;margin-bottom:.55rem;
-  transition:border-color .2s ease,transform .2s ease}
-a.item:hover{border-color:rgba(216,192,150,.45);transform:translateY(-2px)}
-a.item .nom{font-weight:600;font-size:.97rem;line-height:1.25}
-a.item .dato{display:block;color:var(--texto-suave);font-size:.76rem;font-weight:500;margin-top:.15rem}
-a.item .fl{color:var(--dorado);font-weight:700}
+/* Cada excursión lleva el color de SU folleto. El que vio el PDF y después entra
+   acá reconoce de qué está mirando sin leer. */
+a.ruta{display:flex;align-items:center;gap:14px;text-decoration:none;color:#f3ebe0;
+  background:var(--c);border:1px solid rgba(255,255,255,.10);
+  padding:12px 14px;margin-bottom:7px;border-radius:3px;
+  transition:transform .18s ease,filter .18s ease}
+a.ruta:hover{transform:translateY(-2px);filter:brightness(1.12)}
+a.ruta .nom{font-weight:700;font-size:1rem;line-height:1.2;flex:1}
+a.ruta .dato{font-weight:700;font-size:.8rem;white-space:nowrap;text-align:right}
+a.ruta .dato em{font-style:normal;font-weight:400;opacity:.72}
 
-a.item.selecta{border-color:rgba(216,192,150,.5);
-  background:linear-gradient(180deg,rgba(216,192,150,.09),rgba(216,192,150,.02))}
-a.item.selecta .nom{color:#f4ead6}
+.medida{display:block;text-decoration:none;color:var(--tinta);margin-top:26px;
+  border:1.5px solid var(--tinta);padding:20px;text-align:center;border-radius:3px}
+.medida .t{font-family:var(--display);font-size:1.7rem;line-height:1;display:block}
+.medida .q{display:block;font-weight:400;font-size:.92rem;color:var(--suave);margin-top:7px}
 
-a.medida{display:block;text-align:center;text-decoration:none;border:1px solid var(--dorado);
-  border-radius:18px;padding:1.15rem 1rem;margin:4px 0 2px;
-  background:linear-gradient(180deg,rgba(216,192,150,.1),rgba(216,192,150,.02))}
-a.medida .tit{display:block;font-family:'Playfair Display',Georgia,serif;font-size:1.3rem;
-  font-weight:700;color:var(--texto)}
-a.medida .tit em{font-style:italic;font-weight:500;color:var(--dorado)}
-a.medida .baja{display:block;color:var(--texto-suave);font-size:.85rem;margin-top:.3rem}
+.otros{display:flex;gap:18px;justify-content:center;margin-top:26px;font-size:.9rem}
+.otros a{color:var(--tinta);text-decoration:none;border-bottom:1px solid var(--linea);
+  padding-bottom:2px;font-weight:700}
 
-.chicos{display:flex;gap:.55rem;margin-top:.2rem}
-.chicos a{flex:1;text-align:center;text-decoration:none;color:var(--texto-suave);
-  border:1px solid var(--linea);border-radius:14px;padding:.7rem .5rem;font-size:.85rem;font-weight:600}
-
-.pie{text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid var(--linea)}
-.redes{display:flex;justify-content:center;gap:1.4rem}
-.redes a{color:var(--dorado);text-decoration:none;font-size:.85rem;font-weight:700}
-.pie small{display:block;color:var(--texto-suave);font-size:.72rem;margin-top:.9rem;opacity:.7}
+.pie{margin-top:28px;text-align:center;font-weight:400;font-size:.82rem;color:var(--suave)}
+.pie a{color:var(--tinta);text-decoration:none;font-weight:700}
+.pie .dir{margin-top:9px;font-size:.74rem}
 </style>
 </head>
 <body>
@@ -97,56 +95,53 @@ a.medida .baja{display:block;color:var(--texto-suave);font-size:.85rem;margin-to
   <img src="img/portada.jpg" alt="Caravana de llamas en la Puna de Jujuy" width="900" height="588">
 </div>
 
-<div class="cabecera">
-  <img src="/logo/montana.png" alt="Wamani Turismo" width="110" height="52">
-  <h1>Wamani <em>Turismo</em></h1>
-  <p>Excursiones y travesías en Jujuy</p>
+<div class="marca">
+  <img src="/logo/montana.png" alt="Wamani Turismo" width="110" height="60">
+  <h1>TURISMO &amp; AVENTURA</h1>
+  <p class="sub">Vos elegí la experiencia, nosotros nos encargamos del resto.</p>
 </div>
 
 <div class="cont">
 
-  <a class="wsp" href="https://wa.me/5491178898516?text=%C2%A1Hola!%20Quiero%20consultar%20por%20una%20excursi%C3%B3n" target="_blank" rel="noopener">💬 Escribinos por WhatsApp</a>
+  <a class="wsp" href="https://wa.me/5491178898516?text=%C2%A1Hola!%20Quiero%20consultar%20por%20una%20excursi%C3%B3n" target="_blank" rel="noopener">Escribinos por WhatsApp</a>
 
-  <div class="rotulo">Excursiones de un día</div>
-  <a class="item" href="/excursiones/cascada-santuyoc-y-angosto-de-jaire"><span class="nom">Cascada Santuyoc y Angosto de Jaire<span class="dato">Día completo</span></span><span class="fl">→</span></a>
-  <a class="item" href="/excursiones/termas-de-jordan"><span class="nom">Termas de Jordán<span class="dato">Día completo</span></span><span class="fl">→</span></a>
-  <a class="item" href="/excursiones/atardecer-en-las-salinas"><span class="nom">Atardecer en las Salinas<span class="dato">Día completo</span></span><span class="fl">→</span></a>
-  <a class="item" href="/excursiones/ruta-de-lagunas-y-termas"><span class="nom">Lagunas de Yala y Termas de Reyes<span class="dato">Día completo</span></span><span class="fl">→</span></a>
-  <a class="item" href="/excursiones/recorriendo-la-quebrada"><span class="nom">Recorriendo la Quebrada<span class="dato">Día completo</span></span><span class="fl">→</span></a>
+  <div class="rot">EN EL DÍA</div>
+  <a class="ruta" href="/excursiones/cascada-santuyoc-y-angosto-de-jaire" style="--c:#50461c"><span class="nom">Cascada Santuyoc y Angosto de Jaire</span><span class="dato">1 <em>día</em></span></a>
+  <a class="ruta" href="/excursiones/termas-de-jordan" style="--c:#0f5a51"><span class="nom">Termas de Jordán</span><span class="dato">1 <em>día</em></span></a>
+  <a class="ruta" href="/excursiones/atardecer-en-las-salinas" style="--c:#45489d"><span class="nom">Atardecer en las Salinas</span><span class="dato">1 <em>día</em></span></a>
+  <a class="ruta" href="/excursiones/ruta-de-lagunas-y-termas" style="--c:#236a8c"><span class="nom">Lagunas de Yala y Termas de Reyes</span><span class="dato">1 <em>día</em></span></a>
+  <a class="ruta" href="/excursiones/recorriendo-la-quebrada" style="--c:#5a2a22"><span class="nom">Recorriendo la Quebrada</span><span class="dato">1 <em>día</em></span></a>
 
-  <div class="rotulo">Varios días</div>
-  <a class="item" href="/excursiones/conociendo-las-yungas"><span class="nom">Conociendo las Yungas<span class="dato">3 días y 2 noches</span></span><span class="fl">→</span></a>
-  <a class="item" href="/excursiones/yungas-express"><span class="nom">Yungas Express<span class="dato">2 días y 1 noche</span></span><span class="fl">→</span></a>
+  <div class="rot">CON NOCHE EN LA SELVA</div>
+  <a class="ruta" href="/excursiones/conociendo-las-yungas" style="--c:#3e5a33"><span class="nom">Conociendo las Yungas</span><span class="dato">3 <em>días</em></span></a>
+  <a class="ruta" href="/excursiones/yungas-express" style="--c:#5a7242"><span class="nom">Yungas Express</span><span class="dato">2 <em>días</em></span></a>
 
-  <div class="rotulo">Travesías</div>
-  <a class="item" href="/excursiones/tilcara-calilegua"><span class="nom">Tilcara – Calilegua<span class="dato">Abril a noviembre</span></span><span class="fl">→</span></a>
-  <a class="item" href="/excursiones/humahuaca-yungas"><span class="nom">Humahuaca – Las Yungas<span class="dato">Abril a noviembre</span></span><span class="fl">→</span></a>
-  <a class="item" href="/excursiones/iruya-nazareno"><span class="nom">Iruya – Nazareno<span class="dato">Abril a noviembre · Salta</span></span><span class="fl">→</span></a>
+  <div class="rot">TRAVESÍAS A PIE</div>
+  <a class="ruta" href="/excursiones/tilcara-calilegua" style="--c:#3a1a10"><span class="nom">Tilcara – Calilegua</span><span class="dato">65 <em>km</em></span></a>
+  <a class="ruta" href="/excursiones/humahuaca-yungas" style="--c:#3e2a39"><span class="nom">Humahuaca – Las Yungas</span><span class="dato">5 <em>días</em></span></a>
+  <a class="ruta" href="/excursiones/iruya-nazareno" style="--c:#4a1712"><span class="nom">Iruya – Nazareno</span><span class="dato">5 <em>días</em></span></a>
 
-  <div class="rotulo">✦ Wamani Selecta</div>
-  <a class="item selecta" href="/excursiones/especial-finca-la-fe"><span class="nom">Especial Finca La Fé<span class="dato">Línea premium</span></span><span class="fl">→</span></a>
-  <a class="item selecta" href="/excursiones/especial-the-canuto-glamping"><span class="nom">Especial The Canuto Glamping<span class="dato">Línea premium</span></span><span class="fl">→</span></a>
-  <a class="item selecta" href="/excursiones/especial-ecolodge-de-la-selva"><span class="nom">Especial Ecolodge de la Selva<span class="dato">Línea premium</span></span><span class="fl">→</span></a>
+  <div class="rot">WAMANI SELECTA</div>
+  <a class="ruta" href="/excursiones/especial-finca-la-fe" style="--c:#6f6329"><span class="nom">Finca la Fé</span><span class="dato">4 <em>días</em></span></a>
+  <a class="ruta" href="/excursiones/especial-the-canuto-glamping" style="--c:#6f6329"><span class="nom">The Canuto Glamping</span><span class="dato">3 <em>días</em></span></a>
+  <a class="ruta" href="/excursiones/especial-ecolodge-de-la-selva" style="--c:#6f6329"><span class="nom">Ecolodge de la Selva</span><span class="dato">3 <em>días</em></span></a>
 
-  <div class="rotulo">¿Ninguna te cierra?</div>
   <a class="medida" href="/a-medida/">
-    <span class="tit">Jujuy <em>a medida</em></span>
-    <span class="baja">Recorré la provincia a tu manera</span>
+    <span class="t">JUJUY A MEDIDA</span>
+    <span class="q">Recorré la provincia a tu manera</span>
   </a>
 
-  <div class="rotulo">Más de Wamani</div>
-  <div class="chicos">
-    <a href="/">Nuestra web</a>
-    <a href="/blog/">Blog</a>
+  <div class="otros">
+    <a href="/">La web</a>
+    <a href="/blog/">El blog</a>
     <a href="/receptivo/">Agencias</a>
   </div>
 
   <div class="pie">
-    <div class="redes">
-      <a href="https://instagram.com/wamaniturismo" target="_blank" rel="noopener">Instagram</a>
-      <a href="https://www.facebook.com/profile.php?id=61573110601017" target="_blank" rel="noopener">Facebook</a>
-    </div>
-    <small>wamaniturismo.com · San Salvador de Jujuy, Argentina</small>
+    <a href="https://instagram.com/wamaniturismo" target="_blank" rel="noopener">Instagram</a>
+    &nbsp;
+    <a href="https://www.facebook.com/profile.php?id=61573110601017" target="_blank" rel="noopener">Facebook</a>
+    <div class="dir">wamaniturismo.com<br>San Salvador de Jujuy</div>
   </div>
 
 </div>

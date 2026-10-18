@@ -1772,11 +1772,12 @@ li{margin:7px 0}
           if (b && act) act.textContent = b.textContent.trim();
         }
         sel.addEventListener('click', function (e) {
-          if (e.target.closest('.idi-opciones button')) {
+          var ele = e.target.closest('.idi-opciones button');
+          if (ele) {
             sel.classList.remove('abierto');
             var t = sel.querySelector('.idi-toggle');
             if (t) t.setAttribute('aria-expanded', 'false');
-            setTimeout(sinc, 60);
+            if (act) act.textContent = ele.textContent.trim();
           }
         });
         document.addEventListener('click', function (e) {

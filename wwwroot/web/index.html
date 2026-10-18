@@ -846,11 +846,12 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
           if (b && act) act.textContent = b.textContent.trim();
         }
         sel.addEventListener('click', function (e) {
-          if (e.target.closest('.idi-opciones button')) {
+          var ele = e.target.closest('.idi-opciones button');
+          if (ele) {
             sel.classList.remove('abierto');
             var t = sel.querySelector('.idi-toggle');
             if (t) t.setAttribute('aria-expanded', 'false');
-            setTimeout(sinc, 60);
+            if (act) act.textContent = ele.textContent.trim();
           }
         });
         document.addEventListener('click', function (e) {

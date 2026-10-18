@@ -12,7 +12,7 @@
      nueva. La etiqueta va en el link de la bio, que es el que trae a la gente. -->
 <meta name="robots" content="index,follow">
 <link rel="icon" href="/favicon.ico">
-<link rel="preload" href="fuentes/moche-bold.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="preload" href="fuentes/moche-bold.woff2" as="font" type="font/woff2" crossorigin>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-X04DXRSG6H"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -25,10 +25,10 @@
    HighVoltage Rough y Moche son las del manual (Julieta Cormenzana, 2024). Moche
    pesa menos que la Quicksand que usa el resto del sitio y encima no hay que ir a
    buscarla a Google. HighVoltage es pesada y se usa sólo en los rótulos, con
-   font-display:swap para que el texto se lea desde el primer momento. */
-@font-face{font-family:'HighVoltage';src:url('fuentes/highvoltage.ttf') format('truetype');font-weight:400;font-display:swap}
-@font-face{font-family:'Moche';src:url('fuentes/moche-regular.ttf') format('truetype');font-weight:400;font-display:swap}
-@font-face{font-family:'Moche';src:url('fuentes/moche-bold.ttf') format('truetype');font-weight:700;font-display:swap}
+   en formato woff2: las tres juntas pesan 40 KB en vez de los 406 KB originales. */
+@font-face{font-family:'HighVoltage';src:url('fuentes/highvoltage.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Moche';src:url('fuentes/moche-regular.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Moche';src:url('fuentes/moche-bold.woff2') format('woff2');font-weight:700;font-display:swap}
 
 :root{
   --fondo:#131c18;
@@ -92,7 +92,7 @@ a.ruta .dato em{font-style:normal;font-weight:400;opacity:.72}
 <body>
 
 <div class="tapa">
-  <img src="img/portada.jpg" alt="Caravana de llamas en la Puna de Jujuy" width="900" height="588">
+  <img src="img/portada.webp" alt="El Cerro Hornocal, en la Quebrada de Humahuaca" width="900" height="600">
 </div>
 
 <div class="marca">

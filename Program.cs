@@ -1167,6 +1167,12 @@ foreach (var pagina in paginasWebAnterior)
     app.MapGet("/" + pagina, () => Results.Redirect(destino, permanent: true)).AllowAnonymous();
 }
 
+// La nota de la Quebrada vivió un rato en una dirección más larga. Google todavía la
+// tiene indexada y daba 404. Mismo criterio que arriba: 301 a la dirección buena, para
+// que el que llega desde el buscador caiga en la nota y no en un error.
+app.MapGet("/blog/quebrada-de-humahuaca-jujuy",
+    () => Results.Redirect("/blog/quebrada-de-humahuaca/", permanent: true)).AllowAnonymous();
+
 // ═══════════════════════════════════════════════════════════════════════
 //  "Puente" que le pasa a la LANDING (web pública) su contenido editable:
 //  teléfono, redes, textos, excursiones, testimonios y equipo.

@@ -1176,6 +1176,17 @@ foreach (var pagina in paginasWebAnterior)
 app.MapGet("/blog/quebrada-de-humahuaca-jujuy",
     () => Results.Redirect("/blog/quebrada-de-humahuaca/", permanent: true)).AllowAnonymous();
 
+// La política de privacidad es una página estática (wwwroot/privacidad/index.html) y vive
+// en "/privacidad/", con la barra final. Sin esto, "/privacidad" a secas daba 404: los
+// archivos estáticos sólo contestan la dirección con barra. Importa porque ESA es la
+// dirección que se carga en los formularios de clientes potenciales de Meta, y la escribe
+// una persona a mano.
+// "/privacy" existía de antes: era la página de ejemplo que trae la plantilla de ASP.NET y,
+// como el sistema pide login, al que entraba le aparecía la pantalla de "Entrar" — peor que
+// un error. Se borró esa página y la dirección ahora lleva acá.
+app.MapGet("/privacidad", () => Results.Redirect("/privacidad/", permanent: true)).AllowAnonymous();
+app.MapGet("/privacy", () => Results.Redirect("/privacidad/", permanent: true)).AllowAnonymous();
+
 // ═══════════════════════════════════════════════════════════════════════
 //  "Puente" que le pasa a la LANDING (web pública) su contenido editable:
 //  teléfono, redes, textos, excursiones, testimonios y equipo.
@@ -1914,6 +1925,14 @@ app.MapGet("/sitemap.xml", (AppDbContext db, IWebHostEnvironment env) =>
     sb.AppendLine($"    <lastmod>{hoy}</lastmod>");
     sb.AppendLine("    <changefreq>monthly</changefreq>");
     sb.AppendLine("    <priority>0.9</priority>");
+    sb.AppendLine("  </url>");
+
+    // La política de privacidad. Prioridad baja: no la buscamos posicionar, pero tiene que
+    // estar indexada porque es la dirección que piden Meta y Google para los formularios.
+    sb.AppendLine("  <url>");
+    sb.AppendLine($"    <loc>{baseUrl}/privacidad/</loc>");
+    sb.AppendLine("    <changefreq>yearly</changefreq>");
+    sb.AppendLine("    <priority>0.2</priority>");
     sb.AppendLine("  </url>");
 
     // Una entrada por excursión activa.

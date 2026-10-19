@@ -165,6 +165,79 @@ public class MantenimientoModel : PageModel
         return RedirectToPage();
     }
 
+    // ---------- Correr una salida a otro día ----------
+    //
+    // Una salida vive atada a "excursión + día": las reservas por su FechaDesde, y los
+    // gastos, los proveedores y la ficha por su Fecha. Si se cambia sólo la fecha de la
+    // reserva desde la pantalla de edición, todo lo cargado se queda en el día viejo: la
+    // salida nueva aparece vacía y la vieja queda colgada sumando en Finanzas.
+    //
+    // Esto los corre juntos. NO toca un peso: los gastos y los proveedores conservan
+    // monto, comprobantes, notas y la marca de pagado; la seña y el saldo de la reserva
+    // quedan como están, con la fecha en que se cobraron de verdad.
+    [BindProperty] public int CorrerExcursionId { get; set; }
+    [BindProperty] public DateTime CorrerDesde { get; set; }
+    [BindProperty] public DateTime CorrerHacia { get; set; }
+
+    public async Task<IActionResult> OnPostCorrerSalidaAsync()
+    {
+        var exc = await _db.Excursiones.FirstOrDefaultAsync(e => e.Id == CorrerExcursionId);
+        var dia = CorrerDesde.Date;
+        var nuevo = CorrerHacia.Date;
+
+        if (exc is null || dia == nuevo)
+        {
+            Aviso = "Para correr una salida hay que elegir la excursión, el día que tiene hoy y el día nuevo (distinto).";
+            return RedirectToPage();
+        }
+
+        // Si en el día nuevo ya hay algo de esa misma excursión, no se corre nada: habría
+        // que decidir a mano qué pasa con los dos juegos de gastos.
+        bool ocupado =
+            await _db.Reservas.AnyAsync(r => r.ExcursionId == exc.Id && r.FechaDesde.Date == nuevo) ||
+            await _db.OperativoGastos.AnyAsync(o => o.ExcursionId == exc.Id && o.Fecha.Date == nuevo) ||
+            await _db.OperativoSalidas.AnyAsync(o => o.ExcursionId == exc.Id && o.Fecha.Date == nuevo);
+        if (ocupado)
+        {
+            Aviso = $"El {nuevo:dd/MM/yyyy} ya tiene una salida de «{exc.Nombre}». No se corrió nada.";
+            return RedirectToPage();
+        }
+
+        var corrimiento = nuevo - dia;
+
+        // 1) Las reservas: se corren los dos extremos, así un viaje de varios días
+        //    conserva la misma cantidad de días.
+        var reservas = await _db.Reservas
+            .Where(r => r.ExcursionId == exc.Id && r.FechaDesde.Date == dia)
+            .ToListAsync();
+        foreach (var r in reservas)
+        {
+            r.FechaDesde = r.FechaDesde.Add(corrimiento);
+            r.FechaHasta = r.FechaHasta.Add(corrimiento);
+        }
+
+        // 2) y 3) Gastos y proveedores ya cargados: sólo cambian de día.
+        var gastos = await _db.OperativoGastos
+            .Where(o => o.ExcursionId == exc.Id && o.Fecha.Date == dia).ToListAsync();
+        foreach (var g in gastos) g.Fecha = nuevo;
+
+        var provs = await _db.OperativoProveedores
+            .Where(o => o.ExcursionId == exc.Id && o.Fecha.Date == dia).ToListAsync();
+        foreach (var pr in provs) pr.Fecha = nuevo;
+
+        // 4) La ficha de la salida.
+        var fichas = await _db.OperativoSalidas
+            .Where(o => o.ExcursionId == exc.Id && o.Fecha.Date == dia).ToListAsync();
+        foreach (var f in fichas) f.Fecha = nuevo;
+
+        await _db.SaveChangesAsync();
+
+        Aviso = $"Salida de «{exc.Nombre}» corrida del {dia:dd/MM/yyyy} al {nuevo:dd/MM/yyyy}: " +
+                $"{reservas.Count} reserva(s), {gastos.Count} gasto(s) y {provs.Count} proveedor(es). " +
+                "No se tocó ningún monto.";
+        return RedirectToPage();
+    }
+
     // ---------- Limpiar costos repetidos de una plantilla ----------
     //
     // Si una excursión tiene el mismo costo cargado dos veces (mismo nombre, mismo precio y

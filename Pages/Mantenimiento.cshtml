@@ -153,6 +153,44 @@
 </div>
 
 <div class="card" style="max-width:640px">
+    <h2>Correr una salida a otro día</h2>
+    <p class="hint">
+        Cuando un viaje se corre de fecha. Mueve <strong>todo junto</strong>: las reservas de
+        ese día —con su fecha de regreso, así el viaje conserva los mismos días—, los gastos
+        ya cargados, los proveedores con sus comprobantes y la ficha de la salida.
+        <strong>No toca ningún monto</strong>: lo pagado sigue pagado y la seña y el saldo
+        quedan con la fecha en que se cobraron. Cambiar sólo la fecha en la reserva NO alcanza:
+        el operativo se queda en el día viejo.
+    </p>
+    <form method="post" asp-page-handler="CorrerSalida"
+          onsubmit="return confirm('¿Correr esa salida entera al día nuevo?');">
+        <div class="form-grid">
+            <div class="field">
+                <label for="CorrerExcursionId">Excursión</label>
+                <select id="CorrerExcursionId" name="CorrerExcursionId" required>
+                    <option value="">— elegí —</option>
+                    @foreach (var e in Model.ExcursionesLista)
+                    {
+                        <option value="@e.Id">@e.Nombre</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label for="CorrerDesde">Día que tiene hoy</label>
+                <input id="CorrerDesde" name="CorrerDesde" type="date" required />
+            </div>
+            <div class="field">
+                <label for="CorrerHacia">Día nuevo</label>
+                <input id="CorrerHacia" name="CorrerHacia" type="date" required />
+            </div>
+        </div>
+        <div class="acciones-form">
+            <button type="submit" class="btn btn-primary">📅 Correr la salida</button>
+        </div>
+    </form>
+</div>
+
+<div class="card" style="max-width:640px">
     <h2>Quitar costos repetidos de una excursión</h2>
     <p class="hint">
         Si un costo quedó cargado dos veces igual (mismo nombre, mismo precio y misma forma de

@@ -35,6 +35,7 @@
   --tinta:#ece1d3;
   --suave:rgba(236,225,211,.62);
   --naranja:#e26c45;
+  --dorado:#c9a04a;
   --linea:rgba(236,225,211,.16);
   --display:'HighVoltage',Impact,'Arial Narrow',sans-serif;
   --texto:'Moche',ui-sans-serif,system-ui,sans-serif;
@@ -46,8 +47,13 @@ body{background:var(--fondo);color:var(--tinta);font-family:var(--texto);
 
 /* La foto va entera y a todo lo ancho. En el teléfono ocupa toda la pantalla; en
    una pantalla grande se queda en la misma columna que los botones. */
-.tapa{line-height:0;max-width:560px;margin:0 auto}
+.tapa{line-height:0;max-width:560px;margin:0 auto;position:relative}
 .tapa img{width:100%;height:auto;display:block}
+/* La foto no corta seca contra el fondo: el ultimo tramo se funde con el verde
+   oscuro. Minimo, lo justo para que no se vea el borde. */
+.tapa::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:16%;
+  background:linear-gradient(to top,var(--fondo) 0%,rgba(19,28,24,.72) 42%,rgba(19,28,24,0) 100%);
+  pointer-events:none}
 
 .marca{max-width:560px;margin:0 auto;padding:18px 20px 0;text-align:center}
 .marca img{height:78px;width:auto;margin:0 auto 8px;display:block}
@@ -71,14 +77,26 @@ a.ruta{display:flex;align-items:center;gap:14px;text-decoration:none;color:#f3eb
   padding:12px 14px;margin-bottom:7px;border-radius:3px;
   transition:transform .18s ease,filter .18s ease}
 a.ruta:hover{transform:translateY(-2px);filter:brightness(1.12)}
+
+/* Las Selecta no llevan el color de su folleto: esas paginas son casi negras y
+   el boton de color prometia otra cosa. Gris grafito con un filete dorado al
+   costado, que es como se ve en el folleto y en el boton de agencias. */
+a.ruta.selecta{background:#3b403e;border-color:rgba(201,160,74,.30);
+  border-left:3px solid var(--dorado)}
+a.ruta.selecta .dato{color:var(--dorado)}
+a.ruta.selecta .dato em{color:rgba(201,160,74,.8)}
 a.ruta .nom{font-weight:700;font-size:1rem;line-height:1.2;flex:1}
 a.ruta .dato{font-weight:700;font-size:.8rem;white-space:nowrap;text-align:right}
 a.ruta .dato em{font-style:normal;font-weight:400;opacity:.72}
 
-.medida{display:block;text-decoration:none;color:var(--tinta);margin-top:26px;
-  border:1.5px solid var(--tinta);padding:20px;text-align:center;border-radius:3px}
-.medida .t{font-family:var(--display);font-size:1.7rem;line-height:1;display:block}
-.medida .q{display:block;font-weight:400;font-size:.92rem;color:var(--suave);margin-top:7px}
+/* Jujuy a medida cierra la lista y es lo que mas deja: va macizo en dorado, que
+   llama sin pelearse con el naranja del WhatsApp de arriba. */
+.medida{display:block;text-decoration:none;color:#1a1410;margin-top:26px;
+  background:linear-gradient(135deg,#d9b25c,#b8862f);
+  padding:22px;text-align:center;border-radius:4px;
+  box-shadow:0 6px 22px rgba(201,160,74,.18)}
+.medida .t{font-family:var(--display);font-size:1.8rem;line-height:1;display:block}
+.medida .q{display:block;font-weight:700;font-size:.92rem;color:rgba(26,20,16,.72);margin-top:7px}
 
 .otros{display:flex;gap:18px;justify-content:center;margin-top:26px;font-size:.9rem}
 .otros a{color:var(--tinta);text-decoration:none;border-bottom:1px solid var(--linea);
@@ -92,7 +110,7 @@ a.ruta .dato em{font-style:normal;font-weight:400;opacity:.72}
 <body>
 
 <div class="tapa">
-  <img src="img/portada.webp" alt="El Cerro Hornocal, en la Quebrada de Humahuaca" width="900" height="600">
+  <img src="img/portada.webp" alt="Una tropa de llamas cargadas, en la puna jujena" width="900" height="588">
 </div>
 
 <div class="marca">
@@ -122,9 +140,9 @@ a.ruta .dato em{font-style:normal;font-weight:400;opacity:.72}
   <a class="ruta" href="/excursiones/iruya-nazareno" style="--c:#4a1712"><span class="nom">Iruya – Nazareno</span><span class="dato">5 <em>días</em></span></a>
 
   <div class="rot">WAMANI SELECTA</div>
-  <a class="ruta" href="/excursiones/especial-finca-la-fe" style="--c:#6f6329"><span class="nom">Finca la Fé</span><span class="dato">4 <em>días</em></span></a>
-  <a class="ruta" href="/excursiones/especial-the-canuto-glamping" style="--c:#6f6329"><span class="nom">The Canuto Glamping</span><span class="dato">3 <em>días</em></span></a>
-  <a class="ruta" href="/excursiones/especial-ecolodge-de-la-selva" style="--c:#6f6329"><span class="nom">Ecolodge de la Selva</span><span class="dato">3 <em>días</em></span></a>
+  <a class="ruta selecta" href="/excursiones/especial-finca-la-fe"><span class="nom">Finca la Fé</span><span class="dato">4 <em>días</em></span></a>
+  <a class="ruta selecta" href="/excursiones/especial-the-canuto-glamping"><span class="nom">The Canuto Glamping</span><span class="dato">3 <em>días</em></span></a>
+  <a class="ruta selecta" href="/excursiones/especial-ecolodge-de-la-selva"><span class="nom">Ecolodge de la Selva</span><span class="dato">3 <em>días</em></span></a>
 
   <a class="medida" href="/a-medida/">
     <span class="t">JUJUY A MEDIDA</span>

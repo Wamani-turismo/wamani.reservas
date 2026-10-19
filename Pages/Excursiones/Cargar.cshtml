@@ -108,6 +108,17 @@
             </div>
             <div class="field full">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+                    <input asp-for="Excursion.EsSelecta" type="checkbox" style="width:auto" />
+                    ✦ Es una <strong>Wamani Selecta</strong>
+                </label>
+                <div class="hint">
+                    Las experiencias de varios días con hospedaje elegido. <strong>No cambia
+                    ninguna cuenta</strong>: se cotiza igual que cualquier excursión. Sólo hace
+                    que aparezca en su propio bloque en Excursiones y en Rentabilidad.
+                </div>
+            </div>
+            <div class="field full">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
                     <input asp-for="Excursion.Activa" type="checkbox" style="width:auto" />
                     Activa (aparece para cargar reservas nuevas)
                 </label>

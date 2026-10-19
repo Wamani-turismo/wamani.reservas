@@ -137,6 +137,56 @@ else
         </table>
     </div>
 
+    @* ── WAMANI SELECTA ──────────────────────────────────────────────────
+       Mismas columnas que el catálogo: se cotizan igual que cualquier excursión.
+       Van aparte porque son otro producto, no otra forma de contar la plata. *@
+    @if (Model.Selectas.Count > 0)
+    {
+        <h2 style="margin-top:36px">✦ Wamani Selecta</h2>
+        <p class="subtitle" style="margin-top:-6px">
+            Las experiencias de varios días con hospedaje elegido. Se cargan y se cotizan
+            igual que cualquier excursión; van agrupadas aparte para no mezclarlas con las
+            salidas de todos los días.
+        </p>
+        <div class="table-wrap">
+            <table class="tabla">
+                <thead>
+                    <tr>
+                        <th>Experiencia</th>
+                        <th class="num">Precio por persona</th>
+                        <th class="num">Mínimo</th>
+                        <th>Estado</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var e in Model.Selectas)
+                {
+                    <tr>
+                        <td data-label="Experiencia"><strong>@e.Nombre</strong></td>
+                        <td class="num" data-label="Precio por persona">@Money(e.PrecioPorPersona)</td>
+                        <td class="num" data-label="Mínimo">@e.MinimoPersonas</td>
+                        <td data-label="Estado">
+                            @if (e.Activa)
+                            {
+                                <span class="pill pill-ok">Activa</span>
+                            }
+                            else
+                            {
+                                <span class="pill pill-muted">Oculta</span>
+                            }
+                        </td>
+                        <td class="acciones" data-label="">
+                            <a asp-page="/Excursiones/Cargar" asp-route-id="@e.Id">Editar</a>
+                            <a asp-page="/Operativo/Reservas" asp-route-excursionId="@e.Id">👥 Reservas</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+
     @* ── LA COMBI DE WAMANI ──────────────────────────────────────────────
        Va aparte porque se lee distinto: acá no importa el margen por persona sino
        CUÁNTAS BUTACAS hay que vender, que es lo único que mueve la aguja cuando el

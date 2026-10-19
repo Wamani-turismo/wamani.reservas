@@ -84,12 +84,20 @@ public class IndexModel : PageModel
         bool EsCombi(Fila f) => porId[f.Id].EsCombi;
         bool EsAMedida(Fila f) => !EsCombi(f) &&
             (porId[f.Id].EsPersonalizada || porId[f.Id].EsAMedida);
+        bool EsSelecta(Fila f) => porId[f.Id].EsSelecta && !EsCombi(f) && !EsAMedida(f);
 
         Grupos.Add(new Grupo
         {
             Titulo = "Excursiones y travesías",
             Subtitulo = "El catálogo de siempre.",
-            Filas = Filas.Where(f => !EsCombi(f) && !EsAMedida(f)).ToList()
+            Filas = Filas.Where(f => !EsCombi(f) && !EsAMedida(f) && !EsSelecta(f)).ToList()
+        });
+        Grupos.Add(new Grupo
+        {
+            Titulo = "✦ Wamani Selecta",
+            Subtitulo = "Las experiencias de varios días con hospedaje elegido. Se cotizan "
+                      + "igual que cualquier excursión.",
+            Filas = Filas.Where(EsSelecta).ToList()
         });
         Grupos.Add(new Grupo
         {

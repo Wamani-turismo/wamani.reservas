@@ -59,6 +59,13 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Es una salida de La Combi de Wamani")]
         public bool EsCombi { get; set; } = false;
 
+        // WAMANI SELECTA: las experiencias de varios días con hospedaje elegido, que se
+        // venden como producto aparte. No cambia ninguna cuenta —se cotizan igual que
+        // cualquier excursión— pero van agrupadas aparte para no mezclarlas con las
+        // salidas de todos los días.
+        [Display(Name = "Es una Wamani Selecta")]
+        public bool EsSelecta { get; set; } = false;
+
         // Nombre de la excursión a medida que se crea sola la primera vez.
         public const string NombreAMedida = "Excursión a medida";
 

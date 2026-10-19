@@ -23,8 +23,12 @@ public class IndexModel : PageModel
     // un grupo puntual, y La Combi (salidas regulares en traffic, vendidas por butaca).
     // Una combi nunca es "a medida": si alguna vez tuviera las dos marcas, manda la combi.
     public List<Excursion> Combis => Excursiones.Where(e => e.EsCombi).ToList();
+    // Las Selecta salen del catálogo general y van a su propio bloque. Una combi nunca
+    // es Selecta: si alguna vez tuviera las dos marcas, manda la combi.
+    public List<Excursion> Selectas =>
+        Excursiones.Where(e => e.EsSelecta && !e.EsCombi && !EsDeAMedida(e)).ToList();
     public List<Excursion> DelCatalogo =>
-        Excursiones.Where(e => !e.EsCombi && !EsDeAMedida(e)).ToList();
+        Excursiones.Where(e => !e.EsCombi && !e.EsSelecta && !EsDeAMedida(e)).ToList();
     public List<Excursion> AMedida =>
         Excursiones.Where(e => !e.EsCombi && EsDeAMedida(e)).ToList();
 

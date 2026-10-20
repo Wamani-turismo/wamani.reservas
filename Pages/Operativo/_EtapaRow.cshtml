@@ -54,6 +54,7 @@
                de la salida se avisa acá abajo. *@
             <input name="ProvPersonas" type="number" step="1" min="0" value="@Model.Personas"
                    class="etapa-personas" data-sugerida="@(Model.TieneSugerencia ? Model.CantidadSugerida : -1)" />
+            <span class="hint">@Model.AclaraCantidad</span>
             @if (Model.TieneSugerencia)
             {
                 <div class="aviso-cantidad" data-texto="@Model.TextoSugerencia()"></div>
@@ -74,6 +75,7 @@
             <div class="field">
                 <label>@Model.EtiquetaVeces</label>
                 <input name="ProvNoches" type="number" step="1" min="1" value="@Model.Noches" class="etapa-noches" />
+                <span class="hint">@Model.AclaraVeces</span>
             </div>
         }
         <div class="field">

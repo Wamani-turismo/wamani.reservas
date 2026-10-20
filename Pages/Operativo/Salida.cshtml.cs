@@ -38,10 +38,30 @@ public class ProvRowVm
     public int NochesSugeridas { get; set; } = 1;
 
     // Lo que hay que mostrar en la cajita: lo que ya se guardó en esta fila y, si es una
-    // fila nueva, lo que dura la salida.
-    public int NochesFila => Asig?.Noches is int n && n > 0 ? n : (NochesSugeridas > 0 ? NochesSugeridas : 1);
+    // fila NUEVA, lo que dura la salida.
+    //
+    // Una fila que YA existe y NO tiene noches guardadas arranca en 1, igual que los días
+    // del guía (ver DiasFila). Es lo que la vuelve segura: esas filas son viejas, tienen el
+    // total escrito a mano y nunca estuvo multiplicado por nada. Si la cajita arrancara en
+    // las noches de la salida, cambiar el proveedor o tocar la cajita rehacía el total como
+    // "precio del catálogo × 7" y pisaba la plata que estaba cargada.
+    public int NochesFila => Asig?.Noches is int n && n > 0
+        ? n
+        : (Asig is null && NochesSugeridas > 0 ? NochesSugeridas : 1);
 
     public string EtiquetaNoches => Tipo == "Restaurante" ? "Comidas" : "Noches";
+
+    // El aclarador de abajo del "Cuántos". El malentendido que costó plata es creer que ahí
+    // van los días: no, son cabezas. Y el número de guías lo usa el sistema para calcular
+    // los autos y los pasajes, así que inflarlo pide un vehículo de más.
+    public string AclaraCuantos => Tipo == "Auto"
+        ? "Son vehículos, NO días"
+        : "Son guías, NO días";
+
+    // El aclarador de abajo de la cajita de noches / comidas.
+    public string AclaraNoches => Tipo == "Restaurante"
+        ? "Son comidas, NO pasajeros"
+        : "Son noches, NO pasajeros";
 
     // Guía y vehículo: se contratan POR DÍA. La fila lleva una cajita de DÍAS y el total
     // sale de cuántos × lo que cobra cada uno × días. En una salida de un día no aparece:
@@ -97,6 +117,23 @@ public class EtapaRowVm
     public string EtiquetaCantidad => EtapaExcursion.EtiquetaCantidad(Tipo);
     public string EtiquetaPrecio => EtapaExcursion.EtiquetaPrecio(Tipo);
     public string EtiquetaVeces => EtapaExcursion.EtiquetaVeces(Tipo);
+
+    // Aclaradores en pantalla: la columna de la izquierda son CABEZAS (guías, arrieros,
+    // caballos, personas) y la de la derecha son VECES (días o noches). Confundirlas es el
+    // error que hace que el total salga mal.
+    public string AclaraCantidad => Tipo switch
+    {
+        EtapaExcursion.Guia     => "Son guías, NO días",
+        EtapaExcursion.Arriero  => "Son arrieros, NO días",
+        EtapaExcursion.Caballo  => "Son caballos, NO días",
+        EtapaExcursion.Traslado => "Son vehículos",
+        EtapaExcursion.Pasaje   => "Son boletos",
+        _                        => "Son personas, NO noches",
+    };
+
+    public string AclaraVeces => EtapaExcursion.EsPorDia(Tipo)
+        ? "Son días, NO guías"
+        : "Son noches, NO personas";
     public string Icono => EtapaExcursion.Icono(Tipo);
 
     public int Noche { get; set; }

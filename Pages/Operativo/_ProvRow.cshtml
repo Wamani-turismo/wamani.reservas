@@ -73,6 +73,7 @@
             <div class="field">
                 <label>Cuántos</label>
                 <input name="ProvPersonas" type="number" step="1" min="0" value="@Model.Cuantos" class="etapa-personas" />
+                <span class="hint">@Model.AclaraCuantos</span>
             </div>
             <div class="field">
                 <label>Precio de cada uno</label>
@@ -89,7 +90,7 @@
                 <label>Días</label>
                 <input name="ProvNoches" type="number" step="1" min="1" value="@Model.DiasFila"
                        class="etapa-noches" data-sugeridos="@Model.DiasSugeridos" />
-                <span class="hint">Esta salida son @Model.DiasSugeridos @(Model.DiasSugeridos == 1 ? "día" : "días")</span>
+                <span class="hint">Son días, NO guías · esta salida son @Model.DiasSugeridos @(Model.DiasSugeridos == 1 ? "día" : "días")</span>
             </div>
         }
         @* Salidas de varios días: cuántas noches se duerme (o cuántas comidas son) en el
@@ -100,7 +101,7 @@
             <div class="field">
                 <label>@Model.EtiquetaNoches</label>
                 <input name="ProvNoches" type="number" step="1" min="1" value="@Model.NochesFila" class="prov-noches" />
-                <span class="hint">Esta salida son @Model.NochesSugeridas @(Model.NochesSugeridas == 1 ? "noche" : "noches")</span>
+                <span class="hint">@Model.AclaraNoches · esta salida son @Model.NochesSugeridas @(Model.NochesSugeridas == 1 ? "noche" : "noches")</span>
             </div>
         }
         <div class="field">

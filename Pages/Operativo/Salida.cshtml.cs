@@ -63,6 +63,23 @@ public class ProvRowVm
         ? "Son comidas, NO pasajeros"
         : "Son noches, NO pasajeros";
 
+    // ¿El total de esta fila lo calculó el sistema, o lo escribió una persona?
+    //
+    // Es la diferencia entre poder rehacer la cuenta y pisar plata que ya está pagada. Si
+    // el total coincide EXACTO con "lo que cobra ese proveedor × las noches guardadas",
+    // entonces lo calculó el sistema y se puede volver a calcular sin perder nada. Si no
+    // coincide, es un número puesto a mano —el caso de todas las salidas cargadas hasta
+    // ahora, donde la multiplicación se hacía con la calculadora— y no se toca.
+    //
+    // Sin esto, elegir otro proveedor en una fila ya cargada rehacía el total como
+    // "precio del catálogo × 7" y borraba el monto real, con la seña ya pagada abajo.
+    public bool TotalAMano => Asig is not null
+                           && Asig.Total > 0
+                           && (PrecioCatalogo <= 0 || Asig.Total != PrecioCatalogo * Asig.NochesReales());
+
+    // Para escribirlo en el HTML sin comillas anidadas dentro de un atributo.
+    public string ManualAttr => TotalAMano ? "1" : "";
+
     // Guía y vehículo: se contratan POR DÍA. La fila lleva una cajita de DÍAS y el total
     // sale de cuántos × lo que cobra cada uno × días. En una salida de un día no aparece:
     // sería siempre 1 y molestaría.

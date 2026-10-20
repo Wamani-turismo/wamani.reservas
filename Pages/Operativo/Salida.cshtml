@@ -687,8 +687,10 @@
                 var tot = fila.querySelector('.prov-total');
                 // En una salida de varios días el precio del proveedor es por noche (o por
                 // comida): se multiplica por las noches y no hay que hacer la cuenta a mano.
+                // Pero si el total lo escribió una persona (las filas ya cargadas, y las
+                // que se tocaron con el botón ✏️), no se toca: ahí puede haber plata paga.
                 var n = nochesDe(fila);
-                if (precio > 0) { tot.value = precio * n; tot.readOnly = true; }
+                if (precio > 0 && tot.dataset.manual !== '1') { tot.value = precio * n; tot.readOnly = true; }
             }
             recalcularProv();
         });

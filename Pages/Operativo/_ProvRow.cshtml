@@ -106,7 +106,8 @@
         }
         <div class="field">
             <label>Total <button type="button" class="prov-edit-total" onclick="editarTotal(this)" title="Cambiar el total a mano">✏️ a mano</button></label>
-            <input name="ProvTotales" type="number" step="0.01" min="0" value="@Num(a?.Total ?? 0)" class="prov-total" />
+            <input name="ProvTotales" type="number" step="0.01" min="0" value="@Num(a?.Total ?? 0)"
+                   class="prov-total" data-manual="@Model.ManualAttr" />
         </div>
         <div class="field">
             <label>Seña ($)</label>

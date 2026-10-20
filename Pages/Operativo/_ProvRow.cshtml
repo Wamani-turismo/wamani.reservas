@@ -19,7 +19,7 @@
        que estar igual para que todas las listas del form queden alineadas por posición al
        guardar: cada fila aporta exactamente un valor a cada lista. *@
     <input type="hidden" name="ProvLugares" value="" />
-    @if (!Model.ConNoches)
+    @if (!Model.ConNoches && !Model.ConDias)
     {
         <input type="hidden" name="ProvNoches" value="" />
     }
@@ -77,6 +77,19 @@
             <div class="field">
                 <label>Precio de cada uno</label>
                 <input name="ProvPreciosPorPersona" type="number" step="0.01" min="0" value="@Num(Model.PrecioCadaUno)" class="etapa-precio" />
+            </div>
+        }
+        @* Salidas de varios días: cuántos DÍAS se contrata al guía o al vehículo. El total
+           se dispara solo: cuántos × lo que cobra cada uno × días.
+           Una fila que ya estaba cargada arranca en 1 día (ver DiasFila), así el total que
+           está puesto a mano no se mueve. Los días sugeridos son para las filas nuevas. *@
+        @if (Model.ConDias)
+        {
+            <div class="field">
+                <label>Días</label>
+                <input name="ProvNoches" type="number" step="1" min="1" value="@Model.DiasFila"
+                       class="etapa-noches" data-sugeridos="@Model.DiasSugeridos" />
+                <span class="hint">Esta salida son @Model.DiasSugeridos @(Model.DiasSugeridos == 1 ? "día" : "días")</span>
             </div>
         }
         @* Salidas de varios días: cuántas noches se duerme (o cuántas comidas son) en el

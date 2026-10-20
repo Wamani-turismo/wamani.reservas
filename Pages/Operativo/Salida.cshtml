@@ -54,12 +54,24 @@
         @{
             List<Wamani.Reservas.Pages.Operativo.ProvRowVm> RowsDe(string tipo, bool conPasajero, bool conCantidad = false)
             {
+                var cat = Model.CatalogoPorTipo.GetValueOrDefault(tipo) ?? new();
+                var asigs = Model.ProvPorTipo.GetValueOrDefault(tipo) ?? new();
+
+                // Si alguna fila ya tiene guardadas varias noches o varios días, la cajita
+                // se muestra igual aunque las fechas de las reservas digan que la salida es
+                // de un día: si se escondiera, ese número se perdería al guardar.
+                var yaTieneVarias = asigs.Any(a => (a.Noches ?? 1) > 1);
+
                 // Hospedaje y restaurante de una salida de varios días: la fila lleva la
                 // cajita de noches/comidas y el total se multiplica solo. En las de un día
                 // (NochesSalida = 0) no aparece.
-                var conNoches = Model.NochesSalida > 0 && (tipo == "Hospedaje" || tipo == "Restaurante");
-                var cat = Model.CatalogoPorTipo.GetValueOrDefault(tipo) ?? new();
-                var asigs = Model.ProvPorTipo.GetValueOrDefault(tipo) ?? new();
+                var conNoches = (Model.NochesSalida > 0 || yaTieneVarias)
+                                && (tipo == "Hospedaje" || tipo == "Restaurante");
+
+                // Guía y vehículo: se pagan POR DÍA, así que llevan cajita de DÍAS y el
+                // total sale de cuántos × precio de cada uno × días. Aparece cuando la
+                // salida dura más de un día.
+                var conDias = conCantidad && (Model.DiasSalida > 1 || yaTieneVarias);
 
                 decimal PrecioCat(Wamani.Reservas.Models.OperativoProveedor? a)
                     => cat.FirstOrDefault(p => p.Id == a?.ProveedorId)?.Precio ?? 0;
@@ -68,6 +80,7 @@
                 {
                     Tipo = tipo, Asig = a, Cat = cat, ConPasajero = conPasajero, ConCantidad = conCantidad,
                     ConNoches = conNoches, NochesSugeridas = Model.NochesSalida,
+                    ConDias = conDias, DiasSugeridos = Model.DiasSalida,
                     Key = a.Id.ToString(), Reservas = Model.Reservas, PrecioCatalogo = PrecioCat(a)
                 }).ToList();
 
@@ -77,6 +90,7 @@
                     {
                         Tipo = tipo, Asig = null, Cat = cat, ConPasajero = conPasajero, ConCantidad = conCantidad,
                         ConNoches = conNoches, NochesSugeridas = Model.NochesSalida,
+                        ConDias = conDias, DiasSugeridos = Model.DiasSalida,
                         Key = "new-" + tipo, Reservas = Model.Reservas
                     });
                 }
@@ -622,6 +636,9 @@
             // para que se complete sola al elegir el proveedor.
             var cPers = clone.querySelector('.etapa-personas'); if (cPers) cPers.value = '1';
             var cPrec = clone.querySelector('.etapa-precio'); if (cPrec) cPrec.value = '';
+            // Los días de la fila nueva: los que dura la salida (el dato viaja en el campo).
+            var cDias = clone.querySelector('.etapa-noches');
+            if (cDias) cDias.value = cDias.dataset.sugeridos || '1';
             var pq = clone.querySelector('.prov-para'); if (pq) pq.value = '0';   // desplegable de reserva
             // renombrar los campos de comprobante con la clave nueva y limpiarlos
             var fSena = clone.querySelector('input[name^="provcompsena_"]'); if (fSena) { fSena.name = 'provcompsena_' + key; fSena.value = ''; }

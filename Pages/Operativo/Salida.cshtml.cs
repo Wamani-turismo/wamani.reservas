@@ -43,6 +43,23 @@ public class ProvRowVm
 
     public string EtiquetaNoches => Tipo == "Restaurante" ? "Comidas" : "Noches";
 
+    // Guía y vehículo: se contratan POR DÍA. La fila lleva una cajita de DÍAS y el total
+    // sale de cuántos × lo que cobra cada uno × días. En una salida de un día no aparece:
+    // sería siempre 1 y molestaría.
+    public bool ConDias { get; set; }
+    public int DiasSugeridos { get; set; } = 1;
+
+    // Lo que muestra la cajita de días. OJO: esto es a propósito y es lo que hace que el
+    // cambio sea seguro. Una fila que YA estaba cargada arranca en los días que tenga
+    // guardados, y si no tiene ninguno arranca en 1 — NUNCA en los días de la salida.
+    // Las salidas viejas tienen el total escrito a mano (5 días de guía puestos como un
+    // solo número, porque antes había que hacer la cuenta aparte); si la cajita arrancara
+    // en 5, tocar cualquier cosa de esa fila multiplicaría por 5 un total que ya estaba
+    // multiplicado. Los días sugeridos son sólo para las filas nuevas.
+    public int DiasFila => Asig?.Noches is int d && d > 0
+        ? d
+        : (Asig is null && DiasSugeridos > 0 ? DiasSugeridos : 1);
+
     public decimal PrecioCatalogo { get; set; }
 
     // Cuántos van. Las filas cargadas ANTES de que existiera este campo no lo tienen: se
@@ -201,6 +218,11 @@ public class SalidaModel : PageModel
     // Cuántas noches duerme afuera esta salida (0 = es de un día). Se usa para proponer
     // las noches del hospedaje y las comidas del restaurante.
     public int NochesSalida { get; set; }
+
+    // Cuántos DÍAS dura la salida: una noche afuera son dos días. Es lo que se propone en
+    // los días del guía y del vehículo, que se cobran por día y no por noche. En una salida
+    // de un día da 1.
+    public int DiasSalida => NochesSalida > 0 ? NochesSalida + 1 : 1;
 
     // Gastos que están cargados DOS VECES en esta salida: el mismo ítem como fila del grupo
     // y además por pasajero, o repetido dentro del mismo grupo.

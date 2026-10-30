@@ -264,6 +264,10 @@ else
                     }
                     <a class="btn-mini btn-mini-ghost" asp-page="/Operativo/Salida"
                        asp-route-excursionId="@g.ExcursionId" asp-route-fecha="@g.FechaDesde.ToString("yyyy-MM-dd")">🎒 Operativo</a>
+                    @* Cómo quedó esta salida: lo que decía la plantilla contra lo que se cargó de verdad *@
+                    <a class="btn-mini btn-mini-ghost" title="Comparar lo que decía la plantilla con lo que se cargó de verdad"
+                       asp-page="/Rentabilidad/Comparar"
+                       asp-route-excursionId="@g.ExcursionId" asp-route-fecha="@g.FechaDesde.ToString("yyyy-MM-dd")">📊 Teórica vs real</a>
                 </div>
             </div>
 

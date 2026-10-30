@@ -34,6 +34,11 @@ namespace Wamani.Reservas.Models
 
         public string? Comprobante { get; set; }
 
+        // Desglose escrito a mano (el botón 📋), igual que en los gastos de la empresa.
+        // NO entra en ninguna cuenta.
+        [Display(Name = "Detalle")]
+        public string? Comentario { get; set; }
+
         // "Rendimientos" son los intereses que paga Mercado Pago por tener la plata en la
         // cuenta remunerada. Es plata ganada de verdad, no un ajuste: suma a la ganancia del
         // mes como cualquier otro ingreso. El control de caja los carga con este motivo.

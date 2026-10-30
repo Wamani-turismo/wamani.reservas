@@ -28,6 +28,12 @@ namespace Wamani.Reservas.Models
 
         public string? Comprobante { get; set; }
 
+        // Desglose escrito a mano (el botón 📋). Sirve para cuando el gasto se carga
+        // generalizado —"Publicidad", "Combustible"— y después hace falta saber qué había
+        // adentro. NO entra en ninguna cuenta: es sólo para acordarse.
+        [Display(Name = "Detalle")]
+        public string? Comentario { get; set; }
+
         // Si se tilda, este gasto se pagó con el FONDO (el 10% que se aparta de la ganancia
         // de cada mes). Sigue siendo un gasto normal de la empresa: lo único que cambia es
         // que además se descuenta del saldo del fondo, para saber cuánto queda ahí.

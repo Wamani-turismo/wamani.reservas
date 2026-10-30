@@ -69,6 +69,11 @@
             </div>
             <div class="field"><label>Monto</label><input asp-for="NuevoMonto" type="number" step="0.01" min="0" /></div>
             <div class="field"><label>Comprobante (opcional)</label><input asp-for="NuevoComprobante" type="file" accept="image/*,.pdf" multiple /></div>
+            <div class="field full">
+                <label>Detalle (opcional)</label>
+                <textarea asp-for="NuevoComentario" rows="3"
+                          placeholder="Para desglosar un ingreso cargado en general. Ej: 3 días de auto a $40.000 + $15.000 de comisión por el hospedaje"></textarea>
+            </div>
         </div>
         <div class="acciones-form" style="margin-top:12px">
             <button type="submit" class="btn btn-primary">+ Agregar ingreso extra</button>
@@ -89,10 +94,19 @@
         }
         @foreach (var e in Model.Lista)
         {
+            var hayNota = !string.IsNullOrWhiteSpace(e.Comentario);
+            var notaCls = hayNota ? "btn-mini btn-mini-ghost btn-nota con-nota" : "btn-mini btn-mini-ghost btn-nota";
+            var notaTit = hayNota ? e.Comentario : "Escribir el detalle de este ingreso";
             <tr>
                 <td data-label="Fecha">@e.Fecha.ToString("dd/MM/yy")</td>
                 <td data-label="Motivo">@e.Motivo</td>
-                <td data-label="Descripción">@e.Descripcion</td>
+                <td data-label="Descripción">
+                    @e.Descripcion
+                    @if (!string.IsNullOrWhiteSpace(e.Comentario))
+                    {
+                        <div class="nota-desglose">@e.Comentario</div>
+                    }
+                </td>
                 <td data-label="De quién">@(string.IsNullOrWhiteSpace(e.DeQuien) ? "—" : e.DeQuien)</td>
                 <td class="num" data-label="Monto" style="color:var(--ok)">@Money(e.Monto)</td>
                 <td data-label="Comprobante">
@@ -106,6 +120,9 @@
                     }
                 </td>
                 <td>
+                    @* El desglose: qué había adentro de este ingreso *@
+                    <button type="button" class="@notaCls" title="@notaTit"
+                            onclick="abrirDetalle(@e.Id)">📋</button>
                     <form method="post" asp-page-handler="Eliminar" asp-route-id="@e.Id" style="display:inline"
                           onsubmit="return confirm('¿Borrar este ingreso extra?');">
                         <input type="hidden" asp-for="Mes" />
@@ -128,3 +145,45 @@
         }
     </table>
 </div>
+
+@* Una ventanita por ingreso para escribir el desglose. Se guarda sola: no toca el monto,
+   la fecha ni el comprobante. *@
+@foreach (var e in Model.Lista)
+{
+    <div class="modal-overlay gasto-modal" id="detalle-@e.Id" onclick="if(event.target===this) cerrarDetalle(@e.Id)">
+        <div class="modal-box" style="max-width:520px">
+            <h2 style="margin:0 0 4px">📋 Detalle del ingreso</h2>
+            <p class="hint" style="margin:0 0 14px">
+                @e.Descripcion · @Money(e.Monto) · @e.Fecha.ToString("dd/MM/yyyy")<br />
+                Para desglosar lo que cargaste en general. No entra en ninguna cuenta.
+            </p>
+            <form method="post" asp-page-handler="Nota" asp-route-id="@e.Id">
+                <input type="hidden" asp-for="Mes" />
+                <textarea name="nota" rows="7" style="width:100%"
+                          placeholder="Ej: 3 días de auto a $40.000 + $15.000 del hospedaje">@e.Comentario</textarea>
+                <div class="acciones-form" style="margin-top:16px">
+                    <button type="submit" class="btn btn-primary">💾 Guardar detalle</button>
+                    <button type="button" class="btn btn-ghost" onclick="cerrarDetalle(@e.Id)">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+<style>
+/* El desglose se muestra tal como se escribió, respetando los renglones */
+.nota-desglose{margin-top:4px;font-size:.82rem;color:var(--muted);white-space:pre-line;line-height:1.45}
+</style>
+
+@section Scripts {
+    <script>
+        function abrirDetalle(id) {
+            var m = document.getElementById("detalle-" + id);
+            if (m) { m.style.display = "flex"; m.querySelector("textarea").focus(); }
+        }
+        function cerrarDetalle(id) {
+            var m = document.getElementById("detalle-" + id);
+            if (m) { m.style.display = "none"; }
+        }
+    </script>
+}

@@ -31,6 +31,7 @@ public class IndexModel : PageModel
     [BindProperty] public string? NuevoDescripcion { get; set; }
     [BindProperty] public decimal NuevoMonto { get; set; }
     [BindProperty] public List<IFormFile> NuevoComprobante { get; set; } = new();
+    [BindProperty] public string? NuevoComentario { get; set; }
 
 
 
@@ -67,6 +68,7 @@ public class IndexModel : PageModel
                 Tipo = GastoEmpresa.Tipos.Contains(NuevoTipo) ? NuevoTipo : "Fijo",
                 Descripcion = NuevoDescripcion.Trim(),
                 Monto = NuevoMonto,
+                Comentario = string.IsNullOrWhiteSpace(NuevoComentario) ? null : NuevoComentario.Trim(),
                 DelFondo = false
             };
 
@@ -94,6 +96,21 @@ public class IndexModel : PageModel
             await _db.SaveChangesAsync();
             Aviso = $"Gasto movido al {fecha:dd/MM/yyyy}.";
             return RedirectToPage(new { Mes = fecha.ToString("yyyy-MM") });
+        }
+        return RedirectToPage(new { Mes });
+    }
+
+    // Escribir / cambiar el desglose de un movimiento ya cargado (el botón 📋). Se guarda
+    // solo, sin tocar nada más: ni el monto, ni la fecha, ni el comprobante. Vacío = borra
+    // la nota.
+    public async Task<IActionResult> OnPostNotaAsync(int id, string? nota)
+    {
+        var g = await _db.GastosEmpresa.FindAsync(id);
+        if (g is not null)
+        {
+            g.Comentario = string.IsNullOrWhiteSpace(nota) ? null : nota.Trim();
+            await _db.SaveChangesAsync();
+            Aviso = g.Comentario is null ? "Detalle borrado." : "Detalle guardado.";
         }
         return RedirectToPage(new { Mes });
     }

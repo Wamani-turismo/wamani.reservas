@@ -34,6 +34,7 @@ public class IndexModel : PageModel
     [BindProperty] public string? NuevoDeQuien { get; set; }
     [BindProperty] public decimal NuevoMonto { get; set; }
     [BindProperty] public List<IFormFile> NuevoComprobante { get; set; } = new();
+    [BindProperty] public string? NuevoComentario { get; set; }
 
     [TempData] public string? Aviso { get; set; }
 
@@ -68,7 +69,8 @@ public class IndexModel : PageModel
                 Motivo = IngresoExtra.Motivos.Contains(NuevoMotivo) ? NuevoMotivo : "Otro",
                 Descripcion = NuevoDescripcion.Trim(),
                 DeQuien = string.IsNullOrWhiteSpace(NuevoDeQuien) ? null : NuevoDeQuien.Trim(),
-                Monto = NuevoMonto
+                Monto = NuevoMonto,
+                Comentario = string.IsNullOrWhiteSpace(NuevoComentario) ? null : NuevoComentario.Trim()
             };
 
             e.Comprobante = await Wamani.Reservas.Services.Adjuntos.AgregarAsync(
@@ -79,6 +81,21 @@ public class IndexModel : PageModel
             Aviso = "Ingreso extra agregado.";
         }
         return RedirectToPage(new { Mes = NuevoFecha.ToString("yyyy-MM") });
+    }
+
+    // Escribir / cambiar el desglose de un movimiento ya cargado (el botón 📋). Se guarda
+    // solo, sin tocar nada más: ni el monto, ni la fecha, ni el comprobante. Vacío = borra
+    // la nota.
+    public async Task<IActionResult> OnPostNotaAsync(int id, string? nota)
+    {
+        var e = await _db.IngresosExtra.FindAsync(id);
+        if (e is not null)
+        {
+            e.Comentario = string.IsNullOrWhiteSpace(nota) ? null : nota.Trim();
+            await _db.SaveChangesAsync();
+            Aviso = e.Comentario is null ? "Detalle borrado." : "Detalle guardado.";
+        }
+        return RedirectToPage(new { Mes });
     }
 
     public async Task<IActionResult> OnPostEliminarAsync(int id)

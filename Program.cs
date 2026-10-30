@@ -395,6 +395,10 @@ using (var scope = app.Services.CreateScope())
     // La misma nota, pero de UNA salida puntual: en el operativo, por gasto y por proveedor
     EnsureSqliteColumn(db, "OperativoGastos", "Comentario", "TEXT NULL");
     EnsureSqliteColumn(db, "OperativoProveedores", "Comentario", "TEXT NULL");
+    // Y la misma nota en los gastos de la empresa y en los ingresos extra, para desglosar
+    // un movimiento que se cargó generalizado
+    EnsureSqliteColumn(db, "GastosEmpresa", "Comentario", "TEXT NULL");
+    EnsureSqliteColumn(db, "IngresosExtra", "Comentario", "TEXT NULL");
     // Los ítems de la plantilla que se borraron a mano en una salida (para no recopiarlos)
     EnsureSqliteColumn(db, "OperativoSalidas", "ItemsBorrados", "TEXT NULL");
 
@@ -536,6 +540,8 @@ using (var scope = app.Services.CreateScope())
         // La misma nota, pero de UNA salida puntual: en el operativo, por gasto y por proveedor
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoProveedores"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""GastosEmpresa"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""IngresosExtra"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
         // Los ítems de la plantilla que se borraron a mano en una salida (para no recopiarlos)
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoSalidas"" ADD COLUMN IF NOT EXISTS ""ItemsBorrados"" text;");
 

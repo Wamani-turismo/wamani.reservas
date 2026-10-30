@@ -1267,54 +1267,8 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
     // el visitante ve las experiencias que SÍ existen en vez de un cartel del servidor.
     if (e == null)
     {
-        var vivas = db.ExcursionesWeb.Where(x => x.Activa && x.Clave != "")
-                      .OrderBy(x => x.Orden).Select(x => new { x.Clave, x.Nombre }).ToList();
-        var lista = string.Concat(vivas.Select(o =>
-            "<a href=\"/excursiones/" + Uri.EscapeDataString(o.Clave) + "\">" + Esc(o.Nombre) + "</a>"));
-        var sinNada = $$"""
-<!DOCTYPE html>
-<html lang="es-AR"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="robots" content="noindex,follow">
-<title>Esa página no existe | Wamani Turismo</title>
-<link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#131c18;color:#ece5d4;font-family:'Quicksand',sans-serif;line-height:1.7;
-  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 24px}
-.caja{max-width:620px;text-align:center}
-h1{font-family:'Playfair Display',serif;font-size:2.1rem;color:#d8c096;margin-bottom:14px}
-p{color:rgba(236,229,212,.72);margin-bottom:28px}
-.lista{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:32px}
-.lista a{color:#ece5d4;text-decoration:none;font-size:14.5px;font-weight:600;
-  border:1px solid rgba(216,192,150,.25);border-radius:999px;padding:9px 17px;
-  transition:border-color .2s,color .2s}
-.lista a:hover{border-color:#d8c096;color:#d8c096}
-.btn{display:inline-block;background:#d2673a;color:#fff;text-decoration:none;font-weight:700;
-  padding:15px 32px;border-radius:999px}
-/* La barra de volver también acá: sin ella, el que caía en esta página por un enlace
-   viejo no tenía de dónde agarrarse arriba. Era el único lugar del sitio sin salida. */
-.barra{position:fixed;top:0;left:0;right:0;padding:18px 22px;background:#131c18;
-  border-bottom:1px solid rgba(216,192,150,.18);text-align:left}
-.barra a{color:#d8c096;text-decoration:none;font-weight:600;font-size:.95rem}
-</style></head>
-<body>
-<nav class="barra"><a href="/#experiencias">← Volver a todas las experiencias</a></nav>
-<div class="caja">
-  <h1>Esa página no existe</h1>
-  <p>Puede que el enlace esté viejo o que la experiencia ya no esté publicada.
-     Estas son las que sí podés hacer con nosotros hoy:</p>
-  <div class="lista">{{lista}}</div>
-  <a class="btn" href="/">Ir al inicio</a>
-</div></body></html>
-""";
-        // El código se pone sobre la respuesta y el contenido se devuelve sin tocarlo:
-        // Results.Content sin código propio no lo pisa.
         ctx.Response.StatusCode = StatusCodes.Status404NotFound;
-        return Results.Content(sinNada, "text/html; charset=utf-8");
+        return Results.Content(Pagina404Html(db), "text/html; charset=utf-8");
     }
 
     var c = db.ContenidoWeb.FirstOrDefault() ?? new Wamani.Reservas.Models.ContenidoWeb();
@@ -2116,6 +2070,23 @@ app.MapPost("/web/consulta", async (HttpRequest req, AppDbContext db, IWebHostEn
   }
 }).AllowAnonymous().DisableAntiforgery();
 
+// ═══════════════════════════════════════════════════════════════════════
+//  CUALQUIER OTRA DIRECCIÓN QUE NO EXISTA
+//
+//  Antes acá no había nada: el servidor contestaba 404 con el cuerpo VACÍO, o sea una
+//  pantalla en blanco. El que llegaba por un enlace viejo o escribía mal la dirección se
+//  quedaba sin nada para tocar. Ahora ve la misma página de "esa página no existe" que
+//  las fichas de excursión, con la lista de lo que sí hay y el botón al inicio.
+//
+//  MapFallback es lo ÚLTIMO que se prueba: sólo entra cuando ninguna otra ruta coincidió,
+//  así que no toca el panel, ni las fichas, ni los archivos de /blog.
+// ═══════════════════════════════════════════════════════════════════════
+app.MapFallback((AppDbContext db, HttpContext ctx) =>
+{
+    ctx.Response.StatusCode = StatusCodes.Status404NotFound;
+    return Results.Content(Pagina404Html(db), "text/html; charset=utf-8");
+});
+
 app.Run();
 
 // Render entrega la conexión a Postgres como una direccion tipo
@@ -2190,4 +2161,56 @@ static void EnsureSqliteColumn(AppDbContext db, string tabla, string columna, st
         alter.CommandText = $"ALTER TABLE {tabla} ADD COLUMN {columna} {tipoSql};";
         alter.ExecuteNonQuery();
     }
+}
+
+// La página de "esa página no existe": la usan la ficha de excursión y el MapFallback.
+// Ofrece siempre una salida (las experiencias vivas y el botón al inicio) para que nadie
+// quede en una pantalla muerta. Va con noindex: es un 404 de verdad, no una página más.
+static string Pagina404Html(AppDbContext db)
+{
+        var vivas = db.ExcursionesWeb.Where(x => x.Activa && x.Clave != "")
+                      .OrderBy(x => x.Orden).Select(x => new { x.Clave, x.Nombre }).ToList();
+        var lista = string.Concat(vivas.Select(o =>
+            "<a href=\"/excursiones/" + Uri.EscapeDataString(o.Clave) + "\">" + System.Net.WebUtility.HtmlEncode(o.Nombre ?? "") + "</a>"));
+        var sinNada = $$"""
+<!DOCTYPE html>
+<html lang="es-AR"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,follow">
+<title>Esa página no existe | Wamani Turismo</title>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#131c18;color:#ece5d4;font-family:'Quicksand',sans-serif;line-height:1.7;
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 24px}
+.caja{max-width:620px;text-align:center}
+h1{font-family:'Playfair Display',serif;font-size:2.1rem;color:#d8c096;margin-bottom:14px}
+p{color:rgba(236,229,212,.72);margin-bottom:28px}
+.lista{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:32px}
+.lista a{color:#ece5d4;text-decoration:none;font-size:14.5px;font-weight:600;
+  border:1px solid rgba(216,192,150,.25);border-radius:999px;padding:9px 17px;
+  transition:border-color .2s,color .2s}
+.lista a:hover{border-color:#d8c096;color:#d8c096}
+.btn{display:inline-block;background:#d2673a;color:#fff;text-decoration:none;font-weight:700;
+  padding:15px 32px;border-radius:999px}
+/* La barra de volver también acá: sin ella, el que caía en esta página por un enlace
+   viejo no tenía de dónde agarrarse arriba. Era el único lugar del sitio sin salida. */
+.barra{position:fixed;top:0;left:0;right:0;padding:18px 22px;background:#131c18;
+  border-bottom:1px solid rgba(216,192,150,.18);text-align:left}
+.barra a{color:#d8c096;text-decoration:none;font-weight:600;font-size:.95rem}
+</style></head>
+<body>
+<nav class="barra"><a href="/#experiencias">← Volver a todas las experiencias</a></nav>
+<div class="caja">
+  <h1>Esa página no existe</h1>
+  <p>Puede que el enlace esté viejo o que la experiencia ya no esté publicada.
+     Estas son las que sí podés hacer con nosotros hoy:</p>
+  <div class="lista">{{lista}}</div>
+  <a class="btn" href="/">Ir al inicio</a>
+</div></body></html>
+""";
+    return sinNada;
 }

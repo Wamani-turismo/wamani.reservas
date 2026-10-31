@@ -1153,9 +1153,18 @@ app.MapGet("/agencias", () => Results.Redirect("/receptivo/#agencia")).AllowAnon
 //  "página no encontrada" — y Google todavía las muestra en los resultados, así que la
 //  gente que hacía clic se llevaba un error.
 //
-//  Con esto, cada una lleva a la web nueva con ESA experiencia abierta. El redirect es
+//  Con esto, cada una lleva a la página propia de ESA excursión. El redirect es
 //  "permanente" (301), que es la forma de decirle a Google "esto se mudó acá": con el
 //  tiempo reemplaza la dirección vieja por la nueva y le pasa lo que tenía ganado.
+//
+//  31/10/2026 — antes apuntaban a "/web/#excursion" y eso tenía dos problemas, los dos
+//  visibles en Search Console: (1) /web/ ya manda 301 a "/", así que Google tenía que dar
+//  DOS saltos, y en una cadena así buena parte de la fuerza se pierde por el camino
+//  (de hecho /web/ seguía apareciendo en el buscador con 53 impresiones y ningún clic);
+//  (2) peor todavía, el "#excursion" nunca le llega al servidor, así que el que buscaba
+//  "termas de jordan" aterrizaba en la portada y tenía que buscar la excursión a mano.
+//  Como desde entonces cada excursión tiene su propia página (/excursiones/...), ahora
+//  cada dirección vieja va DERECHO a la página de esa excursión, de un solo salto.
 //
 //  Se listan una por una a propósito, en vez de atrapar cualquier dirección: así no se
 //  toca ninguna ruta del sistema y lo que no está en la lista sigue dando 404.
@@ -1170,7 +1179,7 @@ var paginasWebAnterior = new[]
 
 foreach (var pagina in paginasWebAnterior)
 {
-    var destino = "/web/#" + pagina;
+    var destino = "/excursiones/" + pagina;
     // Una sola por página: para el servidor, "/pagina" y "/pagina/" son la misma dirección,
     // así que registrar las dos formas hacía que no supiera cuál usar y tiraba error.
     app.MapGet("/" + pagina, () => Results.Redirect(destino, permanent: true)).AllowAnonymous();

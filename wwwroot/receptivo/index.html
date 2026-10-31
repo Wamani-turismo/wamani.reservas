@@ -239,8 +239,12 @@ footer .datos{display:flex; flex-wrap:wrap; gap:8px 22px; justify-content:center
 
     <div class="caminos">
       <!-- El viajero va derecho a las experiencias de la web: ahí puede verlas todas y
-           entrar a la información de cada una. Antes se quedaba acá y se confundía. -->
-      <a class="camino" href="/web/#experiencias">
+           entrar a la información de cada una. Antes se quedaba acá y se confundía.
+           31/10/2026: apuntaba a "/web/#experiencias", la dirección vieja de la landing,
+           que desde septiembre manda 301 a "/". Era el ÚNICO enlace del sitio que seguía
+           nombrando /web/, y por eso Google la mantenía indexada (53 impresiones y ningún
+           clic en octubre). Ahora va directo a la raíz. -->
+      <a class="camino" href="/#experiencias">
         <span class="icono">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18l5.5-9 3.5 5.5L14 12l7 6H3z"/><circle cx="17" cy="6.5" r="2.2"/></svg>
         </span>

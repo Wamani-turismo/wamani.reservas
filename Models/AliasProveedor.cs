@@ -29,6 +29,12 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Alias")]
         public string? Alias { get; set; }
 
+        // Donde esta la cuenta: Banco Macro, Mercado Pago, Uala, lo que sea. Texto
+        // libre a proposito: Lautaro lo escribe como le salga.
+        [MaxLength(80)]
+        [Display(Name = "Entidad")]
+        public string? Entidad { get; set; }
+
         // El nombre que figura en la cuenta, cuando no es el mismo que el de arriba.
         [MaxLength(140)]
         [Display(Name = "Titular de la cuenta")]

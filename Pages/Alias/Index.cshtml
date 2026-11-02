@@ -55,6 +55,10 @@
                 <input asp-for="Nuevo.Alias" placeholder="Ej: maria.hostal.mp" />
             </div>
             <div class="field">
+                <label>Entidad</label>
+                <input asp-for="Nuevo.Entidad" placeholder="Banco Macro / Mercado Pago / Ualá…" />
+            </div>
+            <div class="field">
                 <label>Titular de la cuenta (si es otro)</label>
                 <input asp-for="Nuevo.Titular" placeholder="Ej: María Elena Vilte" />
             </div>
@@ -120,7 +124,7 @@
                 <div class="table-wrap">
                     <table class="tabla">
                         <thead>
-                            <tr><th>Nombre</th><th>Qué hace</th><th>Alias</th><th>Teléfono</th><th>Dónde queda</th><th></th></tr>
+                            <tr><th>Nombre</th><th>Qué hace</th><th>Alias</th><th>Entidad</th><th>Teléfono</th><th>Dónde queda</th><th></th></tr>
                         </thead>
                         <tbody>
                         @foreach (var a in lista)
@@ -154,6 +158,7 @@
                                                 onclick="copiarAlias(this)" data-alias="@a.Alias">📄</button>
                                     }
                                 </td>
+                                <td data-label="Entidad">@(string.IsNullOrWhiteSpace(a.Entidad) ? "—" : a.Entidad)</td>
                                 <td data-label="Teléfono">@(string.IsNullOrWhiteSpace(a.Telefono) ? "—" : a.Telefono)</td>
                                 <td data-label="Dónde queda">@(string.IsNullOrWhiteSpace(a.Lugar) ? "—" : a.Lugar)</td>
                                 <td class="acciones" data-label="">
@@ -211,6 +216,7 @@
                     <div class="field"><label>Nombre</label><input name="nombre" value="@a.Nombre" /></div>
                     <div class="field"><label>Qué hace</label><input name="tipo" value="@a.Tipo" list="tipos-alias" /></div>
                     <div class="field"><label>Alias</label><input name="alias" value="@a.Alias" /></div>
+                    <div class="field"><label>Entidad</label><input name="entidad" value="@a.Entidad" /></div>
                     <div class="field"><label>Titular de la cuenta</label><input name="titular" value="@a.Titular" /></div>
                     <div class="field"><label>Teléfono</label><input name="telefono" value="@a.Telefono" /></div>
                     <div class="field"><label>Dónde queda</label><input name="lugar" value="@a.Lugar" /></div>

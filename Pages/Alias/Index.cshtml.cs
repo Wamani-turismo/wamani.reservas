@@ -55,6 +55,7 @@ public class IndexModel : PageModel
             Nombre = Nuevo.Nombre.Trim(),
             Tipo = Limpio(Nuevo.Tipo),
             Alias = Limpio(Nuevo.Alias),
+            Entidad = Limpio(Nuevo.Entidad),
             Titular = Limpio(Nuevo.Titular),
             Telefono = Limpio(Nuevo.Telefono),
             Lugar = Limpio(Nuevo.Lugar),
@@ -67,7 +68,7 @@ public class IndexModel : PageModel
 
     // Guardar los cambios de una fila ya cargada (el botón ✏️).
     public async Task<IActionResult> OnPostEditarAsync(int id, string? region, string? nombre,
-        string? tipo, string? alias, string? titular, string? telefono, string? lugar)
+        string? tipo, string? alias, string? entidad, string? titular, string? telefono, string? lugar)
     {
         var a = await _db.AliasProveedores.FindAsync(id);
         if (a is not null && !string.IsNullOrWhiteSpace(nombre))
@@ -76,6 +77,7 @@ public class IndexModel : PageModel
             a.Nombre = nombre.Trim();
             a.Tipo = Limpio(tipo);
             a.Alias = Limpio(alias);
+            a.Entidad = Limpio(entidad);
             a.Titular = Limpio(titular);
             a.Telefono = Limpio(telefono);
             a.Lugar = Limpio(lugar);

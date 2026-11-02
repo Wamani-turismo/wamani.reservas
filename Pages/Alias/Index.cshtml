@@ -1,0 +1,260 @@
+@page
+@model Wamani.Reservas.Pages.Alias.IndexModel
+@{
+    ViewData["Title"] = "Alias de proveedores";
+    var regiones = Wamani.Reservas.Models.AliasProveedor.Regiones;
+    string Ico(string r) => r switch
+    {
+        "Valle" => "🌳",
+        "Quebrada" => "🏜️",
+        "Puna" => "🧂",
+        "Yungas" => "🌿",
+        _ => "📍"
+    };
+}
+
+<div class="toolbar">
+    <div>
+        <h1>Alias de proveedores</h1>
+        <p class="subtitle" style="margin:0">
+            A quién le tenés que transferir, con qué alias, qué hace y dónde queda.
+            Está dividido por región para encontrarlo rápido.
+        </p>
+    </div>
+    <a class="btn btn-ghost" asp-page="/Actividad/Index">← Volver a quién cargó qué</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Aviso))
+{
+    <div class="aviso-ok">@Model.Aviso</div>
+}
+
+<div class="card">
+    <h2>Agregar un proveedor</h2>
+    <form method="post" asp-page-handler="Agregar">
+        <div class="form-grid">
+            <div class="field">
+                <label>Región</label>
+                <select asp-for="Nuevo.Region">
+                    @foreach (var r in regiones)
+                    {
+                        <option value="@r">@r</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label>Nombre</label>
+                <input asp-for="Nuevo.Nombre" placeholder="Ej: Hostal Las Marías" />
+            </div>
+            <div class="field">
+                <label>Qué hace</label>
+                <input asp-for="Nuevo.Tipo" list="tipos-alias" placeholder="Hospedaje / Auto / Comida…" />
+            </div>
+            <div class="field">
+                <label>Alias para transferir</label>
+                <input asp-for="Nuevo.Alias" placeholder="Ej: maria.hostal.mp" />
+            </div>
+            <div class="field">
+                <label>Titular de la cuenta (si es otro)</label>
+                <input asp-for="Nuevo.Titular" placeholder="Ej: María Elena Vilte" />
+            </div>
+            <div class="field">
+                <label>Teléfono</label>
+                <input asp-for="Nuevo.Telefono" placeholder="Ej: 388 15 400 0000" />
+            </div>
+            <div class="field">
+                <label>Dónde queda</label>
+                <input asp-for="Nuevo.Lugar" placeholder="Ej: Tilcara" />
+            </div>
+            <div class="field full">
+                <label>Nota (opcional)</label>
+                <textarea asp-for="Nuevo.Nota" rows="2"
+                          placeholder="Ej: cobra por bloque de 2 personas, pide seña del 50%"></textarea>
+            </div>
+        </div>
+        <div class="acciones-form" style="margin-top:12px">
+            <button type="submit" class="btn btn-primary">+ Agregar proveedor</button>
+        </div>
+    </form>
+</div>
+
+@* Las sugerencias del campo "Qué hace": sirven para el formulario de arriba y para
+   todas las ventanitas de editar. *@
+<datalist id="tipos-alias">
+    <option value="Hospedaje"></option>
+    <option value="Auto"></option>
+    <option value="Comida"></option>
+    <option value="Restaurante"></option>
+    <option value="Guía"></option>
+    <option value="Arriero"></option>
+    <option value="Caballos"></option>
+    <option value="Entradas"></option>
+    <option value="Otro"></option>
+</datalist>
+
+<form method="get" class="mes-nav" style="margin-top:14px">
+    <input class="search" type="search" name="Buscar" value="@Model.Buscar"
+           placeholder="Buscar por nombre, alias, qué hace o lugar…" />
+    <button type="submit" class="btn-mini btn-mini-ghost">Buscar</button>
+    @if (!string.IsNullOrWhiteSpace(Model.Buscar))
+    {
+        <a class="btn-mini btn-mini-ghost" asp-page="/Alias/Index">Ver todos</a>
+    }
+    <span class="mes-titulo" style="margin-left:auto">@Model.Todos.Count proveedor(es)</span>
+</form>
+
+@foreach (var r in regiones)
+{
+    var lista = Model.Todos.Where(a => a.Region == r).ToList();
+    var ocultar = lista.Count == 0 && r == "Otro";
+    if (!ocultar)
+    {
+        <div class="card" style="margin-top:14px">
+            <h2>@Ico(r) @r <span class="hint" style="font-weight:400">· @lista.Count</span></h2>
+            @if (lista.Count == 0)
+            {
+                <p class="hint">Todavía no cargaste ninguno de esta zona.</p>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="tabla">
+                        <thead>
+                            <tr><th>Nombre</th><th>Qué hace</th><th>Alias</th><th>Teléfono</th><th>Dónde queda</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var a in lista)
+                        {
+                            var hayNota = !string.IsNullOrWhiteSpace(a.Nota);
+                            var notaCls = hayNota ? "btn-mini btn-mini-ghost btn-nota con-nota" : "btn-mini btn-mini-ghost btn-nota";
+                            var notaTit = hayNota ? a.Nota : "Escribir una nota de este proveedor";
+                            var confirmar = "return confirm('¿Borrar este proveedor de la libreta?');";
+                            <tr>
+                                <td data-label="Nombre">
+                                    <strong>@a.Nombre</strong>
+                                    @if (!string.IsNullOrWhiteSpace(a.Titular))
+                                    {
+                                        <div class="cliente-sub">Titular: @a.Titular</div>
+                                    }
+                                    @if (hayNota)
+                                    {
+                                        <div class="nota-desglose">@a.Nota</div>
+                                    }
+                                </td>
+                                <td data-label="Qué hace">@(string.IsNullOrWhiteSpace(a.Tipo) ? "—" : a.Tipo)</td>
+                                <td data-label="Alias">
+                                    @if (string.IsNullOrWhiteSpace(a.Alias))
+                                    {
+                                        <span class="cliente-sub">— sin alias —</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="alias-txt">@a.Alias</span>
+                                        <button type="button" class="btn-mini btn-mini-ghost" title="Copiar el alias"
+                                                onclick="copiarAlias(this)" data-alias="@a.Alias">📄</button>
+                                    }
+                                </td>
+                                <td data-label="Teléfono">@(string.IsNullOrWhiteSpace(a.Telefono) ? "—" : a.Telefono)</td>
+                                <td data-label="Dónde queda">@(string.IsNullOrWhiteSpace(a.Lugar) ? "—" : a.Lugar)</td>
+                                <td class="acciones" data-label="">
+                                    <button type="button" class="@notaCls" title="@notaTit"
+                                            onclick="abrirVent('nota-@a.Id')">📋</button>
+                                    <button type="button" class="btn-mini btn-mini-ghost" title="Editar"
+                                            onclick="abrirVent('edit-@a.Id')">✏️</button>
+                                    <form method="post" asp-page-handler="Eliminar" asp-route-id="@a.Id" style="display:inline">
+                                        <button type="submit" class="btn-mini btn-mini-danger" title="Borrar"
+                                                onclick="@confirmar">🗑</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+}
+
+@* Una ventanita por proveedor para la nota y otra para editar los datos *@
+@foreach (var a in Model.Todos)
+{
+    <div class="modal-overlay gasto-modal" id="nota-@a.Id" onclick="if(event.target===this) cerrarVent('nota-@a.Id')">
+        <div class="modal-box" style="max-width:520px">
+            <h2 style="margin:0 0 4px">📋 Nota de @a.Nombre</h2>
+            <p class="hint" style="margin:0 0 14px">Para lo que haya que acordarse: cómo cobra, con quién hablar, lo que sea.</p>
+            <form method="post" asp-page-handler="Nota" asp-route-id="@a.Id">
+                <textarea name="nota" rows="7" style="width:100%"
+                          placeholder="Ej: cobra por bloque de 2 personas, pide seña del 50%">@a.Nota</textarea>
+                <div class="acciones-form" style="margin-top:16px">
+                    <button type="submit" class="btn btn-primary">💾 Guardar nota</button>
+                    <button type="button" class="btn btn-ghost" onclick="cerrarVent('nota-@a.Id')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay gasto-modal" id="edit-@a.Id" onclick="if(event.target===this) cerrarVent('edit-@a.Id')">
+        <div class="modal-box" style="max-width:620px">
+            <h2 style="margin:0 0 14px">✏️ Editar @a.Nombre</h2>
+            <form method="post" asp-page-handler="Editar" asp-route-id="@a.Id">
+                <div class="form-grid">
+                    <div class="field">
+                        <label>Región</label>
+                        <select name="region">
+                            @foreach (var r in regiones)
+                            {
+                                <option value="@r" selected="@(r == a.Region)">@r</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="field"><label>Nombre</label><input name="nombre" value="@a.Nombre" /></div>
+                    <div class="field"><label>Qué hace</label><input name="tipo" value="@a.Tipo" list="tipos-alias" /></div>
+                    <div class="field"><label>Alias</label><input name="alias" value="@a.Alias" /></div>
+                    <div class="field"><label>Titular de la cuenta</label><input name="titular" value="@a.Titular" /></div>
+                    <div class="field"><label>Teléfono</label><input name="telefono" value="@a.Telefono" /></div>
+                    <div class="field"><label>Dónde queda</label><input name="lugar" value="@a.Lugar" /></div>
+                </div>
+                <div class="acciones-form" style="margin-top:16px">
+                    <button type="submit" class="btn btn-primary">💾 Guardar cambios</button>
+                    <button type="button" class="btn btn-ghost" onclick="cerrarVent('edit-@a.Id')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+<style>
+.nota-desglose{margin-top:4px;font-size:.82rem;color:var(--muted);white-space:pre-line;line-height:1.45}
+.alias-txt{font-family:ui-monospace,Menlo,monospace;font-size:.9rem;word-break:break-all}
+</style>
+
+@section Scripts {
+    <script>
+        function abrirVent(id) {
+            var m = document.getElementById(id);
+            if (m) {
+                m.style.display = "flex";
+                var t = m.querySelector("textarea,input");
+                if (t) { t.focus(); }
+            }
+        }
+        function cerrarVent(id) {
+            var m = document.getElementById(id);
+            if (m) { m.style.display = "none"; }
+        }
+        function copiarAlias(btn) {
+            var txt = btn.getAttribute("data-alias") || "";
+            function ok() {
+                var v = btn.textContent;
+                btn.textContent = "OK";
+                setTimeout(function () { btn.textContent = v; }, 1200);
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(txt).then(ok, function () { window.prompt("Copiá el alias:", txt); });
+            } else {
+                window.prompt("Copiá el alias:", txt);
+            }
+        }
+    </script>
+}

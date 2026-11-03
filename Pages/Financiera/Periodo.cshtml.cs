@@ -139,16 +139,13 @@ public class PeriodoModel : PageModel
         {
             // Un gasto pagado de una vez deja un movimiento; uno con seña deja dos, cada
             // uno el día en que se pagó de verdad.
-            var enDosPartes = o.ConSena;
             foreach (var pago in o.Pagos())
             {
                 if (!EnRango(pago.Dia)) continue;
-                var cual = !enDosPartes ? o.Nombre
-                    : (pago.Dia == o.FechaSena && pago.Monto == o.Sena ? $"{o.Nombre} (seña)" : $"{o.Nombre} (saldo)");
                 Egresos.Add(new Movimiento
                 {
                     Fecha = pago.Dia.Date,
-                    Concepto = cual,
+                    Concepto = pago.Cual == "" ? o.Nombre : $"{o.Nombre} ({pago.Cual})",
                     Detalle = NombreExc(o.ExcursionId),
                     Salida = o.Fecha.Date,
                     Monto = pago.Monto

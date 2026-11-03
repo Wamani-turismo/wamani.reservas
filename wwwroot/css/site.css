@@ -673,7 +673,7 @@ input[type=file]::file-selector-button {
 .celda-sena .dgl { display: grid; grid-template-columns: 16px 40px minmax(0, 1fr) 112px;
                    align-items: center; gap: 5px; }
 .celda-sena .dgl + .dgl { margin-top: 5px; }
-.celda-sena .chk-pago { width: 15px; height: 15px; margin: 0; accent-color: var(--ok); }
+.celda-sena .chk-pago { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); cursor: default; }
 .dgl-lbl { font-size: .76rem; color: var(--muted); }
 .celda-sena .dgl-fecha { width: 100%; margin: 0; font-size: .76rem; padding: 4px 5px; }
 /* Lo que falta, o el "Pagado" en verde, abajo del total (igual que en Proveedores).
@@ -681,9 +681,19 @@ input[type=file]::file-selector-button {
 .dgl-falta:empty { display: none; }
 .dgl-falta { margin-top: 5px; font-size: .78rem; color: var(--warn); text-align: right; }
 .dgl-ok { color: var(--ok); font-weight: 700; }
-/* El tilde LISTO bloqueado (lo decide la plata de la seña y el saldo) se ve igual, no
-   apagado: es información, no un campo roto. */
-#tablaGastos .chk-listo:disabled { opacity: 1; accent-color: var(--ok); cursor: default; }
+/* Un tilde "trabado" es el que lo decide la plata (el LISTO cuando hay seña cargada, y
+   los de la seña y el saldo). NO se usa "disabled": el navegador pinta gris un campo
+   deshabilitado y un gasto PAGADO terminaba viéndose más apagado que uno sin pagar, que
+   es justo al revés de lo que sirve para encontrar rápido lo que falta. Se traba el
+   click y se le deja el coral de siempre. */
+.chk-trabado { pointer-events: none; accent-color: var(--accent); cursor: default; }
+
+/* La fila entera avisa cómo viene: filete verde si está pagada del todo, coral si está
+   pagada a medias. Los campos no cambian de color ni se apagan: sólo el borde. */
+#tablaGastos tr.fila-pagada td:first-child { box-shadow: inset 4px 0 0 var(--ok); }
+#tablaGastos tr.fila-pagada td { background: var(--ok-soft); }
+#tablaGastos tr.fila-a-medias td:first-child { box-shadow: inset 4px 0 0 var(--warn); }
+#tablaGastos tr.fila-a-medias td { background: var(--warn-soft); }
 
 @media (max-width: 1100px) {
   /* Si no entra la fecha al lado del monto, baja abajo en vez de apretar todo. */

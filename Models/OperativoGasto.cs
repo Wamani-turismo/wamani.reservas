@@ -99,16 +99,16 @@ namespace Wamani.Reservas.Models
         // Los movimientos de plata REALES de este gasto: qué día salió cuánto.
         // Es el único lugar donde se decide eso; todo el resto del sistema (caja,
         // Finanzas, el fondo, los informes) pregunta acá y así nunca se cuenta dos veces.
-        public IEnumerable<(DateTime Dia, decimal Monto)> Pagos()
+        public IEnumerable<(DateTime Dia, decimal Monto, string Cual)> Pagos()
         {
             if (ConSena)
             {
-                if (FechaSena is DateTime fs && Sena != 0) yield return (fs, Sena);
-                if (FechaSaldo is DateTime fl && Saldo != 0) yield return (fl, Saldo);
+                if (FechaSena is DateTime fs && Sena != 0) yield return (fs, Sena, "seña");
+                if (FechaSaldo is DateTime fl && Saldo != 0) yield return (fl, Saldo, "saldo");
             }
             else if (FechaPago is DateTime f && Precio != 0)
             {
-                yield return (f, Precio);
+                yield return (f, Precio, "");
             }
         }
 

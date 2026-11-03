@@ -80,14 +80,14 @@
         @if (permiteSena)
         {
             <div class="dgl">
-                <input type="checkbox" class="chk-pago chk-pago-sena" disabled @(senaPaga ? "checked" : "") title="Pagado" />
+                <input type="checkbox" class="chk-pago chk-trabado chk-pago-sena" tabindex="-1" aria-readonly="true" @(senaPaga ? "checked" : "") title="Se marca solo cuando hay plata cargada" />
                 <span class="dgl-lbl">Seña</span>
                 <input name="GastoSenas" type="number" step="0.01" min="0" value="@Num(g.Sena)" class="in-sena" />
                 <input type="date" name="GastoFechasSena" value="@fSena" class="dgl-fecha in-fsena"
                        title="El día en que se pagó la seña" />
             </div>
             <div class="dgl">
-                <input type="checkbox" class="chk-pago chk-pago-saldo" disabled @(saldoPago ? "checked" : "") title="Pagado" />
+                <input type="checkbox" class="chk-pago chk-trabado chk-pago-saldo" tabindex="-1" aria-readonly="true" @(saldoPago ? "checked" : "") title="Se marca solo cuando hay plata cargada" />
                 <span class="dgl-lbl">Saldo</span>
                 <input name="GastoSaldos" type="number" step="0.01" min="0" value="@Num(g.Saldo)" class="in-saldo" />
                 <input type="date" name="GastoFechasSaldo" value="@fSaldo" class="dgl-fecha in-fsaldo"

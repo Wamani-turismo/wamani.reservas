@@ -471,10 +471,18 @@
             if (listo) {
                 if (cargado > 0) {
                     listo.checked = suyo > 0 && cargado >= suyo;
-                    listo.disabled = true;
+                    // Se traba con una clase, NO con "disabled": el navegador pinta gris
+                    // un campo deshabilitado y un gasto pagado terminaba viéndose más
+                    // apagado que uno sin pagar.
+                    listo.classList.add('chk-trabado');
+                    listo.tabIndex = -1;
                     listo.title = 'Se pinta solo: acá manda la seña y el saldo';
-                } else if (listo.disabled) {
-                    listo.disabled = false;
+                } else if (listo.classList.contains('chk-trabado')) {
+                    // Se borró la plata: el tilde lo había puesto el sistema, así que se
+                    // suelta y se destilda. Si no, el gasto quedaba pagado por el total.
+                    listo.classList.remove('chk-trabado');
+                    listo.checked = false;
+                    listo.tabIndex = 0;
                     listo.title = '';
                 }
             }
@@ -483,12 +491,30 @@
             if (caja) caja.style.display = (cargado === 0 && listo && listo.checked) ? '' : 'none';
 
             var falta = tr.querySelector('.dgl-falta');
-            if (!falta) return;
-            if (cargado <= 0) { falta.innerHTML = ''; return; }
-            var resta = suyo - cargado;
-            falta.innerHTML = resta > 0
-                ? 'Falta <b>' + money(resta) + '</b>'
-                : '<span class="dgl-ok">Pagado ✔</span>';
+            if (falta) {
+                if (cargado <= 0) {
+                    falta.innerHTML = '';
+                } else {
+                    var resta = suyo - cargado;
+                    falta.innerHTML = resta > 0
+                        ? 'Falta <b>' + money(resta) + '</b>'
+                        : '<span class="dgl-ok">Pagado ✔</span>';
+                }
+            }
+            pintarPagada(tr);
+        }
+
+        // Un gasto pagado del todo se marca con un filete verde al costado, pagado a
+        // medias con uno coral. Es para encontrar de un vistazo lo que falta cuando la
+        // salida tiene quince gastos; los campos no cambian de color ni se apagan.
+        function pintarPagada(tr) {
+            var suyo = (typeof tr._total === 'number') ? tr._total : (parseFloat(tr.querySelector('.in-precio')?.value) || 0);
+            var cargado = pagadoDesglose(tr);
+            var listo = tr.querySelector('.chk-listo');
+            var pagoTodo = cargado > 0 ? (suyo > 0 && cargado >= suyo) : !!(listo && listo.checked);
+            var pagoParte = cargado > 0 && !pagoTodo;
+            tr.classList.toggle('fila-pagada', pagoTodo);
+            tr.classList.toggle('fila-a-medias', pagoParte);
         }
 
         // El día del pago sólo tiene sentido si el gasto está tildado como listo: se
@@ -670,7 +696,7 @@
                 pintarDesglose(e.target.closest('.gasto-row')); recalcular(); return;
             }
             if (e.target.classList.contains('in-precio')) { var f = e.target.closest('.gasto-row'); pintarFila(f); pintarDesglose(f); recalcular(); }
-            else if (e.target.classList.contains('chk-listo')) { pintarFechaPago(e.target); recalcular(); }
+            else if (e.target.classList.contains('chk-listo')) { pintarFechaPago(e.target); pintarPagada(e.target.closest('.gasto-row')); recalcular(); }
             // Al cargar una seña o un saldo, si no hay día puesto se propone el de hoy.
             // Si el monto se borra, la fecha se va con él.
             if (e.target.classList.contains('prov-sena') || e.target.classList.contains('prov-saldo')) {

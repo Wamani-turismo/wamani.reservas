@@ -43,12 +43,12 @@
                 </select>
             </div>
             <div class="field">
-                <label>Nombre</label>
-                <input asp-for="Nuevo.Nombre" placeholder="Ej: Hostal Las Marías" />
-            </div>
-            <div class="field">
                 <label>Qué hace</label>
                 <input asp-for="Nuevo.Tipo" list="tipos-alias" placeholder="Hospedaje / Auto / Comida…" />
+            </div>
+            <div class="field">
+                <label>Nombre</label>
+                <input asp-for="Nuevo.Nombre" placeholder="Ej: Hostal Las Marías" />
             </div>
             <div class="field">
                 <label>Alias para transferir</label>
@@ -228,8 +228,8 @@
                             }
                         </select>
                     </div>
-                    <div class="field"><label>Nombre</label><input name="nombre" value="@a.Nombre" /></div>
                     <div class="field"><label>Qué hace</label><input name="tipo" value="@a.Tipo" list="tipos-alias" /></div>
+                    <div class="field"><label>Nombre</label><input name="nombre" value="@a.Nombre" /></div>
                     <div class="field"><label>Alias</label><input name="alias" value="@a.Alias" /></div>
                     <div class="field"><label>Entidad</label><input name="entidad" value="@a.Entidad" /></div>
                     <div class="field"><label>Titular de la cuenta</label><input name="titular" value="@a.Titular" /></div>

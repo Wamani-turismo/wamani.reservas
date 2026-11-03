@@ -132,7 +132,9 @@ public class IndexModel : PageModel
                                 .Select(r => $"{r.NombreCliente} ({r.CantidadPersonas})").ToList(),
                     HayOperativo = gs.Count > 0 || ps.Count > 0,
                     GastosPendientes = gPend.Count,
-                    FaltaGastos = gPend.Sum(x => x.Precio),
+                    // Lo que FALTA, no el total: de un gasto con la seña pagada sólo
+                    // falta el saldo.
+                    FaltaGastos = gPend.Sum(x => x.Pendiente()),
                     ProveedoresPendientes = pPend.Count,
                     FaltaProveedores = pPend.Sum(x => x.Pendiente()),
                     HaySinPrecio = gPend.Any(x => x.Precio <= 0),

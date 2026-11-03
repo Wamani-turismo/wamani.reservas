@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace Wamani.Reservas.Models
 {
@@ -80,5 +82,44 @@ namespace Wamani.Reservas.Models
         // Día en que se cargó/pagó este gasto (se toma solo). La Financiera lo usa para
         // saber en qué MES impacta el egreso, sin importar cuándo sale la excursión.
         public DateTime? FechaPago { get; set; }
+
+        // ---- Pago en dos partes: seña y saldo ----
+        // Lo normal es pagar el gasto de una sola vez: se tilda LISTO y sale toda la plata.
+        // Pero hay gastos que se arreglan con una seña y el resto después (el 50% de una
+        // excursión, por ejemplo). Si se tilda "con seña", el gasto se desglosa en dos
+        // pagos, cada uno con su monto y su día, y cada parte impacta en la caja y en
+        // Finanzas el día en que se pagó de verdad, no cuando termina la salida.
+        // Los gastos de siempre (ConSena = false) no cambian en nada.
+        public bool ConSena { get; set; }
+        public decimal Sena { get; set; }
+        public decimal Saldo { get; set; }
+        public DateTime? FechaSena { get; set; }
+        public DateTime? FechaSaldo { get; set; }
+
+        // Los movimientos de plata REALES de este gasto: qué día salió cuánto.
+        // Es el único lugar donde se decide eso; todo el resto del sistema (caja,
+        // Finanzas, el fondo, los informes) pregunta acá y así nunca se cuenta dos veces.
+        public IEnumerable<(DateTime Dia, decimal Monto)> Pagos()
+        {
+            if (ConSena)
+            {
+                if (FechaSena is DateTime fs && Sena != 0) yield return (fs, Sena);
+                if (FechaSaldo is DateTime fl && Saldo != 0) yield return (fl, Saldo);
+            }
+            else if (FechaPago is DateTime f && Precio != 0)
+            {
+                yield return (f, Precio);
+            }
+        }
+
+        // Lo que ya salió de este gasto, sin mirar el día.
+        public decimal PagadoReal() => Pagos().Sum(p => p.Monto);
+
+        // Lo que salió dentro de un rango de fechas (un mes, un año, un período).
+        public decimal PagadoSi(Func<DateTime, bool> enRango)
+            => Pagos().Where(p => enRango(p.Dia)).Sum(p => p.Monto);
+
+        // Lo que todavía falta pagar de este gasto.
+        public decimal Pendiente() => Math.Max(0, Precio - PagadoReal());
     }
 }

@@ -137,15 +137,23 @@ public class PeriodoModel : PageModel
         // ---- EGRESOS: gastos del operativo pagados + pagos a proveedores ----
         foreach (var o in await _db.OperativoGastos.ToListAsync())
         {
-            if (EnRango(o.FechaPago) && o.Precio != 0)
+            // Un gasto pagado de una vez deja un movimiento; uno con seña deja dos, cada
+            // uno el día en que se pagó de verdad.
+            var enDosPartes = o.ConSena;
+            foreach (var pago in o.Pagos())
+            {
+                if (!EnRango(pago.Dia)) continue;
+                var cual = !enDosPartes ? o.Nombre
+                    : (pago.Dia == o.FechaSena && pago.Monto == o.Sena ? $"{o.Nombre} (seña)" : $"{o.Nombre} (saldo)");
                 Egresos.Add(new Movimiento
                 {
-                    Fecha = o.FechaPago!.Value.Date,
-                    Concepto = o.Nombre,
+                    Fecha = pago.Dia.Date,
+                    Concepto = cual,
                     Detalle = NombreExc(o.ExcursionId),
                     Salida = o.Fecha.Date,
-                    Monto = o.Precio
+                    Monto = pago.Monto
                 });
+            }
         }
 
         foreach (var p in await _db.OperativoProveedores.ToListAsync())

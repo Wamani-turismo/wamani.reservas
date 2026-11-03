@@ -93,18 +93,18 @@ public class PagarModel : PageModel
 
         GastosEnTotal = gastos.Count;
         GastosListos = gastos.Count(g => g.Comprado);
-        PagadoGastos = gastos.Where(g => g.Comprado).Sum(g => g.Precio);
+        PagadoGastos = gastos.Sum(g => g.PagadoReal());
 
         // ---- Gastos que faltan: los que NO están tildados como listos ----
         // (la regla del operativo es siempre la misma: tilde = pagado)
-        foreach (var g in gastos.Where(x => !x.Comprado))
+        foreach (var g in gastos.Where(x => x.Pendiente() > 0 || (x.Precio <= 0 && !x.Comprado)))
         {
             Gastos.Add(new GastoPendiente
             {
                 Nombre = g.Nombre,
                 DeQuien = g.ReservaId is int rid && nombrePorReserva.TryGetValue(rid, out var n) ? n : "",
                 ComoSeCuenta = ComoSeCuenta(g),
-                Monto = g.Precio,
+                Monto = g.Pendiente(),
                 SinPrecio = g.Precio <= 0
             });
         }

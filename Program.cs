@@ -394,6 +394,12 @@ using (var scope = app.Services.CreateScope())
     EnsureSqliteColumn(db, "GastosExcursion", "Comentario", "TEXT NULL");
     // La misma nota, pero de UNA salida puntual: en el operativo, por gasto y por proveedor
     EnsureSqliteColumn(db, "OperativoGastos", "Comentario", "TEXT NULL");
+    // Gastos que se pagan en dos partes: seña y saldo, cada una con su día
+    EnsureSqliteColumn(db, "OperativoGastos", "ConSena", "INTEGER NOT NULL DEFAULT 0");
+    EnsureSqliteColumn(db, "OperativoGastos", "Sena", "TEXT NOT NULL DEFAULT '0'");
+    EnsureSqliteColumn(db, "OperativoGastos", "Saldo", "TEXT NOT NULL DEFAULT '0'");
+    EnsureSqliteColumn(db, "OperativoGastos", "FechaSena", "TEXT NULL");
+    EnsureSqliteColumn(db, "OperativoGastos", "FechaSaldo", "TEXT NULL");
     EnsureSqliteColumn(db, "OperativoProveedores", "Comentario", "TEXT NULL");
     // Y la misma nota en los gastos de la empresa y en los ingresos extra, para desglosar
     // un movimiento que se cargó generalizado
@@ -563,6 +569,12 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""GastosExcursion"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
         // La misma nota, pero de UNA salida puntual: en el operativo, por gasto y por proveedor
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
+        // Gastos que se pagan en dos partes: seña y saldo, cada una con su día
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""ConSena"" boolean NOT NULL DEFAULT false;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""Sena"" numeric NOT NULL DEFAULT 0;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""Saldo"" numeric NOT NULL DEFAULT 0;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""FechaSena"" timestamp without time zone;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""FechaSaldo"" timestamp without time zone;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoProveedores"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""GastosEmpresa"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""IngresosExtra"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
@@ -683,7 +695,8 @@ using (var scope = app.Services.CreateScope())
             .ToHashSet();
 
         var huerfanos = db.OperativoGastos
-            .Where(o => !o.Comprado && o.FechaPago == null && o.Comprobante == null)
+            .Where(o => !o.Comprado && o.FechaPago == null && o.Comprobante == null
+                     && o.Sena == 0 && o.Saldo == 0)
             .ToList()
             .Where(o => !salidasReales.Contains((o.ExcursionId, o.Fecha.Date)))
             .ToList();

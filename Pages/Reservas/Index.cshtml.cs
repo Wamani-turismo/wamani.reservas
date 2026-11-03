@@ -216,7 +216,7 @@ public class IndexModel : PageModel
                         var quien = string.IsNullOrWhiteSpace(p.ProveedorNombre) ? p.Tipo : $"{p.Tipo}: {p.ProveedorNombre}";
                         return string.IsNullOrWhiteSpace(p.Lugar) ? quien : $"{quien} ({p.Lugar})";
                     })
-                .Concat(gastosComp.Where(o => !o.Comprado).Select(o => o.Nombre))
+                .Concat(gastosComp.Where(o => o.Pendiente() > 0).Select(o => o.Nombre))
                 .ToList();
         }
 
@@ -229,7 +229,7 @@ public class IndexModel : PageModel
             var cantidad = provsR.Count + gastosR.Count;
             if (cantidad == 0) continue;
             ServReservaTotal[r.Id] = cantidad;
-            ServReservaFalta[r.Id] = provsR.Sum(p => p.Pendiente()) + gastosR.Where(o => !o.Comprado).Sum(o => o.Precio);
+            ServReservaFalta[r.Id] = provsR.Sum(p => p.Pendiente()) + gastosR.Sum(o => o.Pendiente());
         }
 
         // ---- Detección de coincidencias para el modal ----

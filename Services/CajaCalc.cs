@@ -45,7 +45,7 @@ public static class CajaCalc
         };
 
         var egGastos = (await db.OperativoGastos.ToListAsync())
-            .Where(o => o.FechaPago != null).Sum(o => o.Precio);
+            .Sum(o => o.PagadoReal());
         var egProv = (await db.OperativoProveedores.ToListAsync())
             .Sum(p => (p.FechaSena != null ? p.Sena : 0) + (p.FechaSaldo != null ? p.Saldo : 0));
         var egEmpresa = (await db.GastosEmpresa.ToListAsync()).Sum(g => g.Monto);

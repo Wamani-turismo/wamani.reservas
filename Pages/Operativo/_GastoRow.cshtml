@@ -19,16 +19,41 @@
     var fechaPago = g.FechaPago?.ToString("yyyy-MM-dd")
         ?? (g.Comprado ? Wamani.Reservas.Services.Reloj.HoyJujuy().ToString("yyyy-MM-dd") : "");
     var estiloFecha = g.Comprado ? "" : "display:none";
+
+    // Gastos que se pagan en dos partes (seña + saldo). El cuadradito aparece en las
+    // salidas nuevas; si un gasto ya está desglosado se sigue viendo siempre.
+    var conSena = g.ConSena;
+    var permiteSena = Model.PermiteSena || conSena;
+    var hoyTxt = Wamani.Reservas.Services.Reloj.HoyJujuy().ToString("yyyy-MM-dd");
+    var senaPaga = g.Sena > 0;
+    var saldoPago = g.Saldo > 0;
+    var fSena = g.FechaSena?.ToString("yyyy-MM-dd") ?? (senaPaga ? hoyTxt : "");
+    var fSaldo = g.FechaSaldo?.ToString("yyyy-MM-dd") ?? (saldoPago ? hoyTxt : "");
+    var estiloSimple = conSena ? "display:none" : "";
+    var estiloDesglose = conSena ? "" : "display:none";
 }
 <tr class="gasto-row" data-tipo="@tipo" data-mult="@mult" data-uni="@uni">
     <td data-label="Listo">
-        <input type="checkbox" name="Comprados" value="@g.Id" class="chk-listo" style="width:20px;height:20px" @(g.Comprado ? "checked" : "") />
-        @* El día del pago. Va SIEMPRE en el formulario (aunque esté escondido) para que
-           todas las filas aporten un valor a la lista y no se desacomoden al guardar. *@
-        <div class="fecha-pago-wrap" style="@estiloFecha">
-            <input type="date" name="FechasPago" value="@fechaPago" class="in-fecha-pago"
-                   title="El día en que se pagó de verdad" />
+        @* Pago de una sola vez: el tilde LISTO y el día. Si el gasto va con seña, este
+           bloque se esconde (pero sigue en el formulario, para no desacomodar las listas). *@
+        <div class="listo-simple" style="@estiloSimple">
+            <input type="checkbox" name="Comprados" value="@g.Id" class="chk-listo" style="width:20px;height:20px" @(g.Comprado ? "checked" : "") />
+            @* El día del pago. Va SIEMPRE en el formulario (aunque esté escondido) para que
+               todas las filas aporten un valor a la lista y no se desacomoden al guardar. *@
+            <div class="fecha-pago-wrap" style="@estiloFecha">
+                <input type="date" name="FechasPago" value="@fechaPago" class="in-fecha-pago"
+                       title="El día en que se pagó de verdad" />
+            </div>
         </div>
+        @* El cuadradito que parte el gasto en seña y saldo. El valor que viaja al guardar
+           es el campo escondido: el tilde sólo lo cambia. *@
+        <input type="hidden" name="GastoConSena" value="@(conSena ? "1" : "0")" class="h-consena" />
+        @if (permiteSena)
+        {
+            <label class="lbl-consena" title="Este gasto se paga en dos partes: una seña y después el saldo">
+                <input type="checkbox" class="chk-consena" @(conSena ? "checked" : "") onchange="toggleSena(this)" /> con seña
+            </label>
+        }
     </td>
     <td data-label="Ítem">
         <input type="hidden" name="Ids" value="@g.Id" />
@@ -55,6 +80,27 @@
         }
         <input name="Precios" type="number" step="0.01" min="0" value="@Num(valorInput)" class="in-precio" />
         <div class="calc-linea"></div>
+        @* Seña y saldo. Los cuatro campos viajan SIEMPRE, aunque el desglose esté
+           escondido: cada fila tiene que aportar un valor a cada lista del formulario.
+           Los cuadraditos no se tildan a mano: se marcan solos cuando hay plata cargada,
+           igual que el "falta" de los proveedores. *@
+        <div class="desglose" style="@estiloDesglose">
+            <div class="dgl">
+                <input type="checkbox" class="chk-pago chk-pago-sena" disabled @(senaPaga ? "checked" : "") title="Pagado" />
+                <span class="dgl-lbl">Seña</span>
+                <input name="GastoSenas" type="number" step="0.01" min="0" value="@Num(g.Sena)" class="in-sena" />
+            </div>
+            <input type="date" name="GastoFechasSena" value="@fSena" class="dgl-fecha in-fsena"
+                   title="El día en que se pagó la seña" />
+            <div class="dgl">
+                <input type="checkbox" class="chk-pago chk-pago-saldo" disabled @(saldoPago ? "checked" : "") title="Pagado" />
+                <span class="dgl-lbl">Saldo</span>
+                <input name="GastoSaldos" type="number" step="0.01" min="0" value="@Num(g.Saldo)" class="in-saldo" />
+            </div>
+            <input type="date" name="GastoFechasSaldo" value="@fSaldo" class="dgl-fecha in-fsaldo"
+                   title="El día en que se pagó el saldo" />
+            <div class="dgl-falta"></div>
+        </div>
     </td>
     <td data-label="Comprobante">
         <input type="file" name="comp_@g.Id" accept="image/*,.pdf" class="in-comp" multiple />

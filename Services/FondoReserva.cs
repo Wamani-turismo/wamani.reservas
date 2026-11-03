@@ -53,7 +53,8 @@ public static class FondoReserva
             Sumar(e.Fecha, e.Monto);
 
         foreach (var o in await db.OperativoGastos.ToListAsync())
-            Sumar(o.FechaPago, -o.Precio);
+            foreach (var pago in o.Pagos())
+                Sumar(pago.Dia, -pago.Monto);
 
         foreach (var p in await db.OperativoProveedores.ToListAsync())
         {

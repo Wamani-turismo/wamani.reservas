@@ -119,7 +119,7 @@ public class IndexModel : PageModel
                 var gs = gastos.Where(x => x.ExcursionId == exId).ToList();
                 var ps = provs.Where(x => x.ExcursionId == exId).ToList();
 
-                var gPend = gs.Where(x => !x.Comprado).ToList();
+                var gPend = gs.Where(x => x.Pendiente() > 0).ToList();
                 var pPend = ps.Where(x => x.TieneDeuda()).ToList();
 
                 return new SalidaDeHoy

@@ -12,6 +12,10 @@ public class GastoRowVm
     public OperativoGasto G { get; set; } = new();
     public int Mult { get; set; }         // por cuánto se multiplica el unitario
     public int ReservaId { get; set; }    // 0 = compartido de la salida
+
+    // Si esta salida puede desglosar el gasto en seña y saldo. Se habilitó para las
+    // salidas del 04/11/2026 en adelante: lo viejo queda exactamente como estaba.
+    public bool PermiteSena { get; set; }
 }
 
 // Datos para renderizar una fila de proveedor (partial _ProvRow)
@@ -314,6 +318,13 @@ public class SalidaModel : PageModel
     [BindProperty] public List<int> GastoReservaIds { get; set; } = new();  // a qué reserva pertenece el gasto (0 = compartido)
     [BindProperty] public List<int> Comprados { get; set; } = new();  // ids tildados
     [BindProperty] public List<string?> FechasPago { get; set; } = new();  // el día en que se pagó cada gasto
+    // Gastos que se pagan en dos partes. Como las listas del formulario se emparejan por
+    // POSICIÓN, cada fila manda siempre su valor en las cinco, aunque no use el desglose.
+    [BindProperty] public List<string> GastoConSena { get; set; } = new();     // "1" si va con seña
+    [BindProperty] public List<string> GastoSenas { get; set; } = new();
+    [BindProperty] public List<string> GastoSaldos { get; set; } = new();
+    [BindProperty] public List<string?> GastoFechasSena { get; set; } = new();
+    [BindProperty] public List<string?> GastoFechasSaldo { get; set; } = new();
     [BindProperty] public List<string?> Comentarios { get; set; } = new();  // la nota de cada gasto (botón 📋)
     [BindProperty] public bool ServiciosPagados { get; set; }
     [BindProperty] public IFormFile? ComprobanteArchivo { get; set; }
@@ -623,7 +634,8 @@ public class SalidaModel : PageModel
         var ps = await _db.OperativoProveedores.AsNoTracking()
             .Where(p => p.ExcursionId == ExcursionId && p.Fecha.Date == Fecha.Date).ToListAsync();
 
-        return gs.Where(g => g.Comprado).Sum(g => g.TotalPara(pax)) + ps.Sum(p => p.Pagado());
+        return gs.Sum(g => g.ConSena ? g.Sena + g.Saldo : (g.Comprado ? g.TotalPara(pax) : 0))
+             + ps.Sum(p => p.Pagado());
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -721,20 +733,62 @@ public class SalidaModel : PageModel
                         g.Precio = valor * MultDe(g);
                     }
 
-                    // La fecha de pago aparece cuando se TILDA el gasto como listo. Antes se
-                    // ponía con sólo tener precio: como la plantilla de la excursión se copia
-                    // con los precios ya cargados, alcanzaba con guardar una vez para que TODA
-                    // la estimación (guía, viáticos, traslados…) contara como plata pagada ese
-                    // día. El tilde "LISTO" sigue siendo el único que confirma el pago.
-                    //
-                    // Lo que cambia es CUÁL fecha: manda la que se escribió en la pantalla, que
-                    // es el día en que se pagó de verdad. Si no escribieron ninguna se respeta
-                    // la que ya tenía, y sólo si no había ninguna se usa la de hoy. Sin esto,
-                    // un pago hecho el 12 y cargado el 28 quedaba fechado el 28 y el día por
-                    // día de Finanzas no cerraba nunca contra el banco.
-                    if (comprado && g.Precio > 0)
-                        g.FechaPago = fechaEscrita ?? g.FechaPago ?? Wamani.Reservas.Services.Reloj.HoyJujuy();
-                    if (!comprado || g.Precio == 0) g.FechaPago = null;
+                    // ---- Gastos que se pagan en dos partes: seña y saldo ----
+                    // Con el cuadradito "seña" tildado, este gasto deja de tener un único
+                    // pago: tiene una seña y un saldo, cada uno con su monto y su día, y
+                    // cada parte descuenta de la caja el día en que se pagó de verdad (no
+                    // al terminar la excursión). Sin tildarlo, todo funciona como siempre.
+                    var conSena = i < GastoConSena.Count && GastoConSena[i] == "1";
+                    g.ConSena = conSena;
+
+                    if (conSena)
+                    {
+                        var sena = ParsePrecio(i < GastoSenas.Count ? GastoSenas[i] : "0");
+                        var saldo = ParsePrecio(i < GastoSaldos.Count ? GastoSaldos[i] : "0");
+                        g.Sena = sena;
+                        g.Saldo = saldo;
+
+                        // Plata cargada = plata pagada, igual que en Proveedores: no hay
+                        // que tildar nada aparte. El día es el que se escribió; si no
+                        // escribieron ninguno se respeta el que ya tenía, y recién si no
+                        // había ninguno se usa el de hoy.
+                        var diaSena = ParseFecha(i < GastoFechasSena.Count ? GastoFechasSena[i] : null);
+                        var diaSaldo = ParseFecha(i < GastoFechasSaldo.Count ? GastoFechasSaldo[i] : null);
+                        g.FechaSena = sena > 0
+                            ? (diaSena ?? g.FechaSena ?? Wamani.Reservas.Services.Reloj.HoyJujuy())
+                            : null;
+                        g.FechaSaldo = saldo > 0
+                            ? (diaSaldo ?? g.FechaSaldo ?? Wamani.Reservas.Services.Reloj.HoyJujuy())
+                            : null;
+
+                        // El gasto queda LISTO solo cuando lo cargado cubre el total.
+                        g.Comprado = g.Precio > 0 && sena + saldo >= g.Precio;
+                        // El día del pago ya lo dicen la seña y el saldo: si quedara acá
+                        // también, Finanzas contaría el gasto dos veces.
+                        g.FechaPago = null;
+                    }
+                    else
+                    {
+                        g.Sena = 0;
+                        g.Saldo = 0;
+                        g.FechaSena = null;
+                        g.FechaSaldo = null;
+
+                        // La fecha de pago aparece cuando se TILDA el gasto como listo. Antes se
+                        // ponía con sólo tener precio: como la plantilla de la excursión se copia
+                        // con los precios ya cargados, alcanzaba con guardar una vez para que TODA
+                        // la estimación (guía, viáticos, traslados…) contara como plata pagada ese
+                        // día. El tilde "LISTO" sigue siendo el único que confirma el pago.
+                        //
+                        // Lo que cambia es CUÁL fecha: manda la que se escribió en la pantalla, que
+                        // es el día en que se pagó de verdad. Si no escribieron ninguna se respeta
+                        // la que ya tenía, y sólo si no había ninguna se usa la de hoy. Sin esto,
+                        // un pago hecho el 12 y cargado el 28 quedaba fechado el 28 y el día por
+                        // día de Finanzas no cerraba nunca contra el banco.
+                        if (comprado && g.Precio > 0)
+                            g.FechaPago = fechaEscrita ?? g.FechaPago ?? Wamani.Reservas.Services.Reloj.HoyJujuy();
+                        if (!comprado || g.Precio == 0) g.FechaPago = null;
+                    }
 
                     g.Comprobante = await GuardarArchivosAsync($"comp_{clave}", g.Comprobante);
 
@@ -945,6 +999,7 @@ public class SalidaModel : PageModel
         var borrables = await _db.OperativoGastos
             .Where(o => o.ExcursionId == ExcursionId && o.Fecha.Date == Fecha.Date
                      && !o.Comprado && o.FechaPago == null && o.Comprobante == null
+                     && o.Sena == 0 && o.Saldo == 0
                      && o.Comentario == null)
             .ToListAsync();
 

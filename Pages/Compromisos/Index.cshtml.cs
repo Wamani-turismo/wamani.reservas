@@ -91,7 +91,7 @@ public class IndexModel : PageModel
                      + (await _db.IngresosExtra.ToListAsync()).Sum(e => e.Monto);
 
         var todosGastos = await _db.OperativoGastos.ToListAsync();
-        var egGastos = todosGastos.Where(o => o.FechaPago != null).Sum(o => o.Precio);
+        var egGastos = todosGastos.Sum(o => o.PagadoReal());
 
         var provs = await _db.OperativoProveedores.ToListAsync();
         var egProv = provs.Sum(p => (p.FechaSena != null ? p.Sena : 0) + (p.FechaSaldo != null ? p.Saldo : 0));
@@ -158,26 +158,26 @@ public class IndexModel : PageModel
         // Sin fecha de pago = sin tildar = todavía no salió esa plata. Se agrupan por salida
         // para que se lea de un vistazo; el detalle ítem por ítem está en el operativo.
         Gastos = todosGastos
-            .Where(o => o.FechaPago == null && o.Precio > 0 && !EsHistorica(o.ExcursionId, o.Fecha))
+            .Where(o => o.Pendiente() > 0 && !EsHistorica(o.ExcursionId, o.Fecha))
             .GroupBy(o => new { o.ExcursionId, Fecha = o.Fecha.Date })
             .Select(g => new GastoPendiente
             {
                 Excursion = NombreExc(g.Key.ExcursionId),
                 Fecha = g.Key.Fecha,
                 Items = g.Count(),
-                Falta = g.Sum(o => o.Precio),
+                Falta = g.Sum(o => o.Pendiente()),
                 YaPaso = g.Key.Fecha < hoy
             })
             .OrderBy(g => g.Fecha)
             .ToList();
 
         var gastosHist = todosGastos
-            .Where(o => o.FechaPago == null && o.Precio > 0 && EsHistorica(o.ExcursionId, o.Fecha))
+            .Where(o => o.Pendiente() > 0 && EsHistorica(o.ExcursionId, o.Fecha))
             .ToList();
         var provsHist = provs
             .Where(p => p.TieneDeuda() && EsHistorica(p.ExcursionId, p.Fecha))
             .ToList();
-        HistoricoIgnorado = gastosHist.Sum(o => o.Precio) + provsHist.Sum(p => p.Pendiente());
+        HistoricoIgnorado = gastosHist.Sum(o => o.Pendiente()) + provsHist.Sum(p => p.Pendiente());
         SalidasHistoricas = gastosHist.Select(o => (o.ExcursionId, o.Fecha.Date))
             .Concat(provsHist.Select(p => (p.ExcursionId, p.Fecha.Date)))
             .Distinct().Count();

@@ -49,7 +49,7 @@ public class IndexModel : PageModel
         d.CobradoReservas = reservas.Sum(r => (EnMes(r.SenaFecha) ? r.SenaMonto ?? 0 : 0)
                                             + (EnMes(r.SaldoFecha) ? r.SaldoMonto ?? 0 : 0));
         d.IngresosExtra = extras.Where(e => EnMes(e.Fecha)).Sum(e => e.Monto);
-        d.PagadoOperativo = ops.Where(o => EnMes(o.FechaPago)).Sum(o => o.Precio)
+        d.PagadoOperativo = ops.Sum(o => o.PagadoSi(f => EnMes(f)))
                           + provs.Sum(x => (EnMes(x.FechaSena) ? x.Sena : 0) + (EnMes(x.FechaSaldo) ? x.Saldo : 0));
         d.GastosEmpresa = gastosEmp.Where(g => EnMes(g.Fecha)).Sum(g => g.Monto);
 
@@ -80,7 +80,7 @@ public class IndexModel : PageModel
         {
             var f0 = m; var f1 = m.AddMonths(1);
             bool Ok(DateTime? f) => f is DateTime x && x.Date >= f0 && x.Date < f1;
-            return ops.Where(o => Ok(o.FechaPago)).Sum(o => o.Precio)
+            return ops.Sum(o => o.PagadoSi(f => Ok(f)))
                  + provs.Sum(x => (Ok(x.FechaSena) ? x.Sena : 0) + (Ok(x.FechaSaldo) ? x.Saldo : 0));
         }
         decimal EmpresaEn(DateTime m)
@@ -97,7 +97,7 @@ public class IndexModel : PageModel
             if (r.SenaFecha is DateTime fs && (r.SenaMonto ?? 0) != 0) fechasConPlata.Add(fs);
             if (r.SaldoFecha is DateTime fl && (r.SaldoMonto ?? 0) != 0) fechasConPlata.Add(fl);
         }
-        foreach (var o in ops) if (o.FechaPago is DateTime f && o.Precio != 0) fechasConPlata.Add(f);
+        foreach (var o in ops) foreach (var pago in o.Pagos()) fechasConPlata.Add(pago.Dia);
         foreach (var x in provs)
         {
             if (x.FechaSena is DateTime f1 && x.Sena != 0) fechasConPlata.Add(f1);
@@ -156,8 +156,8 @@ public class IndexModel : PageModel
             .Select(g => g.Key).ToHashSet();
         bool EsHistorica(int excId, DateTime f) => salidasHistoricas.Contains((excId, f.Date));
 
-        d.FaltaPagarGastos = ops.Where(o => o.FechaPago == null && o.Precio > 0 && !EsHistorica(o.ExcursionId, o.Fecha))
-            .Sum(o => o.Precio);
+        d.FaltaPagarGastos = ops.Where(o => o.Pendiente() > 0 && !EsHistorica(o.ExcursionId, o.Fecha))
+            .Sum(o => o.Pendiente());
         d.FaltaPagarProveedores = provs.Where(x => x.TieneDeuda() && !EsHistorica(x.ExcursionId, x.Fecha))
             .Sum(x => x.Pendiente());
 
@@ -309,8 +309,11 @@ public class IndexModel : PageModel
         // ---- EGRESOS del mes: la plata que SALIÓ este mes (por fecha de pago) ----
         var gastoPorExc = new Dictionary<int, decimal>();
         foreach (var o in ops)
-            if (EnMes(o.FechaPago) && o.Precio != 0)
-                gastoPorExc[o.ExcursionId] = gastoPorExc.GetValueOrDefault(o.ExcursionId) + o.Precio;
+        {
+            var salioGasto = o.PagadoSi(f => EnMes(f));
+            if (salioGasto != 0)
+                gastoPorExc[o.ExcursionId] = gastoPorExc.GetValueOrDefault(o.ExcursionId) + salioGasto;
+        }
 
         foreach (var p in provs)
         {
@@ -373,16 +376,16 @@ public class IndexModel : PageModel
 
         // ---- Egresos por tipo (lo pagado este mes), con detalle por excursión ----
         var porGastos = ops
-            .Where(o => EnMes(o.FechaPago) && o.Precio != 0)
+            .Where(o => o.PagadoSi(f => EnMes(f)) != 0)
             .GroupBy(o => o.Nombre.Trim().ToUpper())
             .Select(g => new GastoTipo
             {
                 Nombre = g.First().Nombre.Trim(),
-                Total = g.Sum(x => x.Precio),
+                Total = g.Sum(x => x.PagadoSi(f => EnMes(f))),
                 Detalle = g.GroupBy(x => x.ExcursionId)
                     .Select(gg => (
                         Excursion: excNombres.TryGetValue(gg.Key, out var n) ? n : "Excursión",
-                        Monto: gg.Sum(x => x.Precio)))
+                        Monto: gg.Sum(x => x.PagadoSi(f => EnMes(f)))))
                     .Where(d => d.Monto > 0)
                     .OrderByDescending(d => d.Monto)
                     .ToList()

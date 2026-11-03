@@ -89,7 +89,7 @@ public class AnualModel : PageModel
         decimal GastoDe(int anio, int? mes = null)
         {
             bool Ok(DateTime? f) => f is DateTime d && d.Year == anio && (mes == null || d.Month == mes);
-            return ops.Sum(o => Ok(o.FechaPago) ? o.Precio : 0)
+            return ops.Sum(o => o.PagadoSi(f => Ok(f)))
                  + provs.Sum(p => (Ok(p.FechaSena) ? p.Sena : 0) + (Ok(p.FechaSaldo) ? p.Saldo : 0));
         }
 
@@ -132,8 +132,11 @@ public class AnualModel : PageModel
         }
         var gastoPorExc = new Dictionary<int, decimal>();
         foreach (var o in ops)
-            if (EnAnio(o.FechaPago) && o.Precio != 0)
-                gastoPorExc[o.ExcursionId] = gastoPorExc.GetValueOrDefault(o.ExcursionId) + o.Precio;
+        {
+            var salioGasto = o.PagadoSi(f => EnAnio(f));
+            if (salioGasto != 0)
+                gastoPorExc[o.ExcursionId] = gastoPorExc.GetValueOrDefault(o.ExcursionId) + salioGasto;
+        }
         foreach (var p in provs)
         {
             decimal salio = (EnAnio(p.FechaSena) ? p.Sena : 0) + (EnAnio(p.FechaSaldo) ? p.Saldo : 0);

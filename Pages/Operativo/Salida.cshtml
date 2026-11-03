@@ -7,6 +7,10 @@
     string Num(decimal m) => m.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
     var total = Model.Gastos.Sum(g => g.Precio);
     var listos = Model.Gastos.Count(g => g.Comprado);
+
+    // Pagar un gasto en dos partes (seña + saldo) se habilitó para las salidas del
+    // 04/11/2026 en adelante. Las salidas anteriores quedan exactamente como estaban.
+    var permiteSena = Model.Fecha.Date >= new DateTime(2026, 11, 4);
 }
 
 <h1>Preparar salida</h1>
@@ -255,7 +259,7 @@
             @foreach (var g in gComp)
             {
                 var m = g.MultiplicadorPropio(Model.PasajerosSalida);
-                <partial name="_GastoRow" model="new Wamani.Reservas.Pages.Operativo.GastoRowVm { G = g, Mult = m, ReservaId = 0 }" />
+                <partial name="_GastoRow" model="new Wamani.Reservas.Pages.Operativo.GastoRowVm { G = g, Mult = m, ReservaId = 0, PermiteSena = permiteSena }" />
             }
             <tr class="gasto-add" data-add-res="0"><td colspan="5"><button type="button" class="btn-mini btn-mini-ghost" onclick="agregarGasto(0, @Model.PasajerosSalida)">+ Agregar gasto compartido</button></td></tr>
 
@@ -269,7 +273,7 @@
                 }
                 foreach (var g in lista)
                 {
-                    <partial name="_GastoRow" model="new Wamani.Reservas.Pages.Operativo.GastoRowVm { G = g, Mult = r.CantidadPersonas, ReservaId = r.Id }" />
+                    <partial name="_GastoRow" model="new Wamani.Reservas.Pages.Operativo.GastoRowVm { G = g, Mult = r.CantidadPersonas, ReservaId = r.Id, PermiteSena = permiteSena }" />
                 }
                 <tr class="gasto-add" data-add-res="@r.Id"><td colspan="5"><button type="button" class="btn-mini btn-mini-ghost" onclick="agregarGasto(@r.Id, @r.CantidadPersonas)">+ Agregar gasto a @r.NombreCliente</button></td></tr>
             }
@@ -405,10 +409,17 @@
             filas.forEach(function (tr) {
                 var suyo = (typeof tr._total === 'number') ? tr._total : (parseFloat(tr.querySelector('.in-precio')?.value) || 0);
                 total += suyo;
-                var c = tr.querySelector('.chk-listo');
-                // Un gasto tildado es un gasto que ya se pagó: es lo mismo que cuenta
-                // Finanzas cuando le pone la fecha de pago.
-                if (c && c.checked) { listos++; pagado += suyo; }
+                // Un gasto con seña cuenta lo que tiene cargado (seña + saldo), y recién
+                // está "listo" cuando eso cubre el total. Uno común cuenta el total si
+                // está tildado: es lo mismo que cuenta Finanzas con la fecha de pago.
+                if (esConSena(tr)) {
+                    var cargado = pagadoDesglose(tr);
+                    pagado += Math.min(cargado, suyo);
+                    if (suyo > 0 && cargado >= suyo) listos++;
+                } else {
+                    var c = tr.querySelector('.chk-listo');
+                    if (c && c.checked) { listos++; pagado += suyo; }
+                }
             });
 
             var provTotal = totalProveedores();
@@ -426,6 +437,54 @@
         // Qué día es hoy en Jujuy (lo dice el servidor: si lo calculara el navegador y
         // alguien abre el sistema de viaje, podría poner otro día).
         var HOY = '@Wamani.Reservas.Services.Reloj.HoyJujuy().ToString("yyyy-MM-dd")';
+
+        // ---- Gastos que se pagan en dos partes: seña y saldo ----
+        function esConSena(tr) {
+            var h = tr.querySelector('.h-consena');
+            return !!h && h.value === '1';
+        }
+        function pagadoDesglose(tr) {
+            return (parseFloat(tr.querySelector('.in-sena')?.value) || 0)
+                 + (parseFloat(tr.querySelector('.in-saldo')?.value) || 0);
+        }
+        // El cuadradito "pagado" de la seña y el del saldo no se tildan a mano: se marcan
+        // solos cuando hay plata cargada, igual que en Proveedores. Y la fecha se pone
+        // sola el día en que se carga, para que el egreso caiga en el día correcto.
+        function pintarDesglose(tr) {
+            if (!tr.querySelector('.desglose')) return;
+            [['.in-sena', '.chk-pago-sena', '.in-fsena'],
+             ['.in-saldo', '.chk-pago-saldo', '.in-fsaldo']].forEach(function (par) {
+                var monto = parseFloat(tr.querySelector(par[0])?.value) || 0;
+                var chk = tr.querySelector(par[1]);
+                var fec = tr.querySelector(par[2]);
+                if (chk) chk.checked = monto > 0;
+                if (fec) {
+                    if (monto > 0 && !fec.value) fec.value = HOY;
+                    fec.style.display = monto > 0 ? '' : 'none';
+                }
+            });
+            var falta = tr.querySelector('.dgl-falta');
+            if (falta) {
+                var suyo = (typeof tr._total === 'number') ? tr._total : (parseFloat(tr.querySelector('.in-precio')?.value) || 0);
+                var resta = suyo - pagadoDesglose(tr);
+                falta.innerHTML = resta > 0
+                    ? 'Falta: <b>' + money(resta) + '</b>'
+                    : '<span class="dgl-ok">Pagado ✔</span>';
+            }
+        }
+        // El cuadradito "con seña": muestra o esconde el desglose. El tilde LISTO deja de
+        // usarse en esa fila, porque lo que manda es la plata cargada.
+        function toggleSena(chk) {
+            var tr = chk.closest('.gasto-row');
+            var h = tr.querySelector('.h-consena');
+            if (h) h.value = chk.checked ? '1' : '0';
+            var simple = tr.querySelector('.listo-simple');
+            var des = tr.querySelector('.desglose');
+            if (simple) simple.style.display = chk.checked ? 'none' : '';
+            if (des) des.style.display = chk.checked ? '' : 'none';
+            pintarDesglose(tr);
+            recalcular();
+        }
 
         // El día del pago sólo tiene sentido si el gasto está tildado como listo: se
         // muestra al tildarlo y se esconde al destildarlo. El campo NO se saca del
@@ -459,7 +518,13 @@
                 // El campo de cantidad va vacío pero TIENE que estar: al guardar, las listas
                 // del formulario se emparejan por posición, así que cada fila debe aportar
                 // exactamente un valor a cada lista.
-                '<td class="num" data-label="Precio y total"><input type="hidden" name="EsManual" value="1" class="es-manual" /><input type="hidden" name="Cantidades" value="" /><input name="Precios" type="number" step="0.01" min="0" value="" class="in-precio" /><div class="calc-linea"><span class="cliente-sub">total a mano</span></div></td>' +
+                '<td class="num" data-label="Precio y total"><input type="hidden" name="EsManual" value="1" class="es-manual" /><input type="hidden" name="Cantidades" value="" /><input name="Precios" type="number" step="0.01" min="0" value="" class="in-precio" /><div class="calc-linea"><span class="cliente-sub">total a mano</span></div>' +
+                // Los campos de seña y saldo van vacíos pero TIENEN que estar: las listas
+                // del formulario se emparejan por posición. El desglose se elige después
+                // de guardar, cuando la fila ya existe de verdad.
+                '<input type="hidden" name="GastoConSena" value="0" class="h-consena" />' +
+                '<input type="hidden" name="GastoSenas" value="0" /><input type="hidden" name="GastoSaldos" value="0" />' +
+                '<input type="hidden" name="GastoFechasSena" value="" /><input type="hidden" name="GastoFechasSaldo" value="" /></td>' +
                 '<td data-label="Comprobante"><input type="file" name="comp_' + key + '" accept="image/*,.pdf" class="in-comp" multiple /></td>' +
                 '<td><input type="hidden" name="Comentarios" value="" />' +
                 '<button type="button" class="btn-mini btn-mini-ghost btn-nota" onclick="abrirNota(this)">📋</button>' +
@@ -596,7 +661,10 @@
             recalcular();  // el total de la salida cambia si cambia un total de proveedor
         }
         document.addEventListener('input', function (e) {
-            if (e.target.classList.contains('in-precio')) { pintarFila(e.target.closest('.gasto-row')); recalcular(); }
+            if (e.target.classList.contains('in-sena') || e.target.classList.contains('in-saldo')) {
+                pintarDesglose(e.target.closest('.gasto-row')); recalcular(); return;
+            }
+            if (e.target.classList.contains('in-precio')) { var f = e.target.closest('.gasto-row'); pintarFila(f); pintarDesglose(f); recalcular(); }
             else if (e.target.classList.contains('chk-listo')) { pintarFechaPago(e.target); recalcular(); }
             // Al cargar una seña o un saldo, si no hay día puesto se propone el de hoy.
             // Si el monto se borra, la fecha se va con él.
@@ -611,7 +679,7 @@
             if (e.target.classList.contains('prov-total') || e.target.classList.contains('prov-sena') || e.target.classList.contains('prov-saldo')) recalcularProv();
         });
         // Pintar los totales de todas las filas al abrir
-        document.querySelectorAll('#gastosBody .gasto-row').forEach(pintarFila);
+        document.querySelectorAll('#gastosBody .gasto-row').forEach(function (tr) { pintarFila(tr); pintarDesglose(tr); });
         recalcularProv();
 
         // Agregar / quitar filas de hospedaje o restaurante (por pasajero)

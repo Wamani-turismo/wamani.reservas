@@ -2,6 +2,10 @@
     var pg = (ViewContext.RouteData.Values["page"]?.ToString() ?? "").ToLower();
     string Activo(params string[] bases) =>
         bases.Any(b => pg == b || pg.StartsWith(b + "/")) ? "active" : "";
+
+    // Una pantalla puede pedir más ancho de hoja (lo usa la carga del operativo, que
+    // tiene una tabla con muchas columnas). Si no pide nada, queda el ancho de siempre.
+    var claseAncho = ViewData["Ancho"] as string ?? "";
 }
 <!DOCTYPE html>
 <html lang="es">
@@ -170,7 +174,7 @@
                 </div>
             </header>
 
-            <main class="container">
+            <main class="container @claseAncho">
                 @RenderBody()
             </main>
 

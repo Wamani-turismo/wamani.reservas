@@ -13,8 +13,8 @@ public class GastoRowVm
     public int Mult { get; set; }         // por cuánto se multiplica el unitario
     public int ReservaId { get; set; }    // 0 = compartido de la salida
 
-    // Si esta salida puede desglosar el gasto en seña y saldo. Se habilitó para las
-    // salidas del 04/11/2026 en adelante: lo viejo queda exactamente como estaba.
+    // Si esta salida puede pagar un gasto en dos partes (seña y saldo). Se habilitó
+    // para las salidas del 04/11/2026 en adelante: lo viejo queda como estaba.
     public bool PermiteSena { get; set; }
 }
 
@@ -319,8 +319,7 @@ public class SalidaModel : PageModel
     [BindProperty] public List<int> Comprados { get; set; } = new();  // ids tildados
     [BindProperty] public List<string?> FechasPago { get; set; } = new();  // el día en que se pagó cada gasto
     // Gastos que se pagan en dos partes. Como las listas del formulario se emparejan por
-    // POSICIÓN, cada fila manda siempre su valor en las cinco, aunque no use el desglose.
-    [BindProperty] public List<string> GastoConSena { get; set; } = new();     // "1" si va con seña
+    // POSICIÓN, cada fila manda siempre su valor en las cuatro, aunque pague de una sola vez.
     [BindProperty] public List<string> GastoSenas { get; set; } = new();
     [BindProperty] public List<string> GastoSaldos { get; set; } = new();
     [BindProperty] public List<string?> GastoFechasSena { get; set; } = new();
@@ -734,17 +733,17 @@ public class SalidaModel : PageModel
                     }
 
                     // ---- Gastos que se pagan en dos partes: seña y saldo ----
-                    // Con el cuadradito "seña" tildado, este gasto deja de tener un único
-                    // pago: tiene una seña y un saldo, cada uno con su monto y su día, y
-                    // cada parte descuenta de la caja el día en que se pagó de verdad (no
-                    // al terminar la excursión). Sin tildarlo, todo funciona como siempre.
-                    var conSena = i < GastoConSena.Count && GastoConSena[i] == "1";
+                    // No hay nada que tildar: si hay plata cargada en la seña o en el saldo,
+                    // este gasto se paga en dos partes y cada una descuenta de la caja el día
+                    // en que se pagó de verdad (no al terminar la excursión). Si las dos van
+                    // en cero, el gasto funciona como siempre: el tilde LISTO manda.
+                    var sena = ParsePrecio(i < GastoSenas.Count ? GastoSenas[i] : "0");
+                    var saldo = ParsePrecio(i < GastoSaldos.Count ? GastoSaldos[i] : "0");
+                    var conSena = sena > 0 || saldo > 0;
                     g.ConSena = conSena;
 
                     if (conSena)
                     {
-                        var sena = ParsePrecio(i < GastoSenas.Count ? GastoSenas[i] : "0");
-                        var saldo = ParsePrecio(i < GastoSaldos.Count ? GastoSaldos[i] : "0");
                         g.Sena = sena;
                         g.Saldo = saldo;
 

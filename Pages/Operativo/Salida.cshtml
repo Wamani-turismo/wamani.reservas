@@ -2,6 +2,9 @@
 @model Wamani.Reservas.Pages.Operativo.SalidaModel
 @{
     ViewData["Title"] = "Preparar salida";
+    // Esta pantalla es la de carga: la tabla tiene precio, seña, saldo y comprobante, así
+    // que se le da más ancho de hoja para que cada gasto entre en una sola línea.
+    ViewData["Ancho"] = "container-ancho";
     var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
     string Money(decimal m) => "$ " + m.ToString("N0", ci);
     string Num(decimal m) => m.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
@@ -237,11 +240,12 @@
         <table class="tabla" id="tablaGastos">
             <thead>
                 <tr>
-                    <th style="width:70px">Listo</th>
+                    <th style="width:62px">Listo</th>
                     <th>Ítem / gasto</th>
-                    <th class="num" style="width:210px">Precio y total</th>
-                    <th style="width:210px">Comprobante</th>
-                    <th style="width:60px"></th>
+                    <th class="num" style="width:215px">Precio y total</th>
+                    <th style="width:300px">Seña y saldo</th>
+                    <th style="width:185px">Comprobante</th>
+                    <th style="width:58px"></th>
                 </tr>
             </thead>
             <tbody id="gastosBody">
@@ -251,31 +255,31 @@
             @* El botón de cada grupo va DENTRO del grupo, abajo de sus filas. Antes el de
                los compartidos estaba al pie de toda la tabla, después de los gastos de
                cada pasajero, y no se entendía a cuál de todos pertenecía. *@
-            <tr class="grupo-head"><td colspan="5">🚐 Compartidos de la salida (nafta, etc.)</td></tr>
+            <tr class="grupo-head"><td colspan="6">🚐 Compartidos de la salida (nafta, etc.)</td></tr>
             @if (gComp.Count == 0)
             {
-                <tr class="gasto-vacio"><td colspan="5" class="cliente-sub">Sin gastos compartidos cargados.</td></tr>
+                <tr class="gasto-vacio"><td colspan="6" class="cliente-sub">Sin gastos compartidos cargados.</td></tr>
             }
             @foreach (var g in gComp)
             {
                 var m = g.MultiplicadorPropio(Model.PasajerosSalida);
                 <partial name="_GastoRow" model="new Wamani.Reservas.Pages.Operativo.GastoRowVm { G = g, Mult = m, ReservaId = 0, PermiteSena = permiteSena }" />
             }
-            <tr class="gasto-add" data-add-res="0"><td colspan="5"><button type="button" class="btn-mini btn-mini-ghost" onclick="agregarGasto(0, @Model.PasajerosSalida)">+ Agregar gasto compartido</button></td></tr>
+            <tr class="gasto-add" data-add-res="0"><td colspan="6"><button type="button" class="btn-mini btn-mini-ghost" onclick="agregarGasto(0, @Model.PasajerosSalida)">+ Agregar gasto compartido</button></td></tr>
 
             @foreach (var r in Model.Reservas)
             {
                 var lista = Model.Gastos.Where(x => x.ReservaId == r.Id).ToList();
-                <tr class="grupo-head"><td colspan="5">🧑 @r.NombreCliente — @r.CantidadPersonas pers.</td></tr>
+                <tr class="grupo-head"><td colspan="6">🧑 @r.NombreCliente — @r.CantidadPersonas pers.</td></tr>
                 @if (lista.Count == 0)
                 {
-                    <tr class="gasto-vacio"><td colspan="5" class="cliente-sub">Sin gastos por persona cargados para esta reserva.</td></tr>
+                    <tr class="gasto-vacio"><td colspan="6" class="cliente-sub">Sin gastos por persona cargados para esta reserva.</td></tr>
                 }
                 foreach (var g in lista)
                 {
                     <partial name="_GastoRow" model="new Wamani.Reservas.Pages.Operativo.GastoRowVm { G = g, Mult = r.CantidadPersonas, ReservaId = r.Id, PermiteSena = permiteSena }" />
                 }
-                <tr class="gasto-add" data-add-res="@r.Id"><td colspan="5"><button type="button" class="btn-mini btn-mini-ghost" onclick="agregarGasto(@r.Id, @r.CantidadPersonas)">+ Agregar gasto a @r.NombreCliente</button></td></tr>
+                <tr class="gasto-add" data-add-res="@r.Id"><td colspan="6"><button type="button" class="btn-mini btn-mini-ghost" onclick="agregarGasto(@r.Id, @r.CantidadPersonas)">+ Agregar gasto a @r.NombreCliente</button></td></tr>
             }
             </tbody>
         </table>
@@ -439,51 +443,52 @@
         var HOY = '@Wamani.Reservas.Services.Reloj.HoyJujuy().ToString("yyyy-MM-dd")';
 
         // ---- Gastos que se pagan en dos partes: seña y saldo ----
-        function esConSena(tr) {
-            var h = tr.querySelector('.h-consena');
-            return !!h && h.value === '1';
-        }
+        // No hay nada que tildar: con sólo cargar plata en la seña o en el saldo, el gasto
+        // pasa a pagarse en dos veces y manda eso en vez del tilde LISTO.
         function pagadoDesglose(tr) {
             return (parseFloat(tr.querySelector('.in-sena')?.value) || 0)
                  + (parseFloat(tr.querySelector('.in-saldo')?.value) || 0);
         }
-        // El cuadradito "pagado" de la seña y el del saldo no se tildan a mano: se marcan
-        // solos cuando hay plata cargada, igual que en Proveedores. Y la fecha se pone
-        // sola el día en que se carga, para que el egreso caiga en el día correcto.
+        function esConSena(tr) { return pagadoDesglose(tr) > 0; }
+
+        // Los cuadraditos de la seña y del saldo se marcan solos cuando hay plata cargada,
+        // y la fecha se pone sola el día en que se carga, para que el egreso caiga en el
+        // día correcto. Lo mismo con el tilde LISTO: con plata cargada se pinta solo y se
+        // bloquea, porque lo que manda ahí es la plata (igual que en Proveedores).
         function pintarDesglose(tr) {
-            if (!tr.querySelector('.desglose')) return;
+            var suyo = (typeof tr._total === 'number') ? tr._total : (parseFloat(tr.querySelector('.in-precio')?.value) || 0);
             [['.in-sena', '.chk-pago-sena', '.in-fsena'],
              ['.in-saldo', '.chk-pago-saldo', '.in-fsaldo']].forEach(function (par) {
                 var monto = parseFloat(tr.querySelector(par[0])?.value) || 0;
                 var chk = tr.querySelector(par[1]);
                 var fec = tr.querySelector(par[2]);
                 if (chk) chk.checked = monto > 0;
-                if (fec) {
-                    if (monto > 0 && !fec.value) fec.value = HOY;
-                    fec.style.display = monto > 0 ? '' : 'none';
-                }
+                if (fec && monto > 0 && !fec.value) fec.value = HOY;
             });
-            var falta = tr.querySelector('.dgl-falta');
-            if (falta) {
-                var suyo = (typeof tr._total === 'number') ? tr._total : (parseFloat(tr.querySelector('.in-precio')?.value) || 0);
-                var resta = suyo - pagadoDesglose(tr);
-                falta.innerHTML = resta > 0
-                    ? 'Falta: <b>' + money(resta) + '</b>'
-                    : '<span class="dgl-ok">Pagado ✔</span>';
+
+            var cargado = pagadoDesglose(tr);
+            var listo = tr.querySelector('.chk-listo');
+            if (listo) {
+                if (cargado > 0) {
+                    listo.checked = suyo > 0 && cargado >= suyo;
+                    listo.disabled = true;
+                    listo.title = 'Se pinta solo: acá manda la seña y el saldo';
+                } else if (listo.disabled) {
+                    listo.disabled = false;
+                    listo.title = '';
+                }
             }
-        }
-        // El cuadradito "con seña": muestra o esconde el desglose. El tilde LISTO deja de
-        // usarse en esa fila, porque lo que manda es la plata cargada.
-        function toggleSena(chk) {
-            var tr = chk.closest('.gasto-row');
-            var h = tr.querySelector('.h-consena');
-            if (h) h.value = chk.checked ? '1' : '0';
-            var simple = tr.querySelector('.listo-simple');
-            var des = tr.querySelector('.desglose');
-            if (simple) simple.style.display = chk.checked ? 'none' : '';
-            if (des) des.style.display = chk.checked ? '' : 'none';
-            pintarDesglose(tr);
-            recalcular();
+            // El día del pago de una sola vez no se usa si el gasto va con seña.
+            var caja = tr.querySelector('.fecha-pago-wrap');
+            if (caja) caja.style.display = (cargado === 0 && listo && listo.checked) ? '' : 'none';
+
+            var falta = tr.querySelector('.dgl-falta');
+            if (!falta) return;
+            if (cargado <= 0) { falta.innerHTML = ''; return; }
+            var resta = suyo - cargado;
+            falta.innerHTML = resta > 0
+                ? 'Falta <b>' + money(resta) + '</b>'
+                : '<span class="dgl-ok">Pagado ✔</span>';
         }
 
         // El día del pago sólo tiene sentido si el gasto está tildado como listo: se
@@ -518,11 +523,11 @@
                 // El campo de cantidad va vacío pero TIENE que estar: al guardar, las listas
                 // del formulario se emparejan por posición, así que cada fila debe aportar
                 // exactamente un valor a cada lista.
-                '<td class="num" data-label="Precio y total"><input type="hidden" name="EsManual" value="1" class="es-manual" /><input type="hidden" name="Cantidades" value="" /><input name="Precios" type="number" step="0.01" min="0" value="" class="in-precio" /><div class="calc-linea"><span class="cliente-sub">total a mano</span></div>' +
-                // Los campos de seña y saldo van vacíos pero TIENEN que estar: las listas
-                // del formulario se emparejan por posición. El desglose se elige después
-                // de guardar, cuando la fila ya existe de verdad.
-                '<input type="hidden" name="GastoConSena" value="0" class="h-consena" />' +
+                '<td class="num" data-label="Precio y total"><input type="hidden" name="EsManual" value="1" class="es-manual" /><input type="hidden" name="Cantidades" value="" /><input name="Precios" type="number" step="0.01" min="0" value="" class="in-precio" /><div class="calc-linea"><span class="cliente-sub">total a mano</span></div><div class="dgl-falta"></div></td>' +
+                // La seña y el saldo se cargan después de guardar, cuando la fila ya existe
+                // de verdad. Los campos van igual: las listas del formulario se emparejan
+                // por posición, así que cada fila tiene que aportar un valor a cada una.
+                '<td data-label="Seña y saldo" class="celda-sena"><span class="cliente-sub">guardá primero</span>' +
                 '<input type="hidden" name="GastoSenas" value="0" /><input type="hidden" name="GastoSaldos" value="0" />' +
                 '<input type="hidden" name="GastoFechasSena" value="" /><input type="hidden" name="GastoFechasSaldo" value="" /></td>' +
                 '<td data-label="Comprobante"><input type="file" name="comp_' + key + '" accept="image/*,.pdf" class="in-comp" multiple /></td>' +

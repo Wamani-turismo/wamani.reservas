@@ -28,6 +28,15 @@ public class ProvRowVm
     public string Key { get; set; } = "";   // clave para asociar el comprobante a la fila (id real o temporal si es nueva)
     public List<Reserva> Reservas { get; set; } = new();   // reservas de la salida (para elegir de quién es el servicio)
 
+    // Los pasajeros anotados en cada reserva, por nombre completo. Una reserva de dos
+    // personas tiene UN titular pero DOS pasajeros: el hospedaje y la cena se le asignan
+    // a cada uno, no al que hizo la reserva, para poder ver que esté todo cubierto.
+    public Dictionary<int, List<string>> PasajerosPorReserva { get; set; } = new();
+
+    // Elegir pasajero por pasajero se habilitó para las salidas del 04/11/2026 en
+    // adelante. En las anteriores el desplegable muestra sólo la reserva, como siempre.
+    public bool PermitePasajeros { get; set; }
+
     // Guía y Auto: en vez de escribir el total, se pone CUÁNTOS van y lo que cobra cada uno,
     // y el total sale solo. Sirve para las travesías, donde según la gente que se anota se
     // suman guías o vehículos, y no hay una fórmula fija: lo deciden los chicos.
@@ -238,6 +247,12 @@ public class SalidaModel : PageModel
     public string ExcursionNombre { get; set; } = "";
     public List<OperativoGasto> Gastos { get; set; } = new();
     public List<Reserva> Reservas { get; set; } = new();
+
+    // Los pasajeros anotados en cada reserva, por nombre completo (los del seguro). Con
+    // esto el desplegable del hospedaje y del restaurante puede ofrecer a cada persona,
+    // y no sólo a quien hizo la reserva.
+    public Dictionary<int, List<string>> PasajerosPorReserva { get; set; } = new();
+
     public int PasajerosSalida { get; set; }   // total de personas de la salida (para multiplicar)
     public int PersonasPorAuto => Wamani.Reservas.Models.Excursion.PersonasPorAuto;
     public OperativoSalida Salida { get; set; } = new();
@@ -365,6 +380,21 @@ public class SalidaModel : PageModel
             .OrderBy(r => r.NombreCliente)
             .ToListAsync();
         PasajerosSalida = Reservas.Sum(r => r.CantidadPersonas);
+
+        // Los pasajeros anotados en cada reserva (los del seguro), para poder asignarle el
+        // hospedaje o la cena a cada persona y no sólo a quien hizo la reserva.
+        var idsReservas = Reservas.Select(r => r.Id).ToList();
+        PasajerosPorReserva = (await _db.Pasajeros.AsNoTracking()
+                .Where(p => idsReservas.Contains(p.ReservaId))
+                .OrderBy(p => p.Id)
+                .ToListAsync())
+            .GroupBy(p => p.ReservaId)
+            .ToDictionary(
+                gr => gr.Key,
+                gr => gr.Select(p => (p.NombreCompleto ?? "").Trim())
+                        .Where(n => n.Length > 0)
+                        .Distinct()
+                        .ToList());
 
         Gastos = await _db.OperativoGastos
             .Where(o => o.ExcursionId == ExcursionId && o.Fecha.Date == Fecha.Date)

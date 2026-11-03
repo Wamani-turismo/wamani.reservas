@@ -10,6 +10,45 @@
     var hoy = Wamani.Reservas.Services.Reloj.HoyJujuy().ToString("yyyy-MM-dd");
     var fechaSena = a?.FechaSena?.ToString("yyyy-MM-dd") ?? ((a?.Sena ?? 0) > 0 ? hoy : "");
     var fechaSaldo = a?.FechaSaldo?.ToString("yyyy-MM-dd") ?? ((a?.Saldo ?? 0) > 0 ? hoy : "");
+
+    // ---- De quién es este servicio ----
+    // Una reserva de dos personas tiene UN titular y DOS pasajeros. Antes el desplegable
+    // ofrecía sólo la reserva, así que el hospedaje de los dos se le colgaba al titular y
+    // no había manera de ver si estaba cubierta la otra persona. Ahora cada reserva abre
+    // un grupo con "toda la reserva" y abajo cada pasajero anotado.
+    //
+    // El valor viaja como "idDeLaReserva|nombre del pasajero" en un solo desplegable, y el
+    // JS lo parte en los dos campos escondidos que son los que se guardan. Si el JS no
+    // corriera, esos campos ya traen puesto lo que hay guardado: no se mueve nada.
+    var paraQuienTexto = (a?.ParaQuien ?? "").Trim();
+    var quienActual = (a?.ReservaId ?? 0) + "|" + paraQuienTexto;
+    var sinQuien = quienActual == "0|";
+    var opcionesQuien = new List<(string Valor, string Texto, string Grupo, bool Sel)>();
+    foreach (var res in Model.Reservas)
+    {
+        var personas = res.CantidadPersonas == 1 ? "1 pers." : $"{res.CantidadPersonas} pers.";
+        var grupo = $"{res.NombreCliente} — {personas}";
+        var valorTodos = res.Id + "|";
+        opcionesQuien.Add((valorTodos, $"Toda la reserva ({personas})", grupo, quienActual == valorTodos));
+
+        if (!Model.PermitePasajeros) continue;
+
+        foreach (var nom in Model.PasajerosPorReserva.GetValueOrDefault(res.Id) ?? new List<string>())
+        {
+            var valorPax = res.Id + "|" + nom;
+            opcionesQuien.Add((valorPax, nom, grupo, quienActual == valorPax));
+        }
+    }
+    // Lo que ya estaba guardado va SIEMPRE en la lista, aunque hoy no coincida con ningún
+    // pasajero anotado (nombres escritos a mano antes de que esto existiera). Si no,
+    // guardar la fila sin tocar el desplegable le cambiaría el dato.
+    if (!sinQuien && !opcionesQuien.Any(o => o.Valor == quienActual))
+    {
+        var resDe = Model.Reservas.FirstOrDefault(r => r.Id == (a?.ReservaId ?? 0));
+        var textoDe = paraQuienTexto.Length > 0 ? paraQuienTexto : (resDe?.NombreCliente ?? "La reserva");
+        var grupoDe = resDe is null ? "Cargado antes" : $"{resDe.NombreCliente} — ya cargado";
+        opcionesQuien.Insert(0, (quienActual, textoDe, grupoDe, true));
+    }
 }
 <div class="prov-row prov-bloque">
     <input type="hidden" name="ProvIds" value="@id" />
@@ -43,20 +82,25 @@
                placeholder="Nombre del proveedor nuevo" style="display:none" />
         @if (Model.ConPasajero)
         {
-            <select name="ProvReservaIds" class="prov-para" title="¿De qué reserva es este servicio?">
-                <option value="0">— reserva… —</option>
-                @foreach (var res in Model.Reservas)
+            @* Un solo desplegable para los dos campos: de qué reserva y para qué pasajero.
+               Los campos que se guardan son los escondidos de abajo; este desplegable los
+               completa (ver sincronizarQuien). *@
+            <select class="prov-para prov-quien" title="¿De quién es este servicio?"
+                    onchange="sincronizarQuien(this)">
+                <option value="0|" selected="@sinQuien">— de quién… —</option>
+                @foreach (var gr in opcionesQuien.GroupBy(o => o.Grupo))
                 {
-                    <option value="@res.Id" selected="@(a?.ReservaId == res.Id)">@res.NombreCliente</option>
+                    <optgroup label="@gr.Key">
+                        @foreach (var op in gr)
+                        {
+                            <option value="@op.Valor" selected="@op.Sel">@op.Texto</option>
+                        }
+                    </optgroup>
                 }
             </select>
-            <input type="hidden" name="ProvParaQuien" value="@a?.ParaQuien" />
         }
-        else
-        {
-            <input type="hidden" name="ProvReservaIds" value="0" />
-            <input type="hidden" name="ProvParaQuien" value="@a?.ParaQuien" />
-        }
+        <input type="hidden" name="ProvReservaIds" value="@(a?.ReservaId ?? 0)" class="h-prov-res" />
+        <input type="hidden" name="ProvParaQuien" value="@a?.ParaQuien" class="h-prov-quien" />
         <span class="prov-falta-wrap">Falta: <strong class="prov-pend"></strong></span>
         @* La nota de este servicio en esta salida (botón 📋). El campo va siempre, aunque
            no se use, para que todas las filas aporten un valor a la misma lista. *@

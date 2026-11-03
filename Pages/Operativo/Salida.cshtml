@@ -14,6 +14,11 @@
     // Pagar un gasto en dos partes (seña + saldo) se habilitó para las salidas del
     // 04/11/2026 en adelante. Las salidas anteriores quedan exactamente como estaban.
     var permiteSena = Model.Fecha.Date >= new DateTime(2026, 11, 4);
+
+    // Elegir a qué PASAJERO es el hospedaje o la cena (y no sólo a qué reserva) se
+    // habilitó con la misma fecha: las salidas anteriores muestran el desplegable de
+    // siempre, con la reserva nada más.
+    var permitePasajeros = Model.Fecha.Date >= new DateTime(2026, 11, 4);
 }
 
 <h1>Preparar salida</h1>
@@ -88,7 +93,8 @@
                     Tipo = tipo, Asig = a, Cat = cat, ConPasajero = conPasajero, ConCantidad = conCantidad,
                     ConNoches = conNoches, NochesSugeridas = Model.NochesSalida,
                     ConDias = conDias, DiasSugeridos = Model.DiasSalida,
-                    Key = a.Id.ToString(), Reservas = Model.Reservas, PrecioCatalogo = PrecioCat(a)
+                    Key = a.Id.ToString(), Reservas = Model.Reservas, PrecioCatalogo = PrecioCat(a),
+                    PasajerosPorReserva = Model.PasajerosPorReserva, PermitePasajeros = permitePasajeros
                 }).ToList();
 
                 if (rows.Count == 0)
@@ -154,7 +160,9 @@
                                 Cat = Model.CatalogoPorTipo.GetValueOrDefault("Hospedaje") ?? new(),
                                 ConPasajero = true,
                                 Key = a.Id.ToString(),
-                                Reservas = Model.Reservas
+                                Reservas = Model.Reservas,
+                                PasajerosPorReserva = Model.PasajerosPorReserva,
+                                PermitePasajeros = permitePasajeros
                             };
                             <partial name="_ProvRow" model="vmSuelto" />
                         }
@@ -715,6 +723,23 @@
 
         // Agregar / quitar filas de hospedaje o restaurante (por pasajero)
         var nuevoProvSeq = 1;
+        // El desplegable "de quién es" lleva las dos cosas en un solo valor:
+        // "idDeLaReserva|nombre del pasajero". Acá se parte en los dos campos escondidos,
+        // que son los que se guardan de verdad. Así se elige una vez en vez de dos, y los
+        // campos guardados siguen siendo los mismos de siempre.
+        function sincronizarQuien(sel) {
+            var fila = sel.closest('.prov-row');
+            if (!fila) return;
+            var valor = sel.value || '0|';
+            var corte = valor.indexOf('|');
+            var res = corte >= 0 ? valor.slice(0, corte) : valor;
+            var quien = corte >= 0 ? valor.slice(corte + 1) : '';
+            var hRes = fila.querySelector('.h-prov-res');
+            if (hRes) hRes.value = res || '0';
+            var hQuien = fila.querySelector('.h-prov-quien');
+            if (hQuien) hQuien.value = quien;
+        }
+
         function agregarProv(tipo) {
             var group = document.querySelector('.prov-group[data-tipo="' + tipo + '"]');
             var base = group.querySelector('.prov-row');
@@ -738,7 +763,14 @@
             // Los días de la fila nueva: los que dura la salida (el dato viaja en el campo).
             var cDias = clone.querySelector('.etapa-noches');
             if (cDias) cDias.value = cDias.dataset.sugeridos || '1';
-            var pq = clone.querySelector('.prov-para'); if (pq) pq.value = '0';   // desplegable de reserva
+            // Desplegable "de quién es": la fila nueva arranca sin dueño, y los dos campos
+            // escondidos se vacían con él (si no, hereda la reserva de la fila copiada).
+            var pq = clone.querySelector('.prov-quien');
+            if (pq) { pq.value = '0|'; sincronizarQuien(pq); }
+            else {
+                var hr = clone.querySelector('.h-prov-res'); if (hr) hr.value = '0';
+                var hq = clone.querySelector('.h-prov-quien'); if (hq) hq.value = '';
+            }
             // renombrar los campos de comprobante con la clave nueva y limpiarlos
             var fSena = clone.querySelector('input[name^="provcompsena_"]'); if (fSena) { fSena.name = 'provcompsena_' + key; fSena.value = ''; }
             var fSaldo = clone.querySelector('input[name^="provcompsaldo_"]'); if (fSaldo) { fSaldo.name = 'provcompsaldo_' + key; fSaldo.value = ''; }

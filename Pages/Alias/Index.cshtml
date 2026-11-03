@@ -124,16 +124,32 @@
                 <div class="table-wrap">
                     <table class="tabla">
                         <thead>
-                            <tr><th>Nombre</th><th>Qué hace</th><th>Alias</th><th>Entidad</th><th>Teléfono</th><th>Dónde queda</th><th></th></tr>
+                            <tr><th>Qué hace</th><th>Nombre</th><th>Alias</th><th>Entidad</th><th>Teléfono</th><th>Dónde queda</th><th></th></tr>
                         </thead>
                         <tbody>
-                        @foreach (var a in lista)
+                        @for (var i = 0; i < lista.Count; i++)
                         {
+                            var a = lista[i];
+                            var act = string.IsNullOrWhiteSpace(a.Tipo) ? "Sin actividad" : a.Tipo!;
+                            var actAntes = i == 0 ? null
+                                : (string.IsNullOrWhiteSpace(lista[i - 1].Tipo) ? "Sin actividad" : lista[i - 1].Tipo);
+                            var abreGrupo = act != actAntes;
+                            var filaCls = abreGrupo ? "fila-grupo" : "";
                             var hayNota = !string.IsNullOrWhiteSpace(a.Nota);
                             var notaCls = hayNota ? "btn-mini btn-mini-ghost btn-nota con-nota" : "btn-mini btn-mini-ghost btn-nota";
                             var notaTit = hayNota ? a.Nota : "Escribir una nota de este proveedor";
                             var confirmar = "return confirm('¿Borrar este proveedor de la libreta?');";
-                            <tr>
+                            <tr class="@filaCls">
+                                <td data-label="Qué hace">
+                                    @if (abreGrupo)
+                                    {
+                                        <strong class="act-txt">@act</strong>
+                                    }
+                                    else
+                                    {
+                                        <span class="act-txt act-repe">@act</span>
+                                    }
+                                </td>
                                 <td data-label="Nombre">
                                     <strong>@a.Nombre</strong>
                                     @if (!string.IsNullOrWhiteSpace(a.Titular))
@@ -145,7 +161,6 @@
                                         <div class="nota-desglose">@a.Nota</div>
                                     }
                                 </td>
-                                <td data-label="Qué hace">@(string.IsNullOrWhiteSpace(a.Tipo) ? "—" : a.Tipo)</td>
                                 <td data-label="Alias">
                                     @if (string.IsNullOrWhiteSpace(a.Alias))
                                     {
@@ -232,6 +247,9 @@
 
 <style>
 .nota-desglose{margin-top:4px;font-size:.82rem;color:var(--muted);white-space:pre-line;line-height:1.45}
+.fila-grupo > td{border-top:2px solid var(--borde,rgba(128,128,128,.35))}
+.act-txt{white-space:nowrap}
+.act-repe{color:var(--muted);opacity:.65}
 .alias-txt{font-family:ui-monospace,Menlo,monospace;font-size:.9rem;word-break:break-all}
 </style>
 

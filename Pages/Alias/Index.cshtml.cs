@@ -33,7 +33,13 @@ public class IndexModel : PageModel
                 || (a.Lugar != null && a.Lugar.Contains(b))
                 || (a.Titular != null && a.Titular.Contains(b)));
         }
-        Todos = await q.OrderBy(a => a.Nombre).ToListAsync();
+        // Ordenado por lo que hace (guía, hospedaje, entradas…) y dentro de cada
+        // actividad por nombre. Los que no tienen actividad cargada van al final.
+        Todos = await q
+            .OrderBy(a => a.Tipo == null ? 1 : 0)
+            .ThenBy(a => a.Tipo)
+            .ThenBy(a => a.Nombre)
+            .ToListAsync();
     }
 
     private static string RegionValida(string? r)

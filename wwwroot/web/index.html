@@ -897,10 +897,34 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
 <!-- ═════════════ HERO ═════════════ -->
 <section class="hero" id="inicio">
   <!-- Video de fondo (sin sonido, se repite solo). El poster se ve mientras carga. -->
-  <video class="hero-video" autoplay muted loop playsinline preload="auto"
-         poster="/web/img/hero-video-poster.webp" aria-hidden="true">
-    <source src="/web/img/hero-video.mp4" type="video/mp4">
-  </video>
+  <video class="hero-video" autoplay muted loop playsinline preload="none"
+         poster="/web/img/hero-video-poster.webp" aria-hidden="true"
+         data-src="/web/img/hero-video.mp4"></video>
+  <script>
+  /* El video de fondo pesa 7,4 MB y ANTES se bajaba siempre, también en el celular
+     (preload="auto"): era, lejos, lo más pesado de toda la home y el motivo de que
+     tardara 5,3 s en mostrarse en un teléfono. Ahora la etiqueta nace SIN fuente y el
+     archivo se engancha recién si vale la pena:
+       • en pantallas angostas NO se baja — el video está recortado a una tira vertical,
+         no se entiende nada y gasta los datos del visitante;
+       • tampoco si el navegador avisa "ahorro de datos" o conexión lenta.
+     En esos casos queda el póster, que pesa 12 KB y se ve igual de bien.
+     Ninguna foto pierde calidad con esto: no se tocó un solo píxel. */
+  (function(){
+    var v = document.currentScript.previousElementSibling;
+    if (!v || v.tagName !== "VIDEO") return;
+    try {
+      if (window.matchMedia("(max-width:859px)").matches) return;
+      var c = navigator.connection;
+      if (c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || ""))) return;
+    } catch (e) { /* si algo de esto no existe, se carga normal */ }
+    var s = document.createElement("source");
+    s.src = v.getAttribute("data-src");
+    s.type = "video/mp4";
+    v.appendChild(s);
+    v.load();
+  })();
+  </script>
   <div class="hero-inner">
     <img class="hero-monte" src="/web/img/montana.png" alt="">
     <span class="hero-eyebrow">Turismo de aventura · Jujuy · Argentina</span>
@@ -1022,7 +1046,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
         <p><b>Vos elegís la experiencia. Nosotros nos ocupamos del resto.</b></p>
       </div>
       <div class="quienes-sello">
-        <img src="/web/img/equipo.webp" alt="Sello Wamani Turismo y Aventura">
+        <img src="/web/img/equipo.webp" alt="Sello Wamani Turismo y Aventura" loading="lazy" decoding="async">
       </div>
     </div>
     <!-- ═══ INTEGRANTES ═══════════════════════════════════════════
@@ -1476,7 +1500,7 @@ function abrirGuia(id, delHistorial){
       // --f lleva la misma foto al relleno borroso del fondo (ver .mg-slide::before).
       const slides = fs.map(function(f){
         return '<div class="mg-slide" style="--f:url(\'' + f + '\')">' +
-               '<img src="' + f + '" alt="' + g.n + '"></div>';
+               '<img src="' + f + '" alt="' + g.n + '" loading="lazy" decoding="async"></div>';
       }).join('');
       const dots = fs.length > 1 ? '<div class="mg-dots">' + fs.map(function(_,i){ return '<span' + (i===0?' class="on"':'') + '></span>'; }).join('') + '</div>' : '';
       // Con más de una foto: flechas y contador. Sin esto, en la compu no había
@@ -1633,7 +1657,7 @@ document.querySelectorAll(".punto").forEach(function(p){
     document.querySelectorAll(".punto.activo").forEach(a => a.classList.remove("activo"));
     p.classList.add("activo");
     panelMapa.innerHTML =
-      '<div class="mp-foto"><img src="' + g.img + '" alt="' + g.n + '"></div>' +
+      '<div class="mp-foto"><img src="' + g.img + '" alt="' + g.n + '" loading="lazy" decoding="async"></div>' +
       '<div class="mp-cuerpo">' +
         '<span class="mp-chip' + (g.t ? " travesia" : "") + '">' + g.chip + '</span>' +
         (g.sel ? '<span class="mp-chip selecta">✦ Wamani Selecta</span>' : '') +

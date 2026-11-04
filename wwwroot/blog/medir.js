@@ -14,6 +14,11 @@
 (function () {
   var ID = 'G-X04DXRSG6H';
 
+  // El WhatsApp de Wamani, en UN solo lugar para las cinco notas. Cada nota lleva
+  // además el número escrito en el href, que es el respaldo por si este archivo no
+  // llega a cargar: si alguna vez cambia, hay que tocar acá Y esos cinco href.
+  var WPP = '5491178898516';
+
   // 1) El stub de gtag ANTES de cargar la librería. Las llamadas se
   //    encolan en dataLayer y la librería las procesa cuando llega.
   window.dataLayer = window.dataLayer || [];
@@ -39,7 +44,16 @@
     var href = a.getAttribute('href') || '';
 
     try {
-      // 3.a) De una nota a una ficha de excursión. ESTE es el número que
+      // 3.a) El botón de WhatsApp del final de la nota. ESTE es el que dice si el
+      //      blog vende o sólo informa. Va con el mismo nombre que usa el resto del
+      //      sitio — clic_whatsapp, que en GA4 está marcado como evento clave — más
+      //      la nota de la que salió, para poder separarlo del WhatsApp de la portada.
+      if (href.indexOf('wa.me') > -1) {
+        gtag('event', 'clic_whatsapp', { desde: 'blog', nota: nota });
+        return;
+      }
+
+      // 3.b) De una nota a una ficha de excursión. ESTE es el número que
       //      importa: cuánta gente que vino a leer terminó mirando algo
       //      que vendemos. "lugar" distingue los botones del recuadro
       //      final de los enlaces sueltos en el medio del texto.
@@ -52,7 +66,7 @@
         return;
       }
 
-      // 3.b) Del índice (o del pie de una nota) a otra nota. Sirve para
+      // 3.c) Del índice (o del pie de una nota) a otra nota. Sirve para
       //      saber qué títulos funcionan y si alguien lee una segunda.
       if (href.indexOf('/blog/') === 0 && href !== '/blog/') {
         gtag('event', 'clic_nota', {
@@ -62,7 +76,7 @@
         return;
       }
 
-      // 3.c) Del blog a la web grande (el logo y el "Ir al sitio").
+      // 3.d) Del blog a la web grande (el logo y el "Ir al sitio").
       if (href === '/') {
         gtag('event', 'clic_desde_blog', {
           nota: nota, excursion: '(home)', lugar: 'navegacion'
@@ -70,4 +84,23 @@
       }
     } catch (e) { /* medir nunca debe romper la página */ }
   }, true);
+
+  // 4) El botón de WhatsApp del final: el mensaje ya escrito vive en el atributo
+  //    data-wpp de cada nota, en castellano y legible, y es distinto en cada una.
+  //    Acá se arma el enlace. Si esto no corre, el href del HTML abre el chat igual,
+  //    sólo que sin el mensaje puesto.
+  function armarWpp() {
+    try {
+      var botones = document.querySelectorAll('a.wpp[data-wpp]');
+      for (var i = 0; i < botones.length; i++) {
+        botones[i].href = 'https://wa.me/' + WPP + '?text=' +
+          encodeURIComponent(botones[i].getAttribute('data-wpp'));
+      }
+    } catch (e) { /* nunca romper la página */ }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', armarWpp);
+  } else {
+    armarWpp();
+  }
 })();

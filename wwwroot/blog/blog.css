@@ -189,3 +189,33 @@ figure.alta img{ max-height:620px; width:auto; margin:0 auto }
   padding:22px 20px 34px; text-align:center; color:var(--tinta-2); font-size:14px;
 }
 .pie a{ color:var(--tinta-2) }
+
+/* ── El WhatsApp del final de la nota ──────────────────────────── */
+/* Va dentro del recuadro de cierre, ARRIBA de los botones de excursión.
+   El verde es el de WhatsApp y no el de la zona a propósito: es el único color
+   que se reconoce sin leer, y sobre el fondo oscuro del cierre no compite con
+   el acento de la nota. La forma y la tipografía sí son las del blog, así el
+   botón pertenece a la página y no parece pegado de otro lado. */
+.cierre .wpp{
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  width:100%; margin-top:20px; padding:15px 22px;
+  background:#25d366; color:#0b2e18;
+  border-radius:999px; font-weight:800; font-size:16.5px; line-height:1.25;
+  text-align:center; text-decoration:none;
+  transition:background .15s ease, transform .15s ease;
+}
+.cierre .wpp svg{ width:21px; height:21px; flex:0 0 21px; fill:currentColor }
+.cierre .wpp:hover{ background:#1ec15b; transform:translateY(-1px) }
+.cierre .wpp:focus-visible{ outline:3px solid #fff; outline-offset:3px }
+
+/* El rotulito que separa el WhatsApp de las excursiones. En minúscula y apagado:
+   está para ordenar la lectura, no para competir con el botón de arriba. */
+.cierre .o-tambien{
+  margin:18px 0 0; font-size:13.5px; letter-spacing:.06em;
+  text-transform:uppercase; color:#b9b1a0;
+}
+.cierre .o-tambien + .botones{ margin-top:10px }
+
+@media (max-width:420px){
+  .cierre .wpp{ font-size:15.5px; padding:14px 16px }
+}

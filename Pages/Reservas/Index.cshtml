@@ -1,4 +1,4 @@
-@page
+﻿@page
 @model Wamani.Reservas.Pages.Reservas.IndexModel
 @{
     ViewData["Title"] = "Reservas";
@@ -290,6 +290,11 @@ else
                         <td data-label="Pasajero">
                             <div class="cliente-nombre">@r.NombreCliente</div>
                             <div class="cliente-sub">@r.Telefono</div>
+                            @* De dónde vino: se ve de un vistazo qué canal trae las ventas. *@
+                            @if (!string.IsNullOrWhiteSpace(r.Origen))
+                            {
+                                <div class="cliente-sub" title="De dónde vino este cliente">📍 @r.OrigenTexto()</div>
+                            }
                         </td>
                         <td data-label="Personas">
                             @r.CantidadPersonas

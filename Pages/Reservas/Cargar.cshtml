@@ -1,4 +1,4 @@
-@page
+﻿@page
 @model Wamani.Reservas.Pages.Reservas.CargarModel
 @{
     ViewData["Title"] = Model.EsNueva ? "Nueva reserva" : "Editar reserva";
@@ -83,6 +83,35 @@
                 <label asp-for="Reserva.Email"></label>
                 <input asp-for="Reserva.Email" type="email" />
                 <span asp-validation-for="Reserva.Email" class="text-danger"></span>
+            </div>
+
+            @* ── De dónde vino el cliente ───────────────────────────────────
+               Un clic al cargar la reserva y pasamos a saber qué canal trae
+               plata, no sólo visitas. "Agencia o plataforma" abre una segunda
+               cajita para escribir cuál (Ulalén, Civitatis...): la lista se
+               arma sola con las que ya se usaron, así no se vuelve un choclo
+               ni hay que tocar el código para sumar una nueva. *@
+            <div class="field">
+                <label asp-for="Reserva.Origen"></label>
+                <select asp-for="Reserva.Origen" id="selOrigen">
+                    <option value="">— Sin especificar —</option>
+                    @foreach (var o in Wamani.Reservas.Models.Reserva.OrigenesPosibles)
+                    {
+                        <option value="@o">@o</option>
+                    }
+                </select>
+            </div>
+            <div class="field" id="campoOrigenDetalle" style="display:none">
+                <label asp-for="Reserva.OrigenDetalle"></label>
+                <input asp-for="Reserva.OrigenDetalle" list="listaPlataformas"
+                       placeholder="Ej: Ulalén, Civitatis..." autocomplete="off" />
+                <datalist id="listaPlataformas">
+                    @foreach (var pl in Model.Plataformas)
+                    {
+                        <option value="@pl"></option>
+                    }
+                </datalist>
+                <div class="hint">Escribila una vez y después aparece sola en la lista.</div>
             </div>
 
             <div class="field">
@@ -410,6 +439,18 @@
             body.appendChild(clone);
             clone.querySelector('input[name=PasNombres]').focus();
         }
+        // "Agencia o plataforma" es el único origen que necesita aclarar cuál.
+        (function () {
+            var sel = document.getElementById('selOrigen');
+            var campo = document.getElementById('campoOrigenDetalle');
+            if (!sel || !campo) return;
+            function ver() {
+                campo.style.display = (sel.value === 'Agencia o plataforma') ? '' : 'none';
+            }
+            sel.addEventListener('change', ver);
+            ver();
+        })();
+
         function quitarPasajero(btn) {
             if (!confirm('¿Realmente lo querés borrar?')) return;
             var body = document.getElementById('pasBody');

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -456,6 +456,10 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Reservas"" ADD COLUMN IF NOT EXISTS ""DescuentoMonto"" numeric NOT NULL DEFAULT 0;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Reservas"" ADD COLUMN IF NOT EXISTS ""DescuentoMotivo"" text;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Reservas"" ADD COLUMN IF NOT EXISTS ""CantidadMenores"" integer NOT NULL DEFAULT 0;");
+        // De dónde vino el cliente (noviembre 2026). Queda vacío en las reservas
+        // viejas a propósito: no se puede adivinar hacia atrás.
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Reservas"" ADD COLUMN IF NOT EXISTS ""Origen"" text;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Reservas"" ADD COLUMN IF NOT EXISTS ""OrigenDetalle"" text;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoProveedores"" ADD COLUMN IF NOT EXISTS ""ReservaId"" integer;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoGastos"" ADD COLUMN IF NOT EXISTS ""ReservaId"" integer;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""Excursiones"" ADD COLUMN IF NOT EXISTS ""EsAMedida"" boolean NOT NULL DEFAULT false;");

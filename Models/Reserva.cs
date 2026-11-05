@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Wamani.Reservas.Models
@@ -116,6 +116,43 @@ namespace Wamani.Reservas.Models
         public string? SaldoRecibioPor { get; set; }
 
         public string? SaldoComprobante { get; set; }
+
+        // ---------- De dónde vino el cliente ----------
+        // Sirve para saber qué canal trae ventas de verdad (no clics: plata).
+        // Origen es el canal; OrigenDetalle sólo se usa cuando el canal es una
+        // agencia o plataforma (Ulalén, Civitatis...) y guarda cuál fue.
+        // Se deja en texto libre a propósito: la lista de plataformas crece sola
+        // y no hay que tocar el código cada vez que se suma una nueva.
+        [MaxLength(40)]
+        [Display(Name = "¿De dónde vino?")]
+        public string? Origen { get; set; }
+
+        [MaxLength(80)]
+        [Display(Name = "¿Cuál agencia o plataforma?")]
+        public string? OrigenDetalle { get; set; }
+
+        // Lo que se muestra en las listas: "Civitatis" en vez de "Agencia o plataforma".
+        public string OrigenTexto()
+        {
+            if (string.IsNullOrWhiteSpace(Origen)) return "—";
+            if (!string.IsNullOrWhiteSpace(OrigenDetalle)) return OrigenDetalle!.Trim();
+            return Origen!;
+        }
+
+        // Las opciones del desplegable, en un solo lugar.
+        public const string OrigenAgencia = "Agencia o plataforma";
+        public static readonly string[] OrigenesPosibles = new[]
+        {
+            "Página web",
+            "Instagram",
+            "Facebook",
+            "TikTok",
+            "WhatsApp directo",
+            "Recomendación",
+            OrigenAgencia,
+            "Repite",
+            "Otro"
+        };
 
         // ---------- Estado ----------
         // Si es NULL => el estado se calcula solo por los pagos.

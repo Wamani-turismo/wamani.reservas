@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +47,21 @@ public class CargarModel : PageModel
 
     public bool EsNueva => Reserva.Id == 0;
 
+    // Las agencias y plataformas que ya se cargaron alguna vez (Ulalén, Civitatis...).
+    // No es una lista fija: se arma sola con lo que hay en la base, así sumar una
+    // plataforma nueva es escribirla una vez y listo, sin tocar el código.
+    public List<string> Plataformas { get; set; } = new();
+
+    private async Task CargarPlataformasAsync()
+    {
+        Plataformas = await _db.Reservas
+            .Where(r => r.OrigenDetalle != null && r.OrigenDetalle != "")
+            .Select(r => r.OrigenDetalle!)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToListAsync();
+    }
+
     private async Task CargarExcursionesAsync()
     {
         // La "a medida" va primera: es la que se elige cuando el cliente pide algo que no
@@ -92,6 +107,7 @@ public class CargarModel : PageModel
         }
 
         await CargarExcursionesAsync();
+        await CargarPlataformasAsync();
 
         // Si la reserva es de una salida a medida, el campo del nombre arranca con el que
         // ya tenía guardado (no con el genérico del catálogo).
@@ -131,6 +147,7 @@ public class CargarModel : PageModel
         if (!ModelState.IsValid)
         {
             await CargarExcursionesAsync();
+            await CargarPlataformasAsync();
             return Page();
         }
 
@@ -190,6 +207,11 @@ public class CargarModel : PageModel
             db.DescuentoMonto = Reserva.DescuentoMonto;
             db.DescuentoMotivo = Reserva.DescuentoMotivo;
             db.CantidadMenores = Reserva.CantidadMenores;
+            db.Origen = Reserva.Origen;
+            // El detalle sólo tiene sentido si el canal es una agencia o plataforma.
+            db.OrigenDetalle = Reserva.Origen == Wamani.Reservas.Models.Reserva.OrigenAgencia
+                ? (string.IsNullOrWhiteSpace(Reserva.OrigenDetalle) ? null : Reserva.OrigenDetalle!.Trim())
+                : null;
 
             db.SenaMonto = Reserva.SenaMonto;
             db.SenaFecha = Reserva.SenaFecha;

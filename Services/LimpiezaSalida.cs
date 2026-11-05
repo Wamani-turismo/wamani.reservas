@@ -29,5 +29,34 @@ public static class LimpiezaSalida
         await db.OperativoSalidas
             .Where(o => o.ExcursionId == exId && o.Fecha >= desde && o.Fecha < hasta)
             .ExecuteDeleteAsync();
+
+        // Los INGRESOS EXTRA de esa salida son otra cosa: no son una estimación copiada de
+        // la plantilla, son plata que entró de verdad y está en la caja. Borrarlos acá
+        // descuadraría la caja sin que nadie se enterara.
+        //
+        // Así que no se borran: se les saca la salida (que ya no existe) y quedan como un
+        // ingreso extra suelto en la pantalla Extras, con una línea que dice de dónde venía.
+        // La plata sigue estando y se puede ver; lo que desaparece es la salida.
+        var extras = await db.IngresosExtra
+            .Where(o => o.ExcursionId == exId && o.FechaSalida >= desde && o.FechaSalida < hasta)
+            .ToListAsync();
+
+        if (extras.Count > 0)
+        {
+            var nombre = await db.Excursiones.AsNoTracking()
+                .Where(x => x.Id == exId).Select(x => x.Nombre).FirstOrDefaultAsync();
+
+            foreach (var x in extras)
+            {
+                var rastro = $"Era de la salida de «{nombre ?? "excursión"}» del {desde:dd/MM/yyyy}, " +
+                             "que se borró al quedar sin reservas.";
+                x.Comentario = string.IsNullOrWhiteSpace(x.Comentario)
+                    ? rastro
+                    : x.Comentario + System.Environment.NewLine + rastro;
+                x.ExcursionId = null;
+                x.FechaSalida = null;
+            }
+            await db.SaveChangesAsync();
+        }
     }
 }

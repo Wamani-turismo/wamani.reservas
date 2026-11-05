@@ -207,7 +207,8 @@
         <h2>Ingresos extra del mes</h2>
         <p class="subtitle">
             Plata que entró por fuera de las reservas. Se carga en
-            <a asp-page="/Extras/Index" asp-route-mes="@Model.MesActual.ToString("yyyy-MM")">Extra</a>.
+            <a asp-page="/Extras/Index" asp-route-mes="@Model.MesActual.ToString("yyyy-MM")">Extra</a>,
+            o en el operativo de la salida cuando el extra es de una salida puntual.
         </p>
         <table class="tabla">
             <thead>
@@ -219,7 +220,15 @@
                     <tr>
                         <td>@e.Fecha.ToString("dd/MM/yy")</td>
                         <td>@e.Motivo</td>
-                        <td>@e.Descripcion</td>
+                        <td>
+                            @e.Descripcion
+                            @if (e.ExcursionId is int exId && e.FechaSalida is DateTime fSal)
+                            {
+                                <div style="font-size:.82rem;color:var(--muted)">
+                                    🚐 @(Model.ExtrasExcursion.TryGetValue(exId, out var nx) ? nx : "Salida") · @fSal.ToString("dd/MM/yy")
+                                </div>
+                            }
+                        </td>
                         <td>@(string.IsNullOrWhiteSpace(e.DeQuien) ? "—" : e.DeQuien)</td>
                         <td class="num" style="color:var(--ok)">@Money(e.Monto)</td>
                     </tr>

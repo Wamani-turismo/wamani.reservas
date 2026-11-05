@@ -28,6 +28,12 @@ public class IndexModel : PageModel
     public decimal Total { get; set; }
     public decimal TotalHistorico { get; set; }
 
+    // Los ingresos extra que nacieron de una SALIDA se cargan desde el operativo y
+    // aparecen igual en esta lista: es la misma plata y la misma tabla, así el total de
+    // acá siempre coincide con lo que la Caja suma. Esto sirve para mostrar de qué salida
+    // vino cada uno, y que no parezca cargado dos veces.
+    public Dictionary<int, string> NombresExcursion { get; set; } = new();
+
     [BindProperty] public DateTime NuevoFecha { get; set; } = DateTime.Today;
     [BindProperty] public string NuevoMotivo { get; set; } = "Comisión";
     [BindProperty] public string? NuevoDescripcion { get; set; }
@@ -57,6 +63,12 @@ public class IndexModel : PageModel
         Total = Lista.Sum(e => e.Monto);
 
         TotalHistorico = (await _db.IngresosExtra.ToListAsync()).Sum(e => e.Monto);
+
+        var ids = Lista.Where(e => e.ExcursionId != null).Select(e => e.ExcursionId!.Value).Distinct().ToList();
+        if (ids.Count > 0)
+            NombresExcursion = await _db.Excursiones.AsNoTracking()
+                .Where(x => ids.Contains(x.Id))
+                .ToDictionaryAsync(x => x.Id, x => x.Nombre);
     }
 
     public async Task<IActionResult> OnPostAgregarAsync()

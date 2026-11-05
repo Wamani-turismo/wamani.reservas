@@ -102,6 +102,17 @@
                 <td data-label="Motivo">@e.Motivo</td>
                 <td data-label="Descripción">
                     @e.Descripcion
+                    @if (e.ExcursionId is int exId && e.FechaSalida is DateTime fSal)
+                    {
+                        @* Vino del operativo de una salida: se muestra de cuál, para que se
+                           entienda de dónde salió y no parezca cargado dos veces. *@
+                        <div style="margin-top:4px;font-size:.82rem">
+                            <a asp-page="/Operativo/Salida" asp-route-excursionId="@exId"
+                               asp-route-fecha="@fSal.ToString("yyyy-MM-dd")">
+                                🚐 @(Model.NombresExcursion.TryGetValue(exId, out var nx) ? nx : "Salida") · @fSal.ToString("dd/MM/yy")
+                            </a>
+                        </div>
+                    }
                     @if (!string.IsNullOrWhiteSpace(e.Comentario))
                     {
                         <div class="nota-desglose">@e.Comentario</div>

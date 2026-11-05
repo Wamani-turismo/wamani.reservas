@@ -43,6 +43,26 @@ namespace Wamani.Reservas.Models
         // cuenta remunerada. Es plata ganada de verdad, no un ajuste: suma a la ganancia del
         // mes como cualquier otro ingreso. El control de caja los carga con este motivo.
         public static readonly string[] Motivos =
-            { "Comisión", "Rendimientos", "Alquiler de auto", "Hospedaje", "Servicio suelto", "Venta", "Otro" };
+            { "Comisión", "Rendimientos", "Alquiler de auto", "Hospedaje", "Traslado",
+              "Servicio suelto", "Venta", "Otro" };
+
+        // ---- De qué SALIDA es este ingreso (opcional) ----
+        //
+        // Hay ingresos extra que nacen de una salida puntual: un traslado que hubo que
+        // sumar porque el avión aterrizó en otra provincia, una noche más, una entrada que
+        // no estaba. Esos se cargan DESDE el operativo de la salida y quedan atados a ella,
+        // así se puede ver, salida por salida, cuánta plata de más entró y con qué gasto.
+        //
+        // Los que no tienen salida dueña (venta de remeras, alquiler de bastones, una
+        // comisión de la rentadora) se siguen cargando en Extras y quedan en null.
+        //
+        // Una salida es "excursión + día", igual que en el operativo: hacen falta los dos
+        // datos para identificarla.
+        public int? ExcursionId { get; set; }
+
+        [DataType(DataType.Date)]
+        public DateTime? FechaSalida { get; set; }
+
+        public bool EsDeSalida => ExcursionId is int && FechaSalida is DateTime;
     }
 }

@@ -235,6 +235,10 @@ public class IndexModel : PageModel
     // Ingresos EXTRA del mes (comisiones, alquileres, servicios sueltos): no son de
     // ninguna excursión, así que van aparte de la tabla por excursión pero suman al neto.
     public List<IngresoExtra> ExtrasLista { get; set; } = new();
+
+    // De qué salida vino cada ingreso extra que se cargó desde un operativo (los que no
+    // son de ninguna salida no están en este diccionario).
+    public Dictionary<int, string> ExtrasExcursion { get; set; } = new();
     public decimal ExtrasTotal { get; set; }
     public decimal IngresoTotal => Ingreso + ExtrasTotal;
 
@@ -370,6 +374,13 @@ public class IndexModel : PageModel
             .OrderByDescending(e => e.Fecha)
             .ToListAsync();
         ExtrasTotal = ExtrasLista.Sum(e => e.Monto);
+
+        var idsExtras = ExtrasLista.Where(e => e.ExcursionId != null)
+            .Select(e => e.ExcursionId!.Value).Distinct().ToList();
+        if (idsExtras.Count > 0)
+            ExtrasExcursion = await _db.Excursiones.AsNoTracking()
+                .Where(x => idsExtras.Contains(x.Id))
+                .ToDictionaryAsync(x => x.Id, x => x.Nombre);
 
         // ---- La cuenta de cada socio, acumulada hasta este mes ----
         Cuentas = await Wamani.Reservas.Services.CuentaSocios.CalcularAsync(_db, Duenos, MesActual);

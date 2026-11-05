@@ -158,10 +158,18 @@ public class MantenimientoModel : PageModel
         if (yaHay) _db.OperativoSalidas.RemoveRange(fichas);
         else foreach (var f in fichas) f.ExcursionId = destino.Id;
 
+        // 5) Los ingresos extra cargados en el operativo de esa salida (un traslado que
+        //    hubo que sumar, una noche agregada). Son plata que ya entró: tiene que viajar
+        //    con la salida, o queda colgada en la excursión vieja.
+        var extras = await _db.IngresosExtra
+            .Where(o => o.ExcursionId == MoverDesde && o.FechaSalida == dia).ToListAsync();
+        foreach (var x in extras) x.ExcursionId = destino.Id;
+
         await _db.SaveChangesAsync();
 
         Aviso = $"Salida del {dia:dd/MM/yyyy} movida a «{destino.Nombre}»: " +
-                $"{reservas.Count} reserva(s), {gastos.Count} gasto(s) y {provs.Count} proveedor(es). No se tocó ningún monto.";
+                $"{reservas.Count} reserva(s), {gastos.Count} gasto(s), {provs.Count} proveedor(es) " +
+                $"y {extras.Count} ingreso(s) extra. No se tocó ningún monto.";
         return RedirectToPage();
     }
 
@@ -230,11 +238,17 @@ public class MantenimientoModel : PageModel
             .Where(o => o.ExcursionId == exc.Id && o.Fecha.Date == dia).ToListAsync();
         foreach (var f in fichas) f.Fecha = nuevo;
 
+        // 5) Los ingresos extra cargados en el operativo de esa salida. Se corre el día de
+        //    la SALIDA, no la fecha en que entró la plata: esa es la de la caja y no cambia.
+        var extras = await _db.IngresosExtra
+            .Where(o => o.ExcursionId == exc.Id && o.FechaSalida == dia).ToListAsync();
+        foreach (var x in extras) x.FechaSalida = nuevo;
+
         await _db.SaveChangesAsync();
 
         Aviso = $"Salida de «{exc.Nombre}» corrida del {dia:dd/MM/yyyy} al {nuevo:dd/MM/yyyy}: " +
-                $"{reservas.Count} reserva(s), {gastos.Count} gasto(s) y {provs.Count} proveedor(es). " +
-                "No se tocó ningún monto.";
+                $"{reservas.Count} reserva(s), {gastos.Count} gasto(s), {provs.Count} proveedor(es) " +
+                $"y {extras.Count} ingreso(s) extra. No se tocó ningún monto.";
         return RedirectToPage();
     }
 

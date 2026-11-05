@@ -297,6 +297,35 @@ public class SalidaModel : PageModel
     // de un día da 1.
     public int DiasSalida => NochesSalida > 0 ? NochesSalida + 1 : 1;
 
+    // ---- INGRESOS EXTRA de esta salida ----
+    //
+    // Plata de MÁS que entró por esta salida puntual: el traslado que hubo que sumar porque
+    // el avión aterrizó en otra provincia, una noche agregada, una entrada que no estaba.
+    //
+    // Son los mismos IngresoExtra de la pantalla Extras, pero con la salida anotada. Por eso
+    // suman solos en la Caja, en Finanzas, en el fondo y en el cierre del mes: no hay una
+    // cuenta nueva en ningún lado y es imposible que se cuenten dos veces.
+    public List<IngresoExtra> IngresosExtra { get; set; } = new();
+    public decimal IngresosExtraTotal => IngresosExtra.Sum(e => e.Monto);
+
+    [BindProperty] public int IngresoId { get; set; }
+    // El día de HOY en Jujuy, no el del servidor: si no, un ingreso cargado a las 22:00
+    // queda fechado al día siguiente y cae en el mes que no es.
+    [BindProperty] public DateTime IngresoFecha { get; set; } = Wamani.Reservas.Services.Reloj.HoyJujuy();
+    [BindProperty] public string IngresoMotivo { get; set; } = "Traslado";
+    [BindProperty] public string? IngresoDescripcion { get; set; }
+    [BindProperty] public string? IngresoDeQuien { get; set; }
+    [BindProperty] public decimal IngresoMonto { get; set; }
+    [BindProperty] public string? IngresoNota { get; set; }
+
+    [TempData] public string? AvisoIngreso { get; set; }
+    [TempData] public bool AvisoIngresoEsError { get; set; }
+
+    // Los ingresos extra son plata de la empresa, así que esta parte es sólo para los
+    // socios. Un colaborador de afuera (acceso limitado a una excursión) entra igual al
+    // operativo de SU travesía para cargar los gastos, pero no ve ni puede tocar la caja.
+    public bool PuedeTocarIngresos => !Wamani.Reservas.Services.Permisos.EsLimitado(User);
+
     // Gastos que están cargados DOS VECES en esta salida: el mismo ítem como fila del grupo
     // y además por pasajero, o repetido dentro del mismo grupo.
     //
@@ -517,6 +546,12 @@ public class SalidaModel : PageModel
         }
 
         ProvPorTipo = asignados.GroupBy(o => o.Tipo).ToDictionary(g => g.Key, g => g.ToList());
+
+        // La plata de más que entró por ESTA salida.
+        IngresosExtra = await _db.IngresosExtra
+            .Where(e => e.ExcursionId == ExcursionId && e.FechaSalida == Fecha.Date)
+            .OrderBy(e => e.Fecha).ThenBy(e => e.Id)
+            .ToListAsync();
 
         BuscarDuplicados();
     }
@@ -1012,6 +1047,105 @@ public class SalidaModel : PageModel
         return RedirectToPage("/Operativo/Salida",
             new { ExcursionId, Fecha = Fecha.ToString("yyyy-MM-dd"), guardado = true });
     }
+
+    // ---------- INGRESOS EXTRA de esta salida ----------
+    //
+    // Guarda uno nuevo o modifica el que ya estaba (manda el mismo formulario: si viene con
+    // IngresoId, edita). Lo que se graba es un IngresoExtra igual a los de la pantalla
+    // Extras, pero con la excursión y el día de la salida anotados. Por eso no hace falta
+    // tocar nada más: la Caja, Finanzas, el fondo y el cierre del mes lo suman solos, y no
+    // existe la posibilidad de que se cuente dos veces.
+    public async Task<IActionResult> OnPostIngresoAsync()
+    {
+        // Un colaborador de afuera no toca la caja: se lo manda a lo suyo, igual que el
+        // candado de Program.cs con las pantallas que no le corresponden.
+        if (!PuedeTocarIngresos) return RedirectToPage("/Operativo/Index");
+
+        var descripcion = (IngresoDescripcion ?? "").Trim();
+
+        if (descripcion.Length == 0 || IngresoMonto <= 0)
+        {
+            AvisoIngreso = "Para cargar un ingreso extra hace falta el detalle y un monto mayor que cero.";
+            AvisoIngresoEsError = true;
+            return VolverAIngresos();
+        }
+
+        var nombreExc = await _db.Excursiones.AsNoTracking()
+            .Where(x => x.Id == ExcursionId).Select(x => x.Nombre).FirstOrDefaultAsync() ?? "Excursión";
+
+        IngresoExtra ing;
+        decimal montoAntes = 0;
+
+        if (IngresoId != 0)
+        {
+            // Sólo se puede editar un ingreso de ESTA salida: así la pantalla de una salida
+            // no puede tocar la plata de otra ni un extra de los de Extras.
+            var guardado = await _db.IngresosExtra.FirstOrDefaultAsync(
+                x => x.Id == IngresoId && x.ExcursionId == ExcursionId && x.FechaSalida == Fecha.Date);
+            if (guardado is null)
+            {
+                AvisoIngreso = "Ese ingreso extra ya no está.";
+                AvisoIngresoEsError = true;
+                return VolverAIngresos();
+            }
+            ing = guardado;
+            montoAntes = ing.Monto;
+        }
+        else
+        {
+            ing = new IngresoExtra { ExcursionId = ExcursionId, FechaSalida = Fecha.Date };
+            _db.IngresosExtra.Add(ing);
+        }
+
+        ing.Fecha       = IngresoFecha.Date;
+        ing.Motivo      = IngresoExtra.Motivos.Contains(IngresoMotivo) ? IngresoMotivo : "Otro";
+        ing.Descripcion = descripcion.Length > 160 ? descripcion[..160] : descripcion;
+        var deQuien     = Recortar(IngresoDeQuien);          // la columna admite 120
+        ing.DeQuien     = deQuien is null ? null : (deQuien.Length > 120 ? deQuien[..120] : deQuien);
+        ing.Monto       = IngresoMonto;
+        ing.Comentario  = Recortar(IngresoNota);
+
+        await _db.SaveChangesAsync();
+
+        // Queda anotado en Actividad quién movió esta plata, igual que el resto del sistema.
+        // Al editar se anota sólo la diferencia, que es lo que cambió de verdad.
+        Wamani.Reservas.Services.Registro.Anotar(_db, User, "Ingreso extra",
+            $"{ing.Descripcion} · {nombreExc} · salida del {Fecha:dd/MM/yyyy}",
+            ExcursionId, ing.Monto - montoAntes);
+        await _db.SaveChangesAsync();
+
+        AvisoIngreso = IngresoId != 0 ? "Ingreso extra modificado ✔" : "Ingreso extra agregado ✔";
+        return VolverAIngresos();
+    }
+
+    public async Task<IActionResult> OnPostIngresoBorrarAsync(int id)
+    {
+        // Un colaborador de afuera no toca la caja: se lo manda a lo suyo, igual que el
+        // candado de Program.cs con las pantallas que no le corresponden.
+        if (!PuedeTocarIngresos) return RedirectToPage("/Operativo/Index");
+
+        var ing = await _db.IngresosExtra.FirstOrDefaultAsync(
+            x => x.Id == id && x.ExcursionId == ExcursionId && x.FechaSalida == Fecha.Date);
+
+        if (ing is not null)
+        {
+            var nombreExc = await _db.Excursiones.AsNoTracking()
+                .Where(x => x.Id == ExcursionId).Select(x => x.Nombre).FirstOrDefaultAsync() ?? "Excursión";
+
+            // Borrar un ingreso saca plata de la caja: se anota en negativo.
+            Wamani.Reservas.Services.Registro.Anotar(_db, User, "Ingreso extra borrado",
+                $"{ing.Descripcion} · {nombreExc} · salida del {Fecha:dd/MM/yyyy}",
+                ExcursionId, -ing.Monto);
+
+            _db.IngresosExtra.Remove(ing);
+            await _db.SaveChangesAsync();
+            AvisoIngreso = "Ingreso extra borrado.";
+        }
+        return VolverAIngresos();
+    }
+
+    private IActionResult VolverAIngresos()
+        => Redirect($"/Operativo/Salida?ExcursionId={ExcursionId}&Fecha={Fecha:yyyy-MM-dd}#ingresos");
 
     // Borra los gastos de ESTA salida que no tienen nada encima —ni tilde, ni fecha de
     // pago, ni comprobante— para que se vuelvan a copiar limpios de la plantilla.

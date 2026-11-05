@@ -405,6 +405,10 @@ using (var scope = app.Services.CreateScope())
     // un movimiento que se cargó generalizado
     EnsureSqliteColumn(db, "GastosEmpresa", "Comentario", "TEXT NULL");
     EnsureSqliteColumn(db, "IngresosExtra", "Comentario", "TEXT NULL");
+    // De qué SALIDA es un ingreso extra (los que se cargan desde el operativo).
+    // Los de Extras, que no son de ninguna salida, quedan en null.
+    EnsureSqliteColumn(db, "IngresosExtra", "ExcursionId", "INTEGER NULL");
+    EnsureSqliteColumn(db, "IngresosExtra", "FechaSalida", "TEXT NULL");
     // Los ítems de la plantilla que se borraron a mano en una salida (para no recopiarlos)
     EnsureSqliteColumn(db, "OperativoSalidas", "ItemsBorrados", "TEXT NULL");
 
@@ -578,6 +582,9 @@ using (var scope = app.Services.CreateScope())
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoProveedores"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""GastosEmpresa"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""IngresosExtra"" ADD COLUMN IF NOT EXISTS ""Comentario"" text;");
+        // De qué SALIDA es un ingreso extra (los que se cargan desde el operativo)
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""IngresosExtra"" ADD COLUMN IF NOT EXISTS ""ExcursionId"" integer;");
+        db.Database.ExecuteSqlRaw(@"ALTER TABLE ""IngresosExtra"" ADD COLUMN IF NOT EXISTS ""FechaSalida"" timestamp without time zone;");
         // Los ítems de la plantilla que se borraron a mano en una salida (para no recopiarlos)
         db.Database.ExecuteSqlRaw(@"ALTER TABLE ""OperativoSalidas"" ADD COLUMN IF NOT EXISTS ""ItemsBorrados"" text;");
 

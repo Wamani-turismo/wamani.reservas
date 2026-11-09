@@ -186,8 +186,43 @@ else
                     </div>
                 }
             </div>
+            @* Plata de más que entró POR ESTA SALIDA (el bloque "Ingresos extra" del
+               operativo). Va sólo acá, del lado real: el gasto de ese extra ya está
+               adentro del costo real, así que si la plata no se mostrara, la salida
+               cargaría el costo y no el cobro, y la ganancia real saldría más chica. *@
+            @if (Model.IngresoExtra > 0)
+            {
+                <div class="fin-card">
+                    <div class="fin-label">Ingresos extra de la salida</div>
+                    <div class="fin-val" style="color:var(--ok)">+ @M(Model.IngresoExtra)</div>
+                    <div class="fin-label" style="margin-top:4px">sólo suma del lado real</div>
+                </div>
+            }
             <div class="fin-card"><div class="fin-label">Ganancia teórica</div><div class="fin-val">@M(Model.GananciaTeorica)</div></div>
             <div class="fin-card fin-card-net"><div class="fin-label">Ganancia real</div><div class="fin-val" style="color:var(--accent)">@M(Model.GananciaReal)</div></div>
         </div>
+        @if (Model.Extras.Count > 0)
+        {
+            <div style="margin-top:14px">
+                <div class="fin-label" style="margin-bottom:8px">Qué entró de más</div>
+                <ul class="lista-simple">
+                    @foreach (var i in Model.Extras)
+                    {
+                        <li>
+                            <span>@i.Nombre @if (i.Extra != null) { <span class="pill" style="margin-left:4px">@i.Extra</span> }</span>
+                            <span class="num" style="color:var(--ok)">@M(i.Monto)</span>
+                        </li>
+                    }
+                </ul>
+                <p class="hint" style="margin-top:10px">
+                    Esta plata se carga en el operativo de la salida y suma en la Caja y en Finanzas.
+                    Acá entra <strong>sólo en la ganancia real</strong>: la plantilla de la excursión
+                    nunca previó estos extras, así que sumarlos a la teórica sería compararla contra
+                    algo que no tiene.
+                    Ganancia real = @M(Model.Ingreso) cobrado + @M(Model.IngresoExtra) de extra
+                    − @M(Model.RealTotal) de costo = <strong>@M(Model.GananciaReal)</strong>.
+                </p>
+            </div>
+        }
     </div>
 }

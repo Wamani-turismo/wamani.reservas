@@ -64,8 +64,25 @@ public class CompararModel : PageModel
     public decimal IngresoDeLista { get; set; }
     public decimal DiferenciaPrecio => Ingreso - IngresoDeLista;
 
+    // ---- Plata de MÁS que entró por esta salida ----
+    //
+    // Es el bloque "Ingresos extra" del operativo: un traslado que hubo que sumar porque el
+    // avión aterrizó en otra provincia, una noche agregada, una entrada que no estaba.
+    //
+    // Va SÓLO del lado REAL, nunca de la teórica: la plantilla de la excursión no previó ese
+    // extra, así que sumárselo sería inventarle un ingreso que no tiene y la comparación
+    // dejaría de comparar lo mismo.
+    //
+    // Sin esto, la pantalla mentía para abajo: el GASTO del extra sí está cargado en el
+    // operativo (y por lo tanto adentro del costo real), pero la PLATA no aparecía por
+    // ningún lado, así que la salida mostraba el costo del extra y no lo que se cobró por
+    // él, y la ganancia real salía más chica de lo que fue.
+    public List<ItemMonto> Extras { get; set; } = new();
+    public decimal IngresoExtra { get; set; }
+    public decimal IngresoReal => Ingreso + IngresoExtra;
+
     public decimal GananciaTeorica => Ingreso - TeoricaTotal;
-    public decimal GananciaReal => Ingreso - RealTotal;
+    public decimal GananciaReal => IngresoReal - RealTotal;
 
     private static string Norm(string? s) => (s ?? "").Trim().ToLowerInvariant();
 
@@ -91,6 +108,21 @@ public class CompararModel : PageModel
         // precio cambiado a mano en la reserva, porque cada reserva guarda su propio precio.
         Ingreso = reservas.Sum(r => r.TotalConDescuento());
         IngresoDeLista = exc.PrecioPorPersona * Pax;
+
+        // Los ingresos extra de ESTA salida. Igual que arriba: se filtra la fecha en
+        // memoria. Una salida es "excursión + día", así que hacen falta los dos datos.
+        Extras = (await _db.IngresosExtra
+                .Where(e => e.ExcursionId == ExcursionId).ToListAsync())
+            .Where(e => e.FechaSalida != null && e.FechaSalida.Value.Date == Fecha.Date)
+            .OrderByDescending(e => e.Monto)
+            .Select(e => new ItemMonto
+            {
+                Nombre = string.IsNullOrWhiteSpace(e.Descripcion) ? e.Motivo : e.Descripcion.Trim(),
+                Monto = e.Monto,
+                Extra = e.Motivo
+            })
+            .ToList();
+        IngresoExtra = Extras.Sum(i => i.Monto);
 
         var plantilla = await _db.GastosExcursion
             .Where(g => g.ExcursionId == ExcursionId).OrderBy(g => g.Id).ToListAsync();

@@ -1014,6 +1014,10 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
             <!-- Canuto: -23,9646 -65,4632 · Ecolodge: -24,1417 -65,2925 · Finca: -24,3184 -64,5455 -->
             <g class="punto selecta" data-id="especial-ecolodge-de-la-selva" transform="translate(396,498)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Especial Ecolodge de la Selva</title></g>
             <g class="punto selecta" data-id="especial-the-canuto-glamping" transform="translate(320,470)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Especial The Canuto Glamping</title></g>
+            <!-- La Sala: Lozano, -24,0834 -65,4032. El lugar exacto cae a 10 px del punto
+                 de las Lagunas de Yala y se pisarían, así que va 2 km al sudeste, sobre la
+                 traza de la Ruta 9, que es la que une Lozano con la ciudad. -->
+            <g class="punto selecta" data-id="especial-la-sala" transform="translate(357,487)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Especial La Sala</title></g>
             <g class="punto selecta" data-id="especial-finca-la-fe" transform="translate(533,545)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Especial Finca la Fé</title></g>
           </svg>
           <div class="mapa-leyenda">
@@ -1318,6 +1322,13 @@ let GUIAS = {
     itinerario:["Día 1 · Inca Cueva: pinturas rupestres, el Oasis y La Ventana", "Día 2 · Trekking por el entorno y mirador de Maimará"],
     incluye:["Traslados desde y hasta San Salvador de Jujuy", "1 noche de alojamiento en el refugio de Inca Cueva", "Recorrido por Inca Cueva con guía local", "Caminata a La Ventana y trekking de la segunda jornada", "Picada gourmet en el Oasis", "Merienda y cena del día 1", "Desayuno y almuerzo del día 2", "Parada en el mirador de Maimará", "Snacks y refrigerios durante el traslado", "Acompañamiento, asistencia y botiquín de primeros auxilios"],
     llevar:"Calzado de trekking con buena adherencia, ropa cómoda, abrigo para la tarde y la noche, campera de lluvia, protector solar, anteojos de sol, gorra o sombrero, 2 litros de agua, linterna y mochila pequeña (consultanos por el alquiler). No están incluidas las bebidas en las comidas ni los gastos personales." },
+  "la-sala": { w:"especial-la-sala", n:"Especial La Sala", chip:"3 días y 2 noches", sel:true, img:"/web/img/la-sala-aerea.webp", c:"58,110,90",
+    fotos:["/web/img/la-sala-aerea.webp", "/web/img/la-sala-casa.webp", "/web/img/la-sala-patio.webp", "/web/img/la-sala-habitacion.webp", "/web/img/la-sala-comedor.webp", "/web/img/la-sala-parque.webp"],
+    resumen:"Tres días con una casa como centro: La Sala de Yolanda, posta del Camino Real desde 1775 en Lozano. Jaire, Yala, Purmamarca y las Salinas, y cada tarde de vuelta al parque con llamas, lagunas y piano.",
+    datos:["🗓️ 3 días / 2 noches", "🚌 Salida 9:30 · San Salvador de Jujuy", "👥 Grupos reducidos · posibilidad de tomar la casa en exclusiva", "🥾 Dificultad media/baja · de 1.600 a más de 4.000 msnm"],
+    itinerario:["DÍA 01 —", "09:30 h · Salida desde San Salvador de Jujuy", "Trekking · Angosto de Jaire, entre paredones y cursos de agua", "Circuito · Lagunas de Yala: Comedero, Rodeo y Desaguadero", "18:00 h · Llegada a La Sala: parque, lagunas, puente colgante y llamas", "Cena · Mesa larga y la historia de la casa, al piano", "DÍA 02 —", "Desayuno · Junto al piano del comedor", "Visita · Purmamarca: Cerro de los Siete Colores y Paseo de los Colorados", "Almuerzo regional · Purmamarca", "Ascenso · Cuesta de Lipán y Salinas Grandes", "Regreso a Lozano · Segunda cena y hogar a leña", "DÍA 03 —", "Desayuno sin horario · En la galería", "Recorrido · La casona de la Niña Yolanda, sus muebles y su parque", "Almuerzo de despedida · Mesa larga de La Sala", "Por la tarde · Regreso a San Salvador de Jujuy"],
+    incluye:["Traslado ida y vuelta desde San Salvador de Jujuy", "Todos los traslados durante los tres días", "Dos noches en La Sala, con desayuno", "Dos almuerzos: día 2 en Purmamarca y día 3 en La Sala", "Dos cenas en la mesa larga de La Sala", "Guía de Wamani para todas las actividades", "Snacks y refrigerio durante los traslados", "Seguro para pasajeros y asistencia permanente", "Botiquín de primeros auxilios y coordinación única de principio a fin"],
+    llevar:"Calzado cómodo para caminatas, campera rompeviento y abrigo (la Puna es fría aun en verano), ropa cómoda y muda de recambio, gorro para el sol, anteojos de sol y protector solar, mochila pequeña y recipiente para agua, elementos de higiene personal, binoculares si te interesan las aves del parque y traje de baño en temporada de pileta. No están incluidas las bebidas de los almuerzos y las cenas; el almuerzo del día 1 se resuelve en el recorrido de Jaire y Yala." },
   "jordan": { w:"termas-de-jordan", n:"Termas de Jordán", chip:"Día completo", img:"/web/img/termas-jordan-1.webp", c:"58,110,90",
     resumen:"Trekking profundo por la selva de las yungas hasta las piscinas naturales de aguas termales color turquesa.",
     datos:["🕐 14-16 hs","🚌 Salida 5:00 · SSJ","👥 2 a 12 (grupos más grandes, consultar) · Dif. moderada/alta"],
@@ -1375,7 +1386,7 @@ let GUIAS = {
 };
 
 /* ═══ Orden de las experiencias (respaldo; el sistema lo reemplaza) ═══ */
-let ORDEN = ["jordan","salinas","yungas","quebrada","conociendo-la-quebrada","inca-cueva-express","santuyoc","yungas-express","lagunas","humahuaca-yungas","tilcara","iruya","ecolodge"];
+let ORDEN = ["jordan","salinas","yungas","quebrada","conociendo-la-quebrada","inca-cueva-express","santuyoc","yungas-express","lagunas","humahuaca-yungas","tilcara","iruya","ecolodge","la-sala"];
 
 /* Si el sistema mandó excursiones (web publicada), reemplazan a las de respaldo */
 if (D && D.excursiones && D.excursiones.length){

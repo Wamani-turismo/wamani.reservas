@@ -1073,6 +1073,110 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
+    // ---- Especial La Sala: Wamani Selecta en Lozano, 3 días y 2 noches ----
+    //
+    // La Sala de Yolanda: posta del Camino Real desde 1775, la misma familia hace siete
+    // generaciones. Entra en la línea Selecta, así que no lleva paleta propia: queda
+    // con el verde oscuro, que es parte de lo que distingue a esa línea.
+    //
+    // Como las otras, sólo se crea si todavía no existe. Después manda el panel.
+    if (!db.ExcursionesWeb.Any(x => x.Clave == "especial-la-sala"))
+    {
+        var vecinaSala = db.ExcursionesWeb.FirstOrDefault(x => x.Clave == "especial-finca-la-fe");
+        var ordenSala = (vecinaSala?.Orden ?? 100) + 1;
+        foreach (var post in db.ExcursionesWeb.Where(x => x.Orden >= ordenSala).ToList())
+            post.Orden += 1;
+        db.ExcursionesWeb.Add(new Wamani.Reservas.Models.ExcursionWeb
+        {
+            Clave      = "especial-la-sala",
+            Nombre     = "Especial La Sala",
+            Chip       = "3 días y 2 noches",
+            EsTravesia = false,
+            EsSelecta  = true,
+            Color      = "58,110,90",
+            Foto       = "la-sala-aerea.webp",
+            FotoFicha  = "la-sala-aerea.webp",
+            Fotos      = string.Join("\n", new[]
+            {
+                "la-sala-aerea.webp",
+                "la-sala-casa.webp",
+                "la-sala-patio.webp",
+                "la-sala-habitacion.webp",
+                "la-sala-comedor.webp",
+                "la-sala-parque.webp"
+            }),
+            Resumen    = "Tres días con una casa como centro: La Sala de Yolanda, posta del Camino Real desde 1775 en Lozano. Jaire, Yala, Purmamarca y las Salinas, y cada tarde de vuelta al parque con llamas, lagunas y piano.",
+            TituloSeo  = "La Sala de Lozano: 3 días en una casona de 1775, Jujuy",
+            Datos      = string.Join("\n", new[]
+            {
+                "🗓️ 3 días / 2 noches",
+                "🚌 Salida 9:30 · San Salvador de Jujuy",
+                "👥 Grupos reducidos · posibilidad de tomar la casa en exclusiva",
+                "🥾 Dificultad media/baja · de 1.600 a más de 4.000 msnm"
+            }),
+            Itinerario = string.Join("\n", new[]
+            {
+                "DÍA 01 —",
+                "09:30 h · Salida desde San Salvador de Jujuy",
+                "Trekking · Angosto de Jaire, entre paredones y cursos de agua",
+                "Circuito · Lagunas de Yala: Comedero, Rodeo y Desaguadero",
+                "18:00 h · Llegada a La Sala: parque, lagunas, puente colgante y llamas",
+                "Cena · Mesa larga y la historia de la casa, al piano",
+                "DÍA 02 —",
+                "Desayuno · Junto al piano del comedor",
+                "Visita · Purmamarca: Cerro de los Siete Colores y Paseo de los Colorados",
+                "Almuerzo regional · Purmamarca",
+                "Ascenso · Cuesta de Lipán y Salinas Grandes",
+                "Regreso a Lozano · Segunda cena y hogar a leña",
+                "DÍA 03 —",
+                "Desayuno sin horario · En la galería",
+                "Recorrido · La casona de la Niña Yolanda, sus muebles y su parque",
+                "Almuerzo de despedida · Mesa larga de La Sala",
+                "Por la tarde · Regreso a San Salvador de Jujuy"
+            }),
+            ItinerarioLargo = string.Join("\n", new[]
+            {
+                "Día 1 · Angosto de Jaire y Lagunas de Yala",
+                "9:30 h · Encuentro y salida desde San Salvador de Jujuy, con traslado hacia Jaire",
+                "Trekking guiado por el Angosto de Jaire, entre paredones de roca y cursos de agua, con interpretación del entorno y tiempo para fotografías",
+                "Circuito por las Lagunas de Yala — Comedero, Rodeo y Desaguadero —, con las caminatas ajustadas al estado de los accesos y a las condiciones del día. Dificultad media/baja",
+                "Cerca de las 18 h · Llegada a Lozano, donde nos reciben los dueños de la casa. Check-in y el resto de la tarde en el parque: las dos lagunas, el puente colgante, la cascada y las llamas",
+                "Cena en la mesa larga del comedor, compartida con los demás huéspedes, y después la historia de la casona contada por la familia, con la Zamba de Lozano sonando en el piano donde se estrenó",
+                "Día 2 · Purmamarca y Salinas Grandes",
+                "Desayuno en La Sala, junto al piano del comedor, y salida temprano hacia la Quebrada de Humahuaca",
+                "Purmamarca por la mañana: Cerro de los Siete Colores, Paseo de los Colorados y mirador El Porito",
+                "Almuerzo en Purmamarca, en el restaurante de uno de los hoteles del pueblo, con mesa reservada para el grupo",
+                "Ascenso panorámico por la Cuesta de Lipán hacia la Puna, con paradas en los miradores",
+                "Visita guiada al salar: el proceso de extracción de la sal y los Ojos del Salar, sujetos al acceso y a la disponibilidad local",
+                "Entre las 18 y las 19 h · Regreso a Lozano bajando la cuesta con luz, sin manejar de noche en altura",
+                "Segunda cena en La Sala y tiempo en la sala de estar, con el hogar a leña encendido si la noche acompaña",
+                "Día 3 · La casa de la Niña Yolanda",
+                "Desayuno sin horario, en la galería o junto al piano",
+                "La mañana para recorrer La Sala con calma: los ambientes que conserva la familia, los muebles originales, el filtro de agua colonial de la galería, las partituras y las fotografías de la Niña Yolanda",
+                "El parque: las dos lagunas, el puente colgante, la cascada y los árboles históricos. Avistaje de aves — picaflores, tucanes y martines pescadores — para el que madrugue",
+                "Pileta de temporada, galerías y patio interno, sin programa y sin horarios",
+                "Almuerzo de despedida en la mesa larga, con la cocina de la casa",
+                "Por la tarde · Traslado de regreso a San Salvador de Jujuy"
+            }),
+            Incluye    = string.Join("\n", new[]
+            {
+                "Traslado ida y vuelta desde San Salvador de Jujuy",
+                "Todos los traslados durante los tres días",
+                "Dos noches en La Sala, con desayuno",
+                "Dos almuerzos: día 2 en Purmamarca y día 3 en La Sala",
+                "Dos cenas en la mesa larga de La Sala",
+                "Guía de Wamani para todas las actividades",
+                "Snacks y refrigerio durante los traslados",
+                "Seguro para pasajeros y asistencia permanente",
+                "Botiquín de primeros auxilios y coordinación única de principio a fin"
+            }),
+            Llevar     = "Calzado cómodo para caminatas, campera rompeviento y abrigo (la Puna es fría aun en verano), ropa cómoda y muda de recambio, gorro para el sol, anteojos de sol y protector solar, mochila pequeña y recipiente para agua, elementos de higiene personal, binoculares si te interesan las aves del parque y traje de baño en temporada de pileta. No están incluidas las bebidas de los almuerzos y las cenas; el almuerzo del día 1 se resuelve en el recorrido de Jaire y Yala.",
+            Orden      = ordenSala,
+            Activa     = true
+        });
+        db.SaveChanges();
+    }
+
     // ---- Los testimonios de ejemplo pasan a ser reseñas REALES de Google ----
     //
     // Cuando se armó la web quedaron tres testimonios inventados, firmados "María —
@@ -1723,6 +1827,7 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
         ["especial-ecolodge-de-la-selva"]      = "Escapada de 3 días con ecolodge en la selva de Jujuy",
         ["iruya-nazareno"]                     = "Travesía de trekking de 5 días por Iruya y Nazareno, Salta",
         ["especial-finca-la-fe"]               = "Escapada de 4 días a las Termas del Río Jordán, Jujuy",
+        ["especial-la-sala"]                   = "Escapada de 3 días en una casona histórica de Lozano, Jujuy",
     };
     if (subManual.TryGetValue(e.Clave ?? "", out var subPropio)) subtitulo = subPropio;
     var nomSpan      = " <span class=\"h2-nom\">" + Esc(e.Nombre) + "</span>";

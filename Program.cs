@@ -986,7 +986,9 @@ using (var scope = app.Services.CreateScope())
             Fotos      = string.Join("\n", new[]
             {
                 "inca-cueva-oasis.webp",
+                "inca-cueva-cartel.webp",
                 "inca-cueva-ventana.webp",
+                "inca-cueva-refugio.webp",
                 "inca-cueva-pared.webp"
             }),
             Resumen    = "Dos días en la Quebrada para conocer las pinturas rupestres más antiguas de Jujuy, con picada gourmet en el Oasis y una noche en el refugio de una familia local.",
@@ -1038,6 +1040,37 @@ using (var scope = app.Services.CreateScope())
             Activa     = true
         });
         db.SaveChanges();
+    }
+
+    // ---- Inca Cueva Express: dos fotos más en la galería ----
+    //
+    // Las eligió Lautaro mirando la galería ya publicada: el cartel de la rueda que
+    // marca los 3 km va segunda, apenas después del Oasis, y el refugio visto de lejos
+    // va cuarta. Quedan intercaladas entre las que ya estaban, no al final.
+    //
+    // Se cambia sólo si la galería es TODAVÍA la de tres que se cargó al darla de alta:
+    // así no pisa nada de lo que se suba después desde el panel, y no se repite en el
+    // próximo despliegue.
+    {
+        var ice = db.ExcursionesWeb.FirstOrDefault(x => x.Clave == "inca-cueva-express");
+        var galeriaVieja = string.Join("\n", new[]
+        {
+            "inca-cueva-oasis.webp",
+            "inca-cueva-ventana.webp",
+            "inca-cueva-pared.webp"
+        });
+        if (ice != null && (ice.Fotos ?? "").Replace("\r", "").Trim() == galeriaVieja)
+        {
+            ice.Fotos = string.Join("\n", new[]
+            {
+                "inca-cueva-oasis.webp",
+                "inca-cueva-cartel.webp",
+                "inca-cueva-ventana.webp",
+                "inca-cueva-refugio.webp",
+                "inca-cueva-pared.webp"
+            });
+            db.SaveChanges();
+        }
     }
 
     // ---- Los testimonios de ejemplo pasan a ser reseñas REALES de Google ----

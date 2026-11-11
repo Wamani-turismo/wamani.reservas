@@ -1287,6 +1287,26 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
+    // ---- Conociendo la Quebrada: la foto 1 y la 2 cambian de lugar (11/11/2026) ----
+    //
+    // Pasa a abrir con el Hornocal (`hero-quebrada.webp`, apaisada) y la cabra entre las
+    // rocas queda segunda. La tapa de la página completa ya era el Hornocal, así que
+    // ahora la tarjeta y la página muestran lo mismo. Corre una sola vez: la condición
+    // pide que la tarjeta siga siendo la foto vieja.
+    var cqFoto = db.ExcursionesWeb.FirstOrDefault(x => x.Clave == "conociendo-la-quebrada"
+                     && x.Foto == "cq-inca-cueva-cabra.webp");
+    if (cqFoto != null)
+    {
+        var fotosCq = cqFoto.Fotos.Replace("\r", "")
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+        fotosCq.Remove("hero-quebrada.webp");
+        fotosCq.Insert(0, "hero-quebrada.webp");
+        cqFoto.Fotos = string.Join("\n", fotosCq);
+        cqFoto.Foto  = "hero-quebrada.webp";
+        db.SaveChanges();
+    }
+
     // ---- El orden de la lista, de una vez ----
     //
     // Primer intento: se repartieron entre las cuatro Selecta los lugares que ya

@@ -69,6 +69,10 @@ body{background:var(--fondo);color:var(--tinta);font-family:var(--texto);
 
 .rot{font-family:var(--display);font-size:1.05rem;color:var(--suave);
   margin:24px 0 9px;letter-spacing:.02em}
+/* Un renglon chico bajo el rotulo, solo donde hace falta aclarar: la diferencia
+   entre una travesia (se camina) y el circuito de cinco dias (se recorre) no se
+   entiende por el nombre, y es la pregunta que mas llega por WhatsApp. */
+.aclara{font-weight:400;font-size:.84rem;color:var(--suave);margin:-4px 0 9px}
 
 /* Cada excursión lleva el color de SU folleto. El que vio el PDF y después entra
    acá reconoce de qué está mirando sin leer. */
@@ -123,26 +127,35 @@ a.ruta .dato em{font-style:normal;font-weight:400;opacity:.72}
 
   <a class="wsp" href="https://wa.me/5491178898516?text=%C2%A1Hola!%20Quiero%20consultar%20por%20una%20excursi%C3%B3n" target="_blank" rel="noopener">Escribinos por WhatsApp</a>
 
-  <div class="rot">EN EL DÍA</div>
-  <a class="ruta" href="/excursiones/cascada-santuyoc-y-angosto-de-jaire" style="--c:#50461c"><span class="nom">Cascada Santuyoc y Angosto de Jaire</span><span class="dato">1 <em>día</em></span></a>
+  <div class="rot">YUNGAS</div>
   <a class="ruta" href="/excursiones/termas-de-jordan" style="--c:#0f5a51"><span class="nom">Termas de Jordán</span><span class="dato">1 <em>día</em></span></a>
-  <a class="ruta" href="/excursiones/atardecer-en-las-salinas" style="--c:#45489d"><span class="nom">Atardecer en las Salinas</span><span class="dato">1 <em>día</em></span></a>
-  <a class="ruta" href="/excursiones/ruta-de-lagunas-y-termas" style="--c:#236a8c"><span class="nom">Lagunas de Yala y Termas de Reyes</span><span class="dato">1 <em>día</em></span></a>
-  <a class="ruta" href="/excursiones/recorriendo-la-quebrada" style="--c:#5a2a22"><span class="nom">Recorriendo la Quebrada</span><span class="dato">1 <em>día</em></span></a>
-
-  <div class="rot">CON NOCHE EN LA SELVA</div>
-  <a class="ruta" href="/excursiones/conociendo-las-yungas" style="--c:#3e5a33"><span class="nom">Conociendo las Yungas</span><span class="dato">3 <em>días</em></span></a>
   <a class="ruta" href="/excursiones/yungas-express" style="--c:#5a7242"><span class="nom">Yungas Express</span><span class="dato">2 <em>días</em></span></a>
+  <a class="ruta" href="/excursiones/conociendo-las-yungas" style="--c:#3e5a33"><span class="nom">Conociendo las Yungas</span><span class="dato">3 <em>días</em></span></a>
 
-  <div class="rot">TRAVESÍAS A PIE</div>
-  <a class="ruta" href="/excursiones/tilcara-calilegua" style="--c:#3a1a10"><span class="nom">Tilcara – Calilegua</span><span class="dato">65 <em>km</em></span></a>
-  <a class="ruta" href="/excursiones/humahuaca-yungas" style="--c:#3e2a39"><span class="nom">Humahuaca – Las Yungas</span><span class="dato">5 <em>días</em></span></a>
+  <div class="rot">QUEBRADA</div>
+  <a class="ruta" href="/excursiones/recorriendo-la-quebrada" style="--c:#5a2a22"><span class="nom">Recorriendo la Quebrada</span><span class="dato">1 <em>día</em></span></a>
+  <a class="ruta" href="/excursiones/inca-cueva-express" style="--c:#7e4030"><span class="nom">Inca Cueva Express</span><span class="dato">2 <em>días y 1 noche</em></span></a>
+  <a class="ruta" href="/excursiones/conociendo-la-quebrada" style="--c:#6f3136"><span class="nom">Conociendo la Quebrada</span><span class="dato">3 <em>días y 2 noches</em></span></a>
+  <a class="ruta" href="/excursiones/atardecer-en-las-salinas" style="--c:#45489d"><span class="nom">Atardecer en las Salinas</span><span class="dato">1 <em>día</em></span></a>
+
+  <div class="rot">VALLE</div>
+  <a class="ruta" href="/excursiones/ruta-de-lagunas-y-termas" style="--c:#236a8c"><span class="nom">Lagunas de Yala y Termas de Reyes</span><span class="dato">1 <em>día</em></span></a>
+  <a class="ruta" href="/excursiones/cascada-santuyoc-y-angosto-de-jaire" style="--c:#50461c"><span class="nom">Cascada Santuyoc y Angosto de Jaire</span><span class="dato">1 <em>día</em></span></a>
+
+  <div class="rot">TRAVESÍAS</div>
+  <p class="aclara">A pie, con arrieros y mulas.</p>
+  <a class="ruta" href="/excursiones/tilcara-calilegua" style="--c:#3a1a10"><span class="nom">Tilcara – Calilegua</span><span class="dato">5 <em>días · 65 km</em></span></a>
   <a class="ruta" href="/excursiones/iruya-nazareno" style="--c:#4a1712"><span class="nom">Iruya – Nazareno</span><span class="dato">5 <em>días</em></span></a>
 
+  <div class="rot">CIRCUITO DE 5 DÍAS</div>
+  <p class="aclara">De pueblo en pueblo, con traslados y caminatas de jornada.</p>
+  <a class="ruta" href="/excursiones/humahuaca-yungas" style="--c:#3e2a39"><span class="nom">Humahuaca – Las Yungas</span><span class="dato">5 <em>días</em></span></a>
+
   <div class="rot">WAMANI SELECTA</div>
-  <a class="ruta selecta" href="/excursiones/especial-finca-la-fe"><span class="nom">Finca la Fé</span><span class="dato">4 <em>días</em></span></a>
   <a class="ruta selecta" href="/excursiones/especial-the-canuto-glamping"><span class="nom">The Canuto Glamping</span><span class="dato">3 <em>días</em></span></a>
+  <a class="ruta selecta" href="/excursiones/especial-la-sala"><span class="nom">La Sala</span><span class="dato">3 <em>días</em></span></a>
   <a class="ruta selecta" href="/excursiones/especial-ecolodge-de-la-selva"><span class="nom">Ecolodge de la Selva</span><span class="dato">3 <em>días</em></span></a>
+  <a class="ruta selecta" href="/excursiones/especial-finca-la-fe"><span class="nom">Finca la Fé</span><span class="dato">4 <em>días</em></span></a>
 
   <a class="medida" href="/a-medida/">
     <span class="t">JUJUY A MEDIDA</span>

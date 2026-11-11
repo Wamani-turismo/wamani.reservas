@@ -1837,23 +1837,45 @@ if (ANCLAS.indexOf(anclaInicial) >= 0) {
   var irAlAncla = function () {
     var s = document.getElementById(anclaInicial);
     if (!s) return;
-    var hasta = Date.now() + 2500, corte = false;
-    function frenar() { corte = true; }
-    window.addEventListener("wheel", frenar, { once: true, passive: true });
-    window.addEventListener("touchstart", frenar, { once: true, passive: true });
+    // Hasta el 11/11/2026 esto insistia 2,5 s y se daba por hecho que alcanzaba.
+    // No alcanzaba: viniendo de la ficha de una excursion se aterrizaba SIEMPRE
+    // arriba de todo. Durante los primeros segundos la pagina vuelve sola al
+    // principio mientras se terminan de acomodar las tarjetas y las fotos, asi
+    // que la bajada se perdia dentro de esa ventana y, cuando se acababa el
+    // reloj, quedaba en cero. Ahora no se corta por tiempo sino CUANDO LLEGA:
+    // insiste hasta que la posicion se queda quieta tres veces seguidas, con
+    // ocho segundos de techo.
+    var hasta = Date.now() + 8000, corte = false, quietas = 0;
+    function limpiar() {
+      window.removeEventListener("wheel", frenar);
+      window.removeEventListener("touchmove", frenar);
+      window.removeEventListener("keydown", frenar);
+    }
+    function frenar() { corte = true; limpiar(); }
+    // "wheel" y "touchmove", no "touchstart": en el celular el dedo toca la
+    // pantalla apenas carga, y con touchstart la bajada se cancelaba sola.
+    window.addEventListener("wheel", frenar, { passive: true });
+    window.addEventListener("touchmove", frenar, { passive: true });
+    window.addEventListener("keydown", frenar);
     (function ir() {
       if (corte) return;
-      // El menú de arriba es fijo y tapa lo primero de la sección: hay que dejarle
-      // su altura de aire, si no el título queda cortado por la mitad.
+      // El menu de arriba es fijo y tapa lo primero de la seccion: hay que
+      // dejarle su altura de aire, si no el titulo queda cortado por la mitad.
       var menu = document.querySelector("header");
       var aire = (menu ? menu.getBoundingClientRect().height : 0) + 14;
       var y = s.getBoundingClientRect().top + window.scrollY - aire;
       if (y < 0) y = 0;
-      if (Math.abs(window.scrollY - y) > 4) window.scrollTo(0, y);
-      if (Date.now() < hasta) setTimeout(ir, 80);
+      if (Math.abs(window.scrollY - y) > 4) {
+        quietas = 0;
+        // "instant" a proposito: con el scroll suave del CSS, volver a llamar
+        // cada 80 ms reinicia la animacion y la pagina no termina de llegar.
+        try { window.scrollTo({ top: y, behavior: "instant" }); }
+        catch (e) { window.scrollTo(0, y); }
+      } else if (++quietas >= 3) { limpiar(); return; }
+      if (Date.now() < hasta) setTimeout(ir, 80); else limpiar();
     })();
   };
-  // Si la página ya terminó de cargar, el evento "load" no vuelve a dispararse.
+  // Si la pagina ya termino de cargar, el evento "load" no vuelve a dispararse.
   if (document.readyState === "complete") irAlAncla();
   else window.addEventListener("load", irAlAncla);
 }

@@ -1269,6 +1269,24 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
+    // ---- La foto del piletón va quinta (pedido de Lautaro, 11/11/2026) ----
+    //
+    // Se había sumado al final de la galería. En el quinto lugar queda después de las
+    // cuatro de la casa y antes del parque, que es donde el que desliza todavía está
+    // mirando. Corre una sola vez: la condición pide que siga siendo la última.
+    var salaFotos = db.ExcursionesWeb.FirstOrDefault(x => x.Clave == "especial-la-sala"
+                        && x.Fotos.EndsWith("la-sala-pileton.webp"));
+    if (salaFotos != null)
+    {
+        var fotosSala = salaFotos.Fotos.Replace("\r", "")
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+        fotosSala.Remove("la-sala-pileton.webp");
+        fotosSala.Insert(Math.Min(4, fotosSala.Count), "la-sala-pileton.webp");
+        salaFotos.Fotos = string.Join("\n", fotosSala);
+        db.SaveChanges();
+    }
+
     // ---- El orden de la lista, de una vez ----
     //
     // Primer intento: se repartieron entre las cuatro Selecta los lugares que ya

@@ -39,6 +39,10 @@ en: {
   },
 
   textos: {
+    /* -- "Jujuy a tu medida", la franja que va despues de las experiencias -- */
+    "¿Todavía no sabés qué elegir?": "Not sure what to choose yet?",
+    "Contanos cuántos días tenés y te armamos el viaje entero": "Tell us how many days you have and we'll plan the whole trip",
+    "Ver cómo lo armamos →": "See how we build it →",
     /* ── Conociendo la Quebrada · Inca Cueva Express · Especial La Sala ──
        Los nombres propios quedan como están: Purmamarca, Salinas Grandes,
        Hornocal, Inca Cueva, el Oasis, La Ventana, La Sala, Lozano. El título de
@@ -697,6 +701,10 @@ fr: {
   },
 
   textos: {
+    /* -- "Jujuy a tu medida", la franja que va despues de las experiencias -- */
+    "¿Todavía no sabés qué elegir?": "Vous ne savez pas encore quoi choisir ?",
+    "Contanos cuántos días tenés y te armamos el viaje entero": "Dites-nous combien de jours vous avez et nous organisons tout le voyage",
+    "Ver cómo lo armamos →": "Voir comment nous l'organisons →",
     /* ── Conociendo la Quebrada · Inca Cueva Express · Especial La Sala ──
        Los nombres propios quedan como están: Purmamarca, Salinas Grandes,
        Hornocal, Inca Cueva, el Oasis, La Ventana, La Sala, Lozano. El título de
@@ -1346,6 +1354,10 @@ pt: {
   },
 
   textos: {
+    /* -- "Jujuy a tu medida", la franja que va despues de las experiencias -- */
+    "¿Todavía no sabés qué elegir?": "Ainda não sabe o que escolher?",
+    "Contanos cuántos días tenés y te armamos el viaje entero": "Conte-nos quantos dias você tem e montamos a viagem inteira",
+    "Ver cómo lo armamos →": "Veja como montamos →",
     /* ── Conociendo la Quebrada · Inca Cueva Express · Especial La Sala ──
        Los nombres propios quedan como están: Purmamarca, Salinas Grandes,
        Hornocal, Inca Cueva, el Oasis, La Ventana, La Sala, Lozano. El título de

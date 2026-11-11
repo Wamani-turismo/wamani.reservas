@@ -114,6 +114,40 @@
         <small>Es el renglón azul que se ve en Google. Si lo dejás vacío se arma solo con el nombre. Google corta cerca de los 60 caracteres: poné primero lo que la gente busca y después lo que nos diferencia.</small>
     </div>
 
+    @* Google indexa una direccion por idioma (?lang=en, fr, pt). El cuerpo de la ficha
+       lo traduce el navegador, pero el titulo y la descripcion los arma el servidor:
+       si estan vacios, esa pagina sale en castellano y se declara copia de la
+       espanola, asi que Google la descarta. Llenandolos, cada idioma pasa a ser una
+       pagina propia. *@
+    <details class="campo">
+        <summary style="cursor:pointer;font-weight:700">Título y descripción en otros idiomas (para Google)</summary>
+        <div class="campo">
+            <label asp-for="Ex.TituloSeoEn"></label>
+            <input class="input" asp-for="Ex.TituloSeoEn" maxlength="70" />
+        </div>
+        <div class="campo">
+            <label asp-for="Ex.ResumenEn"></label>
+            <textarea class="input crece" asp-for="Ex.ResumenEn" rows="3"></textarea>
+        </div>
+        <div class="campo">
+            <label asp-for="Ex.TituloSeoFr"></label>
+            <input class="input" asp-for="Ex.TituloSeoFr" maxlength="70" />
+        </div>
+        <div class="campo">
+            <label asp-for="Ex.ResumenFr"></label>
+            <textarea class="input crece" asp-for="Ex.ResumenFr" rows="3"></textarea>
+        </div>
+        <div class="campo">
+            <label asp-for="Ex.TituloSeoPt"></label>
+            <input class="input" asp-for="Ex.TituloSeoPt" maxlength="70" />
+        </div>
+        <div class="campo">
+            <label asp-for="Ex.ResumenPt"></label>
+            <textarea class="input crece" asp-for="Ex.ResumenPt" rows="3"></textarea>
+        </div>
+        <small>Si un idioma queda vacío, esa página sale en castellano y no se le declara dirección propia: es a propósito, para que Google no vea cuatro copias iguales.</small>
+    </details>
+
     <div class="campo">
         <label asp-for="Ex.FotoFicha"></label>
         <input class="input" asp-for="Ex.FotoFicha" placeholder="Ej: hero-quebrada.webp" />

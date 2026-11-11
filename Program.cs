@@ -1319,6 +1319,173 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
+    // ---- Título y descripción en inglés, francés y portugués (11/11/2026) ----
+    //
+    // Sin esto, las direcciones ?lang=en/fr/pt salían con el título castellano y se
+    // declaraban copias de la española: Google indexaba una sola. Cargados acá, cada
+    // idioma pasa a ser una página propia, con su canonical y su hreflang.
+    //
+    // Sólo rellena lo que está vacío, así que corre una vez y nunca pisa lo que se
+    // edite después desde el panel. Los nombres propios no se traducen.
+    var seoPorIdioma = new Dictionary<string, string[]>
+    {
+        ["cascada-santuyoc-y-angosto-de-jaire"] = new[]
+        {
+            "Santuyoc Waterfall and Angosto de Jaire, with lunch",
+            "A full day to the Santuyoc waterfall and the Angosto de Jaire, with lunch at Canuto Glamping. Small groups, local guides and everything arranged.",
+            "Cascade Santuyoc et Angosto de Jaire, déjeuner inclus",
+            "Une journée complète à la cascade de Santuyoc et à l'Angosto de Jaire, avec déjeuner au Canuto Glamping. Petits groupes et guides locaux.",
+            "Cachoeira Santuyoc e Angosto de Jaire, com almoço",
+            "Um dia completo na cachoeira de Santuyoc e no Angosto de Jaire, com almoço no Canuto Glamping. Grupos pequenos e guias locais."
+        },
+        ["conociendo-la-quebrada"] = new[]
+        {
+            "Quebrada in 3 days: Salinas Grandes and Hornocal",
+            "Three days through the Quebrada and the Puna: sunset on the Salinas Grandes salt flats, the Inca Cueva trails and the colours of the Hornocal.",
+            "La Quebrada en 3 jours : Salinas Grandes et Hornocal",
+            "Trois jours dans la Quebrada et la Puna : le coucher de soleil sur les salines, les sentiers d'Inca Cueva et les couleurs du Hornocal.",
+            "Quebrada em 3 dias: Salinas Grandes e Hornocal",
+            "Três dias pela Quebrada e pela Puna: o pôr do sol nas Salinas Grandes, as trilhas de Inca Cueva e as montanhas coloridas do Hornocal."
+        },
+        ["inca-cueva-express"] = new[]
+        {
+            "Inca Cueva Express: rock art and a night in a refuge",
+            "Two days in the Quebrada to see the oldest rock paintings in Jujuy, with a gourmet platter at the Oasis and a night in a family-run refuge.",
+            "Inca Cueva Express : art rupestre et nuit en refuge",
+            "Deux jours dans la Quebrada pour découvrir les plus anciennes peintures rupestres de Jujuy, avec une planche gourmande à l'Oasis et une nuit en refuge.",
+            "Inca Cueva Express: arte rupestre e noite no refúgio",
+            "Dois dias na Quebrada para conhecer as pinturas rupestres mais antigas de Jujuy, com tábua gourmet no Oasis e uma noite no refúgio de uma família."
+        },
+        ["termas-de-jordan"] = new[]
+        {
+            "Jordán Hot Springs, Jujuy: day trip with transfer",
+            "A full day at the Río Jordán hot springs, in the Jujuy valley. Return transfer, entrance, local guide and insurance. Small groups, all arranged.",
+            "Thermes de Jordán, Jujuy : journée avec transfert",
+            "Une journée complète aux thermes du Río Jordán, dans la vallée de Jujuy. Transfert aller-retour, entrée, guide local et assurance. Petits groupes.",
+            "Termas de Jordán, Jujuy: um dia com transfer",
+            "Um dia completo nas termas do Río Jordán, no vale de Jujuy. Transfer ida e volta, entrada, guia local e seguro. Grupos pequenos e tudo resolvido."
+        },
+        ["ruta-de-lagunas-y-termas"] = new[]
+        {
+            "Yala Lagoons and Termas de Reyes: entry included",
+            "The Yala lagoons, the La Horqueta waterfall and the Termas de Reyes hot springs in a day. Transfer, spa entrance and a gourmet platter. Local guide.",
+            "Lagunes de Yala et Termas de Reyes : entrée incluse",
+            "Les lagunes de Yala, la cascade La Horqueta et les thermes de Reyes en une journée. Transfert, entrée aux thermes et planche gourmande. Guide local.",
+            "Lagoas de Yala e Termas de Reyes: entrada incluída",
+            "As lagoas de Yala, a cachoeira La Horqueta e as Termas de Reyes em um dia. Transfer, entrada nas termas e tábua gourmet. Guia local."
+        },
+        ["humahuaca-yungas"] = new[]
+        {
+            "Humahuaca to the Yungas, 5 days: transfer and lodging",
+            "Five days from the Quebrada to the Yungas: transfer from San Salvador, four nights of lodging, breakfasts and dinners, and entrance to the Hornocal.",
+            "De Humahuaca aux Yungas, 5 jours : transfert et nuits",
+            "Cinq jours de la Quebrada aux Yungas : transfert depuis San Salvador, quatre nuits d'hébergement, petits-déjeuners et dîners, et entrée au Hornocal.",
+            "De Humahuaca às Yungas, 5 dias: transfer e hospedagem",
+            "Cinco dias da Quebrada às Yungas: transfer desde San Salvador, quatro noites de hospedagem, cafés da manhã e jantares, e entrada ao Hornocal."
+        },
+        ["atardecer-en-las-salinas"] = new[]
+        {
+            "Sunset at Salinas Grandes: transfer, entry and snack",
+            "The Salinas Grandes salt flats at sunset, with a guided walk on the salar, entrance and a gourmet snack. Return transfer from San Salvador de Jujuy.",
+            "Coucher de soleil aux Salinas Grandes : transfert inclus",
+            "Les salines de Salinas Grandes au coucher du soleil, avec visite guidée du salar, entrée et goûter gourmand. Transfert depuis San Salvador de Jujuy.",
+            "Pôr do sol nas Salinas Grandes: transfer e entrada",
+            "As Salinas Grandes ao pôr do sol, com passeio guiado no salar, entrada e lanche gourmet. Transfer ida e volta desde San Salvador de Jujuy."
+        },
+        ["yungas-express"] = new[]
+        {
+            "Yungas Express, 2 days: transfer, lodging and entries",
+            "Two days in the Jujuy Yungas: transfer, one night in San Francisco, breakfast and dinner, entrances and a local guide. The short version, all arranged.",
+            "Yungas Express, 2 jours : transfert et hébergement",
+            "Deux jours dans les Yungas de Jujuy : transfert, une nuit à San Francisco, petit-déjeuner et dîner, entrées et guide local. La version courte.",
+            "Yungas Express, 2 dias: transfer, hospedagem e entradas",
+            "Dois dias nas Yungas de Jujuy: transfer, uma noite em San Francisco, café da manhã e jantar, entradas e guia local. A versão curta, tudo resolvido."
+        },
+        ["tilcara-calilegua"] = new[]
+        {
+            "Tilcara to Calilegua trek, 5 days: 65 km with refuges",
+            "Five days on foot from Tilcara to Calilegua, 65 km. Four nights between Tilcara and mountain refuges, all meals, muleteers, mules and the return trip.",
+            "Trek Tilcara-Calilegua, 5 jours : 65 km et refuges",
+            "Cinq jours à pied de Tilcara à Calilegua, 65 km. Quatre nuits entre Tilcara et les refuges, tous les repas, muletiers, mules et le retour.",
+            "Travessia Tilcara-Calilegua, 5 dias: 65 km a pé",
+            "Cinco dias a pé de Tilcara a Calilegua, 65 km. Quatro noites entre Tilcara e refúgios, todas as refeições, tropeiros, mulas e o retorno."
+        },
+        ["iruya-nazareno"] = new[]
+        {
+            "Iruya and Nazareno, 5 days: transfers, lodging, meals",
+            "Five days through Iruya and Nazareno, in Salta: bus from Humahuaca, internal transfers, four nights of accommodation and all meals.",
+            "Iruya et Nazareno, 5 jours : transferts et repas",
+            "Cinq jours entre Iruya et Nazareno, à Salta : bus depuis Humahuaca, transferts internes, quatre nuits d'hébergement et tous les repas.",
+            "Iruya e Nazareno, 5 dias: transfers e refeições",
+            "Cinco dias por Iruya e Nazareno, em Salta: ônibus desde Humahuaca, transfers internos, quatro noites de hospedagem e todas as refeições."
+        },
+        ["conociendo-las-yungas"] = new[]
+        {
+            "Jujuy Yungas, 3 days: transfer, lodging and entries",
+            "Three days in the Jujuy Yungas: transfer, two nights of lodging in San Francisco, breakfasts and dinners, entrances and a local guide. All arranged.",
+            "Yungas de Jujuy, 3 jours : transfert et hébergement",
+            "Trois jours dans les Yungas de Jujuy : transfert, deux nuits à San Francisco, petits-déjeuners et dîners, entrées et guide local. Tout est organisé.",
+            "Yungas de Jujuy, 3 dias: transfer e hospedagem",
+            "Três dias nas Yungas de Jujuy: transfer, duas noites de hospedagem em San Francisco, cafés da manhã e jantares, entradas e guia local."
+        },
+        ["recorriendo-la-quebrada"] = new[]
+        {
+            "Quebrada de Humahuaca and Hornocal: transfer and entry",
+            "The Quebrada de Humahuaca and the Hornocal in a day, with entrance to the Hornocal and to the Quebrada de Las Señoritas. Transfer from San Salvador.",
+            "Quebrada de Humahuaca et Hornocal : transfert inclus",
+            "La Quebrada de Humahuaca et le Cerro Hornocal en une journée, avec les entrées au Hornocal et à la Quebrada de Las Señoritas. Transfert inclus.",
+            "Quebrada de Humahuaca e Hornocal: transfer e entradas",
+            "A Quebrada de Humahuaca e o Cerro Hornocal em um dia, com entradas ao Hornocal e à Quebrada de Las Señoritas. Transfer desde San Salvador."
+        },
+        ["especial-the-canuto-glamping"] = new[]
+        {
+            "The Canuto Glamping, Jujuy: 3 days with transfer",
+            "Three days and two nights at The Canuto Glamping. Return transfer from San Salvador, internal transfers, two breakfasts, two dinners and one lunch.",
+            "The Canuto Glamping, Jujuy : 3 jours avec transfert",
+            "Trois jours et deux nuits au Canuto Glamping. Transfert aller-retour depuis San Salvador, transferts internes, deux petits-déjeuners et deux dîners.",
+            "The Canuto Glamping, Jujuy: 3 dias com transfer",
+            "Três dias e duas noites no The Canuto Glamping. Transfer ida e volta de San Salvador, transfers internos, dois cafés da manhã e dois jantares."
+        },
+        ["especial-la-sala"] = new[]
+        {
+            "La Sala de Lozano: 3 days in a 1775 house, Jujuy",
+            "Three days with a house at the centre: La Sala de Yolanda, a staging post on the Camino Real since 1775. Yala, Termas de Reyes and the salt flats.",
+            "La Sala de Lozano : 3 jours dans une maison de 1775",
+            "Trois jours avec une maison pour centre : La Sala de Yolanda, relais du Camino Real depuis 1775. Yala, les thermes de Reyes et les salines.",
+            "La Sala de Lozano: 3 dias em um casarão de 1775",
+            "Três dias com uma casa como centro: La Sala de Yolanda, posta do Camino Real desde 1775. Yala, as Termas de Reyes e as salinas."
+        },
+        ["especial-ecolodge-de-la-selva"] = new[]
+        {
+            "Ecolodge de la Selva, Jujuy: 3 days with meals",
+            "Three days and two nights at the Ecolodge de la Selva. Transfer, two breakfasts, two dinners, lunch at Canuto Glamping and entrance to Termas de Reyes.",
+            "Ecolodge de la Selva, Jujuy : 3 jours, repas inclus",
+            "Trois jours et deux nuits à l'Ecolodge de la Selva. Transfert, deux petits-déjeuners, deux dîners, déjeuner au Canuto Glamping et entrée aux thermes.",
+            "Ecolodge de la Selva, Jujuy: 3 dias com refeições",
+            "Três dias e duas noites no Ecolodge de la Selva. Transfer, dois cafés da manhã, dois jantares, almoço no Canuto Glamping e entrada nas Termas de Reyes."
+        },
+        ["especial-finca-la-fe"] = new[]
+        {
+            "Finca la Fé, Jujuy: 4 days in a lodge, with dinners",
+            "Four days with nights in San Francisco and at the Finca la Fé lodge. Three-course French dinners, continental breakfasts and a gourmet picnic.",
+            "Finca la Fé, Jujuy : 4 jours en lodge, dîners inclus",
+            "Quatre jours avec des nuits à San Francisco et au lodge Finca la Fé. Dîners français en trois services, petits-déjeuners continentaux et pique-nique.",
+            "Finca la Fé, Jujuy: 4 dias em lodge, com jantares",
+            "Quatro dias com noites em San Francisco e no lodge Finca la Fé. Jantares franceses de três tempos, cafés da manhã continentais e piquenique gourmet."
+        }
+    };
+    foreach (var par in seoPorIdioma)
+    {
+        var exSeo = db.ExcursionesWeb.FirstOrDefault(x => x.Clave == par.Key);
+        if (exSeo == null) continue;
+        if (string.IsNullOrWhiteSpace(exSeo.TituloSeoEn)) exSeo.TituloSeoEn = par.Value[0];
+        if (string.IsNullOrWhiteSpace(exSeo.ResumenEn))   exSeo.ResumenEn   = par.Value[1];
+        if (string.IsNullOrWhiteSpace(exSeo.TituloSeoFr)) exSeo.TituloSeoFr = par.Value[2];
+        if (string.IsNullOrWhiteSpace(exSeo.ResumenFr))   exSeo.ResumenFr   = par.Value[3];
+        if (string.IsNullOrWhiteSpace(exSeo.TituloSeoPt)) exSeo.TituloSeoPt = par.Value[4];
+        if (string.IsNullOrWhiteSpace(exSeo.ResumenPt))   exSeo.ResumenPt   = par.Value[5];
+    }
+    db.SaveChanges();
     // ---- El orden de la lista, de una vez ----
     //
     // Primer intento: se repartieron entre las cuatro Selecta los lugares que ya
@@ -1955,17 +2122,53 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
     // cual: esta escrito a mano para entrar en los 60 caracteres y para decir lo que
     // hace clickear (el almuerzo, el traslado, el hospedaje). Si esta vacio, se arma
     // solo con el nombre, como siempre.
-    var tituloPropio = (e.TituloSeo ?? "").Trim();
+    // ── El idioma de esta dirección ──────────────────────────────────────────────
+    //
+    // La ficha vive en cuatro direcciones: la de siempre (castellano) y ?lang=en, fr
+    // y pt. El cuerpo lo traduce idiomas.js en el navegador, pero el título, la
+    // descripción y el idioma declarado los arma el servidor, y hasta ahora salían
+    // siempre en castellano: Google leía cuatro páginas iguales y se quedaba con una.
+    //
+    // La regla: un idioma "existe" sólo si tiene cargado su título desde el panel. Si
+    // existe, esa dirección se declara a sí misma como canónica y se ofrece como
+    // alternativa; si no, cae al castellano y apunta a la dirección española. Nunca se
+    // declara como versión propia una página sin traducir: eso le daría a Google
+    // cuatro copias y haría que muestre menos, no más.
+    var idiomaPedido = ctx.Request.Query["lang"].ToString().Trim().ToLowerInvariant();
+    string TitEn = (e.TituloSeoEn ?? "").Trim(), TitFr = (e.TituloSeoFr ?? "").Trim(), TitPt = (e.TituloSeoPt ?? "").Trim();
+    bool HayEn = TitEn.Length > 0, HayFr = TitFr.Length > 0, HayPt = TitPt.Length > 0;
+    var idioma = "es";
+    if (idiomaPedido == "en" && HayEn) idioma = "en";
+    else if (idiomaPedido == "fr" && HayFr) idioma = "fr";
+    else if (idiomaPedido == "pt" && HayPt) idioma = "pt";
+    var urlIdioma = idioma == "es" ? url : url + "?lang=" + idioma;
+    var htmlLang = idioma == "es" ? "es-AR" : idioma;
+    var ogLocale = idioma == "en" ? "en_US" : idioma == "fr" ? "fr_FR" : idioma == "pt" ? "pt_BR" : "es_AR";
+
+    var tituloPropio = (idioma == "en" ? TitEn : idioma == "fr" ? TitFr : idioma == "pt" ? TitPt
+                        : (e.TituloSeo ?? "").Trim());
     var titulo = tituloPropio.Length > 0
         ? tituloPropio
         : (tituloBase + " | Wamani Turismo").Length <= 60
             ? tituloBase + " | Wamani Turismo"
             : tituloBase;
     // Descripción para el resultado de Google: Google recorta cerca de 160 caracteres.
-    var resumen = (e.Resumen ?? "").Trim();
+    var resumen = (idioma == "en" ? (e.ResumenEn ?? "") : idioma == "fr" ? (e.ResumenFr ?? "")
+                   : idioma == "pt" ? (e.ResumenPt ?? "") : (e.Resumen ?? "")).Trim();
+    if (resumen.Length == 0) resumen = (e.Resumen ?? "").Trim();
     var desc = resumen.Length > 155 ? resumen.Substring(0, 152).TrimEnd() + "…" : resumen;
     if (string.IsNullOrWhiteSpace(desc))
         desc = e.Nombre + " con Wamani Turismo: guías locales y grupos reducidos en Jujuy.";
+
+    // Las alternativas que se declaran: siempre la española y x-default, y cada idioma
+    // que tenga su título cargado.
+    var alternativas = new System.Text.StringBuilder();
+    alternativas.Append("<link rel=\"alternate\" hreflang=\"es\" href=\"" + Esc(url) + "\">\n");
+    if (HayEn) alternativas.Append("<link rel=\"alternate\" hreflang=\"en\" href=\"" + Esc(url) + "?lang=en\">\n");
+    if (HayFr) alternativas.Append("<link rel=\"alternate\" hreflang=\"fr\" href=\"" + Esc(url) + "?lang=fr\">\n");
+    if (HayPt) alternativas.Append("<link rel=\"alternate\" hreflang=\"pt\" href=\"" + Esc(url) + "?lang=pt\">\n");
+    alternativas.Append("<link rel=\"alternate\" hreflang=\"x-default\" href=\"" + Esc(url) + "\">");
+    var hreflangs = alternativas.ToString();
     // Texto distinto al de la web principal a propósito: es la única forma de saber, al
     // leer el WhatsApp, si la consulta salió de estas páginas nuevas o del sitio de siempre.
     var msg = Uri.EscapeDataString("¡Hola! Estuve viendo la página de " + e.Nombre + " y quiero consultar.");
@@ -2150,26 +2353,24 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
 
     var html = $$"""
 <!DOCTYPE html>
-<html lang="es-AR">
+<html lang="{{htmlLang}}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{Esc(titulo)}}</title>
 <meta name="description" content="{{Esc(desc)}}">
-<link rel="canonical" href="{{Esc(url)}}">
-<!-- Los cuatro idiomas de esta página. El contenido lo traduce idiomas.js en el
-     navegador, pero Google necesita que la dirección de cada idioma esté declarada:
-     si no, indexa una sola versión y las búsquedas en inglés no llegan acá. -->
-<link rel="alternate" hreflang="es" href="{{Esc(url)}}">
-<link rel="alternate" hreflang="en" href="{{Esc(url)}}?lang=en">
-<link rel="alternate" hreflang="fr" href="{{Esc(url)}}?lang=fr">
-<link rel="alternate" hreflang="pt" href="{{Esc(url)}}?lang=pt">
-<link rel="alternate" hreflang="x-default" href="{{Esc(url)}}">
+<link rel="canonical" href="{{Esc(urlIdioma)}}">
+<!-- Los idiomas de esta página. El cuerpo lo traduce idiomas.js en el navegador, pero
+     cada dirección tiene que declararse para que Google la muestre a quien busca en
+     ese idioma. Sólo se declara el idioma que tiene cargados su título y su
+     descripción: una copia sin traducir no suma, resta. -->
+{{hreflangs}}
 <meta property="og:type" content="article">
 <meta property="og:title" content="{{Esc(titulo)}}">
 <meta property="og:description" content="{{Esc(desc)}}">
 <meta property="og:image" content="{{Esc(fotoAbs)}}">
-<meta property="og:url" content="{{Esc(url)}}">
+<meta property="og:url" content="{{Esc(urlIdioma)}}">
+<meta property="og:locale" content="{{ogLocale}}">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2496,16 +2697,22 @@ app.MapGet("/sitemap.xml", (AppDbContext db, IWebHostEnvironment env) =>
     sb.AppendLine("  </url>");
 
     // Una entrada por excursión activa.
-    foreach (var clave in db.ExcursionesWeb.Where(x => x.Activa).OrderBy(x => x.Orden)
-                            .Select(x => x.Clave).ToList())
+    foreach (var ex in db.ExcursionesWeb.Where(x => x.Activa).OrderBy(x => x.Orden)
+                         .Select(x => new { x.Clave, x.TituloSeoEn, x.TituloSeoFr, x.TituloSeoPt }).ToList())
     {
+        var clave = ex.Clave;
         if (string.IsNullOrWhiteSpace(clave)) continue;
         sb.AppendLine("  <url>");
         sb.AppendLine($"    <loc>{baseUrl}/excursiones/{Uri.EscapeDataString(clave)}</loc>");
-        // Los cuatro idiomas, igual que la portada: la ficha se traduce sola en el
-        // navegador y cada dirección tiene que estar declarada para que Google la
-        // muestre a quien busca en su idioma.
-        foreach (var (idioma, sufijo) in new[] { ("es", ""), ("en", "?lang=en"), ("fr", "?lang=fr"), ("pt", "?lang=pt"), ("x-default", "") })
+        // Los idiomas de esta ficha. Se declara el que tiene cargado su título: la
+        // página en ese idioma existe de verdad (título, descripción y dirección
+        // propia). Declarar una sin traducir sería ofrecerle a Google una copia.
+        var idiomas = new List<(string, string)> { ("es", "") };
+        if (!string.IsNullOrWhiteSpace(ex.TituloSeoEn)) idiomas.Add(("en", "?lang=en"));
+        if (!string.IsNullOrWhiteSpace(ex.TituloSeoFr)) idiomas.Add(("fr", "?lang=fr"));
+        if (!string.IsNullOrWhiteSpace(ex.TituloSeoPt)) idiomas.Add(("pt", "?lang=pt"));
+        idiomas.Add(("x-default", ""));
+        foreach (var (idioma, sufijo) in idiomas)
             sb.AppendLine($"""    <xhtml:link rel="alternate" hreflang="{idioma}" href="{baseUrl}/excursiones/{Uri.EscapeDataString(clave)}{sufijo}"/>""");
         sb.AppendLine($"    <lastmod>{hoy}</lastmod>");
         sb.AppendLine("    <changefreq>monthly</changefreq>");

@@ -111,6 +111,33 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Título para Google (opcional, hasta 60 caracteres)")]
         public string TituloSeo { get; set; } = "";
 
+        // El titulo y la descripcion en los otros tres idiomas. El cuerpo de la ficha
+        // lo traduce idiomas.js en el navegador, pero esto lo arma el servidor y hasta
+        // ahora salia siempre en castellano: Google veia cuatro direcciones con el
+        // mismo titulo espanol y se quedaba con una sola.
+        //
+        // Si un idioma queda vacio, la ficha de ese idioma cae al castellano Y su
+        // canonical apunta a la direccion espanola: nunca se declara como version
+        // propia una pagina sin traducir, que es lo que haria que Google las trate
+        // como copias.
+        [Display(Name = "Título para Google en inglés")]
+        public string TituloSeoEn { get; set; } = "";
+
+        [Display(Name = "Título para Google en francés")]
+        public string TituloSeoFr { get; set; } = "";
+
+        [Display(Name = "Título para Google en portugués")]
+        public string TituloSeoPt { get; set; } = "";
+
+        [Display(Name = "Descripción corta en inglés")]
+        public string ResumenEn { get; set; } = "";
+
+        [Display(Name = "Descripción corta en francés")]
+        public string ResumenFr { get; set; } = "";
+
+        [Display(Name = "Descripción corta en portugués")]
+        public string ResumenPt { get; set; } = "";
+
         // Estos tres se escriben con UN dato por renglón (una línea = un ítem)
         [Display(Name = "Datos (uno por renglón, ej: 🕐 10 hs)")]
         public string Datos { get; set; } = "";

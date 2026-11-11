@@ -1177,6 +1177,98 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
+    // ---- Especial La Sala: el folleto final (11/11/2026) ----
+    //
+    // El contenido se cargó con un itinerario que después cambió: Jaire estaba el día 1
+    // junto a Yala, y el día 3 terminaba con el almuerzo. El folleto definitivo mueve
+    // Jaire a la tarde del día 3 y suma las Termas de Reyes al día 1 — el almuerzo en el
+    // restaurante del hotel y el piletón termal privado, que es el tercer almuerzo del
+    // programa y hay que declararlo en "incluye".
+    //
+    // Se corrige acá y no a mano porque la excursión ya está publicada. La condición
+    // mira el itinerario viejo: corre una sola vez y nunca pisa una edición posterior
+    // hecha desde el panel.
+    var salaVieja = db.ExcursionesWeb.FirstOrDefault(x => x.Clave == "especial-la-sala"
+                        && x.ItinerarioLargo.Contains("Día 1 · Angosto de Jaire"));
+    if (salaVieja != null)
+    {
+        salaVieja.Resumen = "Tres días con una casa como centro: La Sala de Yolanda, posta del Camino Real desde 1775 en Lozano. Las Lagunas de Yala y las Termas de Reyes, Purmamarca y las Salinas, y el Angosto de Jaire para cerrar, con las dos tardes de vuelta al parque con llamas, lagunas y piano.";
+        salaVieja.Datos = string.Join("\n", new[]
+        {
+            "🗓️ 3 días / 2 noches",
+            "🚌 Salida 9:00 · San Salvador de Jujuy",
+            "👥 Grupos reducidos · posibilidad de tomar La Sala en exclusiva",
+            "🥾 Dificultad media/baja · de 1.600 a más de 4.000 msnm"
+        });
+        salaVieja.Itinerario = string.Join("\n", new[]
+        {
+            "DÍA 01 —",
+            "09:00 h · Salida desde San Salvador de Jujuy por la Ruta Provincial 4",
+            "Circuito · Lagunas de Yala: Comedero, Rodeo y Desaguadero",
+            "Almuerzo · Restaurante del Hotel Spa Termas de Reyes",
+            "Piletón termal · Pileta climatizada privada, con aguas que brotan a 45 °C",
+            "18:00 h · Llegada a La Sala: parque, lagunas, puente colgante y llamas",
+            "Cena · Mesa larga, menú único y la historia de la casa",
+            "DÍA 02 —",
+            "Desayuno · En La Sala, junto al piano del comedor",
+            "Visita · Purmamarca: Cerro de los Siete Colores y Paseo de los Colorados",
+            "Almuerzo regional · Purmamarca",
+            "Ascenso · Cuesta de Lipán y Salinas Grandes",
+            "Regreso a Lozano · Segunda cena y hogar a leña",
+            "DÍA 03 —",
+            "Desayuno · En la galería",
+            "La mañana · La casona de la Niña Yolanda, sus muebles y su parque",
+            "Almuerzo de despedida · Mesa larga de La Sala",
+            "Trekking · Angosto de Jaire, entre paredones y cursos de agua",
+            "Por la tarde · Regreso a San Salvador de Jujuy"
+        });
+        salaVieja.ItinerarioLargo = string.Join("\n", new[]
+        {
+            "Día 1 · Lagunas de Yala y Termas de Reyes",
+            "9:00 h · Encuentro y salida desde San Salvador de Jujuy por la Ruta Provincial 4, rumbo a las Lagunas de Yala",
+            "Lagunas de Yala — Comedero, Rodeo y Desaguadero —, con senderos de dificultad baja y tiempo libre a orillas del agua, ajustando las caminatas al estado de los accesos y a las condiciones del día",
+            "Almuerzo en el restaurante del Hotel Spa Termas de Reyes",
+            "Piletón termal privado del hotel: pileta climatizada, con aguas que brotan a 45 °C",
+            "Salida del hotel a media tarde. Cerca de las 18 h · Llegada a Lozano, donde nos reciben los dueños de La Sala de Yolanda. Check-in y el resto de la tarde en el parque: las dos lagunas, el puente colgante, la cascada y las llamas, sin volver a subir a la camioneta",
+            "Cena en la mesa larga del comedor, compartida con los demás huéspedes de La Sala: la comida casera que es la marca de la casa, con menú único, música de fondo y a la luz de las velas. Después, la historia de La Sala contada por la familia",
+            "Día 2 · Purmamarca y Salinas Grandes",
+            "Desayuno en La Sala y salida temprano hacia la Quebrada de Humahuaca, con llegada a Purmamarca durante la mañana",
+            "Purmamarca: Cerro de los Siete Colores, Paseo de los Colorados y mirador El Porito",
+            "Almuerzo en Purmamarca, en el restaurante de uno de los hoteles del pueblo: cocina regional de muy buen nivel, con mesa reservada para el grupo",
+            "Ascenso panorámico por la Cuesta de Lipán hacia la Puna, con paradas en los miradores",
+            "Visita guiada al salar: el proceso de extracción de la sal y los Ojos del Salar, sujetos al acceso y a la disponibilidad local. Caminatas de baja dificultad en un recorrido de gran altura",
+            "Entre las 18 y las 19 h · Regreso a Lozano bajando la cuesta con luz, sin manejar de noche en altura",
+            "Segunda cena en La Sala, con menú único, y tiempo en la sala de estar, con el hogar a leña encendido si la noche acompaña",
+            "Día 3 · La Sala de Yolanda y el Angosto de Jaire",
+            "Desayuno y la mañana para recorrer La Sala con calma: los ambientes que conserva la familia, los muebles originales, el filtro de agua colonial de la galería, las partituras y las fotografías de la Niña Yolanda",
+            "El recorrido por La Sala y su historia, contado por la familia Carenzo",
+            "El parque: las dos lagunas, el puente colgante, la cascada y los árboles históricos. Avistaje de aves — picaflores, tucanes y martines pescadores — para el que madrugue",
+            "Pileta de temporada, galerías y patio interno, sin programa hasta el almuerzo",
+            "Almuerzo de despedida en la mesa larga, con el menú único de La Sala",
+            "Por la tarde · Angosto de Jaire: trekking guiado entre paredones de roca y cursos de agua, con interpretación del entorno natural y tiempo libre para fotografías. Dificultad media/baja",
+            "Desde Jaire, regreso a San Salvador de Jujuy"
+        });
+        salaVieja.Incluye = string.Join("\n", new[]
+        {
+            "Traslado ida y vuelta desde San Salvador de Jujuy",
+            "Todos los traslados durante los tres días",
+            "Dos noches en La Sala de Yolanda, con desayuno",
+            "Tres almuerzos: día 1 en el Hotel Termas de Reyes, día 2 en Purmamarca y día 3 en La Sala",
+            "Piletón termal del Hotel Spa Termas de Reyes",
+            "Dos cenas en la mesa larga de La Sala, con menú único",
+            "Guía de Wamani para todas las actividades",
+            "Snacks y refrigerio durante los traslados",
+            "Seguro para pasajeros y asistencia permanente",
+            "Botiquín de primeros auxilios y coordinación única de principio a fin"
+        });
+        salaVieja.Llevar = "Calzado cómodo para caminatas, campera rompeviento y abrigo (la Puna es fría aun en verano), ropa cómoda y muda de recambio, gorro para el sol, anteojos de sol y protector solar, mochila pequeña de marcha y recipiente para agua, elementos de higiene personal, binoculares si te interesan las aves del parque, y traje de baño: el piletón termal del día 1 y la pileta de temporada de La Sala. No incluye las bebidas de los almuerzos y las cenas, que quedan a cargo de cada pasajero; las comidas en La Sala de Yolanda son de menú único, no a la carta.";
+        // La foto del piletón del Hotel Spa Termas de Reyes, que es del día 1 y no de la
+        // casa: va última en la galería para que las de La Sala sigan abriendo.
+        if (!salaVieja.Fotos.Contains("la-sala-pileton.webp"))
+            salaVieja.Fotos = salaVieja.Fotos.TrimEnd() + "\nla-sala-pileton.webp";
+        db.SaveChanges();
+    }
+
     // ---- El orden de la lista, de una vez ----
     //
     // Primer intento: se repartieron entre las cuatro Selecta los lugares que ya

@@ -19,6 +19,13 @@ window.WAMANI_IDIOMAS = {
 /* ══════════════════════════════ INGLÉS ══════════════════════════════════ */
 en: {
   bloques: {
+    /* -- Titulos de la portada que se reescribieron por SEO: las claves viejas
+       quedaron sin usar y estos titulos se veian en castellano en los tres idiomas
+       (revisado el 11/11/2026). -- */
+    "Excursiones y travesías que pocos conocen": "Tours and treks <em>few people know</em>",
+    "Guías locales que conocen el camino": "Local guides who know <em>the way</em>",
+    "Opiniones de los que ya lo vivieron": "Reviews from those <em>who have lived it</em>",
+    "¿Listo para tu próxima aventura en Jujuy?": "Ready for your next <em>adventure in Jujuy</em>?",
     /* ── Landing de agencias (/receptivo) ── */
     "Descubrí Jujuy con Wamani": "Discover Jujuy with <em>Wamani</em>",
     "Wamani Turismo — Jujuy, Argentina": "Wamani Turismo — <span class=\"resalte\">Jujuy, Argentina</span>",
@@ -39,6 +46,11 @@ en: {
   },
 
   textos: {
+    /* -- Lo que quedaba en castellano en los otros idiomas (11/11/2026) -- */
+    "2 días y 1 noche": "2 days and 1 night",
+    "Política de privacidad": "Privacy policy",
+    "Día completo en el Angosto de Jaire y Cascada Santuyoc": "Full day at the Angosto de Jaire and the Santuyoc waterfall",
+    "Dos viajeras cuentan cómo les fue en el día completo, con el almuerzo en Canuto Glamping.": "Two travellers tell how their full day went, with lunch at Canuto Glamping.",
     /* -- "Jujuy a tu medida", la franja que va despues de las experiencias -- */
     "¿Todavía no sabés qué elegir?": "Not sure what to choose yet?",
     "Contanos cuántos días tenés y te armamos el viaje entero": "Tell us how many days you have and we'll plan the whole trip",
@@ -681,6 +693,13 @@ en: {
 /* ══════════════════════════════ FRANCÉS ═════════════════════════════════ */
 fr: {
   bloques: {
+    /* -- Titulos de la portada que se reescribieron por SEO: las claves viejas
+       quedaron sin usar y estos titulos se veian en castellano en los tres idiomas
+       (revisado el 11/11/2026). -- */
+    "Excursiones y travesías que pocos conocen": "Excursions et treks <em>que peu de gens connaissent</em>",
+    "Guías locales que conocen el camino": "Des guides locaux qui connaissent <em>le chemin</em>",
+    "Opiniones de los que ya lo vivieron": "Les avis de ceux <em>qui l'ont déjà vécu</em>",
+    "¿Listo para tu próxima aventura en Jujuy?": "Prêt pour votre prochaine <em>aventure à Jujuy</em> ?",
     /* ── Landing de agencias (/receptivo) ── */
     "Descubrí Jujuy con Wamani": "Découvrez Jujuy avec <em>Wamani</em>",
     "Wamani Turismo — Jujuy, Argentina": "Wamani Turismo — <span class=\"resalte\">Jujuy, Argentine</span>",
@@ -701,6 +720,11 @@ fr: {
   },
 
   textos: {
+    /* -- Lo que quedaba en castellano en los otros idiomas (11/11/2026) -- */
+    "2 días y 1 noche": "2 jours et 1 nuit",
+    "Política de privacidad": "Politique de confidentialité",
+    "Día completo en el Angosto de Jaire y Cascada Santuyoc": "Journée complète à l'Angosto de Jaire et à la cascade de Santuyoc",
+    "Dos viajeras cuentan cómo les fue en el día completo, con el almuerzo en Canuto Glamping.": "Deux voyageuses racontent leur journée complète, avec le déjeuner au Canuto Glamping.",
     /* -- "Jujuy a tu medida", la franja que va despues de las experiencias -- */
     "¿Todavía no sabés qué elegir?": "Vous ne savez pas encore quoi choisir ?",
     "Contanos cuántos días tenés y te armamos el viaje entero": "Dites-nous combien de jours vous avez et nous organisons tout le voyage",
@@ -1334,6 +1358,13 @@ fr: {
 /* ════════════════════════════ PORTUGUÉS ═════════════════════════════════ */
 pt: {
   bloques: {
+    /* -- Titulos de la portada que se reescribieron por SEO: las claves viejas
+       quedaron sin usar y estos titulos se veian en castellano en los tres idiomas
+       (revisado el 11/11/2026). -- */
+    "Excursiones y travesías que pocos conocen": "Excursões e travessias que <em>poucos conhecem</em>",
+    "Guías locales que conocen el camino": "Guias locais que conhecem <em>o caminho</em>",
+    "Opiniones de los que ya lo vivieron": "Opiniões de quem <em>já viveu</em>",
+    "¿Listo para tu próxima aventura en Jujuy?": "Pronto para a sua próxima <em>aventura em Jujuy</em>?",
     /* ── Landing de agencias (/receptivo) ── */
     "Descubrí Jujuy con Wamani": "Descubra Jujuy com <em>Wamani</em>",
     "Wamani Turismo — Jujuy, Argentina": "Wamani Turismo — <span class=\"resalte\">Jujuy, Argentina</span>",
@@ -1354,6 +1385,11 @@ pt: {
   },
 
   textos: {
+    /* -- Lo que quedaba en castellano en los otros idiomas (11/11/2026) -- */
+    "2 días y 1 noche": "2 dias e 1 noite",
+    "Política de privacidad": "Política de privacidade",
+    "Día completo en el Angosto de Jaire y Cascada Santuyoc": "Dia completo no Angosto de Jaire e na cachoeira de Santuyoc",
+    "Dos viajeras cuentan cómo les fue en el día completo, con el almuerzo en Canuto Glamping.": "Duas viajantes contam como foi o dia completo, com almoço no Canuto Glamping.",
     /* -- "Jujuy a tu medida", la franja que va despues de las experiencias -- */
     "¿Todavía no sabés qué elegir?": "Ainda não sabe o que escolher?",
     "Contanos cuántos días tenés y te armamos el viaje entero": "Conte-nos quantos dias você tem e montamos a viagem inteira",

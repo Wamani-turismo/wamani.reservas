@@ -1177,6 +1177,36 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
+    // ---- El orden de la línea Wamani Selecta ----
+    //
+    // Lo pidió Lautaro: Canuto, La Sala, EcoLodge y Finca la Fé al final, porque Finca
+    // es la más difícil de conseguir y conviene dejarla como cierre.
+    //
+    // No se tocan los números de las demás experiencias: se toman los cuatro lugares
+    // que la línea ya ocupa en la lista y se reparten entre ellas en ese orden. Así el
+    // resto de la web queda exactamente igual.
+    //
+    // Corre una sola vez: la condición es que La Sala esté DESPUÉS de Finca la Fé, que
+    // es como quedó al darla de alta. Una vez ordenadas, no vuelve a tocar nada, y si
+    // mañana se reordenan desde el panel, tampoco.
+    {
+        var orden = new[] { "especial-the-canuto-glamping", "especial-la-sala",
+                            "especial-ecolodge-de-la-selva", "especial-finca-la-fe" };
+        var selectas = db.ExcursionesWeb.Where(x => orden.Contains(x.Clave)).ToList();
+        var sala = selectas.FirstOrDefault(x => x.Clave == "especial-la-sala");
+        var finca = selectas.FirstOrDefault(x => x.Clave == "especial-finca-la-fe");
+        if (selectas.Count == orden.Length && sala != null && finca != null && sala.Orden > finca.Orden)
+        {
+            var lugares = selectas.Select(x => x.Orden).OrderBy(x => x).ToList();
+            for (var i = 0; i < orden.Length; i++)
+            {
+                var ex = selectas.First(x => x.Clave == orden[i]);
+                ex.Orden = lugares[i];
+            }
+            db.SaveChanges();
+        }
+    }
+
     // ---- Los testimonios de ejemplo pasan a ser reseñas REALES de Google ----
     //
     // Cuando se armó la web quedaron tres testimonios inventados, firmados "María —

@@ -1177,34 +1177,40 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
-    // ---- El orden de la línea Wamani Selecta ----
+    // ---- El orden de la lista, de una vez ----
     //
-    // Lo pidió Lautaro: Canuto, La Sala, EcoLodge y Finca la Fé al final, porque Finca
-    // es la más difícil de conseguir y conviene dejarla como cierre.
+    // Primer intento: se repartieron entre las cuatro Selecta los lugares que ya
+    // ocupaban. No alcanzó, y el motivo vale anotarlo: varias experiencias comparten
+    // el MISMO número de orden, así que entre ellas el lugar lo decide la base y puede
+    // cambiar de un arranque a otro. Con empates, reordenar es imposible.
     //
-    // No se tocan los números de las demás experiencias: se toman los cuatro lugares
-    // que la línea ya ocupa en la lista y se reparten entre ellas en ese orden. Así el
-    // resto de la web queda exactamente igual.
+    // Así que se numera la lista entera de diez en diez, respetando el orden que ya se
+    // veía, y se mete la línea Selecta en el orden que pidió Lautaro: Canuto, La Sala,
+    // EcoLodge y Finca la Fé, que cierra por ser la más difícil de conseguir.
     //
-    // Corre una sola vez: la condición es que La Sala esté DESPUÉS de Finca la Fé, que
-    // es como quedó al darla de alta. Una vez ordenadas, no vuelve a tocar nada, y si
-    // mañana se reordenan desde el panel, tampoco.
+    // Corre una sola vez: después quedan todos en múltiplos de diez y la condición ya
+    // no se cumple. Desde el panel se sigue editando como siempre.
+    if (db.ExcursionesWeb.Any(x => x.Activa && x.Orden % 10 != 0))
     {
-        var orden = new[] { "especial-the-canuto-glamping", "especial-la-sala",
-                            "especial-ecolodge-de-la-selva", "especial-finca-la-fe" };
-        var selectas = db.ExcursionesWeb.Where(x => orden.Contains(x.Clave)).ToList();
-        var sala = selectas.FirstOrDefault(x => x.Clave == "especial-la-sala");
-        var finca = selectas.FirstOrDefault(x => x.Clave == "especial-finca-la-fe");
-        if (selectas.Count == orden.Length && sala != null && finca != null && sala.Orden > finca.Orden)
+        var lista = db.ExcursionesWeb.Where(x => x.Activa)
+                      .OrderBy(x => x.Orden).ThenBy(x => x.Id).ToList();
+        var ordenSelecta = new[] { "especial-the-canuto-glamping", "especial-la-sala",
+                                   "especial-ecolodge-de-la-selva", "especial-finca-la-fe" };
+        // Sólo se reordena la línea si están exactamente esas cuatro: si mañana se suma
+        // o se da de baja una Selecta, se renumera igual pero sin tocar su orden.
+        var puedeOrdenar = lista.Where(x => x.EsSelecta).Select(x => x.Clave).OrderBy(x => x)
+                               .SequenceEqual(ordenSelecta.OrderBy(x => x));
+        var cola = new Queue<string>(ordenSelecta);
+        var final = new List<Wamani.Reservas.Models.ExcursionWeb>();
+        foreach (var ex in lista)
         {
-            var lugares = selectas.Select(x => x.Orden).OrderBy(x => x).ToList();
-            for (var i = 0; i < orden.Length; i++)
-            {
-                var ex = selectas.First(x => x.Clave == orden[i]);
-                ex.Orden = lugares[i];
-            }
-            db.SaveChanges();
+            if (puedeOrdenar && ex.EsSelecta && cola.Count > 0)
+                final.Add(lista.First(x => x.Clave == cola.Dequeue()));
+            else
+                final.Add(ex);
         }
+        for (var i = 0; i < final.Count; i++) final[i].Orden = (i + 1) * 10;
+        db.SaveChanges();
     }
 
     // ---- Los testimonios de ejemplo pasan a ser reseñas REALES de Google ----

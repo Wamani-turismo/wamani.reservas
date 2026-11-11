@@ -2015,6 +2015,14 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
 <title>{{Esc(titulo)}}</title>
 <meta name="description" content="{{Esc(desc)}}">
 <link rel="canonical" href="{{Esc(url)}}">
+<!-- Los cuatro idiomas de esta página. El contenido lo traduce idiomas.js en el
+     navegador, pero Google necesita que la dirección de cada idioma esté declarada:
+     si no, indexa una sola versión y las búsquedas en inglés no llegan acá. -->
+<link rel="alternate" hreflang="es" href="{{Esc(url)}}">
+<link rel="alternate" hreflang="en" href="{{Esc(url)}}?lang=en">
+<link rel="alternate" hreflang="fr" href="{{Esc(url)}}?lang=fr">
+<link rel="alternate" hreflang="pt" href="{{Esc(url)}}?lang=pt">
+<link rel="alternate" hreflang="x-default" href="{{Esc(url)}}">
 <meta property="og:type" content="article">
 <meta property="og:title" content="{{Esc(titulo)}}">
 <meta property="og:description" content="{{Esc(desc)}}">
@@ -2352,6 +2360,11 @@ app.MapGet("/sitemap.xml", (AppDbContext db, IWebHostEnvironment env) =>
         if (string.IsNullOrWhiteSpace(clave)) continue;
         sb.AppendLine("  <url>");
         sb.AppendLine($"    <loc>{baseUrl}/excursiones/{Uri.EscapeDataString(clave)}</loc>");
+        // Los cuatro idiomas, igual que la portada: la ficha se traduce sola en el
+        // navegador y cada dirección tiene que estar declarada para que Google la
+        // muestre a quien busca en su idioma.
+        foreach (var (idioma, sufijo) in new[] { ("es", ""), ("en", "?lang=en"), ("fr", "?lang=fr"), ("pt", "?lang=pt"), ("x-default", "") })
+            sb.AppendLine($"""    <xhtml:link rel="alternate" hreflang="{idioma}" href="{baseUrl}/excursiones/{Uri.EscapeDataString(clave)}{sufijo}"/>""");
         sb.AppendLine($"    <lastmod>{hoy}</lastmod>");
         sb.AppendLine("    <changefreq>monthly</changefreq>");
         sb.AppendLine("    <priority>0.9</priority>");

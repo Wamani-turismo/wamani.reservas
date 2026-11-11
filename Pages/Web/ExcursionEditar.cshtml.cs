@@ -67,6 +67,8 @@ public class ExcursionEditarModel : PageModel
         Ex.TituloSeo  = T(Ex.TituloSeo);
         Ex.Datos      = T(Ex.Datos);
         Ex.Itinerario = T(Ex.Itinerario);
+        Ex.ItinerarioLargo = T(Ex.ItinerarioLargo);
+        Ex.FotoFicha  = T(Ex.FotoFicha);
         Ex.Incluye    = T(Ex.Incluye);
         Ex.Llevar     = T(Ex.Llevar);
 
@@ -115,6 +117,8 @@ public class ExcursionEditarModel : PageModel
             actual.TituloSeo = Ex.TituloSeo;
             actual.Datos = Ex.Datos;
             actual.Itinerario = Ex.Itinerario;
+            actual.ItinerarioLargo = Ex.ItinerarioLargo;
+            actual.FotoFicha = Ex.FotoFicha;
             actual.Incluye = Ex.Incluye;
             actual.Llevar = Ex.Llevar;
             actual.Orden = Ex.Orden;

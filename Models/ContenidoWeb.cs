@@ -92,6 +92,15 @@ namespace Wamani.Reservas.Models
         [Display(Name = "Fotos adicionales")]
         public string Fotos { get; set; } = "";
 
+        // La portada de la página completa, cuando tiene que ser distinta de la de la
+        // tarjeta. Ahí la foto va a todo el ancho: una vertical queda chica y centrada
+        // con los costados vacíos, así que con este campo se le pone una apaisada sin
+        // tocar la tarjeta de la portada.
+        // Si se carga, la página completa muestra SÓLO esa foto: las demás se quedan
+        // en la galería de la ventana, que es donde se ven enteras.
+        [Display(Name = "Foto de portada de la página completa (opcional)")]
+        public string FotoFicha { get; set; } = "";
+
         [Display(Name = "Descripción corta")]
         public string Resumen { get; set; } = "";
 
@@ -108,6 +117,15 @@ namespace Wamani.Reservas.Models
 
         [Display(Name = "Itinerario (un paso por renglón)")]
         public string Itinerario { get; set; } = "";
+
+        // El itinerario largo: el de la página completa (/excursiones/...). Si queda
+        // vacío, esa página muestra el mismo de arriba y no cambia nada.
+        // Existe porque los dos lugares piden cosas distintas: en la ventana que se
+        // abre desde la portada el itinerario tiene que entrar de un vistazo —un
+        // renglón por día—, y en la página propia conviene el detalle completo, que es
+        // lo que lee Google y lo que contesta las dudas antes de que las escriban.
+        [Display(Name = "Itinerario detallado (sólo para la página completa)")]
+        public string ItinerarioLargo { get; set; } = "";
 
         [Display(Name = "Qué incluye (uno por renglón)")]
         public string Incluye { get; set; } = "";

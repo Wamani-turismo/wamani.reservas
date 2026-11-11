@@ -115,6 +115,12 @@
     </div>
 
     <div class="campo">
+        <label asp-for="Ex.FotoFicha"></label>
+        <input class="input" asp-for="Ex.FotoFicha" placeholder="Ej: hero-quebrada.webp" />
+        <small>El nombre de archivo de una foto ya subida. En la página propia la tapa va a todo el ancho: si la foto de la tarjeta es vertical, acá conviene una apaisada. Cargándola, esa página muestra sólo esa foto; las demás quedan en la galería de la ventana. Vacío = usa la misma de la tarjeta.</small>
+    </div>
+
+    <div class="campo">
         <label asp-for="Ex.Datos"></label>
         <textarea class="input crece" asp-for="Ex.Datos" rows="4" placeholder="🕐 10 hs&#10;🚌 Salida 9:00 · SSJ&#10;👥 2 a 12 personas · grupos más grandes, consultar&#10;🥾 Dificultad baja"></textarea>
         <small>Un dato por renglón (apretá Enter para separar).</small>
@@ -123,7 +129,13 @@
     <div class="campo">
         <label asp-for="Ex.Itinerario"></label>
         <textarea class="input crece" asp-for="Ex.Itinerario" rows="6"></textarea>
-        <small>Un paso por renglón.</small>
+        <small>Un paso por renglón. Es el que se ve en la ventana que se abre desde la portada: tiene que entrar de un vistazo (en las de varios días, un renglón por día).</small>
+    </div>
+
+    <div class="campo">
+        <label asp-for="Ex.ItinerarioLargo"></label>
+        <textarea class="input crece" asp-for="Ex.ItinerarioLargo" rows="8"></textarea>
+        <small>El detalle completo, con horarios y duraciones, para la página propia de la excursión. Si lo dejás vacío, esa página muestra el de arriba.</small>
     </div>
 
     <div class="campo">

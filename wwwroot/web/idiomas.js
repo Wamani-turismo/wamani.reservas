@@ -291,10 +291,10 @@
     prepararDiccionarios();
     observar();
 
-    var pedido = null;
+    var pedido = null, vinoEnLaDireccion = false;
     try {
       var qs = new URLSearchParams(window.location.search).get("lang");
-      if (qs) pedido = qs.toLowerCase();
+      if (qs) { pedido = qs.toLowerCase(); vinoEnLaDireccion = true; }
       if (!pedido) pedido = localStorage.getItem("wamani_idioma");
     } catch (e) {}
 
@@ -313,7 +313,20 @@
     // direcciones ?lang=en, ?lang=fr y ?lang=pt.
     //
     // Sigue respetándose la elección guardada: el que ya eligió EN o FR lo conserva.
-    cambiar(pedido && IDIOMAS[pedido] ? pedido : "es", false);
+    var elegido = pedido && IDIOMAS[pedido] ? pedido : "es";
+    cambiar(elegido, false);
+
+    // Si el idioma vino en la dirección (?lang=fr), eso ES una elección y vale para el
+    // resto de la visita. Antes no se guardaba: el que leía una ficha en francés y
+    // tocaba "Expériences" en el menú aterrizaba en una portada en otro idioma, porque
+    // la portada sólo miraba lo guardado. No se toca la dirección: la de la ficha ya
+    // lleva su ?lang y es la que Google tiene declarada.
+    //
+    // Esto NO es la detección automática que se sacó a propósito (ver arriba): el robot
+    // de Google pide cada dirección por separado y no arrastra nada de una a otra.
+    if (vinoEnLaDireccion) {
+      try { localStorage.setItem("wamani_idioma", elegido); } catch (e) {}
+    }
   }
 
   window.WamaniIdioma = {

@@ -999,6 +999,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
             <g class="punto" data-id="atardecer-en-las-salinas" transform="translate(249,394)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Atardecer en las Salinas</title></g>
             <g class="punto" data-id="recorriendo-la-quebrada" transform="translate(365,305)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Recorriendo la Quebrada</title></g>
             <g class="punto" data-id="conociendo-la-quebrada" transform="translate(330,345)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Conociendo la Quebrada</title></g>
+            <g class="punto" data-id="inca-cueva-express" transform="translate(340,268)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Inca Cueva Express</title></g>
             <g class="punto" data-id="termas-de-jordan" transform="translate(451,392)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Termas de Jordán</title></g>
             <g class="punto" data-id="ruta-de-lagunas-y-termas" transform="translate(338,494)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Ruta de Lagunas y Termas</title></g>
             <g class="punto" data-id="cascada-santuyoc-y-angosto-de-jaire" transform="translate(349,468)"><circle class="halo" r="11"/><circle class="centro" r="7"/><title>Cascada Santuyoc y Angosto de Jaire</title></g>
@@ -1310,6 +1311,13 @@ let GUIAS = {
     itinerario:["Día 1 · Purmamarca y Salinas Grandes", "Día 2 · Inca Cueva y Humahuaca", "Día 3 · Quebrada de las Señoritas y Serranía del Hornocal"],
     incluye:["Traslados durante todo el circuito", "2 noches de alojamiento: Purmamarca y Humahuaca", "Recorrido guiado y merienda al atardecer en Salinas Grandes", "Guías locales y almuerzo regional en Inca Cueva", "Trekking guiado en la Quebrada de las Señoritas", "Entradas a la Quebrada de las Señoritas y al Hornocal", "Cena de comida regional del día 1", "Snacks y refrigerio durante los traslados"],
     llevar:"Calzado cómodo para trekking, ropa cómoda para caminar, abrigo para la tarde y la noche, protector solar, anteojos de sol, gorra o sombrero, botella de agua reutilizable y cámara o celular para las fotos. No están incluidos los almuerzos de los días 1 y 3, la cena del día 2 en Humahuaca ni los gastos personales." },
+  "inca-cueva-express": { w:"inca-cueva-express", n:"Inca Cueva Express", chip:"2 días y 1 noche", img:"/web/img/inca-cueva-oasis.webp", c:"148,74,56",
+    fotos:["/web/img/inca-cueva-oasis.webp", "/web/img/inca-cueva-ventana.webp", "/web/img/inca-cueva-pared.webp"],
+    resumen:"Dos días en la Quebrada para conocer las pinturas rupestres más antiguas de Jujuy, con picada gourmet en el Oasis y una noche en el refugio de una familia local.",
+    datos:["🗓️ 2 días / 1 noche", "🚌 Salida 8:00 · San Salvador de Jujuy", "👥 2 a 12 personas", "🥾 Dificultad moderada · 3.600 msnm aprox."],
+    itinerario:["Día 1 · Inca Cueva: pinturas rupestres, el Oasis y La Ventana", "Día 2 · Trekking por el entorno y mirador de Maimará"],
+    incluye:["Traslados desde y hasta San Salvador de Jujuy", "1 noche de alojamiento en el refugio de Inca Cueva", "Recorrido por Inca Cueva con guía local", "Caminata a La Ventana y trekking de la segunda jornada", "Picada gourmet en el Oasis", "Merienda y cena del día 1", "Desayuno y almuerzo del día 2", "Parada en el mirador de Maimará", "Snacks y refrigerios durante el traslado", "Acompañamiento, asistencia y botiquín de primeros auxilios"],
+    llevar:"Calzado de trekking con buena adherencia, ropa cómoda, abrigo para la tarde y la noche, campera de lluvia, protector solar, anteojos de sol, gorra o sombrero, 2 litros de agua, linterna y mochila pequeña (consultanos por el alquiler). No están incluidas las bebidas en las comidas ni los gastos personales." },
   "jordan": { w:"termas-de-jordan", n:"Termas de Jordán", chip:"Día completo", img:"/web/img/termas-jordan-1.webp", c:"58,110,90",
     resumen:"Trekking profundo por la selva de las yungas hasta las piscinas naturales de aguas termales color turquesa.",
     datos:["🕐 14-16 hs","🚌 Salida 5:00 · SSJ","👥 2 a 12 (grupos más grandes, consultar) · Dif. moderada/alta"],
@@ -1367,7 +1375,7 @@ let GUIAS = {
 };
 
 /* ═══ Orden de las experiencias (respaldo; el sistema lo reemplaza) ═══ */
-let ORDEN = ["jordan","salinas","yungas","quebrada","conociendo-la-quebrada","santuyoc","yungas-express","lagunas","humahuaca-yungas","tilcara","iruya","ecolodge"];
+let ORDEN = ["jordan","salinas","yungas","quebrada","conociendo-la-quebrada","inca-cueva-express","santuyoc","yungas-express","lagunas","humahuaca-yungas","tilcara","iruya","ecolodge"];
 
 /* Si el sistema mandó excursiones (web publicada), reemplazan a las de respaldo */
 if (D && D.excursiones && D.excursiones.length){
@@ -1475,6 +1483,7 @@ carrusel.addEventListener("pointerleave", function(){ if (!autoCar) arrancarAuto
 const COLORES_FICHA = {
   "recorriendo-la-quebrada":            ["#3a1518", "#eba63a"],  // rojo noche + cielo
   "conociendo-la-quebrada":             ["#45161c", "#e8913f"],  // vino del folleto + ocre
+  "inca-cueva-express":                 ["#4a1c17", "#e2a24b"],  // ladrillo del folleto + ocre
   "atardecer-en-las-salinas":           ["#1b1c44", "#f54302"],  // índigo + fuego
   "cascada-santuyoc-y-angosto-de-jaire":["#2b2610", "#df903e"],  // mostaza + oro
   "termas-de-jordan":                   ["#0d2a26", "#38a89a"],  // verde agua + turquesa

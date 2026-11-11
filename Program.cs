@@ -961,6 +961,85 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
+    // ---- Inca Cueva Express: 2 días y 1 noche, arte rupestre y refugio ----
+    //
+    // Misma idea que la de Conociendo la Quebrada: se da de alta desde acá para que
+    // quede escrita en el repositorio, y sólo si todavía no existe. Después manda el
+    // panel. Entra justo después de Conociendo la Quebrada, que es su vecina en la
+    // Quebrada de Humahuaca.
+    if (!db.ExcursionesWeb.Any(x => x.Clave == "inca-cueva-express"))
+    {
+        var vecina = db.ExcursionesWeb.FirstOrDefault(x => x.Clave == "conociendo-la-quebrada");
+        var ordenIce = (vecina?.Orden ?? 100) + 1;
+        foreach (var post in db.ExcursionesWeb.Where(x => x.Orden >= ordenIce).ToList())
+            post.Orden += 1;
+        db.ExcursionesWeb.Add(new Wamani.Reservas.Models.ExcursionWeb
+        {
+            Clave      = "inca-cueva-express",
+            Nombre     = "Inca Cueva Express",
+            Chip       = "2 días y 1 noche",
+            EsTravesia = false,
+            EsSelecta  = false,
+            Color      = "148,74,56",
+            Foto       = "inca-cueva-oasis.webp",
+            FotoFicha  = "inca-cueva-ventana.webp",
+            Fotos      = string.Join("\n", new[]
+            {
+                "inca-cueva-oasis.webp",
+                "inca-cueva-ventana.webp",
+                "inca-cueva-pared.webp"
+            }),
+            Resumen    = "Dos días en la Quebrada para conocer las pinturas rupestres más antiguas de Jujuy, con picada gourmet en el Oasis y una noche en el refugio de una familia local.",
+            TituloSeo  = "Inca Cueva Express: arte rupestre y noche en el refugio",
+            Datos      = string.Join("\n", new[]
+            {
+                "🗓️ 2 días / 1 noche",
+                "🚌 Salida 8:00 · San Salvador de Jujuy",
+                "👥 2 a 12 personas",
+                "🥾 Dificultad moderada · 3.600 msnm aprox."
+            }),
+            Itinerario = string.Join("\n", new[]
+            {
+                "Día 1 · Inca Cueva: pinturas rupestres, el Oasis y La Ventana",
+                "Día 2 · Trekking por el entorno y mirador de Maimará"
+            }),
+            ItinerarioLargo = string.Join("\n", new[]
+            {
+                "Día 1 · Inca Cueva: pinturas rupestres, el Oasis y La Ventana",
+                "8:00 h · Salida desde San Salvador de Jujuy, desde un punto coordinado de antemano",
+                "10:30 h · Llegada e inicio del trekking: caminata hasta la cueva (3 km, 1 h 30 aprox.), donde nos recibe el guía local",
+                "12:00 h · Recorrido guiado por Inca Cueva: la historia del lugar, sus pinturas rupestres y el entorno natural",
+                "13:30 h · Picada gourmet en el Oasis",
+                "14:30 h · Caminata a La Ventana, con paradas para contemplar el paisaje",
+                "17:00 h · Llegada al refugio, merienda y tiempo libre",
+                "20:30 h · Cena regional y noche en el refugio",
+                "Día 2 · Trekking y mirador de Maimará",
+                "7:30 h · Desayuno en el refugio",
+                "9:00 h · Trekking por el entorno de Inca Cueva con el guía local (3 h aprox., según el ritmo del grupo y el estado del sendero)",
+                "12:00 h · Fin del trekking y almuerzo en el refugio, junto con los anfitriones",
+                "Por la tarde · Regreso con parada en el mirador de Maimará, para contemplar la Paleta del Pintor",
+                "19:00 h · Llegada a San Salvador de Jujuy, aprox."
+            }),
+            Incluye    = string.Join("\n", new[]
+            {
+                "Traslados desde y hasta San Salvador de Jujuy",
+                "1 noche de alojamiento en el refugio de Inca Cueva",
+                "Recorrido por Inca Cueva con guía local",
+                "Caminata a La Ventana y trekking de la segunda jornada",
+                "Picada gourmet en el Oasis",
+                "Merienda y cena del día 1",
+                "Desayuno y almuerzo del día 2",
+                "Parada en el mirador de Maimará",
+                "Snacks y refrigerios durante el traslado",
+                "Acompañamiento, asistencia y botiquín de primeros auxilios"
+            }),
+            Llevar     = "Calzado de trekking con buena adherencia, ropa cómoda, abrigo para la tarde y la noche, campera de lluvia, protector solar, anteojos de sol, gorra o sombrero, 2 litros de agua, linterna y mochila pequeña (consultanos por el alquiler). No están incluidas las bebidas en las comidas ni los gastos personales.",
+            Orden      = ordenIce,
+            Activa     = true
+        });
+        db.SaveChanges();
+    }
+
     // ---- Los testimonios de ejemplo pasan a ser reseñas REALES de Google ----
     //
     // Cuando se armó la web quedaron tres testimonios inventados, firmados "María —
@@ -1529,6 +1608,7 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
     {
         ["recorriendo-la-quebrada"]             = ("#3a1518", "#5a2a22"),
         ["conociendo-la-quebrada"]              = ("#45161c", "#6b2a2a"),
+        ["inca-cueva-express"]                  = ("#4a1c17", "#6a2e22"),
         ["atardecer-en-las-salinas"]            = ("#1b1c44", "#303169"),
         ["cascada-santuyoc-y-angosto-de-jaire"] = ("#2b2610", "#50461c"),
         ["termas-de-jordan"]                    = ("#0d2a26", "#15463f"),
@@ -1599,6 +1679,7 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
         ["cascada-santuyoc-y-angosto-de-jaire"]= "Excursión de día completo a la Cascada Santuyoc, Valle de Jujuy",
         ["recorriendo-la-quebrada"]            = "Excursión de día completo por la Quebrada de Humahuaca, Jujuy",
         ["conociendo-la-quebrada"]             = "Excursión de 3 días por la Quebrada de Humahuaca y la Puna",
+        ["inca-cueva-express"]                 = "Excursión de 2 días a las pinturas rupestres de Inca Cueva, Jujuy",
         ["termas-de-jordan"]                   = "Excursión de día completo a las Termas del Río Jordán, Jujuy",
         ["ruta-de-lagunas-y-termas"]           = "Excursión de día completo a las Lagunas de Yala y Termas de Reyes",
         ["humahuaca-yungas"]                   = "Travesía de 5 días de la Quebrada de Humahuaca a las Yungas",

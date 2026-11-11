@@ -1205,7 +1205,13 @@ using (var scope = app.Services.CreateScope())
         foreach (var ex in lista)
         {
             if (puedeOrdenar && ex.EsSelecta && cola.Count > 0)
-                final.Add(lista.First(x => x.Clave == cola.Dequeue()));
+            {
+                // Ojo: el Dequeue va ANTES y en su propia variable. Adentro del
+                // lambda se ejecutaba una vez por cada fila que First iba mirando,
+                // y vaciaba la cola a la primera vuelta.
+                var claveSel = cola.Dequeue();
+                final.Add(lista.First(x => x.Clave == claveSel));
+            }
             else
                 final.Add(ex);
         }

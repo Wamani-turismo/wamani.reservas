@@ -840,6 +840,87 @@ using (var scope = app.Services.CreateScope())
         if (cambio) db.SaveChanges();
     }
 
+    // ---- Conociendo la Quebrada: 3 días y 2 noches por la Quebrada y la Puna ----
+    //
+    // Se da de alta acá y no a mano desde el panel para que quede escrita en el
+    // repositorio, como el resto del contenido inicial. Sólo se crea si todavía no
+    // existe: una vez dada de alta, este bloque no vuelve a tocarla nunca, así manda
+    // lo que se edite después desde el panel.
+    //
+    // Se mete JUSTO DESPUÉS de "Recorriendo la Quebrada" (la de un día), que es su
+    // pariente más cercano en la lista, corriendo un lugar a las que venían después.
+    if (!db.ExcursionesWeb.Any(x => x.Clave == "conociendo-la-quebrada"))
+    {
+        var hermana = db.ExcursionesWeb.FirstOrDefault(x => x.Clave == "recorriendo-la-quebrada");
+        var ordenNueva = (hermana?.Orden ?? 100) + 1;
+        foreach (var post in db.ExcursionesWeb.Where(x => x.Orden >= ordenNueva).ToList())
+            post.Orden += 1;
+        db.ExcursionesWeb.Add(new Wamani.Reservas.Models.ExcursionWeb
+        {
+            Clave      = "conociendo-la-quebrada",
+            Nombre     = "Conociendo la Quebrada",
+            Chip       = "3 días y 2 noches",
+            EsTravesia = false,
+            EsSelecta  = false,
+            Color      = "138,62,66",
+            Foto       = "cq-inca-cueva-cabra.webp",
+            Fotos      = string.Join("\n", new[]
+            {
+                "cq-inca-cueva-cabra.webp",
+                "hero-quebrada.webp",
+                "cq-purmamarca.webp",
+                "cq-inca-cueva.webp",
+                "quebrada-3.webp"
+            }),
+            Resumen    = "Tres días por la Quebrada y la Puna: el atardecer en Salinas Grandes, los senderos de Inca Cueva y las montañas multicolores del Hornocal. Dos noches en Purmamarca y Humahuaca, todo resuelto.",
+            TituloSeo  = "Quebrada en 3 días: Salinas Grandes, Inca Cueva y Hornocal",
+            Datos      = string.Join("\n", new[]
+            {
+                "🗓️ 3 días / 2 noches",
+                "🚌 Salida 9:30 · San Salvador de Jujuy",
+                "👥 2 a 12 personas",
+                "🥾 Dificultad media/baja · hasta más de 4.000 msnm"
+            }),
+            Itinerario = string.Join("\n", new[]
+            {
+                "Día 1 · Purmamarca y Salinas Grandes",
+                "9:30 h · Salida desde San Salvador de Jujuy por la Ruta Nacional 9",
+                "Mirador del Cerro de los Siete Colores, con las vistas panorámicas de Purmamarca (20 a 30 minutos)",
+                "Paseo de los Colorados y tiempo libre en el pueblo, entre artesanías y calles de adobe (2 a 2 horas y media) · almuerzo libre",
+                "Ascenso por la Cuesta de Lipán con paradas panorámicas y visita al Mirador Alto El Morado",
+                "Salinas Grandes: recorrido guiado por el salar, los Ojos del Salar y la extracción tradicional de la sal, con merienda al atardecer (2 a 3 horas)",
+                "Noche en Purmamarca, con cena de comida regional",
+                "Día 2 · Inca Cueva y Humahuaca",
+                "8:00 h · Salida desde Purmamarca hacia Inca Cueva (entre una hora y media y dos horas de viaje)",
+                "Caminata con guías locales por la primera parte del circuito, con los relatos sobre la historia del lugar y las culturas que lo habitaron",
+                "Almuerzo regional preparado en el lugar por los propios anfitriones",
+                "Segunda parte del circuito: las formaciones geológicas y los paisajes del paraje",
+                "17:00 h · Llegada a Humahuaca, tarde libre para recorrer el pueblo y noche ahí · cena libre",
+                "Día 3 · Quebrada de las Señoritas y Hornocal",
+                "8:30 h · Salida desde Humahuaca hacia Uquía",
+                "Quebrada de las Señoritas: trekking guiado entre formaciones rojizas y senderos de montaña (2 a 3 horas, dificultad moderada)",
+                "Almuerzo libre en Humahuaca",
+                "Serranía del Hornocal: ascenso al mirador del Cerro de los Catorce Colores, a más de 4.000 msnm (1 hora y media a 2 horas)",
+                "19:00 a 19:30 h · Regreso a San Salvador de Jujuy"
+            }),
+            Incluye    = string.Join("\n", new[]
+            {
+                "Traslados durante todo el circuito",
+                "2 noches de alojamiento: Purmamarca y Humahuaca",
+                "Recorrido guiado y merienda al atardecer en Salinas Grandes",
+                "Guías locales y almuerzo regional en Inca Cueva",
+                "Trekking guiado en la Quebrada de las Señoritas",
+                "Entradas a la Quebrada de las Señoritas y al Hornocal",
+                "Cena de comida regional del día 1",
+                "Snacks y refrigerio durante los traslados"
+            }),
+            Llevar     = "Calzado cómodo para trekking, ropa cómoda para caminar, abrigo para la tarde y la noche, protector solar, anteojos de sol, gorra o sombrero, botella de agua reutilizable y cámara o celular para las fotos. No están incluidos los almuerzos de los días 1 y 3, la cena del día 2 en Humahuaca ni los gastos personales.",
+            Orden      = ordenNueva,
+            Activa     = true
+        });
+        db.SaveChanges();
+    }
+
     // ---- Los testimonios de ejemplo pasan a ser reseñas REALES de Google ----
     //
     // Cuando se armó la web quedaron tres testimonios inventados, firmados "María —
@@ -1398,6 +1479,7 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
     var paletas = new Dictionary<string, (string fondo, string panel)>
     {
         ["recorriendo-la-quebrada"]             = ("#3a1518", "#5a2a22"),
+        ["conociendo-la-quebrada"]              = ("#45161c", "#6b2a2a"),
         ["atardecer-en-las-salinas"]            = ("#1b1c44", "#303169"),
         ["cascada-santuyoc-y-angosto-de-jaire"] = ("#2b2610", "#50461c"),
         ["termas-de-jordan"]                    = ("#0d2a26", "#15463f"),
@@ -1467,6 +1549,7 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
         ["conociendo-las-yungas"]              = "Excursión de 3 días de trekking por las Yungas de Jujuy",
         ["cascada-santuyoc-y-angosto-de-jaire"]= "Excursión de día completo a la Cascada Santuyoc, Valle de Jujuy",
         ["recorriendo-la-quebrada"]            = "Excursión de día completo por la Quebrada de Humahuaca, Jujuy",
+        ["conociendo-la-quebrada"]             = "Excursión de 3 días por la Quebrada de Humahuaca y la Puna",
         ["termas-de-jordan"]                   = "Excursión de día completo a las Termas del Río Jordán, Jujuy",
         ["ruta-de-lagunas-y-termas"]           = "Excursión de día completo a las Lagunas de Yala y Termas de Reyes",
         ["humahuaca-yungas"]                   = "Travesía de 5 días de la Quebrada de Humahuaca a las Yungas",

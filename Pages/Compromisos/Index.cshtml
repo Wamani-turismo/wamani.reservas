@@ -5,15 +5,17 @@
     var ci = System.Globalization.CultureInfo.GetCultureInfo("es-AR");
     string Money(decimal m) => "$ " + m.ToString("N0", ci);
     string Dia(DateTime d) => d.ToString("dd/MM/yy", ci);
-    var pasoChip = "display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;color:#fff;background:var(--warn)";
+    var chipEstimado = "display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;color:#fff;background:var(--warn)";
+    var chipArmado = "display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;color:var(--ink-soft);border:1px solid var(--line)";
 }
 
 <div class="toolbar">
     <div>
         <h1>Compromisos</h1>
         <p class="subtitle" style="margin:0">
-            Cuánta plata neta queda de las salidas que ya tienen reservas: lo que hay en caja hoy,
-            más lo que falta cobrar, menos todo lo que falta pagar.
+            Lo que Wamani tiene comprometido de acá en adelante: la plata que hay en caja hoy,
+            más lo que falta cobrar de las salidas que todavía no salieron, menos lo que van a
+            costar esas salidas.
         </p>
     </div>
 </div>
@@ -33,9 +35,34 @@
     <div class="fin-card">
         <div class="fin-label">− Falta pagar</div>
         <div class="fin-val" style="color:var(--warn)">@Money(Model.PorPagar)</div>
-        <div class="fin-label" style="margin-top:4px">
-            @Money(Model.PorPagarGastos) gastos · @Money(Model.PorPagarProveedores) proveedores
-        </div>
+        <details style="margin-top:4px">
+            <summary class="fin-label" style="cursor:pointer">
+                el teórico de @Model.Salidas.Count salida(s), menos lo ya pagado · ver de cuáles
+            </summary>
+            <div style="margin-top:8px;font-size:.82rem;color:var(--ink-soft)">
+                <p style="margin:0 0 8px">
+                    <strong>Es el teórico de la excursión</strong>, no lo cargado en el operativo:
+                    la plantilla por los pasajeros de cada salida, menos lo que ya se pagó.
+                </p>
+                @foreach (var s in Model.Salidas)
+                {
+                    <div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px solid var(--line)">
+                        <span>
+                            @Dia(s.Fecha) · @s.Excursion
+                            @if (s.OperativoVacio)
+                            {
+                                <span style="color:var(--warn)"> (sin armar)</span>
+                            }
+                        </span>
+                        <strong style="white-space:nowrap">@Money(s.Falta)</strong>
+                    </div>
+                }
+                <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0">
+                    <span><strong>Total a pagar</strong></span>
+                    <strong style="white-space:nowrap">@Money(Model.PorPagar)</strong>
+                </div>
+            </div>
+        </details>
     </div>
     <div class="fin-card fin-card-net">
         <div class="fin-label">Plata neta proyectada</div>
@@ -48,22 +75,38 @@
     <p style="margin:0;color:var(--ink-soft)">
         <strong>Proyectado</strong> = Caja hoy @Money(Model.CajaHoy)
         + falta cobrar @Money(Model.PorCobrar)
-        − gastos del operativo @Money(Model.PorPagarGastos)
-        − proveedores @Money(Model.PorPagarProveedores)
+        − falta pagar @Money(Model.PorPagar)
         = <strong>@Money(Model.Proyectado)</strong>.
     </p>
     <p style="margin:8px 0 0;color:var(--ink-soft)">
-        Los <strong>gastos del operativo</strong> salen de la plantilla de cada excursión: son una
-        estimación hasta que los vas cargando y tildando. Los <strong>proveedores</strong> ya tienen
-        lugar tomado y precio acordado, así que esa deuda es firme. Por eso van separados.
+        El costo de cada salida se proyecta con <strong>el teórico de la excursión</strong> —la
+        plantilla multiplicada por los pasajeros de esa salida, el mismo número de Rentabilidad—
+        y recién después se le descuenta lo que ya se pagó. <strong>Que todavía no se haya
+        elegido el guía o el hospedaje no significa que no haya que pagarlos:</strong> por eso no
+        se usa lo cargado en el operativo, que puede estar a medio armar. Si en una salida se
+        pagó más que el teórico, no falta nada: ese excedente se arregla en el operativo de la
+        salida.
     </p>
+    <p style="margin:8px 0 0;color:var(--ink-soft)">
+        Acá <strong>no entra nada de la estructura</strong>: publicidad, agencia, contador,
+        seguro y nafta no son un compromiso con nadie. Eso se paga con lo que quede.
+    </p>
+    @if (Model.SalidasSinOperativo > 0)
+    {
+        <p style="margin:8px 0 0;color:var(--ink-soft)">
+            De lo que falta pagar, <strong>@Money(Model.FaltaEstimado)</strong> son
+            @Model.SalidasSinOperativo salida(s) <strong>sin nada cargado en el operativo</strong>:
+            ahí el número es íntegramente la estimación de la plantilla. A medida que cargues los
+            proveedores de verdad el total casi no se va a mover, pero vas a saber a quién le debés
+            cada peso.
+        </p>
+    }
     @if (Model.HistoricoIgnorado > 0)
     {
         <p style="margin:8px 0 0;color:var(--ink-soft)">
             No se cuentan @Money(Model.HistoricoIgnorado) de @Model.SalidasHistoricas salida(s)
             <strong>anteriores al sistema</strong> (las de "Reservas Históricas"): esas ya se
-            pagaron en su momento, fuera del sistema. Los gastos que figuran ahí salieron solos
-            de la plantilla de la excursión, no son una deuda.
+            pagaron en su momento, fuera del sistema.
         </p>
     }
 </div>
@@ -71,14 +114,20 @@
 @if (Model.CobrarVencido > 0 || Model.PagarVencido > 0)
 {
     <div class="aviso-ok" style="background:var(--warn-bg,#fff4e5);border-color:var(--warn)">
-        <strong>Ojo con lo vencido:</strong>
+        <strong>Colgado de salidas que ya pasaron.</strong>
+        Esto <em>no</em> entra en la proyección de arriba —el compromiso es a futuro— pero conviene
+        revisarlo en el operativo de cada salida:
         @if (Model.CobrarVencido > 0)
         {
-            <span>hay @Money(Model.CobrarVencido) sin cobrar de salidas que ya pasaron.</span>
+            <span>hay <strong>@Money(Model.CobrarVencido)</strong> sin cobrar.</span>
         }
         @if (Model.PagarVencido > 0)
         {
-            <span>Hay @Money(Model.PagarVencido) sin pagar de salidas que ya pasaron.</span>
+            <span>
+                Hay <strong>@Money(Model.PagarVencido)</strong> sin pagar en
+                @Model.SalidasVencidas salida(s), que puede ser plata que falta de verdad o un
+                tilde que quedó sin poner.
+            </span>
         }
     </div>
 }
@@ -90,7 +139,7 @@
 
     @if (Model.Cobros.Count == 0)
     {
-        <p style="color:var(--ink-soft)">No queda nada por cobrar. Todas las reservas están pagas.</p>
+        <p style="color:var(--ink-soft)">No queda nada por cobrar de las salidas que vienen.</p>
     }
     else
     {
@@ -108,13 +157,7 @@
                 @foreach (var c in Model.Cobros)
                 {
                     <tr>
-                        <td>
-                            @Dia(c.Fecha)
-                            @if (c.YaPaso)
-                            {
-                                <span style="@pasoChip">ya pasó</span>
-                            }
-                        </td>
+                        <td>@Dia(c.Fecha)</td>
                         <td>@c.Excursion</td>
                         <td>@c.Cliente</td>
                         <td style="text-align:right">@c.Personas</td>
@@ -134,17 +177,17 @@
     }
 </div>
 
-<!-- Falta pagar: gastos del operativo -->
+<!-- Falta pagar: salida por salida, al teórico -->
 <div class="card" style="margin-top:12px">
-    <h2 style="margin-top:0">Falta pagar · gastos del operativo</h2>
+    <h2 style="margin-top:0">Falta pagar (salida por salida)</h2>
     <p class="subtitle">
-        Nafta, entradas, comidas, viáticos y demás de cada salida: todo lo que todavía no está
-        tildado como pagado. El detalle ítem por ítem está en el operativo de cada salida.
+        Lo que va a costar cada salida según la plantilla de su excursión, menos la plata que ya
+        salió por ella. El detalle ítem por ítem está en el operativo de cada salida.
     </p>
 
-    @if (Model.Gastos.Count == 0)
+    @if (Model.Salidas.Count == 0)
     {
-        <p style="color:var(--ink-soft)">No queda ningún gasto del operativo sin pagar.</p>
+        <p style="color:var(--ink-soft)">No hay salidas vendidas de acá en adelante.</p>
     }
     else
     {
@@ -152,45 +195,65 @@
             <thead>
                 <tr>
                     <th>Sale</th><th>Excursión</th>
-                    <th style="text-align:right">Ítems</th>
+                    <th style="text-align:right">Pers.</th>
+                    <th style="text-align:right">Teórico</th>
+                    <th style="text-align:right">Ya pagado</th>
                     <th style="text-align:right">Falta pagar</th>
+                    <th>Operativo</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var g in Model.Gastos)
+                @foreach (var s in Model.Salidas)
                 {
                     <tr>
+                        <td>@Dia(s.Fecha)</td>
+                        <td>@s.Excursion</td>
+                        <td style="text-align:right">@s.Personas</td>
+                        <td style="text-align:right">@Money(s.Teorico)</td>
+                        <td style="text-align:right">@Money(s.Pagado)</td>
+                        <td style="text-align:right"><strong>@Money(s.Falta)</strong></td>
                         <td>
-                            @Dia(g.Fecha)
-                            @if (g.YaPaso)
+                            @if (s.OperativoVacio)
                             {
-                                <span style="@pasoChip">ya pasó</span>
+                                <span style="@chipEstimado">sin armar</span>
+                            }
+                            else
+                            {
+                                <span style="@chipArmado">@Money(s.Cargado) cargado</span>
                             }
                         </td>
-                        <td>@g.Excursion</td>
-                        <td style="text-align:right">@g.Items</td>
-                        <td style="text-align:right"><strong>@Money(g.Falta)</strong></td>
                     </tr>
                 }
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="3" style="text-align:right"><strong>Total en gastos</strong></td>
-                    <td style="text-align:right"><strong>@Money(Model.PorPagarGastos)</strong></td>
+                    <td colspan="5" style="text-align:right"><strong>Total a pagar</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.PorPagar)</strong></td>
+                    <td></td>
                 </tr>
             </tfoot>
         </table>
+        <p class="hint" style="margin-top:8px">
+            <strong>Sin armar</strong> = esa salida no tiene ni un gasto ni un proveedor cargado,
+            así que todo el costo es la estimación de la plantilla. Donde dice un monto cargado, es
+            lo que hay en el operativo hoy: si es menor que el teórico, falta cargar la diferencia.
+        </p>
     }
 </div>
 
-<!-- Falta pagar: proveedores -->
+<!-- Detalle: proveedores con saldo -->
 <div class="card" style="margin-top:12px">
-    <h2 style="margin-top:0">Falta pagar · proveedores</h2>
-    <p class="subtitle">Guías, hospedajes, restaurantes y autos que ya tienen lugar tomado y todavía deben saldo.</p>
+    <h2 style="margin-top:0">De eso, los proveedores ya elegidos</h2>
+    <p class="subtitle">
+        Guías, hospedajes, restaurantes y autos de las salidas que vienen que ya tienen lugar
+        tomado y precio acordado, y todavía deben saldo. <strong>No se suma aparte:</strong> ya
+        está adentro del total de arriba. Sirve para saber cuánto de lo que falta pagar ya tiene
+        nombre y apellido.
+    </p>
 
     @if (Model.Pagos.Count == 0)
     {
-        <p style="color:var(--ink-soft)">No queda nada por pagar a proveedores.</p>
+        <p style="color:var(--ink-soft)">Ningún proveedor elegido con saldo pendiente.</p>
     }
     else
     {
@@ -207,13 +270,7 @@
                 @foreach (var p in Model.Pagos)
                 {
                     <tr>
-                        <td>
-                            @Dia(p.Fecha)
-                            @if (p.YaPaso)
-                            {
-                                <span style="@pasoChip">ya pasó</span>
-                            }
-                        </td>
+                        <td>@Dia(p.Fecha)</td>
                         <td>@p.Excursion</td>
                         <td>@p.Tipo</td>
                         <td>
@@ -231,8 +288,8 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <td colspan="6" style="text-align:right"><strong>Total a proveedores</strong></td>
-                    <td style="text-align:right"><strong>@Money(Model.PorPagarProveedores)</strong></td>
+                    <td colspan="6" style="text-align:right"><strong>Deuda con proveedores</strong></td>
+                    <td style="text-align:right"><strong>@Money(Model.DeudaProveedores)</strong></td>
                 </tr>
             </tfoot>
         </table>

@@ -1697,8 +1697,15 @@ static void PonerCache(Microsoft.AspNetCore.StaticFiles.StaticFileResponseContex
         return;
     }
 
+    // Las tipografias de la marca viven en /fonts/ y no cambian nunca: si alguna
+    // vez hay que cambiar una, SE LE CAMBIA EL NOMBRE AL ARCHIVO, porque con este
+    // encabezado el navegador que ya la tiene no vuelve a preguntar por ella en
+    // un ano. Mismo trato que las fotos subidas desde el panel.
+    var esFuente = n.EndsWith(".woff2", StringComparison.OrdinalIgnoreCase) ||
+                   n.EndsWith(".woff",  StringComparison.OrdinalIgnoreCase);
+
     var esSubida = n.StartsWith("sube-", StringComparison.OrdinalIgnoreCase);
-    ctx.Context.Response.Headers["Cache-Control"] = esSubida
+    ctx.Context.Response.Headers["Cache-Control"] = (esSubida || esFuente)
         ? "public, max-age=31536000, immutable"
         : "public, max-age=86400";
 }

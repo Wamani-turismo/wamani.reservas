@@ -18,9 +18,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/logo/wamani-icono-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/logo/wamani-icono-180.png">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" href="/fonts/wamani-titulo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/wamani-texto-400.woff2" as="font" type="font/woff2" crossorigin>
 
 <!-- Nació como la página del QR del stand de la FIT, pero la feria terminó y quedó colgada
      del menú de la web ("Receptivo"), así que ahora entra cualquiera en cualquier momento:
@@ -37,17 +36,40 @@
   --sombra:0 14px 40px rgba(0,0,0,.45); --radio:22px;
 }
 *{box-sizing:border-box}
+/* -- Las dos tipografias de la marca, servidas por nosotros. No van por Google
+      Fonts: asi no hay dos conexiones extra antes de que se vea una letra.
+      Los .woff2 estan recortados: 45 KB las cuatro juntas, contra 48 KB que
+      bajaba de Google. NO subir nunca el .ttf crudo (333 KB la de titulos). -- */
+@font-face{font-family:"Wamani Titulo";src:url("/fonts/wamani-titulo.woff2") format("woff2");
+  font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-300.woff2") format("woff2");
+  font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-400.woff2") format("woff2");
+  font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-700.woff2") format("woff2");
+  font-weight:700;font-style:normal;font-display:swap}
+/* HighVoltage Rough se dibuja un 30% mas ancha de lo que es la marca: SIEMPRE
+   condensada al 75% (scaleX .75) y SIEMPRE en mayusculas. Debajo de ~40px se
+   empasta, por eso solo la usan los titulos grandes; de ahi para abajo manda
+   Moche Bold. Nunca una barra "/" en un titulo: esta fuente la dibuja como un
+   garabato (usar "." o "y"). */
 html{scroll-behavior:smooth}
 body{
   margin:0; background:var(--fondo); color:var(--texto);
-  font-family:Quicksand,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;
   font-size:17px; line-height:1.6; -webkit-font-smoothing:antialiased;
 }
-h1,h2,h3{font-family:"Playfair Display",Georgia,serif; font-weight:600; line-height:1.15; margin:0}
-/* El dorado va SIN cursiva: en Playfair la "J" itálica lleva una cola que cruza la letra
-   de al lado y "Jujuy" se leía mal. */
+h1,h2,h3{font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif; font-weight:700; line-height:1.25; margin:0}
+/* Los dos unicos titulos lo bastante grandes para la tipografia de titulos. */
+.portada h1,.encabezado h2{
+  font-family:"Wamani Titulo",Impact,"Arial Narrow",sans-serif; font-weight:400;
+  text-transform:uppercase; letter-spacing:.005em; line-height:1.04;
+  transform:scaleX(.75); transform-origin:left center;
+}
+.encabezado h2{transform-origin:center}
+/* Moche no tiene bastardilla: el dorado hace solo el trabajo de destacar. */
 .resalte{color:var(--dorado)}
-em{font-style:italic; color:var(--dorado)}
+em{font-style:normal; color:var(--dorado)}
 a{color:var(--dorado); text-decoration:none}
 a:hover{text-decoration:underline}
 .envoltorio{max-width:1080px; margin:0 auto; padding:0 22px}
@@ -71,7 +93,7 @@ a:hover{text-decoration:underline}
 }
 .sel-idioma button{
   background:none; border:none; cursor:pointer; color:var(--texto-suave);
-  font-family:'Quicksand',sans-serif; font-weight:700; font-size:.8rem;
+  font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif; font-weight:700; font-size:.8rem;
   letter-spacing:.05em; padding:.34rem .46rem; border-radius:8px; line-height:1;
   transition:color .2s ease, background .2s ease;
 }
@@ -94,7 +116,7 @@ a:hover{text-decoration:underline}
   display:block; letter-spacing:.22em; text-transform:uppercase; font-size:.74rem;
   color:var(--dorado); margin-bottom:16px;
 }
-.portada h1{font-size:clamp(2.1rem,6vw,3.4rem); margin-bottom:14px}
+.portada h1{font-size:clamp(2.6rem,7.6vw,4.2rem); margin-bottom:16px}
 .portada p.pregunta{color:var(--texto-suave); font-size:1.06rem; margin:0 0 38px}
 
 .caminos{display:grid; grid-template-columns:1fr 1fr; gap:20px; text-align:left}
@@ -108,7 +130,7 @@ a:hover{text-decoration:underline}
 .camino .icono{display:block; margin-bottom:16px; color:var(--dorado)}
 .camino .icono svg{width:38px; height:38px; stroke:currentColor; stroke-width:1.4; fill:none;
                    stroke-linecap:round; stroke-linejoin:round}
-.camino b{display:block; font-family:"Playfair Display",Georgia,serif; font-size:1.5rem; font-weight:600; margin-bottom:8px}
+.camino b{display:block; font-size:1.45rem; font-weight:700; margin-bottom:8px}
 .camino span.detalle{display:block; color:var(--texto-suave); font-size:.98rem}
 .camino .flecha{display:block; margin-top:18px; color:var(--coral); font-weight:600; font-size:.95rem}
 
@@ -120,7 +142,7 @@ a:hover{text-decoration:underline}
   display:block; letter-spacing:.2em; text-transform:uppercase; font-size:.72rem;
   color:var(--dorado); margin-bottom:10px;
 }
-.encabezado h2{font-size:clamp(1.7rem,4.4vw,2.5rem)}
+.encabezado h2{font-size:clamp(2.2rem,6.2vw,3.2rem)}
 .encabezado p{color:var(--texto-suave); max-width:660px; margin:14px auto 0}
 
 .regiones{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin:0 0 10px}

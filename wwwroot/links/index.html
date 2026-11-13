@@ -22,13 +22,16 @@
 </script>
 <style>
 /* LAS LETRAS DE LA MARCA, NO LAS DE LA WEB.
-   HighVoltage Rough y Moche son las del manual (Julieta Cormenzana, 2024). Moche
-   pesa menos que la Quicksand que usa el resto del sitio y encima no hay que ir a
-   buscarla a Google. HighVoltage es pesada y se usa sólo en los rótulos, con
+   HighVoltage Rough y Moche son las del manual (Julieta Cormenzana, 2024).
+   Desde noviembre de 2026 las usa TODA la web, y esta página las toma de
+   /fonts/, que es donde viven para todo el sitio. HighVoltage se usa sólo en los
+   rótulos, con
    en formato woff2: las tres juntas pesan 40 KB en vez de los 406 KB originales. */
-@font-face{font-family:'HighVoltage';src:url('fuentes/highvoltage.woff2') format('woff2');font-weight:400;font-display:swap}
-@font-face{font-family:'Moche';src:url('fuentes/moche-regular.woff2') format('woff2');font-weight:400;font-display:swap}
-@font-face{font-family:'Moche';src:url('fuentes/moche-bold.woff2') format('woff2');font-weight:700;font-display:swap}
+/* Las mismas dos de todo el sitio, servidas desde /fonts/ para que el
+   visitante no las baje dos veces. */
+@font-face{font-family:'HighVoltage';src:url('/fonts/wamani-titulo.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Moche';src:url('/fonts/wamani-texto-400.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Moche';src:url('/fonts/wamani-texto-700.woff2') format('woff2');font-weight:700;font-display:swap}
 
 :root{
   --fondo:#131c18;

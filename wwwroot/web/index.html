@@ -29,10 +29,9 @@
 <link rel="icon" type="image/png" sizes="512x512" href="/logo/wamani-icono-512.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/logo/wamani-icono-180.png">
 
-<!-- Tipografías de la marca: Playfair Display (títulos) + Quicksand (texto) -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Tipografías de la marca: HighVoltage Rough (títulos) + Moche (texto) -->
+<link rel="preload" href="/fonts/wamani-titulo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/wamani-texto-400.woff2" as="font" type="font/woff2" crossorigin>
 
 <!-- ═══════════════════════════════════════════════════════════════════
      ⚙️  DATOS PARA EDITAR
@@ -57,10 +56,28 @@
   --radio:22px;
 }
 
+/* -- Las dos tipografias de la marca, servidas por nosotros. No van por Google
+      Fonts: asi no hay dos conexiones extra antes de que se vea una letra.
+      Los .woff2 estan recortados: 45 KB las cuatro juntas, contra 48 KB que
+      bajaba de Google. NO subir nunca el .ttf crudo (333 KB la de titulos). -- */
+@font-face{font-family:"Wamani Titulo";src:url("/fonts/wamani-titulo.woff2") format("woff2");
+  font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-300.woff2") format("woff2");
+  font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-400.woff2") format("woff2");
+  font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-700.woff2") format("woff2");
+  font-weight:700;font-style:normal;font-display:swap}
+/* HighVoltage Rough se dibuja un 30% mas ancha de lo que es la marca: SIEMPRE
+   condensada al 75% (scaleX .75) y SIEMPRE en mayusculas. Debajo de ~40px se
+   empasta, por eso solo la usan los titulos grandes; de ahi para abajo manda
+   Moche Bold. Nunca una barra "/" en un titulo: esta fuente la dibuja como un
+   garabato (usar "." o "y"). */
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{
-  font-family:'Quicksand',sans-serif;
+  font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:1.0625rem;
   background:var(--fondo);
   color:var(--texto);
   line-height:1.6;
@@ -70,7 +87,17 @@ body{
 }
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
-h1,h2,h3{font-family:'Playfair Display',serif;font-weight:600;line-height:1.2}
+h1,h2,h3{font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:700;line-height:1.28}
+/* Solo estos cuatro son lo bastante grandes para la tipografia de titulos. */
+.encabezado-seccion h2,.contacto-caja h2,.medida-cta .tit,.mg-cuerpo h3{
+  font-family:"Wamani Titulo",Impact,"Arial Narrow",sans-serif;font-weight:400;
+  text-transform:uppercase;letter-spacing:.005em;line-height:1.04;
+  transform:scaleX(.75)}
+.encabezado-seccion h2,.contacto-caja h2{transform-origin:center}
+.medida-cta .tit,.mg-cuerpo h3{transform-origin:left center}
+/* La bastardilla dorada no existe en esta familia: queda el color, que es lo
+   que hacia el trabajo. */
+.encabezado-seccion h2 em,.contacto-caja h2 em,.medida-cta .tit em{font-style:normal}
 
 .contenedor{width:min(1180px,93%);margin:0 auto}
 
@@ -83,7 +110,7 @@ h1,h2,h3{font-family:'Playfair Display',serif;font-weight:600;line-height:1.2}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
   padding:.85rem 1.7rem;border-radius:999px;border:none;cursor:pointer;
-  font-family:'Quicksand',sans-serif;font-weight:700;font-size:1rem;
+  font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:700;font-size:1rem;
   transition:transform .15s ease, background .2s ease, box-shadow .2s ease;
 }
 .btn:hover{transform:translateY(-2px)}
@@ -146,7 +173,7 @@ nav.menu a:hover{opacity:1;color:var(--dorado)}
 }
 .sel-idioma button{
   background:none;border:none;cursor:pointer;color:var(--texto-suave);
-  font-family:'Quicksand',sans-serif;font-weight:700;font-size:.8rem;
+  font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:700;font-size:.8rem;
   letter-spacing:.05em;padding:.34rem .46rem;border-radius:8px;line-height:1;
   transition:color .2s ease, background .2s ease;
 }
@@ -166,7 +193,7 @@ nav.menu a:hover{opacity:1;color:var(--dorado)}
 @media (max-width:760px){
   .idi-toggle{
     display:inline-flex;align-items:center;gap:5px;background:none;border:none;
-    cursor:pointer;color:var(--dorado);font-family:'Quicksand',sans-serif;
+    cursor:pointer;color:var(--dorado);font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;
     font-weight:700;font-size:.8rem;letter-spacing:.05em;padding:.34rem .4rem;
     border-radius:8px;line-height:1;
   }
@@ -233,9 +260,9 @@ nav.menu a:hover{opacity:1;color:var(--dorado)}
 .medida-cta:hover{transform:translateY(-3px);background:rgba(216,192,150,.13)}
 .medida-cta .mini{display:block;font-size:.72rem;font-weight:700;letter-spacing:.2em;
   text-transform:uppercase;color:var(--dorado);opacity:.85;margin-bottom:.5rem}
-.medida-cta .tit{display:block;font-family:'Playfair Display',Georgia,serif;font-weight:700;
-  font-size:clamp(1.7rem,5.2vw,2.3rem);line-height:1.1;color:var(--texto)}
-.medida-cta .tit em{font-style:italic;font-weight:500;color:var(--dorado)}
+.medida-cta .tit{display:block;
+  font-size:clamp(2.2rem,6.6vw,3rem);color:var(--texto)}
+.medida-cta .tit em{color:var(--dorado)}
 .medida-cta .baja{display:block;color:var(--texto-suave);margin-top:.55rem;font-size:.98rem}
 .medida-cta .flecha{display:inline-block;margin-top:1rem;font-weight:700;font-size:.92rem;
   color:var(--dorado);letter-spacing:.01em}
@@ -281,8 +308,8 @@ section{padding:3.4rem 0}
   display:inline-block;color:var(--dorado);font-weight:700;letter-spacing:.22em;
   text-transform:uppercase;font-size:.78rem;margin-bottom:.5rem;opacity:.9;
 }
-.encabezado-seccion h2{font-size:clamp(1.7rem,4.5vw,2.4rem);color:#fff}
-.encabezado-seccion h2 em{color:var(--dorado);font-style:italic}
+.encabezado-seccion h2{font-size:clamp(2.2rem,6.4vw,3.2rem);color:#fff}
+.encabezado-seccion h2 em{color:var(--dorado)}
 .encabezado-seccion p{margin-top:.6rem;color:var(--texto-suave)}
 
 /* ── Por qué Wamani: franja compacta ──────────────────────── */
@@ -298,14 +325,14 @@ section{padding:3.4rem 0}
   flex:0 0 42px;height:42px;border-radius:13px;
   background:rgba(216,192,150,.12);display:grid;place-items:center;font-size:1.25rem;
 }
-.porque-item h3{font-family:'Quicksand',sans-serif;font-weight:700;font-size:.98rem;color:var(--dorado)}
+.porque-item h3{font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:700;font-size:.98rem;color:var(--dorado)}
 .porque-item p{font-size:.86rem;color:var(--texto-suave)}
 
 /* ── Carrusel de experiencias ─────────────────────────────── */
 .filtros{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.4rem}
 .filtro{
   border:1.5px solid var(--linea);background:transparent;color:var(--texto);
-  border-radius:999px;padding:.45rem 1.15rem;font-family:'Quicksand',sans-serif;
+  border-radius:999px;padding:.45rem 1.15rem;font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;
   font-weight:700;font-size:.88rem;cursor:pointer;transition:.2s;
 }
 .filtro:hover{border-color:var(--dorado)}
@@ -322,7 +349,7 @@ section{padding:3.4rem 0}
   display:inline-flex;align-items:center;gap:.35rem;text-decoration:none;
   border:1.5px solid rgba(216,192,150,.55);background:rgba(216,192,150,.07);
   color:var(--dorado);border-radius:999px;padding:.45rem 1.15rem;
-  font-family:'Quicksand',sans-serif;font-weight:700;font-size:.88rem;transition:.2s;
+  font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:700;font-size:.88rem;transition:.2s;
 }
 .filtro-link:hover{background:var(--dorado);color:#1c2a24;border-color:var(--dorado)}
 /* Y debajo de los filtros, a todo lo ancho. Va abajo y no entre los botones
@@ -445,7 +472,7 @@ section{padding:3.4rem 0}
   stroke-linejoin:round;filter:drop-shadow(0 6px 18px rgba(0,0,0,.35));
 }
 .mapa-svg .region{
-  fill:rgba(245,242,234,.28);font-family:'Quicksand',sans-serif;font-weight:700;
+  fill:rgba(245,242,234,.28);font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:700;
   font-size:15px;letter-spacing:.35em;text-transform:uppercase;pointer-events:none;
 }
 .punto{cursor:pointer}
@@ -464,7 +491,7 @@ section{padding:3.4rem 0}
 .punto.activo.selecta .centro{fill:var(--dorado);stroke:#14201b}
 @keyframes pulso{0%{transform:scale(.6);opacity:1}80%{transform:scale(1.8);opacity:0}100%{transform:scale(1.8);opacity:0}}
 .pto-salida{fill:#fff;stroke:var(--verde);stroke-width:1.5}
-.lbl-salida{fill:rgba(245,242,234,.85);font-family:'Quicksand',sans-serif;font-weight:600;font-size:13px}
+.lbl-salida{fill:rgba(245,242,234,.85);font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:600;font-size:13px}
 .mapa-leyenda{display:flex;gap:1.4rem;justify-content:center;flex-wrap:wrap;margin-top:1rem;font-size:.85rem;opacity:.9}
 .mapa-leyenda span{display:inline-flex;align-items:center;gap:.45rem}
 .mapa-leyenda i{width:12px;height:12px;border-radius:50%;display:inline-block}
@@ -557,8 +584,8 @@ section{padding:3.4rem 0}
   padding:2.8rem 1.6rem;text-align:center;border:1px solid var(--linea);
   background-image:radial-gradient(ellipse at top right, rgba(216,192,150,.14), transparent 55%);
 }
-.contacto-caja h2{color:#fff;font-size:clamp(1.7rem,4.5vw,2.3rem)}
-.contacto-caja h2 em{color:var(--dorado);font-style:italic}
+.contacto-caja h2{color:#fff;font-size:clamp(2.2rem,6.4vw,3.1rem)}
+.contacto-caja h2 em{color:var(--dorado)}
 .contacto-caja > p{opacity:.85;max-width:520px;margin:.8rem auto 1.6rem}
 .mini-pasos{
   display:flex;flex-wrap:wrap;gap:.6rem 1.8rem;justify-content:center;
@@ -673,7 +700,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
   padding:.3rem .9rem;border-radius:999px;font-size:.78rem;font-weight:700;margin-bottom:.5rem;
 }
 .mg-chip.trav{background:var(--dorado);color:var(--verde)}
-.mg-cuerpo h3{font-size:1.65rem;color:#fff;margin-bottom:.35rem}
+.mg-cuerpo h3{font-size:2.5rem;color:#fff;margin-bottom:.45rem}
 .mg-resumen{color:var(--texto-suave);font-size:.95rem}
 .mg-datos{
   display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0;
@@ -683,7 +710,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
   padding:.32rem .85rem;font-size:.8rem;font-weight:600;
 }
 .mg-cuerpo h4{
-  font-family:'Quicksand',sans-serif;font-weight:700;font-size:.85rem;color:var(--dorado);
+  font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:700;font-size:.85rem;color:var(--dorado);
   letter-spacing:.14em;text-transform:uppercase;margin:1.15rem 0 .45rem;
 }
 .mg-cuerpo ul{list-style:none}
@@ -767,7 +794,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
     padding:1rem .2rem calc(.4rem + env(safe-area-inset-bottom));margin:1.2rem -.2rem 0}
   .mg-cta .btn{width:100%}
   .mg-cuerpo{padding:1.3rem 1.25rem 1.4rem}
-  .mg-cuerpo h3{font-size:1.5rem}
+  .mg-cuerpo h3{font-size:2.1rem}
 
   /* header: logo un toque más chico para dar aire */
   .barra .logo img{height:40px}
@@ -1229,7 +1256,7 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
      Wamani, sin depender de que el visitante tenga un programa de correo configurado. -->
 <div id="fondo-form" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,16,13,.75);z-index:80;align-items:center;justify-content:center;padding:16px;overflow:auto">
   <div style="background:var(--panel,#1c2a24);border:1px solid var(--linea);border-radius:22px;width:100%;max-width:520px;padding:26px;box-shadow:0 14px 40px rgba(0,0,0,.45)">
-    <h3 style="margin:0 0 6px;font-family:'Playfair Display',Georgia,serif;font-size:1.5rem">Escribinos</h3>
+    <h3 style="margin:0 0 6px;font-size:1.45rem">Escribinos</h3>
     <p style="opacity:.75;font-size:.95rem;margin:0 0 18px">Contanos qué necesitás y te respondemos a la brevedad.</p>
     <form id="form-consulta" autocomplete="on">
       <input type="hidden" name="tipo" value="Viajero">

@@ -14,9 +14,8 @@
 <meta property="og:site_name" content="Wamani Turismo">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/logo/wamani-icono-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" href="/fonts/wamani-titulo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/wamani-texto-400.woff2" as="font" type="font/woff2" crossorigin>
 <script type="application/ld+json">
 {
   "@context":"https://schema.org","@type":"Service",
@@ -41,21 +40,41 @@
       escritorio). Mismos textos, mismos colores por región y las mismas dos
       tipografías de la web; lo que cambia es que acá el ancho manda: el papel
       es de 720 pt fijos y esto tiene que andar igual en un teléfono. ── */
+/* -- Las dos tipografias de la marca, servidas por nosotros. No van por Google
+      Fonts: asi no hay dos conexiones extra antes de que se vea una letra.
+      Los .woff2 estan recortados (la de titulos solo trae MAYUSCULAS, numeros y
+      signos, que es todo lo que usa un titulo): 45 KB las cuatro juntas.
+      NO subir nunca el .ttf crudo: la de titulos pesa 333 KB sin recortar. -- */
+@font-face{font-family:"Wamani Titulo";src:url("/fonts/wamani-titulo.woff2") format("woff2");
+  font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-300.woff2") format("woff2");
+  font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-400.woff2") format("woff2");
+  font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-700.woff2") format("woff2");
+  font-weight:700;font-style:normal;font-display:swap}
 :root{
   --fondo:#201f20; --panel:#2a2829;
   --tinta:#eceae4; --suave:#d5d0c7; --tenue:#8e8679; --linea:#3c3a3b;
   --dorado:#d8c096; --coral:#e2673a;
-  --display:"Playfair Display",Georgia,serif;
-  --texto:"Quicksand",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"Wamani Titulo",Impact,"Arial Narrow",sans-serif;
+  --texto:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:dark;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{font-family:var(--texto);background:var(--fondo);color:var(--tinta);
-  font-size:1rem;line-height:1.65;-webkit-font-smoothing:antialiased}
+  font-size:1.0625rem;line-height:1.62;-webkit-font-smoothing:antialiased}
 img{max-width:100%;display:block}
 a{color:inherit}
-h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:balance}
+/* HighVoltage Rough se dibuja un 30% mas ancha de lo que es la marca: SIEMPRE
+   va condensada al 75% y SIEMPRE en mayusculas. Debajo de ~40px se empasta, por
+   eso los tamanos de abajo subieron. Nunca una barra "/" en un titulo: esta
+   fuente la dibuja como un garabato (usar "." o "y"). */
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.04;
+  text-transform:uppercase;letter-spacing:.005em;text-wrap:balance;
+  transform:scaleX(.75);transform-origin:left center}
+.puente h2,.cierre-cta h2{transform-origin:center}
 .wrap{max-width:860px;margin:0 auto;padding-inline:22px}
 .lab{font-family:var(--texto);font-weight:700;font-size:.72rem;letter-spacing:.22em;
   text-transform:uppercase;color:var(--tenue)}
@@ -92,18 +111,18 @@ h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:b
   .hero .cont{position:static;padding:20px 22px 4px}
   .hero .baja{text-shadow:none}
 }
-.hero h1{font-size:clamp(2.6rem,9vw,4.4rem);color:#fff;line-height:1.02;letter-spacing:-.01em}
+.hero h1{font-size:clamp(2.9rem,10.5vw,5.2rem);color:#fff;line-height:.96;letter-spacing:0}
 .hero .baja{color:#eceae4;opacity:.95;max-width:34ch;margin-top:16px;font-size:1.06rem;
   text-shadow:0 1px 14px rgba(14,12,11,.6)}
 
 /* ── así lo armamos ── */
 .pasos{background:var(--panel);padding-block:46px 42px}
-.pasos h2{font-size:clamp(1.6rem,4.6vw,2.1rem);margin-bottom:6px}
+.pasos h2{font-size:clamp(2.1rem,6.4vw,2.9rem);margin-bottom:10px}
 .pasos .baja{color:var(--tenue);margin-bottom:28px}
 .paso{display:flex;gap:16px;align-items:flex-start;padding-block:14px;border-top:1px solid var(--linea)}
 .paso:first-of-type{border-top:none}
-.paso .n{font-family:var(--display);font-size:1.7rem;color:#c8a06a;line-height:1.1;
-  width:1.1em;flex:none}
+.paso .n{font-family:var(--texto);font-weight:700;font-size:1.6rem;color:#c8a06a;line-height:1.2;
+  width:1.2em;flex:none}
 .paso .pt{font-weight:700;margin-bottom:2px}
 .paso .pd{color:var(--suave);font-size:.96rem}
 .cierre{margin-top:24px;color:var(--suave);border-top:1px solid var(--linea);padding-top:20px}
@@ -111,7 +130,7 @@ h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:b
 
 /* ── puente ── */
 .puente{text-align:center;padding-block:48px 34px}
-.puente h2{font-size:clamp(1.6rem,4.6vw,2.1rem);margin-bottom:12px}
+.puente h2{font-size:clamp(2.1rem,6.4vw,2.9rem);margin-bottom:16px}
 .puente p{color:var(--suave);max-width:62ch;margin:0 auto}
 
 /* ── las cuatro regiones ── */
@@ -122,11 +141,14 @@ h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:b
    color. Por eso tampoco hay ya una línea entre la foto y el texto. */
 .region>img{width:100%;height:auto}
 .region .cuerpo{background:var(--c);padding-block:26px 34px}
-.region .enc{display:flex;align-items:baseline;gap:14px;margin-bottom:6px;flex-wrap:wrap}
-.region h2{font-size:clamp(1.9rem,6vw,2.5rem);color:#fff;text-transform:uppercase;letter-spacing:.02em}
-.region .num{font-family:var(--display);font-size:1.05rem;color:var(--a);font-style:italic}
-.region .frase{font-family:var(--display);font-style:italic;font-size:clamp(1.1rem,3.4vw,1.3rem);
-  color:var(--a);margin-bottom:18px}
+/* El "uno/dos/tres" pasa a volanta ARRIBA del titulo: al condensar el titulo al
+   75% la caja sigue midiendo el ancho sin condensar, y al lado quedaba un hueco. */
+.region .enc{display:flex;flex-direction:column-reverse;align-items:flex-start;gap:3px;margin-bottom:8px}
+.region h2{font-size:clamp(2.4rem,8vw,3.4rem);color:#fff}
+.region .num{font-family:var(--texto);font-weight:700;font-size:.72rem;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--a)}
+.region .frase{font-family:var(--texto);font-weight:300;font-size:clamp(1.15rem,3.5vw,1.38rem);
+  line-height:1.4;color:var(--a);margin-bottom:18px;max-width:30ch}
 .region p.texto{color:rgba(255,255,255,.89);margin-bottom:13px}
 .region p.texto:last-of-type{margin-bottom:0}
 .region p.texto b{font-weight:700;color:#fff}
@@ -143,31 +165,32 @@ h1,h2,h3{font-family:var(--display);font-weight:500;line-height:1.18;text-wrap:b
 .copas{background:#3a1730}
 .copas>img{width:100%;height:auto}
 .copas .cuerpo{padding-block:26px 42px}
-.copas h2{font-size:clamp(1.7rem,5vw,2.2rem);color:#fff;margin:6px 0 10px}
-.copas .frase{font-family:var(--display);font-style:italic;font-size:clamp(1.05rem,3.2vw,1.25rem);
-  color:#e3b7d2;margin-bottom:16px}
+.copas h2{font-size:clamp(2.1rem,6.4vw,2.9rem);color:#fff;margin:8px 0 12px}
+.copas .frase{font-family:var(--texto);font-weight:300;font-size:clamp(1.12rem,3.4vw,1.32rem);
+  line-height:1.4;color:#e3b7d2;margin-bottom:16px;max-width:32ch}
 .copas p{color:rgba(255,255,255,.89);margin-bottom:13px}
 .copas p:last-child{margin-bottom:0}
 .copas b{color:#fff}
 
 /* ── Wamani Selecta ── */
 .selecta{padding-block:46px 10px}
-.selecta .enc{display:flex;align-items:baseline;gap:13px;margin-bottom:6px;flex-wrap:wrap}
-.selecta h2{font-size:clamp(1.6rem,4.6vw,2.1rem);text-transform:uppercase;letter-spacing:.02em}
+.selecta .enc{display:flex;flex-direction:column-reverse;align-items:flex-start;gap:4px;margin-bottom:8px}
+.selecta h2{font-size:clamp(2.1rem,6.4vw,2.9rem)}
 .selecta .sub{color:var(--tenue);margin-bottom:24px;max-width:62ch}
 .tres{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
 .uno{display:block;text-decoration:none;border:1px solid var(--linea);border-radius:14px;
   padding:20px;transition:border-color .2s ease,transform .2s ease;min-width:0}
 .uno:hover{border-color:var(--dorado);transform:translateY(-2px)}
-.uno .nm{font-family:var(--display);font-size:1.12rem;color:var(--tinta);margin-bottom:3px}
+.uno .nm{font-family:var(--texto);font-weight:700;font-size:1.06rem;line-height:1.3;
+  color:var(--tinta);margin-bottom:4px}
 .uno .du{font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dorado);margin-bottom:9px}
 .uno .ds{font-size:.94rem;color:var(--suave)}
 .uno .ver{margin-top:12px;font-size:.86rem;font-weight:700;color:var(--dorado)}
 
 /* ── cierre ── */
 .cierre-cta{text-align:center;padding-block:52px 56px;margin-top:40px;border-top:1px solid var(--linea)}
-.cierre-cta .frase{font-family:var(--display);font-style:italic;font-size:clamp(1.25rem,4vw,1.6rem);
-  color:var(--tinta);max-width:24ch;margin:0 auto 26px}
+.cierre-cta .frase{font-family:var(--texto);font-weight:300;font-size:clamp(1.3rem,4.2vw,1.7rem);
+  line-height:1.38;color:var(--tinta);max-width:26ch;margin:0 auto 26px}
 .btn{display:inline-block;background:var(--coral);color:#fff;text-decoration:none;font-weight:700;
   padding:14px 30px;border-radius:999px;font-size:1rem}
 .btn.borde{background:none;border:1px solid var(--linea);color:var(--tinta);margin-left:10px}

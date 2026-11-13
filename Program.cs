@@ -2468,9 +2468,8 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
 <meta property="og:url" content="{{Esc(urlIdioma)}}">
 <meta property="og:locale" content="{{ogLocale}}">
 <link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" href="/fonts/wamani-titulo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/wamani-texto-400.woff2" as="font" type="font/woff2" crossorigin>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-X04DXRSG6H"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -2488,7 +2487,25 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
   --linea:rgba(216,192,150,.18);
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--fondo);color:var(--texto);font-family:Quicksand,system-ui,sans-serif;line-height:1.65}
+/* -- Las dos tipografias de la marca, servidas por nosotros. No van por Google
+      Fonts: asi no hay dos conexiones extra antes de que se vea una letra.
+      Los .woff2 estan recortados: 45 KB las cuatro juntas, contra 48 KB que
+      bajaba de Google. NO subir nunca el .ttf crudo (333 KB la de titulos). -- */
+@font-face{font-family:"Wamani Titulo";src:url("/fonts/wamani-titulo.woff2") format("woff2");
+  font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-300.woff2") format("woff2");
+  font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-400.woff2") format("woff2");
+  font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-700.woff2") format("woff2");
+  font-weight:700;font-style:normal;font-display:swap}
+/* HighVoltage Rough se dibuja un 30% mas ancha de lo que es la marca: SIEMPRE
+   condensada al 75% (scaleX .75) y SIEMPRE en mayusculas. Debajo de ~40px se
+   empasta, por eso solo la usan los titulos grandes; de ahi para abajo manda
+   Moche Bold. Nunca una barra "/" en un titulo: esta fuente la dibuja como un
+   garabato (usar "." o "y"). */
+body{background:var(--fondo);color:var(--texto);font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:1.0625rem;line-height:1.62}
 img{max-width:100%;display:block}
 a{color:var(--dorado)}
 .barra{padding:18px 22px;border-bottom:1px solid var(--linea)}
@@ -2537,7 +2554,7 @@ a{color:var(--dorado)}
 .sel-idioma .ico-idioma{width:16px;height:16px;flex-shrink:0;margin-right:5px;
   fill:none;stroke:var(--dorado);stroke-width:1.6;stroke-linecap:round;opacity:.75}
 .sel-idioma button{background:none;border:none;cursor:pointer;color:var(--texto-suave);
-  font-family:'Quicksand',sans-serif;font-weight:700;font-size:.8rem;letter-spacing:.05em;
+  font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:700;font-size:.8rem;letter-spacing:.05em;
   padding:.34rem .46rem;border-radius:8px;line-height:1;transition:color .2s ease,background .2s ease}
 .sel-idioma button + button{border-left:1px solid var(--linea)}
 .sel-idioma button:hover{color:var(--dorado)}
@@ -2555,7 +2572,7 @@ a{color:var(--dorado)}
 @media (max-width:760px){
   .idi-toggle{
     display:inline-flex;align-items:center;gap:5px;background:none;border:none;
-    cursor:pointer;color:var(--dorado);font-family:'Quicksand',sans-serif;
+    cursor:pointer;color:var(--dorado);font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;
     font-weight:700;font-size:.8rem;letter-spacing:.05em;padding:.34rem .4rem;
     border-radius:8px;line-height:1;
   }
@@ -2578,14 +2595,18 @@ a{color:var(--dorado)}
   .menu-links{display:none}
   .menu-in{justify-content:space-between}
 }
-h1{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.8rem,5vw,2.7rem);line-height:1.15;margin-bottom:14px}
+h1{margin-bottom:14px}
+h1 .h1-nom{display:block;font-family:"Wamani Titulo",Impact,"Arial Narrow",sans-serif;font-weight:400;
+  font-size:clamp(2.3rem,6.8vw,3.6rem);line-height:1.04;
+  text-transform:uppercase;letter-spacing:.005em;
+  transform:scaleX(.75);transform-origin:left center}
 /* El H1 lleva el nombre grande y, debajo y en chico, la frase que la gente sí
    escribe en Google ("Excursión de 3 días en Jujuy"). Es una sola etiqueta h1:
    el buscador lee todo, el visitante ve el nombre y la aclaración. */
-h1 .h1-sub{display:block;font-family:'Quicksand',system-ui,sans-serif;
+h1 .h1-sub{display:block;font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;
   font-size:.92rem;font-weight:600;letter-spacing:.01em;line-height:1.35;
   color:var(--dorado);opacity:.72;margin-top:7px;text-transform:none}
-h2{font-family:'Playfair Display',Georgia,serif;font-size:1.35rem;color:var(--dorado);margin:32px 0 10px}
+h2{font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:700;font-size:1.32rem;color:var(--dorado);margin:32px 0 10px}
 .chip{display:inline-block;background:var(--verde);border:1px solid var(--linea);color:var(--dorado);
       padding:5px 14px;border-radius:999px;font-size:.82rem;font-weight:600;margin-bottom:16px}
 .resumen{font-size:1.1rem;color:var(--texto-suave)}
@@ -2687,7 +2708,7 @@ li{margin:7px 0}
 {{tapa}}
 <div class="envoltorio">
   <span class="chip">{{Esc(e.Chip)}}</span>
-  <h1>{{Esc(e.Nombre)}}<span class="h1-sub">{{Esc(subtitulo)}}</span></h1>
+  <h1><span class="h1-nom">{{Esc(e.Nombre)}}</span><span class="h1-sub">{{Esc(subtitulo)}}</span></h1>
   <p class="resumen">{{Esc(resumen)}}</p>
   <div class="datos">{{chips}}</div>
   {{Bloque(h2Itinerario, Items(string.IsNullOrWhiteSpace(e.ItinerarioLargo) ? e.Itinerario : e.ItinerarioLargo))}}
@@ -3087,15 +3108,33 @@ static string Pagina404Html(AppDbContext db)
 <meta name="robots" content="noindex,follow">
 <title>Esa página no existe | Wamani Turismo</title>
 <link rel="icon" href="/favicon.ico" sizes="any">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preload" href="/fonts/wamani-titulo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/wamani-texto-400.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#131c18;color:#ece5d4;font-family:'Quicksand',sans-serif;line-height:1.7;
+/* -- Las dos tipografias de la marca, servidas por nosotros. No van por Google
+      Fonts: asi no hay dos conexiones extra antes de que se vea una letra.
+      Los .woff2 estan recortados: 45 KB las cuatro juntas, contra 48 KB que
+      bajaba de Google. NO subir nunca el .ttf crudo (333 KB la de titulos). -- */
+@font-face{font-family:"Wamani Titulo";src:url("/fonts/wamani-titulo.woff2") format("woff2");
+  font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-300.woff2") format("woff2");
+  font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-400.woff2") format("woff2");
+  font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Wamani Texto";src:url("/fonts/wamani-texto-700.woff2") format("woff2");
+  font-weight:700;font-style:normal;font-display:swap}
+/* HighVoltage Rough se dibuja un 30% mas ancha de lo que es la marca: SIEMPRE
+   condensada al 75% (scaleX .75) y SIEMPRE en mayusculas. Debajo de ~40px se
+   empasta, por eso solo la usan los titulos grandes; de ahi para abajo manda
+   Moche Bold. Nunca una barra "/" en un titulo: esta fuente la dibuja como un
+   garabato (usar "." o "y"). */
+body{background:#131c18;color:#ece5d4;font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.7;
   min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 24px}
 .caja{max-width:620px;text-align:center}
-h1{font-family:'Playfair Display',serif;font-size:2.1rem;color:#d8c096;margin-bottom:14px}
+h1{font-family:"Wamani Titulo",Impact,"Arial Narrow",sans-serif;font-weight:400;font-size:2.7rem;color:#d8c096;margin-bottom:14px;
+  text-transform:uppercase;letter-spacing:.005em;line-height:1.04;
+  transform:scaleX(.75)}
 p{color:rgba(236,229,212,.72);margin-bottom:28px}
 .lista{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:32px}
 .lista a{color:#ece5d4;text-decoration:none;font-size:14.5px;font-weight:600;

@@ -2248,8 +2248,10 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
     // Red de seguridad: hay excursiones cargadas sin el emoji (los Especiales del
     // EcoLodge y de Finca la Fé dicen "3 días y 2 noches" a secas). Sin esto se
     // quedaban sin la pregunta de cuánto dura, que es la que más se busca.
+    // Y la última red: el rótulo de la tarjeta (Chip). The Canuto Glamping está
+    // cargado sin ninguna línea de datos y es lo único que dice que son tres días.
     if (duracion.Length == 0)
-        duracion = (datos.FirstOrDefault(d =>
+        duracion = (datos.Concat(new[] { e.Chip ?? "" }).FirstOrDefault(d =>
             d.Contains("día", StringComparison.OrdinalIgnoreCase) ||
             d.Contains("noche", StringComparison.OrdinalIgnoreCase) ||
             d.Contains(" hs", StringComparison.OrdinalIgnoreCase) ||
@@ -2261,7 +2263,7 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
     // excursiones de 2, 3 y 4 días. Hasta el 13/11/2026 todas ésas se le declaraban
     // a Google como "Excursión de un día". Lo decide el texto de la duración, que es
     // lo que ya está cargado, mirando cualquiera de las líneas de datos.
-    var variosDias = e.EsTravesia || datos.Any(d =>
+    var variosDias = e.EsTravesia || datos.Concat(new[] { e.Chip ?? "" }).Any(d =>
         d.Contains("noche", StringComparison.OrdinalIgnoreCase) ||
         System.Text.RegularExpressions.Regex.IsMatch(d, @"(?<![\d,.])([2-9]|[1-9]\d)\s*d[íi]as",
             System.Text.RegularExpressions.RegexOptions.IgnoreCase));

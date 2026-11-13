@@ -93,8 +93,8 @@ h1,h2,h3{font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-seri
   font-family:"Wamani Titulo",Impact,"Arial Narrow",sans-serif;font-weight:400;
   text-transform:uppercase;letter-spacing:.005em;line-height:1.04;
   transform:scaleX(.75)}
-.encabezado-seccion h2,.contacto-caja h2{transform-origin:center}
-.medida-cta .tit,.mg-cuerpo h3{transform-origin:left center}
+.encabezado-seccion h2,.contacto-caja h2,.medida-cta .tit{transform-origin:center}
+.mg-cuerpo h3{transform-origin:left center}
 /* La bastardilla dorada no existe en esta familia: queda el color, que es lo
    que hacia el trabajo. */
 .encabezado-seccion h2 em,.contacto-caja h2 em,.medida-cta .tit em{font-style:normal}
@@ -149,10 +149,15 @@ header{
   border-bottom:1px solid var(--linea);
 }
 .barra{display:flex;align-items:center;justify-content:space-between;padding:.7rem 0}
-.barra .logo img{height:44px;width:auto}
+/* EL LOGO NO SE ACHICA NUNCA. Es un elemento flex y era el unico de la barra
+   que podia ceder: cuando el menu no entraba, se encogia el hasta desaparecer
+   (en castellano, frances y portugues llego a medir 0 px de ancho; en ingles no
+   pasaba porque los nombres del menu son mas cortos). */
+.barra .logo{flex:0 0 auto}
+.barra .logo img{height:44px;width:auto;flex-shrink:0}
 nav.menu{display:none}
 nav.menu a{
-  color:#fff;opacity:.82;font-weight:600;font-size:.95rem;margin:0 .55rem;
+  color:#fff;opacity:.82;font-weight:600;font-size:.88rem;margin:0 .35rem;
   white-space:nowrap;
   transition:opacity .2s, color .2s;
 }
@@ -736,10 +741,12 @@ footer{background:#0f1714;color:#fff;margin-top:3rem;padding:2.4rem 0 1.4rem;bor
 .wsp-flotante svg{width:32px;height:32px;fill:#fff}
 
 /* ── Escritorio ───────────────────────────────────────────── */
-@media (min-width:860px){
+@media (min-width:1240px){
   .hamburguesa,.menu-movil{display:none}
   nav.menu{display:flex}
   .barra .btn{display:inline-flex}
+}
+@media (min-width:860px){
   .porque-franja{grid-template-columns:repeat(4,1fr)}
   .quienes{grid-template-columns:1.25fr .75fr}
   .integrantes{grid-template-columns:repeat(3,1fr)}

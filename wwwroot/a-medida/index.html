@@ -177,7 +177,8 @@ h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.04;
 .selecta .enc{display:flex;flex-direction:column-reverse;align-items:flex-start;gap:4px;margin-bottom:8px}
 .selecta h2{font-size:clamp(2.1rem,6.4vw,2.9rem)}
 .selecta .sub{color:var(--tenue);margin-bottom:24px;max-width:62ch}
-.tres{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.tres{display:grid;grid-template-columns:1fr;gap:16px}
+@media (min-width:620px){.tres{grid-template-columns:repeat(2,1fr)}}
 .uno{display:block;text-decoration:none;border:1px solid var(--linea);border-radius:14px;
   padding:20px;transition:border-color .2s ease,transform .2s ease;min-width:0}
 .uno:hover{border-color:var(--dorado);transform:translateY(-2px)}
@@ -301,22 +302,28 @@ h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.04;
   <div class="enc"><h2>Wamani Selecta</h2><span class="lab">Experiencias exclusivas</span></div>
   <p class="sub">Para quien quiere el mismo viaje con otro nivel de descanso: hospedajes elegidos, gastronomía cuidada, grupos más chicos y un ritmo pensado para disfrutar sin apuro.</p>
   <div class="tres">
-    <a class="uno" href="/excursiones/especial-finca-la-fe">
-      <div class="nm">Especial Finca la Fé</div>
-      <div class="du">4 días / 3 noches</div>
-      <div class="ds">Lodge premium en la selva, con termas, jacuzzi privado, cenas de tres pasos y cabalgata con gauchos locales.</div>
-      <div class="ver">Ver la experiencia →</div>
-    </a>
     <a class="uno" href="/excursiones/especial-the-canuto-glamping">
       <div class="nm">Especial The Canuto Glamping</div>
       <div class="du">3 días / 2 noches</div>
       <div class="ds">Glamping como base para recorrer la altura, durmiendo bajo uno de los mejores cielos del país.</div>
       <div class="ver">Ver la experiencia →</div>
     </a>
+    <a class="uno" href="/excursiones/especial-la-sala">
+      <div class="nm">Especial La Sala</div>
+      <div class="du">3 días / 2 noches</div>
+      <div class="ds">Una posta del Camino Real de 1775 en Lozano, con la misma familia hace siete generaciones: parque con llamas, lagunas y piano.</div>
+      <div class="ver">Ver la experiencia →</div>
+    </a>
     <a class="uno" href="/excursiones/especial-ecolodge-de-la-selva">
       <div class="nm">Especial EcoLodge de la Selva</div>
       <div class="du">3 días / 2 noches</div>
       <div class="ds">Cabañas metidas en plena selva a minutos de la ciudad, con todas las comidas incluidas.</div>
+      <div class="ver">Ver la experiencia →</div>
+    </a>
+    <a class="uno" href="/excursiones/especial-finca-la-fe">
+      <div class="nm">Especial Finca la Fé</div>
+      <div class="du">4 días / 3 noches</div>
+      <div class="ds">Lodge premium en la selva, con termas, jacuzzi privado, cenas de tres pasos y cabalgata con gauchos locales.</div>
       <div class="ver">Ver la experiencia →</div>
     </a>
   </div>

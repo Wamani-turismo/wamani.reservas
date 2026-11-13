@@ -2164,7 +2164,20 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
         var tajo = desc.Substring(0, 152);
         var esp = tajo.LastIndexOf(' ');
         if (esp > 110) tajo = tajo.Substring(0, esp);
-        desc = tajo.TrimEnd(' ', ',', ';', ':', '.', '·', '-', '—') + "…";
+        tajo = tajo.TrimEnd(' ', ',', ';', ':', '.', '·', '-', '—');
+        // Y no terminar en una palabra que no dice nada ("...el refugio de una…"):
+        // se le saca la última hasta que cierre en algo con sentido.
+        var vacias = new[] { "de", "del", "la", "las", "el", "los", "un", "una", "unos",
+                             "unas", "y", "o", "con", "en", "a", "al", "por", "para", "su",
+                             "sus", "que", "desde", "hasta", "sobre", "entre", "the", "of" };
+        for (var i = 0; i < 3; i++)
+        {
+            var corte = tajo.LastIndexOf(' ');
+            if (corte <= 110) break;
+            if (!vacias.Contains(tajo.Substring(corte + 1).ToLowerInvariant())) break;
+            tajo = tajo.Substring(0, corte).TrimEnd(' ', ',', ';', ':', '.', '·', '-', '—');
+        }
+        desc = tajo + "…";
     }
     if (string.IsNullOrWhiteSpace(desc))
         desc = e.Nombre + " con Wamani Turismo: guías locales y grupos reducidos en Jujuy.";

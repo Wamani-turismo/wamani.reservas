@@ -2156,7 +2156,16 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
     var resumen = (idioma == "en" ? (e.ResumenEn ?? "") : idioma == "fr" ? (e.ResumenFr ?? "")
                    : idioma == "pt" ? (e.ResumenPt ?? "") : (e.Resumen ?? "")).Trim();
     if (resumen.Length == 0) resumen = (e.Resumen ?? "").Trim();
-    var desc = resumen.Length > 155 ? resumen.Substring(0, 152).TrimEnd() + "…" : resumen;
+    // Si hay que recortar, se corta en el último espacio y no en el carácter 152: antes
+    // el resultado de Google terminaba en "el refugio de una famil…".
+    var desc = resumen;
+    if (desc.Length > 155)
+    {
+        var tajo = desc.Substring(0, 152);
+        var esp = tajo.LastIndexOf(' ');
+        if (esp > 110) tajo = tajo.Substring(0, esp);
+        desc = tajo.TrimEnd(' ', ',', ';', ':', '.', '·', '-', '—') + "…";
+    }
     if (string.IsNullOrWhiteSpace(desc))
         desc = e.Nombre + " con Wamani Turismo: guías locales y grupos reducidos en Jujuy.";
 
@@ -2230,6 +2239,39 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
     var plazo = e.EsTravesia ? 7 : 4;
     var tipo = e.EsTravesia ? "travesía" : "excursión";
 
+    // La duración y la salida, sacadas de la línea de datos. Se calculan acá arriba
+    // porque las usan tanto la ficha para Google como las preguntas frecuentes.
+    // Los emojis van como texto y no como carácter: 🕐, 🚌 y 🗓 están fuera del rango
+    // básico de Unicode y en C# no entran en un literal de un solo carácter.
+    var duracion = (datos.FirstOrDefault(d => d.Contains("🕐") || d.Contains("🗓")) ?? "")
+        .Replace("🕐", "").Replace("🗓️", "").Replace("🗓", "").Trim();
+    // Red de seguridad: hay excursiones cargadas sin el emoji (los Especiales del
+    // EcoLodge y de Finca la Fé dicen "3 días y 2 noches" a secas). Sin esto se
+    // quedaban sin la pregunta de cuánto dura, que es la que más se busca.
+    if (duracion.Length == 0)
+        duracion = (datos.FirstOrDefault(d =>
+            d.Contains("día", StringComparison.OrdinalIgnoreCase) ||
+            d.Contains("noche", StringComparison.OrdinalIgnoreCase) ||
+            d.Contains(" hs", StringComparison.OrdinalIgnoreCase) ||
+            d.Contains("hora", StringComparison.OrdinalIgnoreCase)) ?? "").Trim();
+    var salida = (datos.FirstOrDefault(d => d.Contains("🚌")) ?? "").Replace("🚌", "").Trim();
+
+    // ¿Es un producto de varios días? El tilde de travesía NO alcanza: Inca Cueva
+    // Express, Yungas Express, Conociendo la Quebrada y los cuatro Especiales son
+    // excursiones de 2, 3 y 4 días. Hasta el 13/11/2026 todas ésas se le declaraban
+    // a Google como "Excursión de un día". Lo decide el texto de la duración, que es
+    // lo que ya está cargado, mirando cualquiera de las líneas de datos.
+    var variosDias = e.EsTravesia || datos.Any(d =>
+        d.Contains("noche", StringComparison.OrdinalIgnoreCase) ||
+        System.Text.RegularExpressions.Regex.IsMatch(d, @"(?<![\d,.])([2-9]|[1-9]\d)\s*d[íi]as",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+
+    // ¿Tiene comidas principales incluidas? La fuente de verdad es la lista de
+    // «Qué incluye» que ya está cargada; no hay que marcar nada aparte.
+    var conComidas = new[] { "desayuno", "almuerzo", "cena", "pensión" }
+        .Any(c => (e.Incluye ?? "").Contains(c, StringComparison.OrdinalIgnoreCase));
+
+
     // Ficha para Google en su propio formato (JSON-LD). Es lo que le permite mostrar
     // el resultado enriquecido con nombre, foto y a qué agencia pertenece.
     var ficha = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>
@@ -2240,7 +2282,8 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
         ["description"] = resumen,
         ["url"] = url,
         ["image"] = fotoAbs,
-        ["touristType"] = e.EsTravesia ? "Trekking y travesías de varios días" : "Excursión de un día",
+        ["touristType"] = e.EsTravesia ? "Trekking y travesías de varios días"
+                          : variosDias ? "Excursión de varios días" : "Excursión de un día",
         ["provider"] = new Dictionary<string, object>
         {
             ["@type"] = "TravelAgency",
@@ -2297,19 +2340,18 @@ app.MapGet("/excursiones/{clave}", (string clave, AppDbContext db, HttpContext c
     //  pago) más las reglas de la casa, que son iguales para todas. Nadie tiene que
     //  escribirlas excursión por excursión.
     // ═══════════════════════════════════════════════════════════════════
-    // Los emojis van como texto y no como carácter: 🕐, 🚌 y 🗓 están fuera del rango
-    // básico de Unicode y en C# no entran en un literal de un solo carácter.
-    var duracion = datos.FirstOrDefault(d => d.Contains("🕐") || d.Contains("🗓")) ?? "";
-    duracion = duracion.Replace("🕐", "").Replace("🗓️", "").Replace("🗓", "").Trim();
-    var salida = datos.FirstOrDefault(d => d.Contains("🚌")) ?? "";
-    salida = salida.Replace("🚌", "").Trim();
 
     // Qué comida está incluida. Es la única respuesta que cambia según el producto:
     // en las excursiones los snacks son del traslado; en Humahuaca – Yungas, sólo los
     // del traslado del primer día; en las otras dos travesías se acompaña con snacks
     // y frutas de punta a punta.
     var comida = !e.EsTravesia
-        ? "Durante el traslado te acompañamos con snacks y refrigerios. Las comidas principales no están incluidas salvo que se aclare en «Qué incluye»."
+        // Las excursiones que SÍ dan de comer (las de varios días y las de un día con
+        // almuerzo) decían que las comidas no estaban incluidas. Eran ocho fichas
+        // contestándole eso a Google con cenas y desayunos cargados. Arreglado 13/11/2026.
+        ? conComidas
+            ? "Las comidas incluidas son las que figuran en «Qué incluye». Además, durante los traslados te acompañamos con snacks y refrigerios."
+            : "Durante el traslado te acompañamos con snacks y refrigerios. Las comidas principales no están incluidas salvo que se aclare en «Qué incluye»."
         : e.Clave == "humahuaca-yungas"
             ? "Te acompañamos con snacks durante el traslado del primer día. El resto de las comidas es el que figura en «Qué incluye»."
             : "Durante toda la travesía te acompañamos con snacks y frutas. Las comidas principales son las que figuran en «Qué incluye».";

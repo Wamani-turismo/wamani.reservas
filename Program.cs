@@ -1663,6 +1663,46 @@ app.UseDefaultFiles();
 // Servir archivos estáticos, agregando el tipo del manifiesto de la app (PWA)
 var tiposArchivo = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
 tiposArchivo.Mappings[".webmanifest"] = "application/manifest+json";
+// ═══════════════════════════════════════════════════════════════════════
+//  Cuánto tiempo guarda el navegador cada archivo (Cache-Control)
+//
+//  Medido el 13/11/2026 con PageSpeed: la home pesa 15 MB y NINGÚN archivo traía
+//  este encabezado ("TTL en caché: None" sobre 14.976 KiB). Sin él, el que vuelve a
+//  entrar a la web se baja todo de nuevo, como si fuera la primera visita. Encima el
+//  sitio está detrás de Cloudflare, que sin este encabezado contesta
+//  "cf-cache-status: DYNAMIC": tampoco lo guarda en el borde.
+//
+//  La regla es simple y depende de si el nombre del archivo puede cambiar de contenido:
+//
+//   • Las fotos que suben los chicos se llaman "sube-<hash>.webp": ese nombre es único
+//     y su contenido NO cambia nunca (al editar una excursión se guarda un archivo
+//     nuevo con otro nombre). Por eso van un año y con "immutable", que le dice al
+//     navegador que ni siquiera pregunte.
+//   • Las fotos, el CSS y los videos que vienen con la app tienen nombre fijo
+//     (hero-quebrada.webp) y SÍ pueden cambiar en un deploy: van un día. Alcanza para
+//     que el visitante no los baje dos veces en la misma visita, y al día siguiente
+//     ya ve lo nuevo.
+//   • Las páginas (.html) y los .js siguen como estaban, con "no-cache": se revisan
+//     siempre contra el servidor. Es lo que hace que una traducción corregida o un
+//     texto nuevo se vean al instante. No se toca.
+// ═══════════════════════════════════════════════════════════════════════
+static void PonerCache(Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext ctx)
+{
+    var n = ctx.File.Name;
+
+    if (n.EndsWith(".html", StringComparison.OrdinalIgnoreCase) ||
+        n.EndsWith(".js", StringComparison.OrdinalIgnoreCase))
+    {
+        ctx.Context.Response.Headers["Cache-Control"] = "no-cache, must-revalidate";
+        return;
+    }
+
+    var esSubida = n.StartsWith("sube-", StringComparison.OrdinalIgnoreCase);
+    ctx.Context.Response.Headers["Cache-Control"] = esSubida
+        ? "public, max-age=31536000, immutable"
+        : "public, max-age=86400";
+}
+
 app.UseStaticFiles(new StaticFileOptions
 {
     ContentTypeProvider = tiposArchivo,
@@ -1681,13 +1721,7 @@ app.UseStaticFiles(new StaticFileOptions
     // usando el idiomas-textos.js que había bajado antes. Cualquier corrección de una
     // traducción habría quedado invisible para el que ya visitó la web. Pesan poco y
     // con "no-cache" el servidor contesta "no cambió" sin mandarlos de nuevo.
-    OnPrepareResponse = ctx =>
-    {
-        var n = ctx.File.Name;
-        if (n.EndsWith(".html", StringComparison.OrdinalIgnoreCase) ||
-            n.EndsWith(".js", StringComparison.OrdinalIgnoreCase))
-            ctx.Context.Response.Headers["Cache-Control"] = "no-cache, must-revalidate";
-    }
+    OnPrepareResponse = PonerCache
 });
 
 // Si hay disco persistente (internet), servir los comprobantes guardados ahí
@@ -1723,10 +1757,15 @@ if (!string.IsNullOrWhiteSpace(carpetaComprobantes))
     // Debe ser la MISMA carpeta que usa Services/FotosWeb.Carpeta().
     var carpetaFotosWeb = Path.GetFullPath(Path.Combine(carpetaComprobantes, "webfotos"));
     Directory.CreateDirectory(carpetaFotosWeb);
+    // OJO: éste es el que de verdad sirve las fotos de la web en internet. Las
+    // "sube-<hash>.webp" viven acá, en el disco persistente, NO en wwwroot. Sin
+    // PonerCache acá, el encabezado de más arriba no las alcanza y se siguen bajando
+    // enteras en cada visita (era el caso hasta el 13/11/2026).
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new PhysicalFileProvider(carpetaFotosWeb),
-        RequestPath = "/web/img"
+        RequestPath = "/web/img",
+        OnPrepareResponse = PonerCache
     });
 }
 

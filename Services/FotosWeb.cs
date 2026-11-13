@@ -30,6 +30,79 @@ namespace Wamani.Reservas.Services
         // el original pero el archivo pesa una fracción.
         private const int Calidad = 82;
 
+        // Calidad con la que se vuelven a guardar las fotos que YA estaban cargadas.
+        // Un poco más apretada que la de arriba: son fotos que ya pasaron por una
+        // compresión, y acá lo que se busca es recuperar peso sin que se note.
+        private const int CalidadRecompresion = 76;
+
+        // Lo que devuelve la herramienta de Mantenimiento, para poder contarlo.
+        public record Recompresion(int Revisadas, int Achicadas, long BytesAntes, long BytesDespues);
+
+        // Vuelve a comprimir las fotos que YA están guardadas en el disco, sin cambiarles
+        // el nombre (por eso no hay que tocar nada en la base ni en las excursiones).
+        //
+        // Para qué: las fotos subidas ANTES del 13/09/2026 entraron sin pasar por ninguna
+        // compresión. El 13/11/2026 PageSpeed encontró dos de ellas todavía vivas en la
+        // home, de 931 KB y 561 KB, cuando una foto bien preparada pesa 150-250 KB.
+        // Volver a subirlas a mano desde el panel también las arregla, pero hay que
+        // acordarse de cuál es cuál; esto las encuentra solas.
+        //
+        // Sólo toca archivos .webp: los videos y cualquier cosa que no sea una imagen se
+        // saltean enteros. Y si el resultado no es al menos un 15 % más liviano, deja el
+        // original como está — no vale la pena perder calidad por nada.
+        public static async Task<Recompresion> RecomprimirGuardadas(IWebHostEnvironment env)
+        {
+            var carpeta = Carpeta(env);
+            int revisadas = 0, achicadas = 0;
+            long bytesAntes = 0, bytesDespues = 0;
+
+            foreach (var ruta in Directory.GetFiles(carpeta, "*.webp"))
+            {
+                revisadas++;
+                var pesoOriginal = new FileInfo(ruta).Length;
+                bytesAntes += pesoOriginal;
+
+                var temporal = ruta + ".tmp";
+                try
+                {
+                    using (var imagen = await SixLabors.ImageSharp.Image.LoadAsync(ruta))
+                    {
+                        imagen.Mutate(x => x.AutoOrient());
+
+                        if (imagen.Width > LadoMaximo || imagen.Height > LadoMaximo)
+                            imagen.Mutate(x => x.Resize(new ResizeOptions
+                            {
+                                Size = new SixLabors.ImageSharp.Size(LadoMaximo, LadoMaximo),
+                                Mode = ResizeMode.Max
+                            }));
+
+                        await imagen.SaveAsWebpAsync(temporal, new WebpEncoder { Quality = CalidadRecompresion });
+                    }
+
+                    var pesoNuevo = new FileInfo(temporal).Length;
+                    if (pesoNuevo > 0 && pesoNuevo < pesoOriginal * 0.85)
+                    {
+                        File.Move(temporal, ruta, overwrite: true);
+                        achicadas++;
+                        bytesDespues += pesoNuevo;
+                    }
+                    else
+                    {
+                        File.Delete(temporal);
+                        bytesDespues += pesoOriginal;
+                    }
+                }
+                catch
+                {
+                    // Un archivo que no se puede leer como imagen se deja intacto.
+                    if (File.Exists(temporal)) try { File.Delete(temporal); } catch { }
+                    bytesDespues += pesoOriginal;
+                }
+            }
+
+            return new Recompresion(revisadas, achicadas, bytesAntes, bytesDespues);
+        }
+
         // Guarda un archivo subido y devuelve SOLO el nombre (lo que se guarda en la base).
         // Si no se subió nada, devuelve el nombre anterior (para no perder la foto al editar).
         //

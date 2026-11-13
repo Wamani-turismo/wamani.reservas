@@ -217,3 +217,21 @@
         </div>
     </form>
 </div>
+
+<div class="card" style="max-width:640px">
+    <h2>Achicar las fotos de la web</h2>
+    <p class="hint">
+        Las fotos que se subieron <strong>antes de septiembre de 2026</strong> entraron tal
+        cual salían del celular, sin pasar por ninguna compresión: hay algunas de casi 1 MB
+        todavía vivas en la portada. Esto las vuelve a guardar más livianas
+        <strong>sin cambiarles el nombre</strong>, así que no hay que tocar ninguna excursión.
+        Las que ya están bien no se tocan, y ninguna cambia de tamaño ni se recorta.
+        Se puede apretar las veces que haga falta.
+    </p>
+    <form method="post" asp-page-handler="RecomprimirFotos"
+          onsubmit="return confirm('¿Volver a comprimir las fotos de la web?');">
+        <div class="acciones-form">
+            <button type="submit" class="btn btn-primary">🗜️ Achicar las fotos</button>
+        </div>
+    </form>
+</div>

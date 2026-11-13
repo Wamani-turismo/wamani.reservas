@@ -12,7 +12,12 @@ namespace Wamani.Reservas.Pages;
 public class MantenimientoModel : PageModel
 {
     private readonly AppDbContext _db;
-    public MantenimientoModel(AppDbContext db) => _db = db;
+    private readonly IWebHostEnvironment _env;   // para saber dónde están las fotos de la web
+    public MantenimientoModel(AppDbContext db, IWebHostEnvironment env)
+    {
+        _db = db;
+        _env = env;
+    }
 
     public int Reservas { get; set; }
     public int Pasajeros { get; set; }
@@ -283,6 +288,28 @@ public class MantenimientoModel : PageModel
         Aviso = repetidos.Count == 0
             ? $"«{exc.Nombre}» no tenía costos repetidos."
             : $"Se quitaron {repetidos.Count} costo(s) repetido(s) de «{exc.Nombre}». Quedaron {costos.Count - repetidos.Count}.";
+        return RedirectToPage();
+    }
+
+    // Vuelve a comprimir las fotos de la web que ya estaban guardadas, sin cambiarles el
+    // nombre: las excursiones las siguen encontrando igual. Las que subieron antes de
+    // septiembre de 2026 entraron sin compresión y pesan hasta cuatro veces lo que
+    // deberían; eso es lo que hace lenta la web en el celular.
+    public async Task<IActionResult> OnPostRecomprimirFotosAsync()
+    {
+        var r = await Wamani.Reservas.Services.FotosWeb.RecomprimirGuardadas(_env);
+
+        if (r.Achicadas == 0)
+        {
+            Aviso = $"Se revisaron {r.Revisadas} foto(s) y ya estaban todas bien comprimidas.";
+            return RedirectToPage();
+        }
+
+        var ahorro = (r.BytesAntes - r.BytesDespues) / 1024d;
+        var antes = r.BytesAntes / 1024d;
+        Aviso = $"Se achicaron {r.Achicadas} de {r.Revisadas} foto(s): de {antes:N0} KB a "
+              + $"{r.BytesDespues / 1024d:N0} KB ({ahorro:N0} KB menos). "
+              + "Las fotos se ven igual; lo que cambió es cuánto tarda la web en el celular.";
         return RedirectToPage();
     }
 

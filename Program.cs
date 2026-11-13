@@ -2597,7 +2597,7 @@ a{color:var(--dorado)}
 }
 h1{margin-bottom:14px}
 h1 .h1-nom{display:block;font-family:"Wamani Titulo",Impact,"Arial Narrow",sans-serif;font-weight:400;
-  font-size:clamp(2.3rem,6.8vw,3.6rem);line-height:1.04;
+  font-size:clamp(2.3rem,6.8vw,3.6rem);line-height:1.22;
   text-transform:uppercase;letter-spacing:.005em;
   transform:scaleX(.75);transform-origin:left center}
 /* El H1 lleva el nombre grande y, debajo y en chico, la frase que la gente sí
@@ -3133,7 +3133,7 @@ body{background:#131c18;color:#ece5d4;font-family:"Wamani Texto",system-ui,-appl
   min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 24px}
 .caja{max-width:620px;text-align:center}
 h1{font-family:"Wamani Titulo",Impact,"Arial Narrow",sans-serif;font-weight:400;font-size:2.7rem;color:#d8c096;margin-bottom:14px;
-  text-transform:uppercase;letter-spacing:.005em;line-height:1.04;
+  text-transform:uppercase;letter-spacing:.005em;line-height:1.22;
   transform:scaleX(.75)}
 p{color:rgba(236,229,212,.72);margin-bottom:28px}
 .lista{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:32px}

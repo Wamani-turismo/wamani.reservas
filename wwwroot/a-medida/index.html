@@ -71,7 +71,11 @@ a{color:inherit}
    va condensada al 75% y SIEMPRE en mayusculas. Debajo de ~40px se empasta, por
    eso los tamanos de abajo subieron. Nunca una barra "/" en un titulo: esta
    fuente la dibuja como un garabato (usar "." o "y"). */
-h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.04;
+/* ALTURA DE RENGLON 1.22, NO MENOS. Las mayusculas con tilde de esta fuente
+   suben 1,077 em sobre la linea de base: con el renglon mas bajo, la tilde de
+   un titulo de dos lineas se mete en la linea de arriba y parece una mancha:
+   "DONDE" perdia su tilde a la vista. Medido sobre el .woff2. */
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.22;
   text-transform:uppercase;letter-spacing:.005em;text-wrap:balance;
   transform:scaleX(.75);transform-origin:left center}
 .puente h2,.cierre-cta h2{transform-origin:center}
@@ -111,7 +115,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.04;
   .hero .cont{position:static;padding:20px 22px 4px}
   .hero .baja{text-shadow:none}
 }
-.hero h1{font-size:clamp(2.9rem,10.5vw,5.2rem);color:#fff;line-height:.96;letter-spacing:0}
+.hero h1{font-size:clamp(2.9rem,10.5vw,5.2rem);color:#fff;line-height:1.1;letter-spacing:0}
 .hero .baja{color:#eceae4;opacity:.95;max-width:34ch;margin-top:16px;font-size:1.06rem;
   text-shadow:0 1px 14px rgba(14,12,11,.6)}
 

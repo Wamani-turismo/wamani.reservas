@@ -86,9 +86,13 @@ a{ color:var(--hondo); text-decoration-color:var(--acento); text-underline-offse
   color:var(--acento); font-weight:700; font-size:12.5px;
   letter-spacing:.14em; text-transform:uppercase; margin:0 0 8px;
 }
+/* ALTURA DE RENGLON 1.22, NO MENOS. Las mayusculas con tilde de esta fuente
+   suben 1,077 em sobre la linea de base: con el renglon mas bajo, la tilde de
+   un titulo de dos lineas se mete en la linea de arriba y parece una mancha:
+   "DONDE" perdia su tilde a la vista. Medido sobre el .woff2. */
 .porta h1{
   font-family:"Wamani Titulo",Impact,"Arial Narrow",sans-serif; font-weight:400;
-  color:#fff; font-size:clamp(34px,7vw,60px); line-height:1.04; margin:0;
+  color:#fff; font-size:clamp(34px,7vw,60px); line-height:1.22; margin:0;
   text-transform:uppercase; letter-spacing:.005em; text-wrap:balance;
   transform:scaleX(.75); transform-origin:left center;
 }
@@ -161,7 +165,7 @@ figure.alta img{ max-height:620px; width:auto; margin:0 auto }
 .titulo-blog h1{
   font-family:"Wamani Titulo",Impact,"Arial Narrow",sans-serif; font-weight:400;
   font-size:clamp(36px,7vw,58px); color:var(--hondo); margin:0 0 10px;
-  text-transform:uppercase; letter-spacing:.005em; line-height:1.04;
+  text-transform:uppercase; letter-spacing:.005em; line-height:1.22;
   transform:scaleX(.75); transform-origin:left center;
 }
 .titulo-blog p{ color:var(--tinta-2); max-width:56ch }

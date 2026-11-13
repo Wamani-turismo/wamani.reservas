@@ -91,7 +91,11 @@ h1,h2,h3{font-family:"Wamani Texto",system-ui,-apple-system,"Segoe UI",sans-seri
 /* Solo estos cuatro son lo bastante grandes para la tipografia de titulos. */
 .encabezado-seccion h2,.contacto-caja h2,.medida-cta .tit,.mg-cuerpo h3{
   font-family:"Wamani Titulo",Impact,"Arial Narrow",sans-serif;font-weight:400;
-  text-transform:uppercase;letter-spacing:.005em;line-height:1.04;
+/* ALTURA DE RENGLON 1.22, NO MENOS. Las mayusculas con tilde de esta fuente
+   suben 1,077 em sobre la linea de base: con el renglon mas bajo, la tilde de
+   un titulo de dos lineas se mete en la linea de arriba y parece una mancha:
+   "DONDE" perdia su tilde a la vista. Medido sobre el .woff2. */
+  text-transform:uppercase;letter-spacing:.005em;line-height:1.22;
   transform:scaleX(.75)}
 .encabezado-seccion h2,.contacto-caja h2,.medida-cta .tit{transform-origin:center}
 .mg-cuerpo h3{transform-origin:left center}

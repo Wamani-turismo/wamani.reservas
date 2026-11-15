@@ -737,7 +737,7 @@ input[type=file]::file-selector-button {
 .desplegable-head::-webkit-details-marker { display: none; }
 .desplegable-titulo { font-weight: 700; font-size: 1.15rem; }
 .desplegable-titulo::before {
-  content: "B8";
+  content: "\25B8";
   display: inline-block;
   margin-right: 8px;
   color: var(--accent);

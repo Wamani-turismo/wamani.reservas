@@ -52,7 +52,7 @@
     </div>
 }
 
-<form method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data" id="formOperativo">
     <input type="hidden" asp-for="ExcursionId" />
     <input type="hidden" asp-for="Fecha" />
 
@@ -333,10 +333,7 @@
         <p class="hint" style="margin:8px 0 0">El hospedaje y las comidas de cada pasajero se cargan arriba (en Proveedores), eligiendo <strong>de qué reserva</strong> es cada uno.</p>
     </div>
 
-    <div class="acciones-form">
-        <button type="submit" class="btn btn-primary">💾 Guardar operativo</button>
-        <a class="btn btn-ghost" asp-page="/Operativo/Index">Cancelar</a>
-    </div>
+    @* La barra de guardar esta mas abajo, despues de los ingresos extra. *@
 </form>
 
 <!-- ================= INGRESOS EXTRA DE ESTA SALIDA ================= -->
@@ -345,10 +342,27 @@
    sin tener que guardar todo el operativo. Y los ingresos no son gastos: no se tildan
    ni se "preparan", son plata que ya entró.
 *@
+@{
+    // Arranca abierto si ya hay algo cargado o si hay un cartel que leer;
+    // si no, queda cerrado para que la pantalla no sea un choclo.
+    string abrirIngresos = (Model.IngresosExtra.Count > 0
+                            || !string.IsNullOrWhiteSpace(Model.AvisoIngreso)) ? "open" : null;
+}
 @if (Model.PuedeTocarIngresos)
 {
 <div class="card" id="ingresos" style="margin-top:18px">
-    <h2>Ingresos extra de esta salida</h2>
+<details class="desplegable" open="@abrirIngresos">
+    <summary class="desplegable-head">
+        <span class="desplegable-titulo">💵 Ingresos extra de esta salida</span>
+        @if (Model.IngresosExtra.Count > 0)
+        {
+            <span class="desplegable-dato">@Money(Model.IngresosExtraTotal)</span>
+        }
+        else
+        {
+            <span class="desplegable-dato desplegable-dato-vacio">tocá para cargar uno</span>
+        }
+    </summary>
     <p class="hint" style="margin:0 0 14px">
         Plata de <strong>más</strong> que entró por esta salida y que no estaba en la reserva:
         un traslado que hubo que sumar, una noche agregada, una entrada que no estaba.
@@ -469,8 +483,17 @@
                     onclick="cancelarIngreso()">Cancelar la edición</button>
         </div>
     </form>
+</details>
 </div>
 }
+
+@* El boton de guardar va al fondo de todo: uno baja hasta abajo para guardar.
+   Va FUERA del formulario grande y atado con form="formOperativo", porque el
+   bloque de ingresos extra tiene formularios propios y no se pueden anidar. *@
+<div class="acciones-form">
+    <button type="submit" form="formOperativo" class="btn btn-primary">💾 Guardar operativo</button>
+    <a class="btn btn-ghost" asp-page="/Operativo/Index">Cancelar</a>
+</div>
 
 @* Ventanita para escribir la nota de un gasto o de un proveedor. Va FUERA del formulario a
    propósito: así el textarea no se manda como un campo más y no desacomoda las listas. *@

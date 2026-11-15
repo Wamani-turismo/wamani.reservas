@@ -722,3 +722,28 @@ input[type=file]::file-selector-button {
   border: 2px solid var(--surface);   /* recorta el punto contra el fondo de la fila */
   box-shadow: 0 0 0 1px rgba(35, 51, 46, .12);
 }
+
+/* Bloque que se abre con un toque (los ingresos extra del operativo).
+   El titulo es el boton: se aprieta y se despliega lo de adentro. */
+.desplegable-head {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.desplegable-head::-webkit-details-marker { display: none; }
+.desplegable-titulo { font-weight: 700; font-size: 1.15rem; }
+.desplegable-titulo::before {
+  content: "B8";
+  display: inline-block;
+  margin-right: 8px;
+  color: var(--accent);
+  transition: transform .15s ease;
+}
+.desplegable[open] > .desplegable-head .desplegable-titulo::before { transform: rotate(90deg); }
+.desplegable-dato { font-weight: 700; color: var(--ok); white-space: nowrap; }
+.desplegable-dato-vacio { font-weight: 500; color: var(--muted); font-size: .9rem; }
+.desplegable[open] > .desplegable-head { margin-bottom: 14px; }

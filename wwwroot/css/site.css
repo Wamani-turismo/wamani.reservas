@@ -747,3 +747,11 @@ input[type=file]::file-selector-button {
 .desplegable-dato { font-weight: 700; color: var(--ok); white-space: nowrap; }
 .desplegable-dato-vacio { font-weight: 500; color: var(--muted); font-size: .9rem; }
 .desplegable[open] > .desplegable-head { margin-bottom: 14px; }
+
+/* La barra de guardar el operativo: separada de los ingresos extra, para que no
+   se confunda un boton con el otro. */
+.guardar-operativo {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 2px solid var(--line);
+}

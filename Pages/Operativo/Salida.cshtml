@@ -478,7 +478,7 @@
         </div>
 
         <div class="acciones-form" style="margin-top:12px">
-            <button type="submit" class="btn btn-primary" id="ingBoton">+ Agregar ingreso extra</button>
+            <button type="submit" class="btn btn-primary" id="ingBoton">💾 Guardar este ingreso extra</button>
             <button type="button" class="btn btn-ghost" id="ingCancelar" style="display:none"
                     onclick="cancelarIngreso()">Cancelar la edición</button>
         </div>
@@ -490,9 +490,18 @@
 @* El boton de guardar va al fondo de todo: uno baja hasta abajo para guardar.
    Va FUERA del formulario grande y atado con form="formOperativo", porque el
    bloque de ingresos extra tiene formularios propios y no se pueden anidar. *@
-<div class="acciones-form">
-    <button type="submit" form="formOperativo" class="btn btn-primary">💾 Guardar operativo</button>
-    <a class="btn btn-ghost" asp-page="/Operativo/Index">Cancelar</a>
+<div class="guardar-operativo">
+    @if (Model.PuedeTocarIngresos)
+    {
+        <p class="hint" style="margin:0 0 10px">
+            Este botón guarda <strong>el operativo</strong> (proveedores, gastos y lo compartido).
+            Un <strong>ingreso extra</strong> se guarda con su propio botón, ahi arriba.
+        </p>
+    }
+    <div class="acciones-form" style="margin-top:0">
+        <button type="submit" form="formOperativo" class="btn btn-primary">💾 Guardar operativo</button>
+        <a class="btn btn-ghost" asp-page="/Operativo/Index">Cancelar</a>
+    </div>
 </div>
 
 @* Ventanita para escribir la nota de un gasto o de un proveedor. Va FUERA del formulario a
@@ -1060,9 +1069,35 @@
             campoIngreso('IngresoMonto').value = '';
             campoIngreso('IngresoNota').value = '';
             document.getElementById('ingTitulo').textContent = 'Agregar un ingreso extra';
-            document.getElementById('ingBoton').textContent = '+ Agregar ingreso extra';
+            document.getElementById('ingBoton').textContent = '💾 Guardar este ingreso extra';
             document.getElementById('ingCancelar').style.display = 'none';
         }
+
+        // ---- Red de seguridad ----
+        // El botón de guardar el operativo quedo justo abajo del bloque de ingresos extra.
+        // Si hay un ingreso escrito y sin guardar, se avisa antes de perderlo: el formulario
+        // grande no lleva esos campos (son dos formularios distintos, a proposito).
+        (function () {
+            var fOp = document.getElementById('formOperativo');
+            if (!fOp || !document.getElementById('formIngreso')) return;
+            fOp.addEventListener('submit', function (ev) {
+                var desc = campoIngreso('IngresoDescripcion');
+                var monto = campoIngreso('IngresoMonto');
+                var hayTexto = desc && desc.value.trim() !== '';
+                var hayMonto = monto && (parseFloat(monto.value) || 0) > 0;
+                if (!hayTexto && !hayMonto) return;
+                var sigo = confirm(
+                    'OJO: escribiste un ingreso extra y todavia no lo guardaste.\n\n' +
+                    '"Guardar operativo" NO guarda el ingreso extra. Para eso esta el boton\n' +
+                    '"Guardar este ingreso extra", arriba de este.\n\n' +
+                    'Aceptar = guardo el operativo y pierdo lo que escribi.\n' +
+                    'Cancelar = vuelvo y guardo primero el ingreso.');
+                if (!sigo) {
+                    ev.preventDefault();
+                    document.getElementById('formIngreso').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        })();
 
         // Botón "a mano": desbloquea el total para cambiarlo y deja de recalcularse solo
         function editarTotal(btn) {

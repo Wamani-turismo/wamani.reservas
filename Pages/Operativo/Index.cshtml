@@ -30,6 +30,7 @@ else
                     <th>Gastos listos</th>
                     <th class="num">Gastos</th>
                     <th class="num">Proveedores</th>
+                    <th class="num">Cuánto sale</th>
                     <th>Comprobantes</th>
                     <th></th>
                 </tr>
@@ -72,6 +73,34 @@ else
                         else
                         {
                             <span class="cliente-sub">—</span>
+                        }
+                    </td>
+                    @* Cuánto sale la salida según la excursión, y cuánto de eso está cargado.
+                       El previsto NO se suma a los totales de plata a pagar: es para saber de
+                       antemano cuánto va a salir y qué proveedor falta designar. *@
+                    <td class="num" data-label="Cuánto sale">
+                        @if (s.Previsto > 0)
+                        {
+                            <div>@Money(s.Previsto) <span class="cliente-sub">previsto</span></div>
+                            <div class="cliente-sub">cargado @Money(s.Cargado)</div>
+                            @if (s.SinCargar > 0)
+                            {
+                                <span class="pill" style="margin-top:4px;background:#fdeaea;color:#b91c1c;border-color:#f3c9c9">
+                                    🔴 sin cargar @Money(s.SinCargar)
+                                </span>
+                            }
+                            else if (s.CargadoDeMas > 0)
+                            {
+                                <span class="pill pill-warn" style="margin-top:4px">+@Money(s.CargadoDeMas) de más</span>
+                            }
+                            else
+                            {
+                                <span class="pill pill-ok" style="margin-top:4px">✔ todo cargado</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="cliente-sub">— sin costos en la excursión —</span>
                         }
                     </td>
                     <td data-label="Comprobantes">

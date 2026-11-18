@@ -52,6 +52,62 @@
     </div>
 }
 
+@* ---------- Cuánto sale esta salida según la excursión ----------
+   Previsto / cargado / sin cargar. El previsto NO entra en los totales de abajo: esos son
+   plata que se le debe a alguien con nombre. Acá es sólo para saber cuánto va a salir la
+   salida y qué proveedor falta designar. Sólo en las salidas de hoy en adelante. *@
+@if (Model.MuestraPrevisto)
+{
+    <div class="card">
+        <h2>Cuánto sale esta salida</h2>
+        <div class="resumen">
+            <div class="item">
+                <div class="label">Previsto (según la excursión)</div>
+                <div class="val">@Money(Model.Previsto)</div>
+            </div>
+            <div class="item">
+                <div class="label">Cargado en este operativo</div>
+                <div class="val">@Money(Model.CargadoTotal)</div>
+            </div>
+            @if (Model.SinCargar > 0)
+            {
+                <div class="item">
+                    <div class="label">Sin cargar</div>
+                    <div class="val" style="color:#b91c1c">🔴 @Money(Model.SinCargar)</div>
+                </div>
+            }
+            else if (Model.CargadoDeMas > 0)
+            {
+                <div class="item">
+                    <div class="label">Cargado de más que lo previsto</div>
+                    <div class="val" style="color:var(--warn)">@Money(Model.CargadoDeMas)</div>
+                </div>
+            }
+            else
+            {
+                <div class="item">
+                    <div class="label">Sin cargar</div>
+                    <div class="val" style="color:var(--ok)">✔ nada</div>
+                </div>
+            }
+        </div>
+
+        @if (Model.SinCargar > 0 && Model.ProveedoresPrevistos.Count > 0)
+        {
+            <p class="hint" style="margin:12px 0 0">
+                <strong>Lo que la excursión tiene previsto pagarle a un proveedor</strong>
+                (se carga arriba, en Proveedores):
+                @string.Join(" · ", Model.ProveedoresPrevistos.Select(x => $"{x.Nombre} {Money(x.Monto)}"))
+            </p>
+        }
+        <p class="hint" style="margin:8px 0 0">
+            El previsto sale de los costos de la excursión, con @Model.PasajerosSalida pasajero(s).
+            <strong>No está sumado</strong> en los totales de abajo: esos son lo que ya está cargado
+            y lo que falta pagarle a alguien.
+        </p>
+    </div>
+}
+
 <form method="post" enctype="multipart/form-data" id="formOperativo">
     <input type="hidden" asp-for="ExcursionId" />
     <input type="hidden" asp-for="Fecha" />

@@ -22,6 +22,17 @@ public class IndexModel : PageModel
         public decimal ProveedoresTotal { get; set; } // total de lo que cuestan los proveedores
         public decimal DeudaProveedores { get; set; } // lo que falta pagarles
         public int Comprobantes { get; set; }        // cuántos comprobantes hay subidos
+        // ---- Cuanto sale la salida segun la excursion ----
+        // Previsto: la plantilla de costos de la excursion (gastos Y proveedores) mas lo que
+        // se contrata para el grupo, a la gente de esta salida. Es el mismo numero de
+        // Rentabilidad y de la columna Teorica de "Teorica vs real".
+        // Cargado: lo que hay cargado en el operativo (gastos + proveedores).
+        // Sin cargar: la diferencia, que es lo que todavia hay que ir a designar. Va aparte,
+        // NO sumado a los totales de plata a pagar (ver el comentario largo en Salida.cshtml.cs).
+        public decimal Previsto { get; set; }
+        public decimal Cargado { get; set; }
+        public decimal SinCargar => Math.Max(0, Previsto - Cargado);
+        public decimal CargadoDeMas => Math.Max(0, Cargado - Previsto);
         public bool Completo => GastosTotal > 0 && GastosListos >= GastosTotal;
     }
 
@@ -43,6 +54,10 @@ public class IndexModel : PageModel
 
         var plantillaPorExc = (await _db.GastosExcursion.ToListAsync())
             .GroupBy(g => g.ExcursionId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var etapasPorExc = (await _db.EtapasExcursion.ToListAsync())
+            .GroupBy(e => e.ExcursionId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
         var operativoPorSalida = (await _db.OperativoGastos.ToListAsync())
@@ -73,8 +88,10 @@ public class IndexModel : PageModel
                 res.Comprobantes = provs.Count(p => !string.IsNullOrEmpty(p.ComprobanteSena))
                                  + provs.Count(p => !string.IsNullOrEmpty(p.ComprobanteSaldo));
 
+                bool hayOperativo = false;
                 if (operativoPorSalida.TryGetValue((exId, g.Key.Fecha), out var ops))
                 {
+                    hayOperativo = true;
                     res.GastosTotal = ops.Count;
                     res.GastosListos = ops.Count(o => o.Comprado);
                     res.Presupuesto = ops.Sum(o => o.Precio);
@@ -86,6 +103,17 @@ public class IndexModel : PageModel
                     res.GastosListos = 0;
                     res.Presupuesto = plant.Sum(p => p.Precio);
                 }
+
+                // Cuanto sale la salida segun la excursion, y cuanto de eso esta cargado.
+                var itemsPrev = plantillaPorExc.GetValueOrDefault(exId) ?? new();
+                var etapasPrev = etapasPorExc.GetValueOrDefault(exId) ?? new();
+                res.Previsto = Wamani.Reservas.Services.RentabilidadCalc
+                    .Costo(itemsPrev, etapasPrev, res.Pasajeros);
+                // OJO: "Cargado" es SOLO lo que esta cargado de verdad en el operativo. Si la
+                // salida todavia no tiene operativo armado, el Presupuesto de arriba es la
+                // plantilla en crudo (sin multiplicar por la gente) y usarlo aca haria que
+                // "sin cargar" diera de menos justo en la salida que no tiene nada cargado.
+                res.Cargado = (hayOperativo ? res.Presupuesto : 0) + res.ProveedoresTotal;
 
                 return res;
             })

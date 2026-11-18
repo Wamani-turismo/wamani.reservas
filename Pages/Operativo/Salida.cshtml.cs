@@ -228,6 +228,14 @@ public class EtapaRowVm
     }
 }
 
+// Un rubro de la excursion que se paga a un proveedor (el chofer, el auto, el almuerzo),
+// con lo que saldria en esta salida. Sirve de referencia al pie del aviso de "sin cargar".
+public class ProveedorPrevisto
+{
+    public string Nombre { get; set; } = "";
+    public decimal Monto { get; set; }
+}
+
 public class SalidaModel : PageModel
 {
     private readonly AppDbContext _db;
@@ -297,6 +305,40 @@ public class SalidaModel : PageModel
     // de un día da 1.
     public int DiasSalida => NochesSalida > 0 ? NochesSalida + 1 : 1;
 
+    // ---- CUÁNTO SALE ESTA SALIDA SEGÚN LA EXCURSIÓN (previsto / cargado / sin cargar) ----
+    //
+    // El operativo contesta "cuánto llevo pagado y cuánto debo", pero hasta acá no contestaba
+    // "cuánto me va a salir". El dato ya existe: es la plantilla de costos de la excursión
+    // calculada a la gente de esta salida, el mismo número de Rentabilidad y de la columna
+    // Teórica de "Teórica vs real". Pedido de Lautaro el 18/11/2026, con la salida de Ruta de
+    // Lagunas del 29/11: el operativo mostraba $81.000 de gastos y nada de proveedores, pero
+    // la salida sale $225.000 — los $144.000 del chofer, el auto y el almuerzo están
+    // marcados como proveedor en la excursión, así que NO bajan a la lista de gastos
+    // (el OnGet filtra !EsProveedor) y esperan que se los designe a mano.
+    //
+    // OJO, Y ES A PROPÓSITO: el previsto se muestra AL LADO del cargado, nunca sumado
+    // adentro de los totales. Los totales de abajo ("total de la salida", "falta pagar en
+    // total") son plata que se le debe a alguien con nombre; si les entrara una estimacion,
+    // el "falta pagar" pasaria a incluir plata que todavia no se le debe a nadie. Ese error
+    // ya lo tuvimos en Compromisos y escondio $2.601.000 (ver Pages/Compromisos/Index.cshtml.cs).
+    // Ahi el teorico SI corresponde, porque esa pantalla proyecta la caja a futuro; aca se
+    // ejecuta el pago de hoy. Dos preguntas distintas, dos numeros distintos.
+    public decimal Previsto { get; set; }
+    public decimal CargadoTotal { get; set; }
+    public decimal SinCargar => Math.Max(0, Previsto - CargadoTotal);
+    public decimal CargadoDeMas => Math.Max(0, CargadoTotal - Previsto);
+
+    // Los rubros que la excursion tiene marcados como proveedor, con lo que saldrian con
+    // esta cantidad de gente. Es la referencia de que hay que ir a designar arriba; no se
+    // intenta adivinar cual de ellos ya se cargo (un proveedor cargado se llama "Lautaro",
+    // no "Chofer"), para eso esta el numero de sin cargar, que baja solo.
+    public List<ProveedorPrevisto> ProveedoresPrevistos { get; set; } = new();
+
+    // El aviso se muestra solo en las salidas de hoy en adelante: las que ya pasaron quedan
+    // exactamente como estaban (pedido de Lautaro, 18/11/2026).
+    public bool MuestraPrevisto => Fecha.Date >= Wamani.Reservas.Services.Reloj.HoyJujuy().Date
+                                && Previsto > 0;
+
     // ---- INGRESOS EXTRA de esta salida ----
     //
     // Plata de MÁS que entró por esta salida puntual: el traslado que hubo que sumar porque
@@ -305,6 +347,7 @@ public class SalidaModel : PageModel
     // Son los mismos IngresoExtra de la pantalla Extras, pero con la salida anotada. Por eso
     // suman solos en la Caja, en Finanzas, en el fondo y en el cierre del mes: no hay una
     // cuenta nueva en ningún lado y es imposible que se cuenten dos veces.
+
     public List<IngresoExtra> IngresosExtra { get; set; } = new();
     public decimal IngresosExtraTotal => IngresosExtra.Sum(e => e.Monto);
 
@@ -552,6 +595,42 @@ public class SalidaModel : PageModel
             .Where(e => e.ExcursionId == ExcursionId && e.FechaSalida == Fecha.Date)
             .OrderBy(e => e.Fecha).ThenBy(e => e.Id)
             .ToListAsync();
+
+        // ---- Cuanto sale esta salida segun la excursion (previsto / cargado / sin cargar) ----
+        // Misma cuenta que Rentabilidad y que la columna Teorica de "Teorica vs real": la
+        // plantilla completa (gastos Y proveedores) mas lo que se contrata para el grupo,
+        // a la gente de esta salida. No se suma a los totales de abajo, se muestra al lado.
+        var plantillaPrev = await _db.GastosExcursion
+            .Where(g => g.ExcursionId == ExcursionId)
+            .OrderBy(g => g.Id)
+            .ToListAsync();
+        var etapasPrev = await _db.EtapasExcursion
+            .Where(e => e.ExcursionId == ExcursionId)
+            .OrderBy(e => e.Orden)
+            .ToListAsync();
+
+        Previsto = Wamani.Reservas.Services.RentabilidadCalc
+            .Costo(plantillaPrev, etapasPrev, PasajerosSalida);
+
+        // Lo cargado: los gastos de la salida mas TODOS los proveedores de la salida (los de
+        // las etapas incluidos, por eso se vuelve a consultar y no se usa ProvPorTipo, que
+        // deja afuera las filas que subieron al bloque de las etapas).
+        var provTodos = await _db.OperativoProveedores
+            .Where(p => p.ExcursionId == ExcursionId && p.Fecha.Date == Fecha.Date)
+            .ToListAsync();
+        CargadoTotal = Gastos.Sum(g => g.Precio) + provTodos.Sum(p => p.Total);
+
+        // El monto de un rubro suelto lo calcula el MISMO servicio que la rentabilidad,
+        // pasandole ese unico item: asi no hay una segunda copia de la formula que se pueda
+        // desincronizar (ya nos paso con el costo, que estaba escrito en tres lados).
+        decimal MontoPrev(GastoExcursion g) => Wamani.Reservas.Services.RentabilidadCalc
+            .Costo(new[] { g }, PasajerosSalida);
+
+        ProveedoresPrevistos = plantillaPrev
+            .Where(g => g.EsProveedor && MontoPrev(g) > 0)
+            .Select(g => new ProveedorPrevisto { Nombre = g.Nombre.Trim(), Monto = MontoPrev(g) })
+            .OrderByDescending(x => x.Monto)
+            .ToList();
 
         BuscarDuplicados();
     }
